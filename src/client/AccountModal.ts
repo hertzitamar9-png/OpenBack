@@ -492,6 +492,10 @@ export class AccountModal extends BaseModal {
     this.syncProfileFields(updated);
     this.profileMessageError = false;
     this.profileMessage = translateText("account_modal.profile_saved");
+    // Refresh the shared cache and nav button so the new name shows up in the
+    // top-bar Profile button (and store, etc.) immediately, and every time the
+    // player changes it — no page reload required.
+    this.propagateLogin(updated);
     window.dispatchEvent(
       new CustomEvent("openback-profile-updated", {
         detail: { displayName: updated.user.displayName },
