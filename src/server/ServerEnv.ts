@@ -83,6 +83,9 @@ export class ServerEnv {
   static cdnBase(): string {
     return process.env.CDN_BASE ?? "";
   }
+  static shareOrigin(): string {
+    return process.env.SHARE_ORIGIN ?? process.env.VITE_SHARE_ORIGIN ?? "";
+  }
   static jwtIssuer(): string {
     const audience = ServerEnv.jwtAudience();
     return audience === "localhost"
