@@ -16,6 +16,7 @@ import {
 } from "../core/ApiSchemas";
 import { AnalyticsRecord, AnalyticsRecordSchema } from "../core/Schemas";
 import { getAuthHeader, logOut, userAuth } from "./Auth";
+import { ClientEnv } from "./ClientEnv";
 
 export async function fetchPlayerById(
   playerId: string,
@@ -315,23 +316,11 @@ export async function openSubscriptionPortal(): Promise<string | false> {
 }
 
 export function getApiBase() {
-  const domainname = getAudience();
-
-  if (domainname === "localhost") {
-    const apiDomain = process?.env?.API_DOMAIN;
-    if (apiDomain) {
-      return `https://${apiDomain}`;
-    }
-    return localStorage.getItem("apiHost") ?? "http://localhost:8787";
-  }
-
-  return `https://api.${domainname}`;
+  return ClientEnv.jwtIssuer();
 }
 
 export function getAudience() {
-  const { hostname } = new URL(window.location.href);
-  const domainname = hostname.split(".").slice(-2).join(".");
-  return domainname;
+  return ClientEnv.jwtAudience();
 }
 
 // Check if the user's account is linked to a Discord or email account.

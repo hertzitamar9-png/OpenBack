@@ -306,6 +306,22 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           secure: false,
         },
+        // Local auth (OpenBack self-contained auth server)
+        "/auth": {
+          target: "http://localhost:3000",
+          changeOrigin: true,
+          secure: false,
+        },
+        "/users": {
+          target: "http://localhost:3000",
+          changeOrigin: true,
+          secure: false,
+        },
+        "/.well-known": {
+          target: "http://localhost:3000",
+          changeOrigin: true,
+          secure: false,
+        },
       },
     },
   };

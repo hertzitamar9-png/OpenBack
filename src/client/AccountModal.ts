@@ -7,9 +7,11 @@ import { Cosmetics } from "../core/CosmeticSchemas";
 import { fetchPlayerById, getUserMe, invalidateUserMe } from "./Api";
 import {
   discordLogin,
+  googleLogin,
   logOut,
   reauthAfterCrazyGamesChange,
-  sendMagicLink,
+  requestLoginCode,
+  verifyLoginCode,
 } from "./Auth";
 import "./components/baseComponents/stats/DiscordUserHeader";
 import "./components/baseComponents/stats/PlayerGameHistoryView";
@@ -32,6 +34,8 @@ export class AccountModal extends BaseModal {
   protected routerName = "account";
 
   @state() private email: string = "";
+  @state() private code: string = "";
+  @state() private codeSent: boolean = false;
   @state() private isLoadingUser: boolean = false;
   // Set on CrazyGames when a CrazyGames user is signed in. Their identity comes
   // from the SDK, not our backend user object.
@@ -415,6 +419,39 @@ export class AccountModal extends BaseModal {
           </div>
 
           <div class="space-y-6">
+            ${
+              ClientEnv.googleEnabled()
+                ? html`
+                    <button
+                      @click="${this.handleGoogleLogin}"
+                      class="w-full px-6 py-4 text-white bg-white hover:bg-gray-100 border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-200 flex items-center justify-center gap-3 group relative overflow-hidden shadow-lg"
+                    >
+                      <svg class="w-6 h-6 relative z-10" viewBox="0 0 48 48">
+                        <path
+                          fill="#EA4335"
+                          d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+                        />
+                        <path
+                          fill="#4285F4"
+                          d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6.01C43.98 37.55 46.98 31.38 46.98 24.55z"
+                        />
+                        <path
+                          fill="#FBBC05"
+                          d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
+                        />
+                        <path
+                          fill="#34A853"
+                          d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6.01c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+                        />
+                      </svg>
+                      <span class="font-bold relative z-10 tracking-wide text-gray-800"
+                        >${translateText("main.login_google")}</span
+                      >
+                    </button>
+                  `
+                : ""
+            }
+
             <!-- Discord Login Button -->
             <button
               @click="${this.handleDiscordLogin}"
@@ -442,7 +479,7 @@ export class AccountModal extends BaseModal {
               <div class="h-px bg-white/10 flex-1"></div>
             </div>
 
-            <!-- Email Recovery -->
+            <!-- Email code sign-in -->
             <div class="space-y-3">
               <div class="relative group">
                 <input
@@ -458,13 +495,44 @@ export class AccountModal extends BaseModal {
                   required
                 />
               </div>
-              <o-button
-                variant="primary"
-                width="block"
-                size="md"
-                translationKey="account_modal.get_magic_link"
-                @click=${this.handleSubmit}
-              ></o-button>
+              ${
+                !this.codeSent
+                  ? html`<o-button
+                      variant="primary"
+                      width="block"
+                      size="md"
+                      translationKey="account_modal.get_magic_link"
+                      @click=${this.handleSubmit}
+                    ></o-button>`
+                  : html`
+                      <div class="relative group">
+                        <input
+                          type="text"
+                          id="code"
+                          name="code"
+                          inputmode="numeric"
+                          .value="${this.code}"
+                          @input="${this.handleCodeInput}"
+                          class="w-full pl-4 pr-12 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/20 focus:outline-none focus:ring-2 focus:ring-malibu-blue/50 focus:border-malibu-blue/50 transition-all font-medium tracking-[0.5em] hover:bg-white/10"
+                          placeholder="######"
+                          required
+                        />
+                      </div>
+                      <o-button
+                        variant="primary"
+                        width="block"
+                        size="md"
+                        translationKey="account_modal.verify_code"
+                        @click=${this.handleVerify}
+                      ></o-button>
+                      <button
+                        @click=${this.handleResend}
+                        class="w-full text-[11px] font-bold text-white/30 hover:text-malibu-blue transition-colors uppercase tracking-widest"
+                      >
+                        ${translateText("account_modal.resend_code")}
+                      </button>
+                    `
+              }
             </div>
           </div>
 
@@ -486,22 +554,64 @@ export class AccountModal extends BaseModal {
     this.email = target.value;
   }
 
+  private handleCodeInput(e: Event) {
+    const target = e.target as HTMLInputElement;
+    this.code = target.value;
+  }
+
   private async handleSubmit() {
     if (!this.email) {
       alert(translateText("account_modal.enter_email_address"));
       return;
     }
-
-    const success = await sendMagicLink(this.email);
-    if (success) {
-      alert(
-        translateText("account_modal.recovery_email_sent", {
-          email: this.email,
-        }),
-      );
+    const result = await requestLoginCode(this.email);
+    if (result.ok) {
+      this.codeSent = true;
+      if (result.devCode) {
+        // Dev-only: the code is logged to the server console and echoed here.
+        this.code = result.devCode;
+        alert(
+          translateText("account_modal.dev_code", { code: result.devCode }),
+        );
+      } else {
+        alert(
+          translateText("account_modal.recovery_email_sent", {
+            email: this.email,
+          }),
+        );
+      }
+      this.requestUpdate();
     } else {
       alert(translateText("account_modal.failed_to_send_recovery_email"));
     }
+  }
+
+  private async handleVerify() {
+    if (!this.code) {
+      alert(translateText("account_modal.enter_code"));
+      return;
+    }
+    const ok = await verifyLoginCode(this.email, this.code);
+    if (ok) {
+      invalidateUserMe();
+      const userMe = await getUserMe();
+      if (userMe) this.userMeResponse = userMe;
+      this.codeSent = false;
+      this.code = "";
+      this.requestUpdate();
+    } else {
+      alert(translateText("account_modal.invalid_code"));
+    }
+  }
+
+  private async handleResend() {
+    this.codeSent = false;
+    this.code = "";
+    await this.handleSubmit();
+  }
+
+  private handleGoogleLogin() {
+    googleLogin();
   }
 
   // CrazyGames sign-in: after their prompt completes, exchange the new token

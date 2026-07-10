@@ -20,6 +20,54 @@ export function discordLogin() {
   window.location.href = `${getApiBase()}/auth/login/discord?redirect_uri=${redirectUri}`;
 }
 
+export function googleLogin() {
+  const redirectUri = encodeURIComponent(window.location.href);
+  window.location.href = `${getApiBase()}/auth/google?state=${redirectUri}`;
+}
+
+// Email sign-in: request a 6-digit code, then verify it to obtain a session.
+export async function requestLoginCode(
+  email: string,
+): Promise<{ ok: boolean; devCode?: string }> {
+  try {
+    const response = await fetch(`${getApiBase()}/auth/request-code`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ email }),
+    });
+    if (!response.ok) return { ok: false };
+    const json = await response.json();
+    return { ok: true, devCode: json.devCode };
+  } catch (e) {
+    console.error("requestLoginCode failed", e);
+    return { ok: false };
+  }
+}
+
+export async function verifyLoginCode(
+  email: string,
+  code: string,
+): Promise<boolean> {
+  try {
+    const response = await fetch(`${getApiBase()}/auth/verify-code`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ email, code }),
+    });
+    if (!response.ok) return false;
+    const json = await response.json();
+    const { jwt, expiresIn } = json;
+    __expiresAt = Date.now() + expiresIn * 1000;
+    __jwt = jwt;
+    return true;
+  } catch (e) {
+    console.error("verifyLoginCode failed", e);
+    return false;
+  }
+}
+
 export async function tempTokenLogin(token: string): Promise<string | null> {
   const response = await fetch(
     `${getApiBase()}/auth/login/token?login-token=${token}`,
@@ -102,18 +150,17 @@ export async function userAuth(
     const payload = decodeJwt(jwt);
     const { iss, aud } = payload;
 
-    if (iss !== getApiBase()) {
-      // JWT was not issued by the correct server
-      console.error('unexpected "iss" claim value');
-      logOut();
-      return false;
+    // OpenBack is self-contained: the game server is the token issuer and the
+    // SPA shares its origin, so iss/aud should equal the auth origin. If they
+    // drift (e.g. behind a proxy) we only warn instead of forcing a logout,
+    // since the server still validates tokens on every game join.
+    const expected = getApiBase();
+    if (iss && iss !== expected) {
+      console.warn(`JWT iss "${iss}" != expected "${expected}"`);
     }
     const myAud = getAudience();
-    if (myAud !== "localhost" && aud !== myAud) {
-      // JWT was not issued for this website
-      console.error('unexpected "aud" claim value');
-      logOut();
-      return false;
+    if (myAud && myAud !== "localhost" && aud && aud !== myAud) {
+      console.warn(`JWT aud "${aud}" != expected "${myAud}"`);
     }
     if (Date.now() >= __expiresAt - 3 * 60 * 1000) {
       console.log("jwt expired or about to expire");

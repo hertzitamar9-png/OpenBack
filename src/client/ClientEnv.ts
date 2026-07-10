@@ -35,11 +35,18 @@ export class ClientEnv {
     ) {
       throw new Error("Missing BOOTSTRAP_CONFIG");
     }
+    const authOrigin =
+      bc.authOrigin?.trim() ??
+      (bc.jwtAudience === "localhost"
+        ? "http://localhost:9000"
+        : `https://api.${bc.jwtAudience}`);
     ClientEnv.values = {
       gameEnv: parseGameEnv(bc.gameEnv),
       numWorkers: bc.numWorkers,
       turnstileSiteKey: bc.turnstileSiteKey,
       jwtAudience: bc.jwtAudience,
+      authOrigin,
+      googleEnabled: bc.googleEnabled ?? false,
       instanceId: bc.instanceId,
       gitCommit: bc.gitCommit,
       shareOrigin: bc.shareOrigin?.trim()
@@ -74,11 +81,11 @@ export class ClientEnv {
   static shareOrigin(): string {
     return ClientEnv.get().shareOrigin;
   }
+  static googleEnabled(): boolean {
+    return ClientEnv.get().googleEnabled;
+  }
   static jwtIssuer(): string {
-    const audience = ClientEnv.jwtAudience();
-    return audience === "localhost"
-      ? "http://localhost:8787"
-      : `https://api.${audience}`;
+    return ClientEnv.get().authOrigin;
   }
   static async jwkPublicKey(): Promise<JWK> {
     if (ClientEnv.publicKey) return ClientEnv.publicKey;
@@ -121,7 +128,9 @@ export interface ClientEnvValues {
   numWorkers: number;
   turnstileSiteKey: string;
   jwtAudience: string;
+  authOrigin: string;
   instanceId: string;
   gitCommit: string;
   shareOrigin: string;
+  googleEnabled: boolean;
 }

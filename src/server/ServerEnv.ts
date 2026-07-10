@@ -60,11 +60,27 @@ export class ServerEnv {
     return v;
   }
   static jwtAudience(): string {
+    return ServerEnv.authOrigin();
+  }
+  // The raw DOMAIN (e.g. openback-cbe3.onrender.com), used to build origins.
+  static jwtAudienceRaw(): string {
     const v = process.env.DOMAIN;
     if (!v) {
       throw new Error("DOMAIN not set");
     }
     return v;
+  }
+  // Public origin where the SPA and auth endpoints live. OpenBack is
+  // self-contained, so auth is served from the game server's own origin rather
+  // than a separate api. subdomain like OpenFront.
+  static authOrigin(): string {
+    if (process.env.AUTH_ORIGIN) return process.env.AUTH_ORIGIN;
+    if (ServerEnv.gameEnv === GameEnv.Dev) return "http://localhost:9000";
+    return `https://${ServerEnv.jwtAudienceRaw()}`;
+  }
+  // Where the Worker can reach the Master's auth routes internally (no egress).
+  static internalAuthBase(): string {
+    return process.env.INTERNAL_AUTH_BASE ?? "http://localhost:3000";
   }
   static instanceId(): string {
     return process.env.INSTANCE_ID ?? "";
@@ -81,20 +97,25 @@ export class ServerEnv {
     return process.env.HOST ?? "";
   }
   static cdnBase(): string {
-    return process.env.CDN_BASE ?? "";
+    if (process.env.CDN_BASE) return process.env.CDN_BASE;
+    // Default to the site origin so asset URLs are absolute. The game worker
+    // is inlined as a same-origin Blob and cannot resolve root-relative URLs,
+    // so it needs a full origin to fetch map binaries/manifests.
+    if (ServerEnv.env() === GameEnv.Dev) return "http://localhost:9000";
+    return `https://${ServerEnv.jwtAudienceRaw()}`;
   }
   static shareOrigin(): string {
     return process.env.SHARE_ORIGIN ?? process.env.VITE_SHARE_ORIGIN ?? "";
   }
   static jwtIssuer(): string {
-    const audience = ServerEnv.jwtAudience();
-    return audience === "localhost"
-      ? "http://localhost:8787"
-      : `https://api.${audience}`;
+    return ServerEnv.authOrigin();
   }
   static async jwkPublicKey(): Promise<JWK> {
     if (ServerEnv.publicKey) return ServerEnv.publicKey;
-    const jwksUrl = ServerEnv.jwtIssuer() + "/.well-known/jwks.json";
+    // Tokens are signed by the Master process (which serves /.well-known/jwks.json);
+    // Workers fetch the public key from there over the internal network so they
+    // verify with the same key the Master used to sign.
+    const jwksUrl = ServerEnv.internalAuthBase() + "/.well-known/jwks.json";
     console.log(`Fetching JWKS from ${jwksUrl}`);
     const response = await fetch(jwksUrl);
     if (!response.ok) {

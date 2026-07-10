@@ -70,12 +70,15 @@ export async function getUserMe(
 > {
   try {
     // Get the user object
-    const response = await fetch(ServerEnv.jwtIssuer() + "/users/@me", {
-      headers: {
-        authorization: `Bearer ${token}`,
-        "x-api-key": ServerEnv.apiKey(),
+    const response = await fetch(
+      ServerEnv.internalAuthBase() + "/users/@me",
+      {
+        headers: {
+          authorization: `Bearer ${token}`,
+          "x-api-key": ServerEnv.apiKey(),
+        },
       },
-    });
+    );
     if (response.status !== 200) {
       return {
         type: "error",

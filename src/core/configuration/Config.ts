@@ -33,6 +33,8 @@ declare global {
       numWorkers?: number;
       turnstileSiteKey?: string;
       jwtAudience?: string;
+      authOrigin?: string;
+      googleEnabled?: boolean;
       instanceId?: string;
       shareOrigin?: string;
     };

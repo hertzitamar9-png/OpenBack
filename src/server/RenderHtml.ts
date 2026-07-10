@@ -28,6 +28,10 @@ export async function renderHtmlContent(htmlPath: string): Promise<string> {
     numWorkers: JSON.stringify(ServerEnv.numWorkers()),
     turnstileSiteKey: JSON.stringify(ServerEnv.turnstileSiteKey()),
     jwtAudience: JSON.stringify(ServerEnv.jwtAudience()),
+    authOrigin: JSON.stringify(ServerEnv.authOrigin()),
+    googleEnabled: JSON.stringify(
+      Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
+    ),
     instanceId: JSON.stringify(ServerEnv.instanceId()),
     shareOrigin: JSON.stringify(ServerEnv.shareOrigin()),
     manifestHref: buildAssetUrl("manifest.json", assetManifest, cdnBase),
