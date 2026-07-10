@@ -18,4 +18,16 @@ describe("StaticAssetCache", () => {
     expect(getStaticAssetCacheControl("/manifest.json")).toBeUndefined();
     expect(getStaticAssetCacheControl("/api/health")).toBeUndefined();
   });
+
+  test("forces revalidation for dynamic root files", () => {
+    expect(getStaticAssetCacheControl("/cosmetics.json")).toBe(
+      "public, max-age=0, must-revalidate",
+    );
+    expect(getStaticAssetCacheControl("/news.json")).toBe(
+      "public, max-age=0, must-revalidate",
+    );
+    expect(getStaticAssetCacheControl("/cosmetics.json?v=1")).toBe(
+      "public, max-age=0, must-revalidate",
+    );
+  });
 });

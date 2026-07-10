@@ -529,6 +529,18 @@ class Client {
       );
     });
 
+    // The account modal (and other flows) can log the user in mid-session and
+    // broadcast `userMeResponse`. Keep the top-bar account button in sync with
+    // those events so a fresh login shows the username without a page reload.
+    document.addEventListener("userMeResponse", (event: Event) => {
+      if (crazyGamesSDK.isOnCrazyGames()) {
+        void updateCrazyGamesNavButton();
+        return;
+      }
+      const detail = (event as CustomEvent<UserMeResponse | false>).detail;
+      updateAccountNavButton(detail);
+    });
+
     const settingsModal = document.querySelector(
       "user-setting",
     ) as UserSettingModal;

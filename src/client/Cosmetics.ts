@@ -192,7 +192,12 @@ export async function fetchCosmetics(): Promise<Cosmetics | null> {
   }
   __cosmetics = (async () => {
     try {
-      const response = await fetch(assetUrl("cosmetics.json"));
+      const response = await fetch(assetUrl("cosmetics.json"), {
+        // Revalidate rather than trust a possibly year-old cached copy (older
+        // deploys served cosmetics.json with a 1y immutable-style cache), so
+        // newly added shop flags/skins show up without a hard refresh.
+        cache: "no-cache",
+      });
       if (!response.ok) {
         console.error(`HTTP error! status: ${response.status}`);
         return null;

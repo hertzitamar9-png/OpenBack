@@ -7,6 +7,7 @@ import {
   fetchPlayerById,
   getUserMe,
   invalidateUserMe,
+  setLastUserMe,
   updateMyProfile,
 } from "./Api";
 import {
@@ -796,7 +797,10 @@ export class AccountModal extends BaseModal {
     if (ok) {
       invalidateUserMe();
       const userMe = await getUserMe();
-      if (userMe) this.userMeResponse = userMe;
+      if (userMe) {
+        this.userMeResponse = userMe;
+        this.propagateLogin(userMe);
+      }
       this.codeSent = false;
       this.code = "";
       this.authMessage = "";
@@ -827,9 +831,28 @@ export class AccountModal extends BaseModal {
     invalidateUserMe();
     await reauthAfterCrazyGamesChange();
     const userMe = await getUserMe();
-    if (userMe) this.userMeResponse = userMe;
+    if (userMe) {
+      this.userMeResponse = userMe;
+      this.propagateLogin(userMe);
+    }
     this.crazyGamesUser = profile;
     this.requestUpdate();
+  }
+
+  // After a mid-session login (email code or CrazyGames), the rest of the app
+  // still thinks we're logged out because nothing re-ran the startup auth flow.
+  // Seed the shared cache and broadcast `userMeResponse` so the nav button,
+  // store, flag/skin selectors and every other listener update immediately —
+  // no page reload required.
+  private propagateLogin(userMe: UserMeResponse) {
+    setLastUserMe(userMe);
+    document.dispatchEvent(
+      new CustomEvent("userMeResponse", {
+        detail: userMe,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
   }
 
   protected onOpen(): void {
