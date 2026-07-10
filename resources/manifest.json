@@ -1,0 +1,19 @@
+{
+  "icons": [
+    {
+      "purpose": "any maskable",
+      "sizes": "any",
+      "src": "/images/OpenBackMark.svg",
+      "type": "image/svg+xml"
+    }
+  ],
+  "orientation": "portrait",
+  "display_override": ["fullscreen", "minimal-ui"],
+  "display": "standalone",
+  "dir": "auto",
+  "lang": "en",
+  "name": "OpenBack",
+  "short_name": "OpenBack",
+  "start_url": "/",
+  "id": "/"
+}

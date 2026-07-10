@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 150" role="img" aria-labelledby="title desc">
+  <title id="title">OpenBack</title>
+  <desc id="desc">OpenBack wordmark with outward-facing arrows</desc>
+  <defs>
+    <linearGradient id="openback-blue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#17b8ff"/>
+      <stop offset="1" stop-color="#0878d1"/>
+    </linearGradient>
+  </defs>
+  <g fill="url(#openback-blue)">
+    <path d="M14 75 54 35v22h48v36H54v22z"/>
+    <path d="m746 75-40-40v22h-48v36h48v22z"/>
+    <text x="380" y="103" text-anchor="middle" font-family="Arial Black, Impact, sans-serif" font-size="94" font-style="italic" font-weight="900" letter-spacing="-7">OPENBACK</text>
+  </g>
+  <path d="M123 122h514" stroke="#85d9ff" stroke-width="4" opacity=".7"/>
+</svg>

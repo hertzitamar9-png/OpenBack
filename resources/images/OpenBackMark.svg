@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">OpenBack</title>
+  <desc id="desc">OpenBack OB monogram</desc>
+  <defs>
+    <linearGradient id="mark-blue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22c4ff"/>
+      <stop offset="1" stop-color="#086fc7"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="24" fill="#111318"/>
+  <path d="M9 64 28 45v11h17v16H28v11zm110 0-19-19v11H83v16h17v11z" fill="#56ccff"/>
+  <text x="64" y="82" text-anchor="middle" fill="url(#mark-blue)" font-family="Arial Black, Impact, sans-serif" font-size="55" font-style="italic" font-weight="900" letter-spacing="-6">OB</text>
+</svg>
