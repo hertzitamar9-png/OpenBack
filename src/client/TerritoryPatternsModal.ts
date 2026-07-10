@@ -9,6 +9,7 @@ import {
   UserSettings,
 } from "../core/game/UserSettings";
 import { PlayerPattern } from "../core/Schemas";
+import { getLastUserMe } from "./Api";
 import { BaseModal } from "./components/BaseModal";
 import "./components/CosmeticButton";
 import "./components/NotLoggedInWarning";
@@ -43,6 +44,10 @@ export class TerritoryPatternsModal extends BaseModal {
 
   connectedCallback() {
     super.connectedCallback();
+    // Seed from the cached response in case the initial `userMeResponse` event
+    // fired before this component mounted (otherwise it wrongly shows as logged
+    // out until the next event).
+    void this.onUserMe(getLastUserMe());
     document.addEventListener(
       "userMeResponse",
       (event: CustomEvent<UserMeResponse | false>) => {

@@ -9,6 +9,7 @@ import { GameEnv } from "../core/configuration/Config";
 import { logger } from "./Logger";
 import { MapPlaylist } from "./MapPlaylist";
 import { MasterLobbyService } from "./MasterLobbyService";
+import { MatchmakingService } from "./MatchmakingService";
 import { setNoStoreHeaders } from "./NoStoreHeaders";
 import { renderAppShell } from "./RenderHtml";
 import { ServerEnv } from "./ServerEnv";
@@ -22,6 +23,10 @@ const app = express();
 const server = http.createServer(app);
 
 const log = logger.child({ comp: "m" });
+
+// Ranked matchmaking lives in the master so it shares the auth user store
+// (and thus Elo) directly.
+const matchmaking = new MatchmakingService(log);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -74,6 +79,12 @@ app.use("/api", (_req, res, next) => {
   next();
 });
 
+// Ranked matchmaking coordination. Workers poll /checkin (offering a gameId)
+// and report finished 1v1s to /matchmaking/result. The /matchmaking/join WS
+// upgrade is handled directly on the HTTP server in startMaster().
+app.post("/checkin", matchmaking.handleCheckin);
+app.post("/matchmaking/result", matchmaking.handleResult);
+
 // Start the master process
 export async function startMaster() {
   if (!cluster.isPrimary) {
@@ -86,6 +97,9 @@ export async function startMaster() {
   log.info(`Setting up ${ServerEnv.numWorkers()} workers...`);
 
   lobbyService = new MasterLobbyService(playlist, log);
+
+  // Handle ranked matchmaking WebSocket upgrades on the master HTTP server.
+  matchmaking.attach(server);
 
   const INSTANCE_ID =
     ServerEnv.env() === GameEnv.Dev

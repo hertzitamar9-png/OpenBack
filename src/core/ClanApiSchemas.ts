@@ -95,6 +95,7 @@ export const ClanMemberSchema = z.object({
   role: z.enum(["leader", "officer", "member"]),
   joinedAt: z.iso.datetime(),
   publicId: z.string(),
+  displayName: z.string().optional(),
   stats: ClanMemberStatsSchema.optional(),
 });
 export type ClanMember = z.infer<typeof ClanMemberSchema>;
@@ -110,6 +111,7 @@ export type ClanMembersResponse = z.infer<typeof ClanMembersResponseSchema>;
 
 export const ClanJoinRequestSchema = z.object({
   publicId: z.string(),
+  displayName: z.string().optional(),
   createdAt: z.iso.datetime(),
 });
 export type ClanJoinRequest = z.infer<typeof ClanJoinRequestSchema>;
@@ -124,6 +126,7 @@ export type ClanRequestsResponse = z.infer<typeof ClanRequestsResponseSchema>;
 
 export const ClanBanSchema = z.object({
   publicId: z.string(),
+  displayName: z.string().optional(),
   bannedBy: z.string(),
   reason: z.string().max(200).nullable(),
   createdAt: z.iso.datetime(),

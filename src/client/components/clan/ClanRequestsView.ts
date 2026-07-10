@@ -156,7 +156,7 @@ export class ClanRequestsView extends LitElement {
                         <copy-button
                           compact
                           .copyText=${req.publicId}
-                          .displayText=${req.publicId}
+                          .displayText=${req.displayName ?? req.publicId}
                           .showVisibilityToggle=${false}
                           .showCopyIcon=${false}
                         ></copy-button>

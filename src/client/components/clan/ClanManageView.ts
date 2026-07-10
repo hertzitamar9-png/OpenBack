@@ -520,7 +520,7 @@ export class ClanManageView extends LitElement {
           <copy-button
             compact
             .copyText=${member.publicId}
-            .displayText=${member.publicId}
+            .displayText=${member.displayName ?? member.publicId}
             .showVisibilityToggle=${false}
             .showCopyIcon=${false}
           ></copy-button>

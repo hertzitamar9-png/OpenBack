@@ -1,7 +1,7 @@
 import { LitElement, html } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { UserMeResponse } from "../../core/ApiSchemas";
-import { hasLinkedAccount } from "../Api";
+import { getLastUserMe, hasLinkedAccount } from "../Api";
 
 @customElement("not-logged-in-warning")
 export class NotLoggedInWarning extends LitElement {
@@ -17,6 +17,7 @@ export class NotLoggedInWarning extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
+    this.linked = hasLinkedAccount(getLastUserMe());
     document.addEventListener(
       "userMeResponse",
       this._onUserMe as EventListener,

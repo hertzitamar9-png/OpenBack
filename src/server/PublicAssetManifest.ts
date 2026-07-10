@@ -26,6 +26,8 @@ const HASHED_PUBLIC_ASSET_GLOBS = [
 const ROOT_PUBLIC_FILES = new Set([
   "LICENSE",
   "ads.txt",
+  "cosmetics.json",
+  "news.json",
   "privacy-policy.html",
   "robots.txt",
   "terms-of-service.html",

@@ -173,6 +173,18 @@ export function invalidateUserMe() {
   __userMe = null;
 }
 
+// The most recently broadcast auth state. Lazily-created components (Store,
+// RankedModal, NotLoggedInWarning, ...) mount after the initial `userMeResponse`
+// event has already fired, so they read this on connect to get current state
+// instead of being stuck at the default "logged out".
+let __lastUserMe: UserMeResponse | false = false;
+export function setLastUserMe(userMeResponse: UserMeResponse | false) {
+  __lastUserMe = userMeResponse;
+}
+export function getLastUserMe(): UserMeResponse | false {
+  return __lastUserMe;
+}
+
 export async function purchaseWithCurrency(
   cosmeticType: "pattern" | "skin" | "flag",
   cosmeticName: string,

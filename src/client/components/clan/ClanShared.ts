@@ -402,7 +402,7 @@ export function renderMemberRow(
               <copy-button
                 compact
                 .copyText=${member.publicId}
-                .displayText=${member.publicId}
+                .displayText=${member.displayName ?? member.publicId}
                 .showVisibilityToggle=${false}
                 .showCopyIcon=${false}
               ></copy-button>
@@ -429,7 +429,9 @@ export function filterMembersBySearch(
   const q = search.toLowerCase();
   return members.filter(
     (m) =>
-      m.publicId.toLowerCase().includes(q) || m.role.toLowerCase().includes(q),
+      m.publicId.toLowerCase().includes(q) ||
+      (m.displayName?.toLowerCase().includes(q) ?? false) ||
+      m.role.toLowerCase().includes(q),
   );
 }
 
@@ -439,5 +441,9 @@ export function filterRequestsBySearch(
 ): ClanJoinRequest[] {
   if (!search) return requests;
   const q = search.toLowerCase();
-  return requests.filter((r) => r.publicId.toLowerCase().includes(q));
+  return requests.filter(
+    (r) =>
+      r.publicId.toLowerCase().includes(q) ||
+      (r.displayName?.toLowerCase().includes(q) ?? false),
+  );
 }

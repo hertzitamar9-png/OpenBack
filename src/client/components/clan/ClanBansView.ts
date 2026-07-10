@@ -94,8 +94,15 @@ export class ClanBansView extends LitElement {
 
     const totalPages = Math.ceil(this.bansTotal / this.bansLimit);
     const filtered = this.memberSearch
-      ? this.bans.filter((b) =>
-          b.publicId.toLowerCase().includes(this.memberSearch.toLowerCase()),
+      ? this.bans.filter(
+          (b) =>
+            b.publicId
+              .toLowerCase()
+              .includes(this.memberSearch.toLowerCase()) ||
+            (b.displayName
+              ?.toLowerCase()
+              .includes(this.memberSearch.toLowerCase()) ??
+              false),
         )
       : this.bans;
 
@@ -149,7 +156,7 @@ export class ClanBansView extends LitElement {
                         <copy-button
                           compact
                           .copyText=${ban.publicId}
-                          .displayText=${ban.publicId}
+                          .displayText=${ban.displayName ?? ban.publicId}
                           .showVisibilityToggle=${false}
                           .showCopyIcon=${false}
                         ></copy-button>

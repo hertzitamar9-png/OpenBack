@@ -8,6 +8,7 @@ import { BaseModal } from "./components/BaseModal";
 import "./components/CosmeticButton";
 import "./components/NotLoggedInWarning";
 import { modalHeader } from "./components/ui/ModalHeader";
+import { getLastUserMe } from "./Api";
 import {
   fetchCosmetics,
   purchaseCosmetic,
@@ -49,6 +50,7 @@ export class StoreModal extends BaseModal {
 
   connectedCallback() {
     super.connectedCallback();
+    void this.onUserMe(getLastUserMe());
     document.addEventListener(
       "userMeResponse",
       (event: CustomEvent<UserMeResponse | false>) => {

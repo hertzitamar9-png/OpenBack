@@ -1,7 +1,56 @@
 {
   "patterns": {},
   "flags": {},
-  "skins": {},
+  "skins": {
+    "golden_crown": {
+      "name": "golden_crown",
+      "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmRlNjhhIi8+PHN0b3Agb2Zmc2V0PSIwLjUiIHN0b3AtY29sb3I9IiNmNTllMGIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiNDUzMDkiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgcng9IjI0IiBmaWxsPSJ1cmwoI2cpIi8+PHBhdGggZD0iTTUwIDEzMCBMNTAgOTAgTDc1IDExMCBMMTAwIDcwIEwxMjUgMTEwIEwxNTAgOTAgTDE1MCAxMzAgWiIgZmlsbD0iI2ZmZmJlYiIgc3Ryb2tlPSIjN2MyZDEyIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48Y2lyY2xlIGN4PSIxMDAiIGN5PSI3MCIgcj0iOCIgZmlsbD0iI2ZmZmJlYiIgc3Ryb2tlPSIjN2MyZDEyIiBzdHJva2Utd2lkdGg9IjQiLz48cmVjdCB4PSI1MCIgeT0iMTMyIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEyIiByeD0iNCIgZmlsbD0iIzdjMmQxMiIvPjwvc3ZnPg==",
+      "product": null,
+      "priceSoft": 1500,
+      "rarity": "legendary",
+      "artist": "OpenBack"
+    },
+    "royal_azure": {
+      "name": "royal_azure",
+      "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJhIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjM2I4MmY2Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMWUzYThhIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIHJ4PSIyNCIgZmlsbD0idXJsKCNhKSIvPjxwYXRoIGQ9Ik0xMDAgNDAgTDExOCA4MiBMMTY0IDgyIEwxMjcgMTEwIEwxNDEgMTU0IEwxMDAgMTI4IEw1OSAxNTQgTDczIDExMCBMMzYgODIgTDgyIDgyIFoiIGZpbGw9IiNmZWY5YzMiIHN0cm9rZT0iIzFlM2E4YSIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+",
+      "product": null,
+      "priceSoft": 1000,
+      "rarity": "epic",
+      "artist": "OpenBack"
+    },
+    "neon_grid": {
+      "name": "neon_grid",
+      "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIHJ4PSIyNCIgZmlsbD0iIzBmMTcyYSIvPjxnIHN0cm9rZT0iIzIyZDNlZSIgc3Ryb2tlLXdpZHRoPSIyIiBvcGFjaXR5PSIwLjgiPjxwYXRoIGQ9Ik0yMCA2MCBIMTgwIE0yMCAxMDAgSDE4MCBNMjAgMTQwIEgxODAgTTYwIDIwIFYxODAgTTEwMCAyMCBWMTgwIE0xNDAgMjAgVjE4MCIvPjwvZz48Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9IjM0IiBmaWxsPSJub25lIiBzdHJva2U9IiNhODU1ZjciIHN0cm9rZS13aWR0aD0iNSIvPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTQiIGZpbGw9IiMyMmQzZWUiLz48L3N2Zz4=",
+      "product": null,
+      "priceSoft": 750,
+      "rarity": "rare",
+      "artist": "OpenBack"
+    },
+    "emerald_scale": {
+      "name": "emerald_scale",
+      "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+PGRlZnM+PHJhZGlhbEdyYWRpZW50IGlkPSJlIiBjeD0iMC41IiBjeT0iMC4zIiByPSIwLjgiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzZlZTdiNyIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzA2NWY0NiIvPjwvcmFkaWFsR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiByeD0iMjQiIGZpbGw9InVybCgjZSkiLz48ZyBmaWxsPSIjMDY0ZTNiIiBvcGFjaXR5PSIwLjU1Ij48Y2lyY2xlIGN4PSI1NSIgY3k9IjU1IiByPSIyMiIvPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjU1IiByPSIyMiIvPjxjaXJjbGUgY3g9IjE0NSIgY3k9IjU1IiByPSIyMiIvPjxjaXJjbGUgY3g9Ijc3IiBjeT0iMTAwIiByPSIyMiIvPjxjaXJjbGUgY3g9IjEyMyIgY3k9IjEwMCIgcj0iMjIiLz48Y2lyY2xlIGN4PSI1NSIgY3k9IjE0NSIgcj0iMjIiLz48Y2lyY2xlIGN4PSIxMDAiIGN5PSIxNDUiIHI9IjIyIi8+PGNpcmNsZSBjeD0iMTQ1IiBjeT0iMTQ1IiByPSIyMiIvPjwvZz48L3N2Zz4=",
+      "product": null,
+      "priceSoft": 750,
+      "rarity": "rare",
+      "artist": "OpenBack"
+    },
+    "crimson_blade": {
+      "name": "crimson_blade",
+      "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJjIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjN2YxZDFkIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZWY0NDQ0Ii8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIHJ4PSIyNCIgZmlsbD0idXJsKCNjKSIvPjxwYXRoIGQ9Ik02MCAxNTAgTDEyMCA0MCBMMTQwIDU1IEw4NSAxNjUgWiIgZmlsbD0iI2YxZjVmOSIgc3Ryb2tlPSIjNDUwYTBhIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cmVjdCB4PSI1MiIgeT0iMTUwIiB3aWR0aD0iNDAiIGhlaWdodD0iMTQiIHJ4PSI0IiB0cmFuc2Zvcm09InJvdGF0ZSgtMzAgNzIgMTU3KSIgZmlsbD0iIzQ1MGEwYSIvPjwvc3ZnPg==",
+      "product": null,
+      "priceSoft": 500,
+      "rarity": "uncommon",
+      "artist": "OpenBack"
+    },
+    "shadow_ops": {
+      "name": "shadow_ops",
+      "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIHJ4PSIyNCIgZmlsbD0iIzFmMjkzNyIvPjxnIGZpbGw9IiMxMTE4MjciPjxwYXRoIGQ9Ik0wIDAgaDcwIHY1MCBoLTQwIHY0MCBoLTMwIFoiLz48cGF0aCBkPSJNMjAwIDQwIGgtNjAgdjUwIGg0MCB2NDAgaDIwIFoiLz48cGF0aCBkPSJNNjAgMjAwIGg2MCB2LTQwIGgtNDAgdi0zMCBoLTIwIFoiLz48L2c+PGcgZmlsbD0iIzM3NDE1MSI+PHBhdGggZD0iTTExMCAyMCBoNTAgdjQwIGgtMzAgdjMwIGgtMjAgWiIvPjxwYXRoIGQ9Ik0yMCAxMjAgaDUwIHY0MCBoLTMwIHY0MCBoLTIwIFoiLz48L2c+PC9zdmc+",
+      "product": null,
+      "priceSoft": 500,
+      "rarity": "uncommon",
+      "artist": "OpenBack"
+    }
+  },
   "colorPalettes": {},
   "currencyPacks": {},
   "subscriptions": {}

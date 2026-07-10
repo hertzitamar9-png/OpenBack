@@ -220,10 +220,12 @@ export class ServerEnv {
     if (v) return v.replace(/\/+$/, "");
     return "";
   }
-  // Matchmaking API base URL. When unset matchmaking polling is skipped.
+  // Matchmaking API base URL. OpenBack's matchmaking runs in the master
+  // process, so workers poll it over the loopback interface by default. Set
+  // MATCHMAKING_API_URL to "" (explicitly empty) to disable ranked matchmaking.
   static matchmakingApiUrl(): string {
     const v = process.env.MATCHMAKING_API_URL;
-    if (v) return v.replace(/\/+$/, "");
-    return "";
+    if (v !== undefined) return v.replace(/\/+$/, "");
+    return "http://127.0.0.1:3000";
   }
 }

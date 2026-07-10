@@ -2,7 +2,7 @@ import { html, LitElement } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { ClientEnv } from "src/client/ClientEnv";
 import { UserMeResponse } from "../core/ApiSchemas";
-import { getUserMe, hasLinkedAccount } from "./Api";
+import { getLastUserMe, getUserMe, hasLinkedAccount } from "./Api";
 import { getPlayToken } from "./Auth";
 import { BaseModal } from "./components/BaseModal";
 import "./components/Difficulties";
@@ -221,6 +221,7 @@ export class MatchmakingButton extends LitElement {
 
   async connectedCallback() {
     super.connectedCallback();
+    this.isLoggedIn = hasLinkedAccount(getLastUserMe());
     // Listen for user authentication changes
     document.addEventListener("userMeResponse", (event: Event) => {
       const customEvent = event as CustomEvent;

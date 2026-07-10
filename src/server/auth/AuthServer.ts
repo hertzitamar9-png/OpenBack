@@ -4,10 +4,18 @@ import fs from "fs";
 import { jwtVerify, SignJWT } from "jose";
 import nodemailer from "nodemailer";
 import { Pool } from "pg";
+import cosmeticsJson from "resources/cosmetics.json";
 import { z } from "zod";
-import { UserMeResponse, UserMeResponseSchema } from "../../core/ApiSchemas";
+import {
+  PlayerProfileSchema,
+  RankedLeaderboardResponseSchema,
+  UserMeResponse,
+  UserMeResponseSchema,
+} from "../../core/ApiSchemas";
 import { base64urlToUuid, uuidToBase64url } from "../../core/Base64";
 import { GameEnv } from "../../core/configuration/Config";
+import { CosmeticsSchema } from "../../core/CosmeticSchemas";
+import { RankedType } from "../../core/game/Game";
 import { generateID } from "../../core/Util";
 import { ServerEnv } from "../ServerEnv";
 import { ensureKeys, getPrivateKey, getPublicJwk } from "./keys";
@@ -33,6 +41,15 @@ interface StoredUser {
   displayName?: string;
   bio?: string;
   bannerColor?: string;
+  // Ranked 1v1 progression.
+  elo?: number;
+  peakElo?: number;
+  rankedWins?: number;
+  rankedLosses?: number;
+  // Shop wallet + owned cosmetics (flare strings, e.g. "pattern:foo").
+  currencySoft?: number;
+  currencyHard?: number;
+  flares?: string[];
 }
 interface Session {
   persistentId: string;
@@ -88,6 +105,8 @@ const usersByPid = new Map<string, StoredUser>();
 const sessions = new Map<string, Session>();
 const codes = new Map<string, PendingCode>();
 const clansByTag = new Map<string, StoredClan>();
+// Parsed once at startup. Purchases validate item names/prices against this.
+const cosmetics = CosmeticsSchema.parse(cosmeticsJson);
 const databaseUrl = process.env.DATABASE_URL;
 const database = databaseUrl
   ? new Pool({
@@ -226,13 +245,40 @@ function userMeFor(user: StoredUser): UserMeResponse {
     player: {
       publicId: user.publicId,
       adfree: false,
+      flares: user.flares ?? [],
       achievements: { singleplayerMap: [] },
+      leaderboard:
+        user.elo !== undefined ? { oneVone: { elo: user.elo } } : undefined,
+      currency: {
+        soft: user.currencySoft ?? 0,
+        hard: user.currencyHard ?? 0,
+      },
       clans,
       clanRequests,
       friends: [],
       subscription: null,
     },
   });
+}
+
+function userByPublicId(publicId: string): StoredUser | null {
+  for (const user of usersByPid.values()) {
+    if (user.publicId === publicId) return user;
+  }
+  return null;
+}
+
+function usernameFor(user: StoredUser): string {
+  return user.displayName ?? user.publicId;
+}
+
+function clanTagFor(user: StoredUser): string | null {
+  for (const clan of clansByTag.values()) {
+    if (clan.members.some((m) => m.publicId === user.publicId)) {
+      return clan.tag;
+    }
+  }
+  return null;
 }
 
 function findOrCreateUser(opts: {
@@ -304,14 +350,10 @@ function userFromSession(req: express.Request): StoredUser | null {
   return usersByPid.get(session.persistentId) ?? null;
 }
 
-async function userFromBearer(
-  req: express.Request,
-): Promise<StoredUser | null> {
-  const auth = req.headers.authorization;
-  if (!auth?.startsWith("Bearer ")) return null;
+async function userFromToken(token: string): Promise<StoredUser | null> {
   await ensureKeys();
   try {
-    const { payload } = await jwtVerify(auth.slice(7), getPublicJwk(), {
+    const { payload } = await jwtVerify(token, getPublicJwk(), {
       algorithms: ["EdDSA"],
       issuer: authOrigin(),
       audience: authOrigin(),
@@ -321,6 +363,77 @@ async function userFromBearer(
   } catch {
     return null;
   }
+}
+
+async function userFromBearer(
+  req: express.Request,
+): Promise<StoredUser | null> {
+  const auth = req.headers.authorization;
+  if (!auth?.startsWith("Bearer ")) return null;
+  return userFromToken(auth.slice(7));
+}
+
+// Default ELO for a player who has not completed a ranked game yet.
+export const DEFAULT_ELO = 1000;
+
+// Used by the matchmaking service (same master process) to resolve a queued
+// player's identity and current rating from their play token.
+export async function resolveRankedPlayer(
+  token: string,
+): Promise<{ publicId: string; persistentId: string; elo: number } | null> {
+  const user = await userFromToken(token);
+  if (!user) return null;
+  return {
+    publicId: user.publicId,
+    persistentId: user.persistentId,
+    elo: user.elo ?? DEFAULT_ELO,
+  };
+}
+
+// chess.com / FIDE-style dynamic K-factor: new accounts converge fast, settled
+// players are stable, and top players barely move (so ratings mean something).
+function eloKFactor(user: StoredUser): number {
+  const elo = user.elo ?? DEFAULT_ELO;
+  const games = (user.rankedWins ?? 0) + (user.rankedLosses ?? 0);
+  if (games < 30) return 40; // provisional / placement
+  if (elo >= 2400) return 10; // master tier
+  if (elo >= 2100) return 20; // expert tier
+  return 32; // established
+}
+
+// Applies an Elo update after a ranked 1v1 result and persists it. This is the
+// same math chess.com uses: the reward scales with the opponent's strength —
+// upsetting a much higher-rated player earns (and costs them) a lot, while
+// beating someone far below you barely moves the needle. Each side uses its own
+// dynamic K-factor so a veteran's rating isn't swung by a newcomer's placement.
+// Players are identified by persistentId (what the game server has on hand).
+export function recordRankedResult(
+  winnerPersistentId: string,
+  loserPersistentId: string,
+): boolean {
+  const winner = usersByPid.get(winnerPersistentId);
+  const loser = usersByPid.get(loserPersistentId);
+  if (!winner || !loser) return false;
+  const rw = winner.elo ?? DEFAULT_ELO;
+  const rl = loser.elo ?? DEFAULT_ELO;
+  // Expected score for the winner given the rating gap (0..1). A big underdog
+  // has expectedW near 0, so (1 - expectedW) — and thus the points gained — is
+  // large; a heavy favorite has expectedW near 1 and gains almost nothing.
+  const expectedW = 1 / (1 + 10 ** ((rl - rw) / 400));
+  const expectedL = 1 - expectedW;
+  const kw = eloKFactor(winner);
+  const kl = eloKFactor(loser);
+  // Guarantee at least 1 point of movement so every ranked game feels rewarding.
+  const gain = Math.max(1, Math.round(kw * (1 - expectedW)));
+  const drop = Math.max(1, Math.round(kl * expectedL));
+  winner.elo = rw + gain;
+  loser.elo = Math.max(0, rl - drop);
+  winner.peakElo = Math.max(winner.peakElo ?? winner.elo, winner.elo);
+  loser.peakElo = Math.max(loser.peakElo ?? loser.elo, loser.elo);
+  winner.rankedWins = (winner.rankedWins ?? 0) + 1;
+  loser.rankedLosses = (loser.rankedLosses ?? 0) + 1;
+  persist();
+  return true;
 }
 
 function clanInfo(clan: StoredClan) {
@@ -342,6 +455,17 @@ function clanForRequest(req: express.Request): StoredClan | null {
 
 function memberFor(clan: StoredClan, user: StoredUser) {
   return clan.members.find((member) => member.publicId === user.publicId);
+}
+
+// Attach the account's display name to a clan entry (member/request/ban) so the
+// UI can show a friendly name. The publicId stays on the object for friending.
+function withDisplayName<T extends { publicId: string }>(
+  entry: T,
+): T & { displayName?: string } {
+  return {
+    ...entry,
+    displayName: usersByPid.get(entry.publicId)?.displayName,
+  };
 }
 
 function canManageClan(clan: StoredClan, user: StoredUser): boolean {
@@ -548,6 +672,136 @@ export function authRouter(): express.Router {
     res.json(userMeFor(user));
   });
 
+  // Public player profile by publicId. Stats are not yet tracked server-side,
+  // so an empty stats tree is returned alongside creation time.
+  router.get("/player/:id", async (req, res) => {
+    const requester = await userFromBearer(req);
+    if (!requester) {
+      res.status(401).json({ error: "unauthorized" });
+      return;
+    }
+    const rawId = req.params.id;
+    const id = Array.isArray(rawId) ? rawId[0] : rawId;
+    const target = userByPublicId(id);
+    if (!target) {
+      res.status(404).json({ error: "not_found" });
+      return;
+    }
+    res.json(
+      PlayerProfileSchema.parse({
+        createdAt: new Date(target.createdAt).toISOString(),
+        stats: {},
+      }),
+    );
+  });
+
+  // Ranked 1v1 leaderboard, sorted by ELO descending, paginated.
+  const LEADERBOARD_PAGE_SIZE = 50;
+  router.get("/leaderboard/ranked", (req, res) => {
+    const page = Math.floor(Number(req.query.page ?? 1));
+    if (!Number.isFinite(page) || page < 1) {
+      res.status(200).json({ message: "Page must be between 1 and 1" });
+      return;
+    }
+    const ranked = [...usersByPid.values()]
+      .filter((u) => u.elo !== undefined)
+      .sort((a, b) => (b.elo ?? 0) - (a.elo ?? 0));
+    const maxPage = Math.max(
+      1,
+      Math.ceil(ranked.length / LEADERBOARD_PAGE_SIZE),
+    );
+    if (page > maxPage) {
+      res
+        .status(200)
+        .json({ message: `Page must be between 1 and ${maxPage}` });
+      return;
+    }
+    const start = (page - 1) * LEADERBOARD_PAGE_SIZE;
+    const entries = ranked
+      .slice(start, start + LEADERBOARD_PAGE_SIZE)
+      .map((u, i) => {
+        const wins = u.rankedWins ?? 0;
+        const losses = u.rankedLosses ?? 0;
+        const total = wins + losses;
+        return {
+          rank: start + i + 1,
+          elo: u.elo ?? 0,
+          peakElo: u.peakElo ?? null,
+          wins,
+          losses,
+          total,
+          public_id: u.publicId,
+          username: usernameFor(u),
+          clanTag: clanTagFor(u),
+        };
+      });
+    res.json(
+      RankedLeaderboardResponseSchema.parse({ [RankedType.OneVOne]: entries }),
+    );
+  });
+
+  // Currency purchase of a cosmetic. Grants the matching ownership flare.
+  router.post("/shop/purchase", async (req, res) => {
+    const user = await userFromBearer(req);
+    if (!user) {
+      res.status(401).json({ error: "unauthorized" });
+      return;
+    }
+    const parsed = z
+      .object({
+        cosmeticType: z.enum(["pattern", "skin", "flag"]),
+        cosmeticName: z.string(),
+        currencyType: z.enum(["hard", "soft"]),
+        colorPaletteName: z.string().optional(),
+      })
+      .safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "invalid_request" });
+      return;
+    }
+    const { cosmeticType, cosmeticName, currencyType, colorPaletteName } =
+      parsed.data;
+
+    const collection =
+      cosmeticType === "pattern"
+        ? cosmetics.patterns
+        : cosmeticType === "flag"
+          ? cosmetics.flags
+          : cosmetics.skins;
+    const item = collection?.[cosmeticName];
+    if (!item) {
+      res.status(404).json({ error: "unknown_cosmetic" });
+      return;
+    }
+
+    const price = currencyType === "hard" ? item.priceHard : item.priceSoft;
+    if (price === undefined) {
+      res.status(400).json({ error: "not_purchasable_with_currency" });
+      return;
+    }
+
+    const balanceKey =
+      currencyType === "hard" ? "currencyHard" : "currencySoft";
+    const balance = user[balanceKey] ?? 0;
+    if (balance < price) {
+      res.status(402).json({ error: "insufficient_funds" });
+      return;
+    }
+
+    const flare =
+      cosmeticType === "pattern" && colorPaletteName
+        ? `pattern:${cosmeticName}:${colorPaletteName}`
+        : `${cosmeticType}:${cosmeticName}`;
+
+    user[balanceKey] = balance - price;
+    user.flares = user.flares ?? [];
+    if (!user.flares.includes(flare)) {
+      user.flares.push(flare);
+    }
+    persist();
+    res.json(userMeFor(user));
+  });
+
   // Self-contained clan API. Every browser worldwide uses this same server,
   // so tags, memberships, requests, and moderation are authoritative.
   router.post("/clans", async (req, res) => {
@@ -659,7 +913,7 @@ export function authRouter(): express.Router {
     const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20));
     const start = (page - 1) * limit;
     res.json({
-      results: clan.members.slice(start, start + limit),
+      results: clan.members.slice(start, start + limit).map(withDisplayName),
       total: clan.members.length,
       page,
       limit,
@@ -779,7 +1033,7 @@ export function authRouter(): express.Router {
     const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20));
     const start = (page - 1) * limit;
     res.json({
-      results: clan.requests.slice(start, start + limit),
+      results: clan.requests.slice(start, start + limit).map(withDisplayName),
       total: clan.requests.length,
       page,
       limit,
@@ -835,7 +1089,7 @@ export function authRouter(): express.Router {
       return;
     }
     res.json({
-      results: clan.bans,
+      results: clan.bans.map(withDisplayName),
       total: clan.bans.length,
       page: 1,
       limit: Math.max(20, clan.bans.length),

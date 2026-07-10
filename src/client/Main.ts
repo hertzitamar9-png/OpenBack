@@ -14,7 +14,7 @@ import { GameEnv } from "../core/configuration/Config";
 import { GameType } from "../core/game/Game";
 import { UserSettings } from "../core/game/UserSettings";
 import "./AccountModal";
-import { getUserMe, invalidateUserMe } from "./Api";
+import { getUserMe, invalidateUserMe, setLastUserMe } from "./Api";
 import { reauthAfterCrazyGamesChange, userAuth } from "./Auth";
 import "./ClanModal";
 import { joinLobby, type JoinLobbyResult } from "./ClientGameRunner";
@@ -136,11 +136,15 @@ function updateAccountNavButton(userMeResponse: UserMeResponse | false) {
     button?.classList.add("border", "border-white/20");
   };
 
-  const showEmailLoggedIn = () => {
+  const showEmailLoggedIn = (name: string) => {
     avatarEl?.classList.add("hidden");
-    personIconEl?.classList.remove("hidden");
-    emailBadgeEl?.classList.remove("hidden");
-    signInTextEl?.classList.add("hidden");
+    personIconEl?.classList.add("hidden");
+    emailBadgeEl?.classList.add("hidden");
+    if (signInTextEl) {
+      signInTextEl.classList.remove("hidden");
+      signInTextEl.removeAttribute("data-i18n");
+      signInTextEl.textContent = name;
+    }
     button?.classList.add("border", "border-white/20");
   };
 
@@ -157,10 +161,10 @@ function updateAccountNavButton(userMeResponse: UserMeResponse | false) {
     }
   }
 
-  const email =
-    userMeResponse !== false ? userMeResponse.user.email : undefined;
-  if (email) {
-    showEmailLoggedIn();
+  const displayName =
+    userMeResponse !== false ? userMeResponse.user.displayName : undefined;
+  if (displayName) {
+    showEmailLoggedIn(displayName);
     return;
   }
 
@@ -486,6 +490,7 @@ class Client {
       }
       // OpenBack does not bundle the upstream advertising service.
       window.adsEnabled = false;
+      setLastUserMe(userMeResponse);
       document.dispatchEvent(
         new CustomEvent("userMeResponse", {
           detail: userMeResponse,

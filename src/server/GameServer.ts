@@ -4,7 +4,7 @@ import WebSocket from "ws";
 import { z } from "zod";
 import { isAdminRole } from "../core/ApiSchemas";
 import { GameEnv } from "../core/configuration/Config";
-import { GameType } from "../core/game/Game";
+import { GameType, RankedType } from "../core/game/Game";
 import {
   ClientID,
   ClientMessageSchema,
@@ -1240,6 +1240,40 @@ export class GameServer {
         ),
       ),
     );
+
+    this.reportRankedResult();
+  }
+
+  // For ranked 1v1s, report the human winner/loser to the matchmaking service
+  // (in the master process) so it can update Elo. No-op unless the winner is
+  // one of the two human players (e.g. a bot winning leaves ratings unchanged).
+  private reportRankedResult(): void {
+    const config = this.gameStartInfo.config;
+    if (config.rankedType !== RankedType.OneVOne) return;
+    const winner = this.winner?.winner;
+    if (!winner || winner[0] !== "player") return;
+
+    const winnerClientId = winner[1];
+    const players = this.gameStartInfo.players;
+    const winnerPlayer = players.find((p) => p.clientID === winnerClientId);
+    if (!winnerPlayer) return;
+    const loserPlayer = players.find((p) => p.clientID !== winnerClientId);
+    if (!loserPlayer) return;
+
+    const winnerPid = this.allClients.get(winnerPlayer.clientID)?.persistentID;
+    const loserPid = this.allClients.get(loserPlayer.clientID)?.persistentID;
+    if (!winnerPid || !loserPid) return;
+
+    const base = ServerEnv.matchmakingApiUrl();
+    if (!base) return;
+    fetch(`${base}/matchmaking/result`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": ServerEnv.apiKey(),
+      },
+      body: JSON.stringify({ winner: winnerPid, loser: loserPid }),
+    }).catch((e) => this.log.warn(`failed to report ranked result: ${e}`));
   }
 
   private handleSynchronization() {

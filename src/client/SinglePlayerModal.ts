@@ -14,7 +14,7 @@ import {
 } from "../core/game/Game";
 import { TeamCountConfig } from "../core/Schemas";
 import { generateID } from "../core/Util";
-import { hasLinkedAccount } from "./Api";
+import { getLastUserMe, hasLinkedAccount } from "./Api";
 import "./components/baseComponents/Button";
 import "./components/baseComponents/Modal";
 import { BaseModal } from "./components/BaseModal";
@@ -112,6 +112,11 @@ export class SinglePlayerModal extends BaseModal {
 
   connectedCallback() {
     super.connectedCallback();
+    // Seed from the cached response in case the initial `userMeResponse` event
+    // fired before this component mounted.
+    const cached = getLastUserMe();
+    this.userMeResponse = cached;
+    this.applyAchievements(cached);
     document.addEventListener(
       "userMeResponse",
       this.handleUserMeResponse as EventListener,
