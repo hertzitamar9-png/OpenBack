@@ -190,10 +190,20 @@ function updateAccountNavButton(userMeResponse: UserMeResponse | false) {
     }
   }
 
-  const displayName =
-    userMeResponse !== false ? userMeResponse.user.displayName : undefined;
-  if (displayName) {
-    showEmailLoggedIn(displayName);
+  // Once authenticated we ALWAYS show the profile button, never "Sign in".
+  // A brand-new email account may not have set a display name yet, so fall
+  // back to the email's local part and finally the public player ID. Without
+  // this fallback the button wrongly stayed on "Sign in" after logging in.
+  if (userMeResponse !== false) {
+    const displayName = userMeResponse.user.displayName?.trim();
+    const email = userMeResponse.user.email;
+    const emailLocalPart = email ? email.split("@")[0] : undefined;
+    const name =
+      displayName ||
+      emailLocalPart ||
+      userMeResponse.player.publicId ||
+      translateText("main.profile");
+    showEmailLoggedIn(name);
     return;
   }
 
