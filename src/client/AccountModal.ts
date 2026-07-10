@@ -2,11 +2,9 @@ import { html, TemplateResult } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { ClientEnv } from "src/client/ClientEnv";
 import { PlayerStatsTree, UserMeResponse } from "../core/ApiSchemas";
-import { assetUrl } from "../core/AssetUrls";
 import { Cosmetics } from "../core/CosmeticSchemas";
 import { fetchPlayerById, getUserMe, invalidateUserMe } from "./Api";
 import {
-  discordLogin,
   googleLogin,
   logOut,
   reauthAfterCrazyGamesChange,
@@ -419,54 +417,37 @@ export class AccountModal extends BaseModal {
           </div>
 
           <div class="space-y-6">
-            ${
-              ClientEnv.googleEnabled()
-                ? html`
-                    <button
-                      @click="${this.handleGoogleLogin}"
-                      class="w-full px-6 py-4 text-white bg-white hover:bg-gray-100 border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-200 flex items-center justify-center gap-3 group relative overflow-hidden shadow-lg"
+            ${ClientEnv.googleEnabled()
+              ? html`
+                  <button
+                    @click="${this.handleGoogleLogin}"
+                    class="w-full px-6 py-4 text-white bg-white hover:bg-gray-100 border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-200 flex items-center justify-center gap-3 group relative overflow-hidden shadow-lg"
+                  >
+                    <svg class="w-6 h-6 relative z-10" viewBox="0 0 48 48">
+                      <path
+                        fill="#EA4335"
+                        d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+                      />
+                      <path
+                        fill="#4285F4"
+                        d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6.01C43.98 37.55 46.98 31.38 46.98 24.55z"
+                      />
+                      <path
+                        fill="#FBBC05"
+                        d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
+                      />
+                      <path
+                        fill="#34A853"
+                        d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6.01c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+                      />
+                    </svg>
+                    <span
+                      class="font-bold relative z-10 tracking-wide text-gray-800"
+                      >${translateText("main.login_google")}</span
                     >
-                      <svg class="w-6 h-6 relative z-10" viewBox="0 0 48 48">
-                        <path
-                          fill="#EA4335"
-                          d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
-                        />
-                        <path
-                          fill="#4285F4"
-                          d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6.01C43.98 37.55 46.98 31.38 46.98 24.55z"
-                        />
-                        <path
-                          fill="#FBBC05"
-                          d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
-                        />
-                        <path
-                          fill="#34A853"
-                          d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6.01c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
-                        />
-                      </svg>
-                      <span class="font-bold relative z-10 tracking-wide text-gray-800"
-                        >${translateText("main.login_google")}</span
-                      >
-                    </button>
-                  `
-                : ""
-            }
-
-            <!-- Discord Login Button -->
-            <button
-              @click="${this.handleDiscordLogin}"
-              class="w-full px-6 py-4 text-white bg-[#5865F2] hover:bg-[#4752C4] border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5865F2] transition-colors duration-200 flex items-center justify-center gap-3 group relative overflow-hidden shadow-lg hover:shadow-[#5865F2]/20"
-            >
-              <img
-                src=${assetUrl("images/DiscordLogo.svg")}
-                alt="Discord"
-                class="w-6 h-6 relative z-10"
-              />
-              <span class="font-bold relative z-10 tracking-wide"
-                >${translateText("main.login_discord") ||
-                translateText("account_modal.link_discord")}</span
-              >
-            </button>
+                  </button>
+                `
+              : ""}
 
             <!-- Divider -->
             <div class="flex items-center gap-4 py-2">
@@ -495,44 +476,42 @@ export class AccountModal extends BaseModal {
                   required
                 />
               </div>
-              ${
-                !this.codeSent
-                  ? html`<o-button
+              ${!this.codeSent
+                ? html`<o-button
+                    variant="primary"
+                    width="block"
+                    size="md"
+                    translationKey="account_modal.get_magic_link"
+                    @click=${this.handleSubmit}
+                  ></o-button>`
+                : html`
+                    <div class="relative group">
+                      <input
+                        type="text"
+                        id="code"
+                        name="code"
+                        inputmode="numeric"
+                        .value="${this.code}"
+                        @input="${this.handleCodeInput}"
+                        class="w-full pl-4 pr-12 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/20 focus:outline-none focus:ring-2 focus:ring-malibu-blue/50 focus:border-malibu-blue/50 transition-all font-medium tracking-[0.5em] hover:bg-white/10"
+                        placeholder="######"
+                        required
+                      />
+                    </div>
+                    <o-button
                       variant="primary"
                       width="block"
                       size="md"
-                      translationKey="account_modal.get_magic_link"
-                      @click=${this.handleSubmit}
-                    ></o-button>`
-                  : html`
-                      <div class="relative group">
-                        <input
-                          type="text"
-                          id="code"
-                          name="code"
-                          inputmode="numeric"
-                          .value="${this.code}"
-                          @input="${this.handleCodeInput}"
-                          class="w-full pl-4 pr-12 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/20 focus:outline-none focus:ring-2 focus:ring-malibu-blue/50 focus:border-malibu-blue/50 transition-all font-medium tracking-[0.5em] hover:bg-white/10"
-                          placeholder="######"
-                          required
-                        />
-                      </div>
-                      <o-button
-                        variant="primary"
-                        width="block"
-                        size="md"
-                        translationKey="account_modal.verify_code"
-                        @click=${this.handleVerify}
-                      ></o-button>
-                      <button
-                        @click=${this.handleResend}
-                        class="w-full text-[11px] font-bold text-white/30 hover:text-malibu-blue transition-colors uppercase tracking-widest"
-                      >
-                        ${translateText("account_modal.resend_code")}
-                      </button>
-                    `
-              }
+                      translationKey="account_modal.verify_code"
+                      @click=${this.handleVerify}
+                    ></o-button>
+                    <button
+                      @click=${this.handleResend}
+                      class="w-full text-[11px] font-bold text-white/30 hover:text-malibu-blue transition-colors uppercase tracking-widest"
+                    >
+                      ${translateText("account_modal.resend_code")}
+                    </button>
+                  `}
             </div>
           </div>
 
@@ -626,10 +605,6 @@ export class AccountModal extends BaseModal {
     if (userMe) this.userMeResponse = userMe;
     this.crazyGamesUser = profile;
     this.requestUpdate();
-  }
-
-  private handleDiscordLogin() {
-    discordLogin();
   }
 
   protected onOpen(): void {

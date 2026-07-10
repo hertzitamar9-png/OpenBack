@@ -1,18 +1,15 @@
-import { jwtVerify, SignJWT } from "jose";
 import crypto from "crypto";
 import express from "express";
 import fs from "fs";
+import { jwtVerify, SignJWT } from "jose";
 import nodemailer from "nodemailer";
 import { z } from "zod";
-import { generateID } from "../../core/Util";
+import { UserMeResponse, UserMeResponseSchema } from "../../core/ApiSchemas";
 import { base64urlToUuid, uuidToBase64url } from "../../core/Base64";
-import {
-  UserMeResponse,
-  UserMeResponseSchema,
-} from "../../core/ApiSchemas";
-import { ServerEnv } from "../ServerEnv";
 import { GameEnv } from "../../core/configuration/Config";
-import { getPrivateKey, getPublicJwk, ensureKeys } from "./keys";
+import { generateID } from "../../core/Util";
+import { ServerEnv } from "../ServerEnv";
+import { ensureKeys, getPrivateKey, getPublicJwk } from "./keys";
 
 // ---------------------------------------------------------------------------
 // Self-contained auth for OpenBack. OpenFront's auth lives in a closed-source
@@ -96,7 +93,9 @@ export function authOrigin(): string {
 }
 
 export function googleEnabled(): boolean {
-  return Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+  return Boolean(
+    process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET,
+  );
 }
 function googleRedirectUri(): string {
   return (
@@ -200,7 +199,10 @@ function userFromSession(req: express.Request): StoredUser | null {
 // ---- Email ----------------------------------------------------------------
 const RequestCodeSchema = z.object({ email: z.string().email() });
 
-async function sendCodeEmail(email: string, code: string): Promise<string | null> {
+async function sendCodeEmail(
+  email: string,
+  code: string,
+): Promise<string | null> {
   const host = process.env.SMTP_HOST;
   if (!host) {
     console.log(`[auth] LOGIN CODE for ${email}: ${code}`);
@@ -218,7 +220,9 @@ async function sendCodeEmail(email: string, code: string): Promise<string | null
     });
     await transporter.sendMail({
       from:
-        process.env.SMTP_FROM ?? process.env.SMTP_USER ?? "no-reply@openback.app",
+        process.env.SMTP_FROM ??
+        process.env.SMTP_USER ??
+        "no-reply@openback.app",
       to: email,
       subject: "Your OpenBack login code",
       text: `Your OpenBack login code is: ${code}\n\nIt expires in 10 minutes.`,
@@ -247,7 +251,11 @@ export function authRouter(): express.Router {
     }
     const email = parsed.data.email.toLowerCase();
     const code = String(crypto.randomInt(100000, 1000000));
-    codes.set(email, { code, expiresAt: Date.now() + CODE_TTL_MS, attempts: 0 });
+    codes.set(email, {
+      code,
+      expiresAt: Date.now() + CODE_TTL_MS,
+      attempts: 0,
+    });
     const devCode = await sendCodeEmail(email, code);
     res.json({ ok: true, devCode: devCode ?? undefined });
   });

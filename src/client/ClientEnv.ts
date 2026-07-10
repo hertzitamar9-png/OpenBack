@@ -39,7 +39,7 @@ export class ClientEnv {
       bc.authOrigin?.trim() ??
       (bc.jwtAudience === "localhost"
         ? "http://localhost:9000"
-        : `https://api.${bc.jwtAudience}`);
+        : `https://${bc.jwtAudience}`);
     ClientEnv.values = {
       gameEnv: parseGameEnv(bc.gameEnv),
       numWorkers: bc.numWorkers,
@@ -129,8 +129,8 @@ export interface ClientEnvValues {
   turnstileSiteKey: string;
   jwtAudience: string;
   authOrigin: string;
+  googleEnabled: boolean;
   instanceId: string;
   gitCommit: string;
   shareOrigin: string;
-  googleEnabled: boolean;
 }

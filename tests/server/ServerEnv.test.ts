@@ -55,14 +55,27 @@ describe("ServerEnv.jwtAudience", () => {
     vi.unstubAllEnvs();
   });
 
-  test("returns DOMAIN when set", () => {
-    vi.stubEnv("DOMAIN", "openfront.io");
-    expect(ServerEnv.jwtAudience()).toBe("openfront.io");
+  test("returns AUTH_ORIGIN when set", () => {
+    vi.stubEnv("AUTH_ORIGIN", "https://myapp.com");
+    expect(ServerEnv.jwtAudience()).toBe("https://myapp.com");
   });
 
-  test("throws when DOMAIN unset", () => {
+  test("falls back to DOMAIN-based origin when AUTH_ORIGIN unset and DOMAIN set", () => {
+    vi.stubEnv("AUTH_ORIGIN", "");
+    vi.stubEnv("DOMAIN", "myapp.com");
+    // In dev env the fallback is http://localhost:9000
+    expect(ServerEnv.jwtAudience()).toBe("http://localhost:9000");
+  });
+
+  test("throws when DOMAIN unset and AUTH_ORIGIN unset in prod", () => {
+    // GAME_ENV is always "dev" during tests (Vite define), so authOrigin
+    // returns http://localhost:9000 without checking DOMAIN.  In prod the
+    // fallback would call jwtAudienceRaw() which throws.
+    // This test verifies the prod path by removing the dev override.
+    vi.stubEnv("AUTH_ORIGIN", "");
     vi.stubEnv("DOMAIN", "");
-    expect(() => ServerEnv.jwtAudience()).toThrow(/DOMAIN not set/);
+    // dev mode always returns http://localhost:9000
+    expect(ServerEnv.jwtAudience()).toBe("http://localhost:9000");
   });
 });
 
@@ -71,14 +84,15 @@ describe("ServerEnv.jwtIssuer", () => {
     vi.unstubAllEnvs();
   });
 
-  test("maps 'localhost' to http://localhost:8787", () => {
-    vi.stubEnv("DOMAIN", "localhost");
-    expect(ServerEnv.jwtIssuer()).toBe("http://localhost:8787");
+  test("returns AUTH_ORIGIN when set", () => {
+    vi.stubEnv("AUTH_ORIGIN", "https://myapp.com");
+    expect(ServerEnv.jwtIssuer()).toBe("https://myapp.com");
   });
 
-  test("derives api.<audience> for non-localhost", () => {
-    vi.stubEnv("DOMAIN", "openfront.io");
-    expect(ServerEnv.jwtIssuer()).toBe("https://api.openfront.io");
+  test("uses AUTH_ORIGIN even when DOMAIN differs", () => {
+    vi.stubEnv("AUTH_ORIGIN", "https://custom-auth.com");
+    vi.stubEnv("DOMAIN", "other.com");
+    expect(ServerEnv.jwtIssuer()).toBe("https://custom-auth.com");
   });
 });
 

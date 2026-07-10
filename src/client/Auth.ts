@@ -15,11 +15,6 @@ let __jwt: string | null = null;
 let __refreshPromise: Promise<void> | null = null;
 let __expiresAt: number = 0;
 
-export function discordLogin() {
-  const redirectUri = encodeURIComponent(window.location.href);
-  window.location.href = `${getApiBase()}/auth/login/discord?redirect_uri=${redirectUri}`;
-}
-
 export function googleLogin() {
   const redirectUri = encodeURIComponent(window.location.href);
   window.location.href = `${getApiBase()}/auth/google?state=${redirectUri}`;

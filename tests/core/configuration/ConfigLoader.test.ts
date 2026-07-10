@@ -61,19 +61,20 @@ describe("ClientEnv", () => {
     expect(() => ClientEnv.instanceId()).toThrow(/Missing BOOTSTRAP_CONFIG/);
   });
 
-  test("jwtIssuer maps 'localhost' to http://localhost:8787", () => {
+  test("jwtIssuer uses authOrigin when provided", () => {
     window.BOOTSTRAP_CONFIG = {
-      gameEnv: "dev",
+      gameEnv: "prod",
       numWorkers: 1,
       turnstileSiteKey: "k",
-      jwtAudience: "localhost",
+      jwtAudience: "openfront.io",
+      authOrigin: "https://custom-auth.com",
       instanceId: "x",
-      gitCommit: "DEV",
+      gitCommit: "abc123",
     };
-    expect(ClientEnv.jwtIssuer()).toBe("http://localhost:8787");
+    expect(ClientEnv.jwtIssuer()).toBe("https://custom-auth.com");
   });
 
-  test("jwtIssuer derives api.<audience> for non-localhost", () => {
+  test("jwtIssuer falls back to same origin when authOrigin unset", () => {
     window.BOOTSTRAP_CONFIG = {
       gameEnv: "prod",
       numWorkers: 1,
@@ -82,6 +83,6 @@ describe("ClientEnv", () => {
       instanceId: "x",
       gitCommit: "abc123",
     };
-    expect(ClientEnv.jwtIssuer()).toBe("https://api.openfront.io");
+    expect(ClientEnv.jwtIssuer()).toBe("https://openfront.io");
   });
 });

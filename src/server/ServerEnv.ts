@@ -63,12 +63,14 @@ export class ServerEnv {
     return ServerEnv.authOrigin();
   }
   // The raw DOMAIN (e.g. openback-cbe3.onrender.com), used to build origins.
+  // Strips any protocol prefix so callers that wrap it in https:// don't
+  // produce doubled schemes like https://https://example.com.
   static jwtAudienceRaw(): string {
     const v = process.env.DOMAIN;
     if (!v) {
       throw new Error("DOMAIN not set");
     }
-    return v;
+    return v.replace(/^https?:\/\//, "");
   }
   // Public origin where the SPA and auth endpoints live. OpenBack is
   // self-contained, so auth is served from the game server's own origin rather
@@ -209,5 +211,19 @@ export class ServerEnv {
       .split(",")
       .map((s) => s.trim())
       .filter((s) => s.length > 0);
+  }
+  // Base URL for cosmetics / privilege data. When unset (or explicitly set
+  // to empty) the privilege refresher is skipped and the fail-open checker
+  // is used instead.
+  static cosmeticsBaseUrl(): string {
+    const v = process.env.COSMETICS_BASE_URL;
+    if (v) return v.replace(/\/+$/, "");
+    return "";
+  }
+  // Matchmaking API base URL. When unset matchmaking polling is skipped.
+  static matchmakingApiUrl(): string {
+    const v = process.env.MATCHMAKING_API_URL;
+    if (v) return v.replace(/\/+$/, "");
+    return "";
   }
 }

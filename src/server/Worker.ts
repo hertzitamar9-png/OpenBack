@@ -58,7 +58,7 @@ export async function startWorker() {
   // Initialize lobby service (handles WebSocket upgrade routing)
   const lobbyService = new WorkerLobbyService(server, wss, gm, log);
 
-  if (ServerEnv.env() !== GameEnv.Dev) {
+  if (ServerEnv.matchmakingApiUrl()) {
     setTimeout(
       () => {
         startMatchmakingPolling(gm);
@@ -71,14 +71,15 @@ export async function startWorker() {
     initWorkerMetrics(gm);
   }
 
+  const cosmeticsBase = ServerEnv.cosmeticsBaseUrl();
   const privilegeRefresher = new PrivilegeRefresher(
-    ServerEnv.jwtIssuer() + "/cosmetics.json",
-    ServerEnv.jwtIssuer() + "/profane_words_game_server",
+    cosmeticsBase + "/cosmetics.json",
+    cosmeticsBase + "/profane_words_game_server",
     ServerEnv.apiKey(),
-    ServerEnv.jwtIssuer() + "/reserved_clan_tags",
+    cosmeticsBase + "/reserved_clan_tags",
     log,
   );
-  if (ServerEnv.env() !== GameEnv.Dev) {
+  if (ServerEnv.env() !== GameEnv.Dev && ServerEnv.cosmeticsBaseUrl()) {
     privilegeRefresher.start();
   }
 
@@ -566,7 +567,7 @@ async function startMatchmakingPolling(gm: GameManager) {
   startPolling(
     async () => {
       try {
-        const url = `${ServerEnv.jwtIssuer() + "/matchmaking/checkin"}`;
+        const url = `${ServerEnv.matchmakingApiUrl()}/checkin`;
         const gameId = ServerEnv.generateGameIdForWorker(workerId);
         if (gameId === null) {
           log.warn(`Failed to generate game ID for worker ${workerId}`);
