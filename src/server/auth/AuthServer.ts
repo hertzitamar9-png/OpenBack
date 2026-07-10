@@ -199,15 +199,46 @@ function userFromSession(req: express.Request): StoredUser | null {
 // ---- Email ----------------------------------------------------------------
 const RequestCodeSchema = z.object({ email: z.string().email() });
 
-async function sendCodeEmail(
+export async function sendCodeEmail(
   email: string,
   code: string,
 ): Promise<string | null> {
+  const brevoApiKey = process.env.BREVO_API_KEY;
+  const brevoSenderEmail = process.env.BREVO_SENDER_EMAIL;
+  if (brevoApiKey && brevoSenderEmail) {
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "api-key": brevoApiKey,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        sender: {
+          email: brevoSenderEmail,
+          name: process.env.BREVO_SENDER_NAME ?? "OpenBack",
+        },
+        to: [{ email }],
+        subject: "Your OpenBack login code",
+        textContent: `Your OpenBack login code is: ${code}\n\nIt expires in 10 minutes.`,
+        htmlContent:
+          `<p>Your OpenBack login code is:</p>` +
+          `<p style="font-size:28px;font-weight:bold;letter-spacing:6px">${code}</p>` +
+          `<p>It expires in 10 minutes.</p>`,
+      }),
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (!response.ok) {
+      throw new Error(`Brevo email API returned ${response.status}`);
+    }
+    return null;
+  }
+
   const host = process.env.SMTP_HOST;
   if (!host) {
     console.log(`[auth] LOGIN CODE for ${email}: ${code}`);
     if (ServerEnv.env() === GameEnv.Dev) return code;
-    throw new Error("SMTP_HOST is not configured");
+    throw new Error("No email delivery provider is configured");
   }
   try {
     const transporter = nodemailer.createTransport({
