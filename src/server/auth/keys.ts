@@ -14,7 +14,10 @@ export async function ensureKeys(): Promise<void> {
     publicJwk.alg = "EdDSA";
     privateKey = (await importJWK(publicJwk, "EdDSA")) as CryptoKey;
   } else {
-    const kp = await generateKeyPair("EdDSA", { crv: "Ed25519" });
+    const kp = await generateKeyPair("EdDSA", {
+      crv: "Ed25519",
+      extractable: true,
+    });
     const privJwk = await exportJWK(kp.privateKey);
     privJwk.alg = "EdDSA";
     const pubJwk = await exportJWK(kp.publicKey);
