@@ -197,6 +197,7 @@ export class HostLobbyModal extends BaseModal {
           .copyText=${this.inviteUrl}
           .displayText=${this.inviteUrl}
           .showVisibilityToggle=${false}
+          .noTruncate=${true}
         ></copy-button>
       `,
     });
