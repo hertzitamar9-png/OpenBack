@@ -115,6 +115,7 @@
     "node-html-parser": "^7.1.0",
     "nodemailer": "^7.0.13",
     "obscenity": "^0.4.6",
+    "pg": "^8.22.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "winston": "^3.19.0",

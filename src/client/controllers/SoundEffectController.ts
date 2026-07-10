@@ -72,6 +72,15 @@ export class SoundEffectController implements Controller {
       case UnitType.SAMLauncher:
         if (unit.owner() === myPlayer) this.emit("sam-built");
         break;
+      case UnitType.MANPAD:
+        if (unit.owner() === myPlayer) this.emit("sam-built");
+        break;
+      case UnitType.Runway:
+        if (unit.owner() === myPlayer) this.emit("build-port");
+        break;
+      case UnitType.Plane:
+        this.emit("atom-launch");
+        break;
     }
   }
 

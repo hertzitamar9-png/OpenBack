@@ -143,6 +143,32 @@ export async function getUserMe(): Promise<UserMeResponse | false> {
   return __userMe;
 }
 
+export async function updateMyProfile(profile: {
+  displayName: string;
+  bio: string;
+  bannerColor: string;
+}): Promise<UserMeResponse | false> {
+  try {
+    const auth = await userAuth();
+    if (!auth) return false;
+    const response = await fetch(getApiBase() + "/users/@me", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        authorization: `Bearer ${auth.jwt}`,
+      },
+      body: JSON.stringify(profile),
+    });
+    if (!response.ok) return false;
+    const parsed = UserMeResponseSchema.safeParse(await response.json());
+    if (!parsed.success) return false;
+    invalidateUserMe();
+    return parsed.data;
+  } catch {
+    return false;
+  }
+}
+
 export function invalidateUserMe() {
   __userMe = null;
 }

@@ -42,6 +42,7 @@ import {
   UT_HYDROGEN_BOMB,
   UT_MIRV,
   UT_MIRV_WARHEAD,
+  UT_PLANE,
   UT_SAM_MISSILE,
   UT_SHELL,
   UT_TRADE_SHIP,
@@ -262,6 +263,7 @@ export class UnitPass {
         this.typeToAtlasCol.set(header.unitTypes[i], col);
       }
     }
+    this.typeToAtlasCol.set(UT_PLANE, UNIT_ORDER.indexOf(UT_ATOM_BOMB));
 
     // Compile shaders
     this.program = createProgram(

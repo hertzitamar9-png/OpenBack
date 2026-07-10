@@ -3,7 +3,12 @@ import { customElement, state } from "lit/decorators.js";
 import { ClientEnv } from "src/client/ClientEnv";
 import { PlayerStatsTree, UserMeResponse } from "../core/ApiSchemas";
 import { Cosmetics } from "../core/CosmeticSchemas";
-import { fetchPlayerById, getUserMe, invalidateUserMe } from "./Api";
+import {
+  fetchPlayerById,
+  getUserMe,
+  invalidateUserMe,
+  updateMyProfile,
+} from "./Api";
 import {
   googleLogin,
   logOut,
@@ -38,6 +43,12 @@ export class AccountModal extends BaseModal {
   @state() private authMessageType: "success" | "error" | "info" = "info";
   @state() private isAuthBusy: boolean = false;
   @state() private isLoadingUser: boolean = false;
+  @state() private profileDisplayName = "";
+  @state() private profileBio = "";
+  @state() private profileBannerColor = "#1689d8";
+  @state() private profileSaving = false;
+  @state() private profileMessage = "";
+  @state() private profileMessageError = false;
   // Set on CrazyGames when a CrazyGames user is signed in. Their identity comes
   // from the SDK, not our backend user object.
   @state() private crazyGamesUser: CrazyGamesUser | null = null;
@@ -59,6 +70,7 @@ export class AccountModal extends BaseModal {
       if (customEvent.detail) {
         const previousPublicId = this.userMeResponse?.player?.publicId;
         this.userMeResponse = customEvent.detail as UserMeResponse;
+        this.syncProfileFields(this.userMeResponse);
         // Reset whenever the player identity changes (login, or switching to a
         // different account) so stats/history from the previous player don't
         // linger.
@@ -206,6 +218,93 @@ export class AccountModal extends BaseModal {
               ></discord-user-header>
               ${this.renderLoggedInAs()}
             </div>
+          </div>
+        </div>
+        <div
+          class="overflow-hidden rounded-xl border border-white/10 bg-white/5"
+        >
+          <div
+            class="h-24 bg-gradient-to-r from-black/20 to-transparent"
+            style=${`background-color:${this.profileBannerColor}`}
+          ></div>
+          <div class="space-y-4 p-6">
+            <div>
+              <h3 class="text-lg font-bold text-white">
+                ${translateText("account_modal.profile_customization")}
+              </h3>
+              <p class="text-xs text-white/40">
+                ${translateText("account_modal.profile_customization_desc")}
+              </p>
+            </div>
+            <label class="block">
+              <span
+                class="mb-1 block text-xs font-bold uppercase tracking-wider text-white/50"
+              >
+                ${translateText("account_modal.display_name")}
+              </span>
+              <input
+                .value=${this.profileDisplayName}
+                @input=${(e: Event) =>
+                  (this.profileDisplayName = (
+                    e.target as HTMLInputElement
+                  ).value)}
+                minlength="3"
+                maxlength="27"
+                class="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none focus:border-malibu-blue"
+              />
+            </label>
+            <label class="block">
+              <span
+                class="mb-1 block text-xs font-bold uppercase tracking-wider text-white/50"
+              >
+                ${translateText("account_modal.profile_bio")}
+              </span>
+              <textarea
+                .value=${this.profileBio}
+                @input=${(e: Event) =>
+                  (this.profileBio = (e.target as HTMLTextAreaElement).value)}
+                maxlength="160"
+                rows="3"
+                class="w-full resize-none rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none focus:border-malibu-blue"
+              ></textarea>
+            </label>
+            <label class="flex items-center justify-between gap-4">
+              <span
+                class="text-xs font-bold uppercase tracking-wider text-white/50"
+              >
+                ${translateText("account_modal.banner_color")}
+              </span>
+              <input
+                type="color"
+                .value=${this.profileBannerColor}
+                @input=${(e: Event) =>
+                  (this.profileBannerColor = (
+                    e.target as HTMLInputElement
+                  ).value)}
+                class="h-10 w-16 cursor-pointer rounded-lg border border-white/10 bg-transparent"
+              />
+            </label>
+            ${this.profileMessage
+              ? html`<div
+                  role=${this.profileMessageError ? "alert" : "status"}
+                  class=${`rounded-xl border px-4 py-3 text-sm ${
+                    this.profileMessageError
+                      ? "border-red-400/30 bg-red-500/10 text-red-200"
+                      : "border-emerald-400/30 bg-emerald-500/10 text-emerald-200"
+                  }`}
+                >
+                  ${this.profileMessage}
+                </div>`
+              : ""}
+            <o-button
+              variant="primary"
+              width="block"
+              size="md"
+              translationKey="account_modal.save_profile"
+              .disable=${this.profileSaving ||
+              this.profileDisplayName.trim().length < 3}
+              @click=${this.handleSaveProfile}
+            ></o-button>
           </div>
         </div>
         ${this.renderSubscriptionPanel()}
@@ -365,6 +464,39 @@ export class AccountModal extends BaseModal {
     }
     return html``;
   }
+
+  private syncProfileFields(userMe: UserMeResponse) {
+    this.profileDisplayName =
+      userMe.user.displayName ?? userMe.user.email?.split("@")[0] ?? "Player";
+    this.profileBio = userMe.user.bio ?? "";
+    this.profileBannerColor = userMe.user.bannerColor ?? "#1689d8";
+  }
+
+  private handleSaveProfile = async () => {
+    if (this.profileSaving) return;
+    this.profileSaving = true;
+    this.profileMessage = "";
+    const updated = await updateMyProfile({
+      displayName: this.profileDisplayName.trim(),
+      bio: this.profileBio.trim(),
+      bannerColor: this.profileBannerColor,
+    });
+    this.profileSaving = false;
+    if (!updated) {
+      this.profileMessageError = true;
+      this.profileMessage = translateText("account_modal.profile_save_failed");
+      return;
+    }
+    this.userMeResponse = updated;
+    this.syncProfileFields(updated);
+    this.profileMessageError = false;
+    this.profileMessage = translateText("account_modal.profile_saved");
+    window.dispatchEvent(
+      new CustomEvent("openback-profile-updated", {
+        detail: { displayName: updated.user.displayName },
+      }),
+    );
+  };
 
   private async viewGame(gameId: string): Promise<void> {
     this.close();
@@ -716,6 +848,7 @@ export class AccountModal extends BaseModal {
       .then((userMe) => {
         if (userMe) {
           this.userMeResponse = userMe;
+          this.syncProfileFields(userMe);
           if (this.userMeResponse?.player?.publicId) {
             this.loadPlayerProfile(this.userMeResponse.player.publicId);
           }

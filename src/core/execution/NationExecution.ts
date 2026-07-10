@@ -15,6 +15,7 @@ import { TileRef } from "../game/GameMap";
 import { PseudoRandom } from "../PseudoRandom";
 import { GameID } from "../Schemas";
 import { assertNever, simpleHash } from "../Util";
+import { ConstructionExecution } from "./ConstructionExecution";
 import { NationAllianceBehavior } from "./nation/NationAllianceBehavior";
 import { NationEmojiBehavior } from "./nation/NationEmojiBehavior";
 import { NationMIRVBehavior } from "./nation/NationMIRVBehavior";
@@ -207,6 +208,42 @@ export class NationExecution implements Execution {
     this.attackBehavior.maybeAttack();
     this.warshipBehavior.counterWarshipInfestation();
     this.nukeBehavior.maybeSendNuke();
+    this.maybeSendPlane();
+  }
+
+  private maybeSendPlane(): void {
+    const player = this.player;
+    if (
+      player === null ||
+      this.mg.config().isUnitDisabled(UnitType.Plane) ||
+      player.units(UnitType.Runway).every((u) => u.isUnderConstruction()) ||
+      this.mg.ticks() % (this.attackRate * 4) !== this.attackTick
+    ) {
+      return;
+    }
+    const targets = this.mg
+      .players()
+      .filter(
+        (other) =>
+          other !== player &&
+          other.isAlive() &&
+          player.canAttackPlayer(other) &&
+          other.borderTiles().size > 0,
+      );
+    if (targets.length === 0) return;
+    const target = this.random.randElement(targets);
+    const tile = this.random.randElement(Array.from(target.borderTiles()));
+    const troops = Math.floor(player.troops() * 0.15);
+    if (troops <= 0 || player.canBuild(UnitType.Plane, tile) === false) return;
+    this.mg.addExecution(
+      new ConstructionExecution(
+        player,
+        UnitType.Plane,
+        tile,
+        undefined,
+        troops,
+      ),
+    );
   }
 
   private initializeBehaviors(): void {

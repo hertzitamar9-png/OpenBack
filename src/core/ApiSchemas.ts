@@ -74,6 +74,12 @@ export const UserMeResponseSchema = z.object({
   user: z.object({
     discord: DiscordUserSchema.optional(),
     email: z.string().optional(),
+    displayName: z.string().max(27).optional(),
+    bio: z.string().max(160).optional(),
+    bannerColor: z
+      .string()
+      .regex(/^#[0-9a-fA-F]{6}$/)
+      .optional(),
   }),
   player: z.object({
     publicId: z.string(),

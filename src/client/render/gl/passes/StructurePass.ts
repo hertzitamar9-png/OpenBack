@@ -19,8 +19,10 @@ import {
   UT_CITY,
   UT_DEFENSE_POST,
   UT_FACTORY,
+  UT_MANPAD,
   UT_MISSILE_SILO,
   UT_PORT,
+  UT_RUNWAY,
   UT_SAM_LAUNCHER,
 } from "../../types";
 import { DynamicInstanceBuffer } from "../DynamicBuffer";
@@ -136,6 +138,14 @@ export class StructurePass {
         this.typeToAtlasCol.set(header.unitTypes[i], col);
       }
     }
+    this.typeToAtlasCol.set(
+      UT_RUNWAY,
+      STRUCTURE_ORDER.indexOf(UT_MISSILE_SILO),
+    );
+    this.typeToAtlasCol.set(
+      UT_MANPAD,
+      STRUCTURE_ORDER.indexOf(UT_SAM_LAUNCHER),
+    );
 
     // Compile shaders
     this.program = createProgram(

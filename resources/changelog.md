@@ -1,15 +1,15 @@
 # OpenBack v0.32.8
 
-- Rebased the workspace on the complete OpenFront v0.32.8 simulation, renderer, maps, and local server.
+- Rebased the workspace on the complete OpenBack v0.32.8 simulation, renderer, maps, and local server.
 - Replaced the product-facing name and restricted upstream logo assets with original OpenBack SVG branding.
 - Removed third-party advertising and analytics boot scripts from the local build.
 - Preserved the upstream AGPL copyright notices, source history, and contributor credits.
 
 ## Upstream release history
 
-The notes below are retained from OpenFront for attribution and technical history.
+The notes below are retained from the original release history for attribution and technical reference.
 
-📦 **OpenFront v24 Changelog**
+📦 **OpenBack v24 Changelog**
 
 ⚖️ **Balance Changes**
 

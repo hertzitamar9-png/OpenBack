@@ -60,6 +60,14 @@ function getStructureRatios(
       ratioPerCity: 0.2,
       perceivedCostIncreasePerOwned: 1,
     },
+    [UnitType.Runway]: {
+      ratioPerCity: 0.15,
+      perceivedCostIncreasePerOwned: 1,
+    },
+    [UnitType.MANPAD]: {
+      ratioPerCity: 0.3,
+      perceivedCostIncreasePerOwned: 0.3,
+    },
   };
 }
 
@@ -470,6 +478,8 @@ export class NationStructureBehavior {
       UnitType.Factory,
       UnitType.SAMLauncher,
       UnitType.MissileSilo,
+      UnitType.Runway,
+      UnitType.MANPAD,
     ];
 
     const nukesEnabled =
@@ -879,6 +889,10 @@ export class NationStructureBehavior {
       case UnitType.Port:
         return this.portValue();
       case UnitType.SAMLauncher:
+        return this.samLauncherValue();
+      case UnitType.Runway:
+        return this.missileSiloValue();
+      case UnitType.MANPAD:
         return this.samLauncherValue();
       default:
         throw new Error(`Value function not implemented for ${type}`);

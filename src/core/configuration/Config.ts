@@ -456,6 +456,21 @@ export class Config {
           cost: () => 0n,
         };
         break;
+      case UnitType.Runway:
+        info = {
+          cost: this.costWrapper(() => 2_000_000, UnitType.Runway),
+          constructionDuration: this.instantBuild() ? 0 : 15 * 10,
+        };
+        break;
+      case UnitType.Plane:
+        info = { cost: () => 0n };
+        break;
+      case UnitType.MANPAD:
+        info = {
+          cost: this.costWrapper(() => 300_000, UnitType.MANPAD),
+          constructionDuration: this.instantBuild() ? 0 : 10 * 10,
+        };
+        break;
       default:
         assertNever(type);
     }
@@ -901,6 +916,18 @@ export class Config {
 
   defaultNukeSpeed(): number {
     return 10;
+  }
+
+  planeSpeed(): number {
+    return this.defaultNukeSpeed() / 3;
+  }
+
+  planeFalloutRadius(): number {
+    return this.nukeMagnitudes(UnitType.AtomBomb).outer / 3;
+  }
+
+  manpadRange(): number {
+    return (this.defensePostRange() * 5) / 3;
   }
 
   defaultNukeTargetableRange(): number {

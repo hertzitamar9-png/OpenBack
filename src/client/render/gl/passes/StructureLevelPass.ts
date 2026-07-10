@@ -169,6 +169,8 @@ export class StructureLevelPass {
       );
       if (col >= 0) this.typeToAtlasCol.set(header.unitTypes[i], col);
     }
+    this.typeToAtlasCol.set("Runway", STRUCTURE_ORDER.indexOf("Missile Silo"));
+    this.typeToAtlasCol.set("MANPAD", STRUCTURE_ORDER.indexOf("SAM Launcher"));
 
     this.kernTable = new Int8Array(CHAR_RANGE * CHAR_RANGE); // digits don't kern
 

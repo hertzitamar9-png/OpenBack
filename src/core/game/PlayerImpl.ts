@@ -1384,6 +1384,17 @@ export class PlayerImpl implements Player {
         return this.nukeSpawn(targetTile, unitType);
       case UnitType.MIRVWarhead:
         return targetTile;
+      case UnitType.Plane: {
+        if (!this.mg.hasOwner(targetTile)) return false;
+        const owner = this.mg.owner(targetTile);
+        if (owner.isPlayer() && this.isFriendly(owner)) return false;
+        const runway = findClosestBy(
+          this.units(UnitType.Runway),
+          (unit) => this.mg.manhattanDist(unit.tile(), targetTile),
+          (unit) => unit.isActive() && !unit.isUnderConstruction(),
+        );
+        return runway?.tile() ?? false;
+      }
       case UnitType.Port:
         return this.portSpawn(targetTile, validTiles);
       case UnitType.Warship:
@@ -1402,6 +1413,8 @@ export class PlayerImpl implements Player {
       case UnitType.SAMLauncher:
       case UnitType.City:
       case UnitType.Factory:
+      case UnitType.Runway:
+      case UnitType.MANPAD:
         return this.landBasedStructureSpawn(targetTile, validTiles);
       default:
         assertNever(unitType);

@@ -118,6 +118,27 @@ export const buildTable: BuildItemDisplay[][] = [
       key: "unit_type.factory",
       countable: true,
     },
+    {
+      unitType: UnitType.Runway,
+      icon: atomBombIcon,
+      description: "build_menu.desc.runway",
+      key: "unit_type.runway",
+      countable: true,
+    },
+    {
+      unitType: UnitType.Plane,
+      icon: atomBombIcon,
+      description: "build_menu.desc.plane",
+      key: "unit_type.plane",
+      countable: false,
+    },
+    {
+      unitType: UnitType.MANPAD,
+      icon: samlauncherIcon,
+      description: "build_menu.desc.manpad",
+      key: "unit_type.manpad",
+      countable: true,
+    },
   ],
 ];
 
@@ -397,7 +418,17 @@ export class BuildMenu extends LitElement implements Controller {
           ? this.uiState.rocketDirectionUp
           : undefined;
       this.eventBus.emit(
-        new BuildUnitIntentEvent(buildableUnit.type, tile, rocketDirectionUp),
+        new BuildUnitIntentEvent(
+          buildableUnit.type,
+          tile,
+          rocketDirectionUp,
+          buildableUnit.type === UnitType.Plane
+            ? Math.floor(
+                (this.game.myPlayer()?.troops() ?? 0) *
+                  this.uiState.attackRatio,
+              )
+            : undefined,
+        ),
       );
     }
     this.hideMenu();

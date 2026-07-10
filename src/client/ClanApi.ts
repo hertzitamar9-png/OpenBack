@@ -127,6 +127,28 @@ export async function fetchClanDetail(tag: string): Promise<ClanInfo | false> {
   }
 }
 
+export async function createClan(input: {
+  tag: string;
+  name: string;
+  description: string;
+  isOpen: boolean;
+}): Promise<ClanInfo | { error: string }> {
+  try {
+    const res = await clanFetch("/clans", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    if (res.status === 409) return { error: "clan_modal.error_tag_taken" };
+    if (res.status === 401) return { error: "clan_modal.sign_in_for_clans" };
+    if (!res.ok) return { error: "clan_modal.error_failed" };
+    const parsed = ClanInfoSchema.safeParse(await res.json());
+    return parsed.success ? parsed.data : { error: "clan_modal.error_failed" };
+  } catch {
+    return { error: "clan_modal.error_network" };
+  }
+}
+
 // Public existence probe (no auth). null = inconclusive (timeout / error /
 // unexpected status); the caller decides how to handle it. The tag is
 // uppercased to the canonical form so it matches the server's route.

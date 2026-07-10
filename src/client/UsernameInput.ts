@@ -10,6 +10,7 @@ import {
   validateClanTag,
   validateUsername,
 } from "../core/validations/username";
+import { getUserMe } from "./Api";
 import { checkClanTagOwnership } from "./ClanApi";
 import { crazyGamesSDK } from "./CrazyGamesSDK";
 
@@ -93,6 +94,8 @@ export class UsernameInput extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this.loadStoredUsername();
+    void this.loadOpenBackProfile();
+    window.addEventListener("openback-profile-updated", this.onProfileUpdated);
     // On CrazyGames the account username is applied here but never persisted
     // (see loadStoredUsername / validateAndStore), so logging out — which
     // reloads the whole page — falls back to a fresh guest username instead of
@@ -110,6 +113,40 @@ export class UsernameInput extends LitElement {
         this.validateAndStore();
       }
     });
+  }
+
+  disconnectedCallback() {
+    window.removeEventListener(
+      "openback-profile-updated",
+      this.onProfileUpdated,
+    );
+    super.disconnectedCallback();
+  }
+
+  private readonly onProfileUpdated = (event: Event) => {
+    const name = (event as CustomEvent<{ displayName?: string }>).detail
+      ?.displayName;
+    if (name) {
+      this.baseUsername = name;
+      this.validateAndStore();
+    }
+  };
+
+  private async loadOpenBackProfile() {
+    if (this.onCrazyGames) return;
+    const profile = await getUserMe();
+    if (!profile) return;
+    const displayName = profile.user.displayName?.trim();
+    if (displayName) {
+      this.baseUsername = displayName;
+      this.validateAndStore();
+    }
+    const clan = profile.player.clans?.[0];
+    if (clan) {
+      this.clanTag = clan.tag;
+      this.validateAndStore();
+      this.startClanCheck();
+    }
   }
 
   protected updated(): void {

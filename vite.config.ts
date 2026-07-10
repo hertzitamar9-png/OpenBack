@@ -326,6 +326,21 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           secure: false,
         },
+        "/clans": {
+          target: "http://localhost:3000",
+          changeOrigin: true,
+          secure: false,
+        },
+        "/public/clan": {
+          target: "http://localhost:3000",
+          changeOrigin: true,
+          secure: false,
+        },
+        "/reserved-clan-tags": {
+          target: "http://localhost:3000",
+          changeOrigin: true,
+          secure: false,
+        },
         "/.well-known": {
           target: "http://localhost:3000",
           changeOrigin: true,

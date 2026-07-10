@@ -17,18 +17,10 @@ import { Platform } from "./Platform";
 export const TUTORIAL_VIDEO_URL = "https://www.youtube.com/embed/EN2oOog3pSs";
 
 /**
- * Rebrand upstream product references while keeping the contributor copyright
- * notice required by OpenFront's AGPL section 7 terms unchanged.
+ * Rebrand user-facing upstream product references. Source URLs and legal
+ * attribution remain intact; only the name rendered in the OpenBack UI changes.
  */
-export function applyOpenBackBrand(key: string, text: string): string {
-  if (
-    key === "main.copyright" ||
-    key === "help_modal.video_tutorial_title" ||
-    key === "win_modal.support_openfront" ||
-    key.startsWith("main.upstream_")
-  ) {
-    return text;
-  }
+export function applyOpenBackBrand(_key: string, text: string): string {
   return text
     .replace(/OpenFront\.io/g, "OpenBack")
     .replace(/Openfront\.io/g, "OpenBack")
