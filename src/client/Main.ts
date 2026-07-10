@@ -131,7 +131,19 @@ function updateAccountNavButton(userMeResponse: UserMeResponse | false) {
     avatarEl?.classList.add("hidden");
     personIconEl?.classList.remove("hidden");
     emailBadgeEl?.classList.add("hidden");
-    signInTextEl?.classList.remove("hidden");
+    if (signInTextEl) {
+      // Undo the logged-in two-line layout and restore the translated label.
+      signInTextEl.classList.remove(
+        "flex",
+        "flex-col",
+        "items-start",
+        "leading-none",
+      );
+      signInTextEl.innerHTML = "";
+      signInTextEl.setAttribute("data-i18n", "main.sign_in");
+      signInTextEl.textContent = translateText("main.sign_in");
+      signInTextEl.classList.remove("hidden");
+    }
     // Restore border when showing signin state
     button?.classList.add("border", "border-white/20");
   };
@@ -143,7 +155,24 @@ function updateAccountNavButton(userMeResponse: UserMeResponse | false) {
     if (signInTextEl) {
       signInTextEl.classList.remove("hidden");
       signInTextEl.removeAttribute("data-i18n");
-      signInTextEl.textContent = name;
+      // Two-line layout: a small "Profile" label with the player's name below.
+      signInTextEl.classList.add(
+        "flex",
+        "flex-col",
+        "items-start",
+        "leading-none",
+      );
+      const profileLabel = translateText("main.profile");
+      signInTextEl.innerHTML = "";
+      const labelEl = document.createElement("span");
+      labelEl.className =
+        "text-[10px] font-bold uppercase tracking-widest text-white/60";
+      labelEl.textContent = profileLabel;
+      const nameEl = document.createElement("span");
+      nameEl.className =
+        "text-xs font-bold tracking-wide max-w-[10rem] truncate";
+      nameEl.textContent = name;
+      signInTextEl.append(labelEl, nameEl);
     }
     button?.classList.add("border", "border-white/20");
   };
