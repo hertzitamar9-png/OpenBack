@@ -88,6 +88,7 @@ export class HostLobbyModal extends BaseModal {
   @state() private allowedPublicIds: string = "";
   @state() private waterNukes: boolean = false;
   @state() private lobbyId = "";
+  @state() private inviteUrl = "";
   @state() private clients: ClientInfo[] = [];
   @state() private useRandomMap: boolean = false;
   @state() private disabledUnits: UnitType[] = [];
@@ -184,19 +185,26 @@ export class HostLobbyModal extends BaseModal {
         this.close();
       },
       ariaLabel: translateText("common.back"),
-      rightContent: html`
-        <copy-button
-          .lobbyId=${this.lobbyId}
-          .copyText=${this.lobbyId}
-          .displayText=${this.lobbyId}
-          .showVisibilityToggle=${false}
-        ></copy-button>
-        <copy-button
-          .lobbyId=${this.lobbyId}
-          .displayText=${translateText("host_modal.copy_invite_link")}
-          .showVisibilityToggle=${false}
-        ></copy-button>
-      `,
+      rightContent: this.lobbyId
+        ? html`
+            <copy-button
+              .lobbyId=${this.lobbyId}
+              .copyText=${this.lobbyId}
+              .displayText=${this.lobbyId}
+              .showVisibilityToggle=${false}
+            ></copy-button>
+            <copy-button
+              .lobbyId=${this.lobbyId}
+              .copyText=${this.inviteUrl}
+              .displayText=${this.inviteUrl}
+              .showVisibilityToggle=${false}
+            ></copy-button>
+          `
+        : html`
+            <span class="text-xs text-white/60 font-mono px-2"
+              >${translateText("common.loading")}</span
+            >
+          `,
     });
   }
 
@@ -532,9 +540,8 @@ export class HostLobbyModal extends BaseModal {
         }
         crazyGamesSDK.showInviteButton(this.lobbyId);
 
-        // Now that we have the id, build and copy the share link. If lobby
-        // creation fails, the catch below clears the clipboard.
         const url = await this.constructUrl();
+        this.inviteUrl = url;
         this.updateLobbyHistory(url);
         await this.updateComplete;
       })
@@ -621,6 +628,7 @@ export class HostLobbyModal extends BaseModal {
     this.useRandomMap = false;
     this.disabledUnits = [];
     this.lobbyId = "";
+    this.inviteUrl = "";
     this.clients = [];
     this.lobbyCreatorClientID = "";
     this.goldMultiplier = false;
