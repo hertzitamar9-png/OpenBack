@@ -192,7 +192,6 @@ export class HostLobbyModal extends BaseModal {
           .copyText=${this.lobbyId}
           .showVisibilityToggle=${false}
           .showCopyIcon=${false}
-          .compact=${true}
         ></copy-button>
         <copy-button
           .lobbyId=${this.lobbyId}
