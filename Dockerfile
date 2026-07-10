@@ -82,6 +82,11 @@ RUN <<'EOF' tee /usr/local/bin/start.sh
 # Generate the create-game nginx upstream from NUM_WORKERS before nginx starts.
 /usr/local/bin/generate-nginx-upstream.sh
 
+# Platform hosts such as Render provide the public port at runtime. Keep the
+# default for local Docker use, but make nginx listen on the assigned port when
+# it is present.
+sed -i "s/listen 80 default_server;/listen ${PORT:-80} default_server;/" /etc/nginx/conf.d/default.conf
+
 if [ "$DOMAIN" = openfront.dev ] && [ "$SUBDOMAIN" != main ]; then
     exec timeout 25h /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
 else
