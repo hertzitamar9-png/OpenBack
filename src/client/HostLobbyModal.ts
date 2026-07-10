@@ -185,26 +185,20 @@ export class HostLobbyModal extends BaseModal {
         this.close();
       },
       ariaLabel: translateText("common.back"),
-      rightContent: this.lobbyId
-        ? html`
-            <copy-button
-              .lobbyId=${this.lobbyId}
-              .copyText=${this.lobbyId}
-              .displayText=${this.lobbyId}
-              .showVisibilityToggle=${false}
-            ></copy-button>
-            <copy-button
-              .lobbyId=${this.lobbyId}
-              .copyText=${this.inviteUrl}
-              .displayText=${this.inviteUrl}
-              .showVisibilityToggle=${false}
-            ></copy-button>
-          `
-        : html`
-            <span class="text-xs text-white/60 font-mono px-2"
-              >${translateText("common.loading")}</span
-            >
-          `,
+      rightContent: html`
+        <copy-button
+          .lobbyId=${this.lobbyId}
+          .copyText=${this.lobbyId}
+          .displayText=${this.lobbyId}
+          .showVisibilityToggle=${false}
+        ></copy-button>
+        <copy-button
+          .lobbyId=${this.lobbyId}
+          .copyText=${this.inviteUrl}
+          .displayText=${this.inviteUrl}
+          .showVisibilityToggle=${false}
+        ></copy-button>
+      `,
     });
   }
 
