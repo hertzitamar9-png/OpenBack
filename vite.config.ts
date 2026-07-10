@@ -109,6 +109,15 @@ export default defineConfig(({ mode }) => {
       env.TURNSTILE_SITE_KEY ?? "1x00000000000000000000AA",
     ),
     jwtAudience: JSON.stringify(env.DOMAIN ?? "localhost"),
+    authOrigin: JSON.stringify(
+      env.AUTH_ORIGIN ??
+        (isProduction
+          ? `https://${(env.DOMAIN ?? "localhost").replace(/^https?:\/\//, "")}`
+          : "http://localhost:9000"),
+    ),
+    googleEnabled: JSON.stringify(
+      Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET),
+    ),
     instanceId: JSON.stringify(env.INSTANCE_ID ?? "DEV_ID"),
     shareOrigin: JSON.stringify(env.VITE_SHARE_ORIGIN ?? ""),
     manifestHref: buildAssetUrl("manifest.json", assetManifest, cdnBase),
