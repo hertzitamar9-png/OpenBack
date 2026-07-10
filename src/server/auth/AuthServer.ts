@@ -206,7 +206,8 @@ async function sendCodeEmail(
   const host = process.env.SMTP_HOST;
   if (!host) {
     console.log(`[auth] LOGIN CODE for ${email}: ${code}`);
-    return ServerEnv.env() === GameEnv.Dev ? code : null;
+    if (ServerEnv.env() === GameEnv.Dev) return code;
+    throw new Error("SMTP_HOST is not configured");
   }
   try {
     const transporter = nodemailer.createTransport({
@@ -230,7 +231,8 @@ async function sendCodeEmail(
     return null;
   } catch (e) {
     console.error("[auth] failed to send email", e);
-    return ServerEnv.env() === GameEnv.Dev ? code : null;
+    if (ServerEnv.env() === GameEnv.Dev) return code;
+    throw e;
   }
 }
 
@@ -256,8 +258,17 @@ export function authRouter(): express.Router {
       expiresAt: Date.now() + CODE_TTL_MS,
       attempts: 0,
     });
-    const devCode = await sendCodeEmail(email, code);
-    res.json({ ok: true, devCode: devCode ?? undefined });
+    try {
+      const devCode = await sendCodeEmail(email, code);
+      res.json({ ok: true, devCode: devCode ?? undefined });
+    } catch (error) {
+      codes.delete(email);
+      console.error(
+        "[auth] could not deliver login code:",
+        error instanceof Error ? error.message : error,
+      );
+      res.status(503).json({ error: "email_delivery_failed" });
+    }
   });
 
   router.post("/auth/verify-code", async (req, res) => {
