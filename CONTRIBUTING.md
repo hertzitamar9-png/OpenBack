@@ -1,6 +1,6 @@
-# Contributing to OpenFront.io
+# Contributing to OpenBack
 
-First off, thank you for considering contributing to OpenFront.io! It's people like you that make OpenFront such a great game.
+First off, thank you for considering contributing to OpenBack! It's people like you that make OpenBack such a great game.
 
 We welcome contributions from everyone. By participating in this project, you agree to abide by our code of conduct and treat all community members with respect.
 
@@ -62,8 +62,8 @@ Using AI tools is fine — but you **MUST** understand the code you are submitti
 1. **Fork the repository** on GitHub.
 2. **Clone your fork** locally:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/OpenFrontIO.git
-   cd OpenFrontIO
+   git clone https://github.com/YOUR_USERNAME/OpenBack.git
+   cd OpenBack
    ```
 3. **Install dependencies**:
    > **Important**: Use `npm run inst` instead of `npm install`. This runs `npm ci --ignore-scripts` to ensure a consistent and secure environment.
@@ -153,7 +153,7 @@ Before submitting, ensure you have:
 
 ## Translations
 
-Translators are welcome! We use Crowdin for translations. To help translate OpenFront.io:
+Translators are welcome! We use Crowdin for translations. To help translate OpenBack:
 
 1. Join the [Translation Discord](https://discord.gg/3zZzacjWFr).
 2. Visit our [Crowdin Project](https://crowdin.com/project/openfront-mls).
@@ -171,4 +171,4 @@ By contributing, you agree that your contributions will be licensed under the [G
 
 Remember that maintaining this project requires significant effort. The maintainer appreciates your contributions but must prioritize long-term project health and stability. Not all contributions will be accepted, and that's okay.
 
-Thank you for helping make OpenFront better!
+Thank you for helping make OpenBack better!

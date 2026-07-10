@@ -26,7 +26,7 @@ npx vitest NationAllianceBehavior --run # match by name pattern
 
 ## Architecture
 
-OpenFront.io is a real-time multiplayer territorial strategy game. There are four components:
+OpenBack is a real-time multiplayer territorial strategy game. There are four components:
 
 1. **`src/core/`** — Deterministic game simulation. Pure TypeScript with **no external dependencies**. Must remain fully deterministic (seeded PRNG, no floating-point math). Runs in a Web Worker thread. All `src/core` changes **must** include tests.
 2. **`src/client/`** — Rendering (Pixi.js/WebGL), UI (Lit web components + Tailwind CSS 4), WebSocket communication.

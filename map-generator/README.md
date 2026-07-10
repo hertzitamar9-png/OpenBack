@@ -1,6 +1,6 @@
 # MapGenerator
 
-This is a go-based tool to generate map files for OpenFront.
+This is a go-based tool to generate map files for OpenBack.
 
 The map generator reads PNG files and converts pixels into terrain based primarily on the **Blue** channel.
 Because only blue values are used, grayscale and other formats are fully supported. Many maps in `assets/maps/<mapname>` are grayscale.
