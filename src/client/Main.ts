@@ -195,14 +195,12 @@ function updateAccountNavButton(userMeResponse: UserMeResponse | false) {
   // back to the email's local part and finally the public player ID. Without
   // this fallback the button wrongly stayed on "Sign in" after logging in.
   if (userMeResponse !== false) {
-    const displayName = userMeResponse.user.displayName?.trim();
+    const trimmedName = userMeResponse.user.displayName?.trim();
+    const displayName = trimmedName === "" ? undefined : trimmedName;
     const email = userMeResponse.user.email;
     const emailLocalPart = email ? email.split("@")[0] : undefined;
     const name =
-      displayName ||
-      emailLocalPart ||
-      userMeResponse.player.publicId ||
-      translateText("main.profile");
+      displayName ?? emailLocalPart ?? userMeResponse.player.publicId;
     showEmailLoggedIn(name);
     return;
   }
