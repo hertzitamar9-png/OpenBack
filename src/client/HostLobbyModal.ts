@@ -188,10 +188,9 @@ export class HostLobbyModal extends BaseModal {
       rightContent: html`
         <copy-button
           .lobbyId=${this.lobbyId}
-          .displayText=${translateText("host_modal.copy_game_id")}
           .copyText=${this.lobbyId}
+          .displayText=${this.lobbyId}
           .showVisibilityToggle=${false}
-          .showCopyIcon=${false}
         ></copy-button>
         <copy-button
           .lobbyId=${this.lobbyId}
