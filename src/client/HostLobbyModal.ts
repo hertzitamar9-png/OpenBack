@@ -88,7 +88,6 @@ export class HostLobbyModal extends BaseModal {
   @state() private allowedPublicIds: string = "";
   @state() private waterNukes: boolean = false;
   @state() private lobbyId = "";
-  @state() private inviteUrl = "";
   @state() private clients: ClientInfo[] = [];
   @state() private useRandomMap: boolean = false;
   @state() private disabledUnits: UnitType[] = [];
@@ -189,13 +188,12 @@ export class HostLobbyModal extends BaseModal {
         <copy-button
           .lobbyId=${this.lobbyId}
           .copyText=${this.lobbyId}
-          .displayText=${this.lobbyId}
+          .displayText=${translateText("host_modal.copy_game_id")}
           .showVisibilityToggle=${false}
         ></copy-button>
         <copy-button
           .lobbyId=${this.lobbyId}
-          .copyText=${this.inviteUrl}
-          .displayText=${this.inviteUrl}
+          .displayText=${translateText("host_modal.copy_invite_link")}
           .showVisibilityToggle=${false}
         ></copy-button>
       `,
@@ -535,7 +533,6 @@ export class HostLobbyModal extends BaseModal {
         crazyGamesSDK.showInviteButton(this.lobbyId);
 
         const url = await this.constructUrl();
-        this.inviteUrl = url;
         this.updateLobbyHistory(url);
         await this.updateComplete;
       })
@@ -622,7 +619,6 @@ export class HostLobbyModal extends BaseModal {
     this.useRandomMap = false;
     this.disabledUnits = [];
     this.lobbyId = "";
-    this.inviteUrl = "";
     this.clients = [];
     this.lobbyCreatorClientID = "";
     this.goldMultiplier = false;
