@@ -33,7 +33,7 @@ import "./GoogleAdElement";
 import { HelpModal } from "./HelpModal";
 import "./HomepagePromos";
 import { HostLobbyModal as HostPrivateLobbyModal } from "./HostLobbyModal";
-import { showInGameConfirm } from "./InGameModal";
+import { showInGameAlert, showInGameConfirm } from "./InGameModal";
 import { JoinLobbyModal } from "./JoinLobbyModal";
 import "./LangSelector";
 import { LangSelector } from "./LangSelector";
@@ -679,8 +679,8 @@ class Client {
         window.location.pathname + window.location.search,
       );
 
-    const alertAndStrip = (message: string) => {
-      alert(message);
+    const alertAndStrip = async (message: string) => {
+      await showInGameAlert(message);
       strip();
     };
 
@@ -696,18 +696,22 @@ class Client {
       const status = params.get("status");
 
       if (status !== "true") {
-        alertAndStrip("purchase failed");
+        await alertAndStrip("Purchase failed.");
         return;
       }
 
       const type = params.get("type");
       if (type === "currency_pack") {
-        alertAndStrip(translateText("store.currency_pack_purchase_success"));
+        await alertAndStrip(
+          translateText("store.currency_pack_purchase_success"),
+        );
         return;
       }
 
       if (type === "subscription_tier") {
-        alert(translateText("store.subscription_purchase_success"));
+        await showInGameAlert(
+          translateText("store.subscription_purchase_success"),
+        );
         strip();
         invalidateUserMe();
         window.location.reload();
@@ -716,7 +720,7 @@ class Client {
 
       const cosmeticName = params.get("cosmetic");
       if (!cosmeticName) {
-        alert("Something went wrong. Please contact support.");
+        await showInGameAlert("Something went wrong. Please contact support.");
         console.error("purchase-completed but no pattern name");
         return;
       }
@@ -739,7 +743,7 @@ class Client {
         });
         this.tokenLoginModal.openWithToken(token);
       } else {
-        alertAndStrip(`purchase succeeded: ${cosmeticName}`);
+        await alertAndStrip(`Purchase succeeded: ${cosmeticName}`);
         setCosmetic();
         this.storeModal.refresh();
       }
@@ -1131,7 +1135,9 @@ async function getTurnstileToken(): Promise<{
       "error-callback": (errorCode: string) => {
         window.turnstile.remove(widgetId);
         console.error(`Turnstile error: ${errorCode}`);
-        alert(`Turnstile error: ${errorCode}. Please refresh and try again.`);
+        void showInGameAlert(
+          `Turnstile error: ${errorCode}. Please refresh and try again.`,
+        );
         reject(new Error(`Turnstile failed: ${errorCode}`));
       },
     });

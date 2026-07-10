@@ -24,6 +24,7 @@ import {
   invalidateUserMe,
   purchaseWithCurrency,
 } from "./Api";
+import { showInGameAlert, showInGameConfirm } from "./InGameModal";
 import { translateText } from "./Utils";
 
 export const TEMP_FLARE_OFFSET = 1 * 60 * 1000; // 1 minute
@@ -76,7 +77,7 @@ export async function purchaseCosmetic(
 
     if (currentSub) {
       if (currentSub.tier === sub.name) {
-        alert(translateText("store.already_subscribed"));
+        await showInGameAlert(translateText("store.already_subscribed"));
         return;
       }
 
@@ -92,17 +93,19 @@ export async function purchaseCosmetic(
       const confirmKey = isUpgrade
         ? "store.confirm_upgrade"
         : "store.confirm_downgrade";
-      const confirmed = window.confirm(
+      const confirmed = await showInGameConfirm(
         translateText(confirmKey, { tier: targetName }),
       );
       if (!confirmed) return;
 
       const ok = await changeSubscriptionTier(sub.name);
       if (!ok) {
-        alert(translateText("store.change_tier_failed"));
+        await showInGameAlert(translateText("store.change_tier_failed"));
         return;
       }
-      alert(translateText("store.change_tier_success", { tier: targetName }));
+      await showInGameAlert(
+        translateText("store.change_tier_success", { tier: targetName }),
+      );
       window.location.reload();
       return;
     }
@@ -110,7 +113,7 @@ export async function purchaseCosmetic(
 
   if (method === "dollar") {
     if (!c.product) {
-      alert(translateText("store.checkout_failed"));
+      await showInGameAlert(translateText("store.checkout_failed"));
       return;
     }
     const url = await createCheckoutSession(
@@ -118,7 +121,7 @@ export async function purchaseCosmetic(
       colorPaletteName,
     );
     if (url === false) {
-      alert(translateText("store.checkout_failed"));
+      await showInGameAlert(translateText("store.checkout_failed"));
       return;
     }
     window.location.href = url;
@@ -139,7 +142,7 @@ export async function purchaseCosmetic(
     method === "hard" ? (priced.priceHard ?? 0) : (priced.priceSoft ?? 0);
   const userMe = await getUserMe();
   if (userMe === false) {
-    alert(translateText("store.login_required"));
+    await showInGameAlert(translateText("store.login_required"));
     return;
   }
   const balance =
@@ -147,7 +150,7 @@ export async function purchaseCosmetic(
       ? (userMe.player.currency?.hard ?? 0)
       : (userMe.player.currency?.soft ?? 0);
   if (balance < price) {
-    alert(translateText("store.not_enough_currency"));
+    await showInGameAlert(translateText("store.not_enough_currency"));
     if (method === "hard") {
       // Send the user to the packs tab so they can top up plutonium.
       window.location.hash = "#modal=store&tab=packs";
@@ -163,10 +166,12 @@ export async function purchaseCosmetic(
     colorPaletteName,
   );
   if (!success) {
-    alert(translateText("store.purchase_failed"));
+    await showInGameAlert(translateText("store.purchase_failed"));
     return;
   }
-  alert(translateText("store.purchase_success", { name: c.name }));
+  await showInGameAlert(
+    translateText("store.purchase_success", { name: c.name }),
+  );
   invalidateUserMe();
   window.location.reload();
 }

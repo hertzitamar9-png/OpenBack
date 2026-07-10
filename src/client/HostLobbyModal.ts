@@ -34,6 +34,7 @@ import "./components/LobbyPlayerView";
 import "./components/ToggleInputCard";
 import { modalHeader } from "./components/ui/ModalHeader";
 import { crazyGamesSDK } from "./CrazyGamesSDK";
+import { showInGameConfirm } from "./InGameModal";
 import { JoinLobbyEvent } from "./Main";
 import { terrainMapFileLoader } from "./TerrainMapFileLoader";
 import {
@@ -50,6 +51,8 @@ import {
 
 @customElement("host-lobby-modal")
 export class HostLobbyModal extends BaseModal {
+  private closeConfirmationPending = false;
+  private closeConfirmed = false;
   @state() private selectedMap: GameMapType = GameMapType.World;
   @state() private selectedDifficulty: Difficulty = Difficulty.Easy;
   @state() private nations: number = 0;
@@ -578,7 +581,22 @@ export class HostLobbyModal extends BaseModal {
   }
 
   public confirmBeforeClose(): boolean {
-    return confirm(translateText("host_modal.leave_confirmation"));
+    if (this.closeConfirmed) {
+      this.closeConfirmed = false;
+      return true;
+    }
+    if (!this.closeConfirmationPending) {
+      this.closeConfirmationPending = true;
+      void showInGameConfirm(
+        translateText("host_modal.leave_confirmation"),
+      ).then((confirmed) => {
+        this.closeConfirmationPending = false;
+        if (!confirmed) return;
+        this.closeConfirmed = true;
+        this.close();
+      });
+    }
+    return false;
   }
 
   protected onClose(): void {

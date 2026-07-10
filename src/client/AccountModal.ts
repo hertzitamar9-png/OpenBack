@@ -34,6 +34,9 @@ export class AccountModal extends BaseModal {
   @state() private email: string = "";
   @state() private code: string = "";
   @state() private codeSent: boolean = false;
+  @state() private authMessage: string = "";
+  @state() private authMessageType: "success" | "error" | "info" = "info";
+  @state() private isAuthBusy: boolean = false;
   @state() private isLoadingUser: boolean = false;
   // Set on CrazyGames when a CrazyGames user is signed in. Their identity comes
   // from the SDK, not our backend user object.
@@ -482,27 +485,49 @@ export class AccountModal extends BaseModal {
                     width="block"
                     size="md"
                     translationKey="account_modal.get_magic_link"
+                    .disable=${this.isAuthBusy}
                     @click=${this.handleSubmit}
                   ></o-button>`
                 : html`
-                    <div class="relative group">
-                      <input
-                        type="text"
-                        id="code"
-                        name="code"
-                        inputmode="numeric"
-                        .value="${this.code}"
-                        @input="${this.handleCodeInput}"
-                        class="w-full pl-4 pr-12 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/20 focus:outline-none focus:ring-2 focus:ring-malibu-blue/50 focus:border-malibu-blue/50 transition-all font-medium tracking-[0.5em] hover:bg-white/10"
-                        placeholder="######"
-                        required
-                      />
+                    <div>
+                      <p
+                        class="mb-3 text-center text-xs font-medium text-white/50"
+                      >
+                        ${translateText("account_modal.enter_code")}
+                      </p>
+                      <div
+                        class="grid grid-cols-6 gap-2"
+                        @paste=${this.handleCodePaste}
+                      >
+                        ${Array.from(
+                          { length: 6 },
+                          (_, index) => html`
+                            <input
+                              type="text"
+                              inputmode="numeric"
+                              autocomplete=${index === 0
+                                ? "one-time-code"
+                                : "off"}
+                              maxlength="1"
+                              aria-label="Login code digit ${index + 1}"
+                              data-code-index=${index}
+                              .value=${this.code[index] ?? ""}
+                              @input=${(event: Event) =>
+                                this.handleCodeInput(event, index)}
+                              @keydown=${(event: KeyboardEvent) =>
+                                this.handleCodeKeydown(event, index)}
+                              class="h-14 min-w-0 rounded-xl border border-white/15 bg-black/20 text-center text-xl font-bold text-white outline-none transition-all hover:bg-white/10 focus:border-malibu-blue focus:bg-malibu-blue/10 focus:ring-2 focus:ring-malibu-blue/30"
+                            />
+                          `,
+                        )}
+                      </div>
                     </div>
                     <o-button
                       variant="primary"
                       width="block"
                       size="md"
                       translationKey="account_modal.verify_code"
+                      .disable=${this.isAuthBusy || this.code.length !== 6}
                       @click=${this.handleVerify}
                     ></o-button>
                     <button
@@ -512,6 +537,22 @@ export class AccountModal extends BaseModal {
                       ${translateText("account_modal.resend_code")}
                     </button>
                   `}
+              ${this.authMessage
+                ? html`<div
+                    role=${this.authMessageType === "error"
+                      ? "alert"
+                      : "status"}
+                    class=${`rounded-xl border px-4 py-3 text-sm font-medium ${
+                      this.authMessageType === "error"
+                        ? "border-red-400/30 bg-red-500/10 text-red-200"
+                        : this.authMessageType === "success"
+                          ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-200"
+                          : "border-blue-400/30 bg-blue-500/10 text-blue-200"
+                    }`}
+                  >
+                    ${this.authMessage}
+                  </div>`
+                : ""}
             </div>
           </div>
 
@@ -531,61 +572,113 @@ export class AccountModal extends BaseModal {
   private handleEmailInput(e: Event) {
     const target = e.target as HTMLInputElement;
     this.email = target.value;
+    this.authMessage = "";
   }
 
-  private handleCodeInput(e: Event) {
+  private handleCodeInput(e: Event, index: number) {
     const target = e.target as HTMLInputElement;
-    this.code = target.value;
+    const digit = target.value.replace(/\D/g, "").slice(-1);
+    const digits = Array.from({ length: 6 }, (_, i) => this.code[i] ?? "");
+    digits[index] = digit;
+    this.code = digits.join("");
+    target.value = digit;
+    this.authMessage = "";
+    if (digit && index < 5) this.focusCodeInput(index + 1);
+  }
+
+  private handleCodeKeydown(e: KeyboardEvent, index: number) {
+    if (e.key === "Backspace" && !this.code[index] && index > 0) {
+      const digits = Array.from({ length: 6 }, (_, i) => this.code[i] ?? "");
+      digits[index - 1] = "";
+      this.code = digits.join("");
+      this.focusCodeInput(index - 1);
+    }
+  }
+
+  private handleCodePaste(e: ClipboardEvent) {
+    const pasted = e.clipboardData
+      ?.getData("text")
+      .replace(/\D/g, "")
+      .slice(0, 6);
+    if (!pasted) return;
+    e.preventDefault();
+    this.code = pasted;
+    this.authMessage = "";
+    this.updateComplete.then(() =>
+      this.focusCodeInput(Math.min(pasted.length, 6) - 1),
+    );
+  }
+
+  private focusCodeInput(index: number) {
+    this.updateComplete.then(() => {
+      this.renderRoot
+        .querySelector<HTMLInputElement>(`[data-code-index="${index}"]`)
+        ?.focus();
+    });
   }
 
   private async handleSubmit() {
     if (!this.email) {
-      alert(translateText("account_modal.enter_email_address"));
+      this.authMessageType = "error";
+      this.authMessage = translateText("account_modal.enter_email_address");
       return;
     }
-    const result = await requestLoginCode(this.email);
+    this.isAuthBusy = true;
+    this.authMessage = "";
+    const result = await requestLoginCode(this.email.trim());
+    this.isAuthBusy = false;
     if (result.ok) {
       this.codeSent = true;
+      this.authMessageType = "success";
       if (result.devCode) {
         // Dev-only: the code is logged to the server console and echoed here.
         this.code = result.devCode;
-        alert(
-          translateText("account_modal.dev_code", { code: result.devCode }),
-        );
+        this.authMessage = translateText("account_modal.dev_code", {
+          code: result.devCode,
+        });
       } else {
-        alert(
-          translateText("account_modal.recovery_email_sent", {
-            email: this.email,
-          }),
-        );
+        this.authMessage = translateText("account_modal.login_code_sent", {
+          email: this.email,
+        });
       }
-      this.requestUpdate();
+      await this.updateComplete;
+      this.focusCodeInput(0);
     } else {
-      alert(translateText("account_modal.failed_to_send_recovery_email"));
+      this.authMessageType = "error";
+      this.authMessage = translateText(
+        "account_modal.failed_to_send_login_code",
+      );
     }
   }
 
   private async handleVerify() {
-    if (!this.code) {
-      alert(translateText("account_modal.enter_code"));
+    if (this.code.length !== 6) {
+      this.authMessageType = "error";
+      this.authMessage = translateText("account_modal.enter_code");
       return;
     }
+    this.isAuthBusy = true;
+    this.authMessage = "";
     const ok = await verifyLoginCode(this.email, this.code);
+    this.isAuthBusy = false;
     if (ok) {
       invalidateUserMe();
       const userMe = await getUserMe();
       if (userMe) this.userMeResponse = userMe;
       this.codeSent = false;
       this.code = "";
+      this.authMessage = "";
       this.requestUpdate();
     } else {
-      alert(translateText("account_modal.invalid_code"));
+      this.authMessageType = "error";
+      this.authMessage = translateText("account_modal.invalid_code");
     }
   }
 
   private async handleResend() {
     this.codeSent = false;
     this.code = "";
+    this.authMessage = "";
     await this.handleSubmit();
   }
 

@@ -23,6 +23,7 @@ import "./components/ToggleInputCard";
 import { modalHeader } from "./components/ui/ModalHeader";
 import { getPlayerCosmetics } from "./Cosmetics";
 import { crazyGamesSDK } from "./CrazyGamesSDK";
+import { showInGameAlert } from "./InGameModal";
 import { JoinLobbyEvent } from "./Main";
 import { UsernameInput } from "./UsernameInput";
 import {
@@ -682,7 +683,7 @@ export class SinglePlayerModal extends BaseModal {
     if (this.maxTimer) {
       if (!this.maxTimerValue || this.maxTimerValue <= 0) {
         console.error("Max timer is enabled but no valid value is set");
-        alert(
+        await showInGameAlert(
           translateText("single_modal.max_timer_invalid") ||
             "Please enter a valid max timer value (1-120 minutes)",
         );

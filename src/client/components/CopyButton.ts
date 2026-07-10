@@ -3,6 +3,7 @@ import { customElement, property, state } from "lit/decorators.js";
 import { ClientEnv } from "src/client/ClientEnv";
 import { UserSettings } from "../../core/game/UserSettings";
 import { crazyGamesSDK } from "../CrazyGamesSDK";
+import { showInGameAlert } from "../InGameModal";
 import { copyToClipboard, translateText } from "../Utils";
 
 @customElement("copy-button")
@@ -76,7 +77,7 @@ export class CopyButton extends LitElement {
   async handleCopy() {
     const text = await this.resolveCopyText();
     if (!text) {
-      alert("Error copying game id");
+      await showInGameAlert("Could not copy the game ID.");
       return;
     }
     await copyToClipboard(

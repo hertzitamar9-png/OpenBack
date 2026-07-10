@@ -9,6 +9,7 @@ import {
   removeFriend,
   sendFriendRequest,
 } from "../FriendsApi";
+import { showInGameConfirm } from "../InGameModal";
 import { showToast, translateText } from "../Utils";
 import "./CopyButton";
 
@@ -174,7 +175,7 @@ export class FriendsList extends LitElement {
 
   private async handleRemove(publicId: string): Promise<void> {
     if (this.actionPending) return;
-    const confirmed = window.confirm(
+    const confirmed = await showInGameConfirm(
       translateText("friends.confirm_remove", { publicId }),
     );
     if (!confirmed) return;

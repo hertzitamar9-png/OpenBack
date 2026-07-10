@@ -1,5 +1,6 @@
 import { ClientEnv } from "src/client/ClientEnv";
 import { PublicGames, PublicLobbyMessageSchema } from "../core/Schemas";
+import { showInGameAlert } from "./InGameModal";
 
 interface LobbySocketOptions {
   reconnectDelay?: number;
@@ -159,7 +160,7 @@ export class PublicLobbySocket {
       this.wsConnectionAttempts++;
     }
     if (this.wsConnectionAttempts >= this.maxWsAttempts) {
-      alert("error connecting to game service");
+      void showInGameAlert("Error connecting to the game service.");
     } else {
       this.scheduleReconnect();
     }

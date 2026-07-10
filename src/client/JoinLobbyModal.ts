@@ -29,6 +29,7 @@ import {
 } from "../core/game/Game";
 import { getApiBase } from "./Api";
 import { crazyGamesSDK } from "./CrazyGamesSDK";
+import { showInGameConfirm } from "./InGameModal";
 import { JoinLobbyEvent } from "./Main";
 import { terrainMapFileLoader } from "./TerrainMapFileLoader";
 import { normaliseMapKey } from "./Utils";
@@ -57,6 +58,8 @@ export class JoinLobbyModal extends BaseModal {
   @state() private lobbyCreatorClientID: string | null = null;
 
   private leaveLobbyOnClose = true;
+  private closeConfirmationPending = false;
+  private closeConfirmed = false;
   private countdownTimerId: number | null = null;
   private handledJoinTimeout = false;
 
@@ -338,7 +341,22 @@ export class JoinLobbyModal extends BaseModal {
 
   public confirmBeforeClose(): boolean {
     if (!this.currentLobbyId) return true;
-    return confirm(translateText("host_modal.leave_confirmation"));
+    if (this.closeConfirmed) {
+      this.closeConfirmed = false;
+      return true;
+    }
+    if (!this.closeConfirmationPending) {
+      this.closeConfirmationPending = true;
+      void showInGameConfirm(
+        translateText("host_modal.leave_confirmation"),
+      ).then((confirmed) => {
+        this.closeConfirmationPending = false;
+        if (!confirmed) return;
+        this.closeConfirmed = true;
+        this.close();
+      });
+    }
+    return false;
   }
 
   protected onClose(): void {
