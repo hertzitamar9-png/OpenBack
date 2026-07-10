@@ -1,7 +1,64 @@
 {
   "patterns": {},
-  "flags": {},
+  "flags": {
+    "phoenix": {
+      "name": "phoenix",
+      "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMjAwIDEyMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJwIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZGMyNjI2Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZmFjYzE1Ii8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9InVybCgjcCkiLz48cGF0aCBkPSJNMTAwIDMwIEMxMjAgNTUgMTUwIDU1IDE1MCA1NSBDMTMwIDY1IDEyMCA2MCAxMjAgNjAgQzEzNSA4MCAxMzAgOTUgMTMwIDk1IEMxMTAgODAgMTA1IDc1IDEwMCA5MCBDOTUgNzUgOTAgODAgNzAgOTUgQzcwIDk1IDY1IDgwIDgwIDYwIEM4MCA2MCA3MCA2NSA1MCA1NSBDNTAgNTUgODAgNTUgMTAwIDMwIFoiIGZpbGw9IiM3ZjFkMWQiLz48L3N2Zz4=",
+      "product": null,
+      "priceSoft": 1500,
+      "rarity": "legendary",
+      "artist": "OpenBack"
+    },
+    "midnight_star": {
+      "name": "midnight_star",
+      "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMjAwIDEyMCI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiMwZjE3MmEiLz48Y2lyY2xlIGN4PSIxNTAiIGN5PSIzNSIgcj0iMTQiIGZpbGw9IiNmYWNjMTUiLz48cGF0aCBkPSJNMTAwIDI1IEwxMDcgNDcgTDEzMCA0NyBMMTEyIDYxIEwxMTkgODMgTDEwMCA2OSBMODEgODMgTDg4IDYxIEw3MCA0NyBMOTMgNDcgWiIgZmlsbD0iI2UyZThmMCIvPjwvc3ZnPg==",
+      "product": null,
+      "priceSoft": 1000,
+      "rarity": "epic",
+      "artist": "OpenBack"
+    },
+    "sunburst": {
+      "name": "sunburst",
+      "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMjAwIDEyMCI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiNmOTczMTYiLz48ZyBmaWxsPSIjZmRlMDQ3Ij48cGF0aCBkPSJNMTAwIDYwIEwxMTAgMCBMOTAgMCBaIi8+PHBhdGggZD0iTTEwMCA2MCBMMTYwIDEwIEwxNDUgMCBaIi8+PHBhdGggZD0iTTEwMCA2MCBMMjAwIDQwIEwyMDAgMjAgWiIvPjxwYXRoIGQ9Ik0xMDAgNjAgTDIwMCA5MCBMMjAwIDExMCBaIi8+PHBhdGggZD0iTTEwMCA2MCBMMTQ1IDEyMCBMMTIwIDEyMCBaIi8+PHBhdGggZD0iTTEwMCA2MCBMODAgMTIwIEw1NSAxMjAgWiIvPjxwYXRoIGQ9Ik0xMDAgNjAgTDAgMTEwIEwwIDkwIFoiLz48cGF0aCBkPSJNMTAwIDYwIEwwIDQwIEwwIDIwIFoiLz48cGF0aCBkPSJNMTAwIDYwIEw0MCAxMCBMNTUgMCBaIi8+PC9nPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjYwIiByPSIyNiIgZmlsbD0iI2ZlZjA4YSIgc3Ryb2tlPSIjN2MyZDEyIiBzdHJva2Utd2lkdGg9IjQiLz48L3N2Zz4=",
+      "product": null,
+      "priceSoft": 750,
+      "rarity": "rare",
+      "artist": "OpenBack"
+    },
+    "tricolor_wave": {
+      "name": "tricolor_wave",
+      "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMjAwIDEyMCI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiMxZDRlZDgiLz48cGF0aCBkPSJNMCA0MCBRNTAgMjAgMTAwIDQwIFQyMDAgNDAgVjAgSDAgWiIgZmlsbD0iI2Y4ZmFmYyIvPjxwYXRoIGQ9Ik0wIDgwIFE1MCA2MCAxMDAgODAgVDIwMCA4MCBWMTIwIEgwIFoiIGZpbGw9IiNkYzI2MjYiLz48L3N2Zz4=",
+      "product": null,
+      "priceSoft": 500,
+      "rarity": "uncommon",
+      "artist": "OpenBack"
+    },
+    "verdant": {
+      "name": "verdant",
+      "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMjAwIDEyMCI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiMxNjY1MzQiLz48cGF0aCBkPSJNMTAwIDIwIEM3MCA1NSA3MCA4NSAxMDAgMTAwIEMxMzAgODUgMTMwIDU1IDEwMCAyMCBaIiBmaWxsPSIjNGFkZTgwIi8+PHJlY3QgeD0iOTciIHk9IjYwIiB3aWR0aD0iNiIgaGVpZ2h0PSI0NSIgZmlsbD0iIzE0NTMyZCIvPjwvc3ZnPg==",
+      "product": null,
+      "priceSoft": 250,
+      "rarity": "common",
+      "artist": "OpenBack"
+    }
+  },
   "skins": {
+    "solar_flare": {
+      "name": "solar_flare",
+      "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+PGRlZnM+PHJhZGlhbEdyYWRpZW50IGlkPSJzIiBjeD0iMC41IiBjeT0iMC41IiByPSIwLjYiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ZlZjA4YSIvPjxzdG9wIG9mZnNldD0iMC42IiBzdG9wLWNvbG9yPSIjZjk3MzE2Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYjkxYzFjIi8+PC9yYWRpYWxHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIHJ4PSIyNCIgZmlsbD0iIzQ1MGEwYSIvPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iNjAiIGZpbGw9InVybCgjcykiLz48ZyBzdHJva2U9IiNmYmJmMjQiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIj48cGF0aCBkPSJNMTAwIDIwIFYwIE0xMDAgMjAwIFYxODAgTTIwIDEwMCBIMCBNMjAwIDEwMCBIMTgwIE00MCA0MCBMMjYgMjYgTTE2MCA0MCBMMTc0IDI2IE00MCAxNjAgTDI2IDE3NCBNMTYwIDE2MCBMMTc0IDE3NCIvPjwvZz48L3N2Zz4=",
+      "product": null,
+      "priceSoft": 1500,
+      "rarity": "legendary",
+      "artist": "OpenBack"
+    },
+    "frost_wolf": {
+      "name": "frost_wolf",
+      "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJmIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjYmFlNmZkIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMWUzYThhIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIHJ4PSIyNCIgZmlsbD0idXJsKCNmKSIvPjxwYXRoIGQ9Ik02MCAxNTAgTDcwIDkwIEw5NSAxMTAgTDEwMCA3MCBMMTA1IDExMCBMMTMwIDkwIEwxNDAgMTUwIFoiIGZpbGw9IiNmMWY1ZjkiIHN0cm9rZT0iIzBjNGE2ZSIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PGNpcmNsZSBjeD0iODgiIGN5PSIxMTgiIHI9IjUiIGZpbGw9IiMwYzRhNmUiLz48Y2lyY2xlIGN4PSIxMTIiIGN5PSIxMTgiIHI9IjUiIGZpbGw9IiMwYzRhNmUiLz48L3N2Zz4=",
+      "product": null,
+      "priceSoft": 1000,
+      "rarity": "epic",
+      "artist": "OpenBack"
+    },
     "golden_crown": {
       "name": "golden_crown",
       "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmRlNjhhIi8+PHN0b3Agb2Zmc2V0PSIwLjUiIHN0b3AtY29sb3I9IiNmNTllMGIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiNDUzMDkiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgcng9IjI0IiBmaWxsPSJ1cmwoI2cpIi8+PHBhdGggZD0iTTUwIDEzMCBMNTAgOTAgTDc1IDExMCBMMTAwIDcwIEwxMjUgMTEwIEwxNTAgOTAgTDE1MCAxMzAgWiIgZmlsbD0iI2ZmZmJlYiIgc3Ryb2tlPSIjN2MyZDEyIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48Y2lyY2xlIGN4PSIxMDAiIGN5PSI3MCIgcj0iOCIgZmlsbD0iI2ZmZmJlYiIgc3Ryb2tlPSIjN2MyZDEyIiBzdHJva2Utd2lkdGg9IjQiLz48cmVjdCB4PSI1MCIgeT0iMTMyIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEyIiByeD0iNCIgZmlsbD0iIzdjMmQxMiIvPjwvc3ZnPg==",

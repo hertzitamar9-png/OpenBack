@@ -7,6 +7,7 @@ import { UserSettings } from "../core/game/UserSettings";
 import { getLastUserMe } from "./Api";
 import { BaseModal } from "./components/BaseModal";
 import "./components/CosmeticButton";
+import "./components/CurrencyDisplay";
 import "./components/NotLoggedInWarning";
 import { modalHeader } from "./components/ui/ModalHeader";
 import {
@@ -66,11 +67,20 @@ export class StoreModal extends BaseModal {
   }
 
   private renderHeader(): TemplateResult {
+    const currency =
+      this.userMeResponse !== false
+        ? this.userMeResponse.player.currency
+        : null;
     return modalHeader({
       title: translateText("store.title"),
       onBack: () => this.close(),
       ariaLabel: translateText("common.back"),
-      rightContent: html`<not-logged-in-warning></not-logged-in-warning>`,
+      rightContent: currency
+        ? html`<currency-display
+            .hard=${currency.hard}
+            .soft=${currency.soft}
+          ></currency-display>`
+        : html`<not-logged-in-warning></not-logged-in-warning>`,
     });
   }
 

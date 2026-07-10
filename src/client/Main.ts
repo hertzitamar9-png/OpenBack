@@ -508,8 +508,11 @@ class Client {
       }
     };
 
-    if (ClientEnv.env() === GameEnv.Dev || (await userAuth()) === false) {
-      // Not logged in
+    if ((await userAuth()) === false) {
+      // Not logged in. (OpenBack has self-contained same-origin auth that works
+      // in every environment, so we must not short-circuit on GameEnv.Dev the
+      // way upstream does — otherwise a signed-in player always shows as logged
+      // out: no username, empty currency, "not logged in" store/leaderboard.)
       onUserMe(false);
     } else {
       // JWT appears to be valid
@@ -838,7 +841,7 @@ class Client {
     if (lobby.source !== "public") {
       this.updateJoinUrlForShare(lobby.gameID);
     }
-    const auth = ClientEnv.env() === GameEnv.Dev ? false : await userAuth();
+    const auth = await userAuth();
     const playerRole = auth !== false ? (auth.claims.role ?? null) : null;
     const newLobbyHandle = joinLobby(this.eventBus, {
       gameID: lobby.gameID,
