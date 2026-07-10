@@ -11,5 +11,6 @@ describe("auth signing keys", () => {
       kty: "OKP",
     });
     expect(getPublicJwk().x).toEqual(expect.any(String));
+    expect(getPublicJwk().d).toBeUndefined();
   });
 });

@@ -10,9 +10,13 @@ export async function ensureKeys(): Promise<void> {
   if (privateKey && publicJwk) return;
   const envJwk = process.env.AUTH_PRIVATE_JWK;
   if (envJwk) {
-    publicJwk = JSON.parse(envJwk) as JWK;
-    publicJwk.alg = "EdDSA";
-    privateKey = (await importJWK(publicJwk, "EdDSA")) as CryptoKey;
+    const privateJwk = JSON.parse(envJwk) as JWK;
+    privateJwk.alg = "EdDSA";
+    privateKey = (await importJWK(privateJwk, "EdDSA")) as CryptoKey;
+    // Never return the private `d` parameter from the public JWKS endpoint.
+    const safePublicJwk = { ...privateJwk };
+    delete safePublicJwk.d;
+    publicJwk = { ...safePublicJwk, alg: "EdDSA", use: "sig" };
   } else {
     const kp = await generateKeyPair("EdDSA", {
       crv: "Ed25519",
@@ -22,12 +26,9 @@ export async function ensureKeys(): Promise<void> {
     privJwk.alg = "EdDSA";
     const pubJwk = await exportJWK(kp.publicKey);
     privateKey = kp.privateKey as CryptoKey;
-    publicJwk = pubJwk;
-    publicJwk.alg = "EdDSA";
-    console.log(
-      `[auth] Generated ephemeral Ed25519 key. Pin it with ` +
-        `AUTH_PRIVATE_JWK=${JSON.stringify(JSON.stringify(privJwk))}`,
-    );
+    publicJwk = { ...pubJwk, alg: "EdDSA", use: "sig" };
+    // Do not print private key material into hosting logs.
+    console.log("[auth] Generated an ephemeral Ed25519 signing key");
   }
 }
 

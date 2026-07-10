@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import WebSocket from "ws";
 
 const baseUrl = process.env.OPENBACK_URL ?? "http://localhost:9000";
@@ -17,12 +16,23 @@ interface GameInfo {
 }
 
 async function main() {
-  const playerIds = [randomUUID(), randomUUID()];
+  const playerTokens = await Promise.all(
+    [1, 2].map(async () => {
+      const response = await fetch(`${baseUrl}/auth/refresh`, {
+        method: "POST",
+      });
+      if (!response.ok) {
+        throw new Error(`Could not authenticate player: ${response.status}`);
+      }
+      const { jwt } = (await response.json()) as { jwt: string };
+      return jwt;
+    }),
+  );
   const response = await fetch(`${baseUrl}/api/create_game`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      authorization: `Bearer ${playerIds[0]}`,
+      authorization: `Bearer ${playerTokens[0]}`,
     },
     body: "{}",
   });
@@ -32,7 +42,7 @@ async function main() {
   }
 
   const socketUrl = `${baseUrl.replace(/^http/, "ws")}/${game.workerPath}`;
-  const sockets = playerIds.map(() => new WebSocket(socketUrl));
+  const sockets = playerTokens.map(() => new WebSocket(socketUrl));
 
   try {
     await Promise.all(
@@ -44,7 +54,7 @@ async function main() {
               socket.send(
                 JSON.stringify({
                   type: "join",
-                  token: playerIds[index],
+                  token: playerTokens[index],
                   gameID: game.gameID,
                   username: `SmokePlayer${index + 1}`,
                   clanTag: null,
