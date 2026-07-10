@@ -188,6 +188,14 @@ export class HostLobbyModal extends BaseModal {
       rightContent: html`
         <copy-button
           .lobbyId=${this.lobbyId}
+          .displayText=${translateText("host_modal.copy_game_id")}
+          .copyText=${this.lobbyId}
+          .showVisibilityToggle=${false}
+          .showCopyIcon=${false}
+          .compact=${true}
+        ></copy-button>
+        <copy-button
+          .lobbyId=${this.lobbyId}
           .displayText=${translateText("host_modal.copy_invite_link")}
           .showVisibilityToggle=${false}
         ></copy-button>
@@ -532,7 +540,6 @@ export class HostLobbyModal extends BaseModal {
         const url = await this.constructUrl();
         this.updateLobbyHistory(url);
         await this.updateComplete;
-        void (this.querySelector("copy-button") as CopyButton)?.handleCopy();
       })
       .then(() => {
         this.dispatchEvent(
