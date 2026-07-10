@@ -1,6 +1,8 @@
 import WebSocket from "ws";
 
 const baseUrl = process.env.OPENBACK_URL ?? "http://localhost:9000";
+const turnstileToken =
+  process.env.OPENBACK_TURNSTILE_TOKEN ?? "openback-smoke-test-token";
 
 interface CreatedGame {
   gameID: string;
@@ -59,7 +61,7 @@ async function main() {
                   username: `SmokePlayer${index + 1}`,
                   clanTag: null,
                   cosmetics: {},
-                  turnstileToken: null,
+                  turnstileToken,
                 }),
               );
               resolve();
