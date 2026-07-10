@@ -13,10 +13,14 @@ describe("auth email delivery", () => {
     process.env.BREVO_API_KEY = "test-api-key";
     process.env.BREVO_SENDER_EMAIL = "login@example.com";
     process.env.BREVO_SENDER_NAME = "OpenBack";
-    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 201 }));
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response(null, { status: 201 }));
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(sendCodeEmail("player@example.net", "123456")).resolves.toBeNull();
+    await expect(
+      sendCodeEmail("player@example.net", "123456"),
+    ).resolves.toBeNull();
 
     expect(fetchMock).toHaveBeenCalledOnce();
     const [url, options] = fetchMock.mock.calls[0];
@@ -37,8 +41,8 @@ describe("auth email delivery", () => {
       vi.fn().mockResolvedValue(new Response(null, { status: 401 })),
     );
 
-    await expect(
-      sendCodeEmail("player@example.net", "123456"),
-    ).rejects.toThrow("Brevo email API returned 401");
+    await expect(sendCodeEmail("player@example.net", "123456")).rejects.toThrow(
+      "Brevo email API returned 401",
+    );
   });
 });

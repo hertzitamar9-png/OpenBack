@@ -4,11 +4,11 @@ import { customElement } from "lit/decorators.js";
 import { UserMeResponse } from "../core/ApiSchemas";
 import { Cosmetics } from "../core/CosmeticSchemas";
 import { UserSettings } from "../core/game/UserSettings";
+import { getLastUserMe } from "./Api";
 import { BaseModal } from "./components/BaseModal";
 import "./components/CosmeticButton";
 import "./components/NotLoggedInWarning";
 import { modalHeader } from "./components/ui/ModalHeader";
-import { getLastUserMe } from "./Api";
 import {
   fetchCosmetics,
   purchaseCosmetic,

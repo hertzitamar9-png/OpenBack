@@ -1,11 +1,8 @@
 import type express from "express";
 import type http from "http";
-import { WebSocket, WebSocketServer } from "ws";
 import type { Logger } from "winston";
-import {
-  recordRankedResult,
-  resolveRankedPlayer,
-} from "./auth/AuthServer";
+import { WebSocket, WebSocketServer } from "ws";
+import { recordRankedResult, resolveRankedPlayer } from "./auth/AuthServer";
 import { ServerEnv } from "./ServerEnv";
 
 // ---------------------------------------------------------------------------
