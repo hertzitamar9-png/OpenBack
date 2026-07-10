@@ -19,7 +19,7 @@
     "games_type_public": "Public",
     "games_type_singleplayer": "Singleplayer",
     "games_username": "Username",
-    "get_magic_link": "Get Magic Link",
+    "get_magic_link": "Send Login Code",
     "invalid_code": "Invalid or expired code",
     "linked_account": "Logged in as {account_name}",
     "log_out": "Log Out",
