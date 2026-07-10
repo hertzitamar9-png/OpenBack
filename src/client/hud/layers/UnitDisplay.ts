@@ -41,6 +41,8 @@ export class UnitDisplay extends LitElement implements Controller {
   private _port = 0;
   private _defensePost = 0;
   private _samLauncher = 0;
+  private _runway = 0;
+  private _manpad = 0;
   private allDisabled = false;
   private _hoveredUnit: PlayerBuildableUnitType | null = null;
 
@@ -83,6 +85,11 @@ export class UnitDisplay extends LitElement implements Controller {
           this.cost(item) <= (player?.gold() ?? 0n) &&
           (player?.units(UnitType.Port).length ?? 0) > 0
         );
+      case UnitType.Plane:
+        return (
+          this.cost(item) <= (player?.gold() ?? 0n) &&
+          (player?.units(UnitType.Runway).length ?? 0) > 0
+        );
       default:
         return this.cost(item) <= (player?.gold() ?? 0n);
     }
@@ -101,6 +108,8 @@ export class UnitDisplay extends LitElement implements Controller {
     this._samLauncher = player.totalUnitLevels(UnitType.SAMLauncher);
     this._factories = player.totalUnitLevels(UnitType.Factory);
     this._warships = player.totalUnitLevels(UnitType.Warship);
+    this._runway = player.totalUnitLevels(UnitType.Runway);
+    this._manpad = player.totalUnitLevels(UnitType.MANPAD);
     this.requestUpdate();
   }
 
@@ -193,6 +202,27 @@ export class UnitDisplay extends LitElement implements Controller {
             "mirv",
             this.keybinds["buildMIRV"]?.key ?? "0",
           )}
+          ${this.renderUnitItem(
+            atomBombIcon,
+            null,
+            UnitType.Plane,
+            "plane",
+            this.keybinds["buildPlane"]?.key ?? "Shift+Digit1",
+          )}
+          ${this.renderUnitItem(
+            samLauncherIcon,
+            this._manpad,
+            UnitType.MANPAD,
+            "manpad",
+            this.keybinds["buildManpad"]?.key ?? "Shift+Digit2",
+          )}
+          ${this.renderUnitItem(
+            atomBombIcon,
+            this._runway,
+            UnitType.Runway,
+            "runway",
+            this.keybinds["buildRunway"]?.key ?? "Shift+Digit3",
+          )}
         </div>
       </div>
     `;
@@ -211,6 +241,7 @@ export class UnitDisplay extends LitElement implements Controller {
     const selected = this.uiState.ghostStructure === unitType;
     const hovered = this._hoveredUnit === unitType;
     const displayHotkey = hotkey
+      .replace("Shift+", "⇧")
       .replace("Digit", "")
       .replace("Key", "")
       .toUpperCase();
