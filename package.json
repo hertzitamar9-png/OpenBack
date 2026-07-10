@@ -26,7 +26,9 @@
     "lint:fix": "eslint --fix",
     "prepare": "husky",
     "gen-maps": "cd map-generator && go run . && npm run format",
-    "inst": "npm ci --ignore-scripts"
+    "inst": "npm ci --ignore-scripts",
+    "deploy": "npm run build-dev && wrangler deploy",
+    "preview": "npm run build-dev && wrangler dev"
   },
   "lint-staged": {
     "**/*": [
@@ -35,6 +37,7 @@
     ]
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.44.0",
     "@datastructures-js/priority-queue": "^6.3.5",
     "@eslint/compat": "^2.0.5",
     "@eslint/js": "^10.0.1",
@@ -81,7 +84,8 @@
     "vite": "^8.0.10",
     "vite-plugin-html": "^3.2.2",
     "vitest": "^4.1.5",
-    "vitest-canvas-mock": "^1.1.4"
+    "vitest-canvas-mock": "^1.1.4",
+    "wrangler": "^4.110.0"
   },
   "dependencies": {
     "@lit-labs/virtualizer": "^2.1.1",
