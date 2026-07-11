@@ -44,8 +44,11 @@ void main() {
   vGlow = isHBomb;
   float scale = mix(1.0, uHBombGlowScale, isHBomb);
   // Aircraft need a readable silhouette at normal map zoom.
-  scale = mix(scale, 1.30, isPlane);
-  scale = mix(scale, 1.85, isTank);
+  // Give loading smoke room around the parked plane. The tank stays compact
+  // enough to fit comfortably within one territory tile.
+  float launchSmoke = isPlane * step(abs(vFlags - 6.0), 0.1);
+  scale = mix(scale, mix(1.30, 2.65, launchSmoke), isPlane);
+  scale = mix(scale, 0.92, isTank);
 
   // UNIT_SIZE is in world-space tiles — no zoom division needed.
   // Units scale with the map like territory tiles do.
@@ -72,5 +75,7 @@ void main() {
 
   // Map the enlarged quad back to sprite cell space: the central 1/scale
   // portion is the sprite, anything outside [0,1] is glow-only margin.
-  vCellUV = (isPlane > 0.5 || isTank > 0.5) ? aPos : (aPos - 0.5) * scale + 0.5;
+  vCellUV = (isPlane > 0.5 && launchSmoke < 0.5) || isTank > 0.5
+    ? aPos
+    : (aPos - 0.5) * scale + 0.5;
 }

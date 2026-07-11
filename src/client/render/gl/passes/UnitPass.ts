@@ -524,7 +524,10 @@ export class UnitPass {
       // server-provided travel angle so the nose tracks the flight path; other
       // units derive it from their lastPos→pos trail (no-op for static ones).
       let angle = 0;
-      if (unit.unitType === UT_PLANE && unit.trajectoryAngle !== undefined) {
+      if (
+        (unit.unitType === UT_PLANE || unit.unitType === UT_TANK) &&
+        unit.trajectoryAngle !== undefined
+      ) {
         angle = unit.trajectoryAngle;
       } else if (unit.lastPos !== unit.pos) {
         const lx = unit.lastPos % this.mapW;

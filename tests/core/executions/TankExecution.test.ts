@@ -43,4 +43,19 @@ describe("TankExecution", () => {
     expect(game.hasFallout(trailTile)).toBe(true);
     expect(game.hasOwner(trailTile)).toBe(false);
   });
+
+  test("moves four tiles per tick and keeps its turret aimed at its target", () => {
+    game.addExecution(new TankExecution(attacker, game.ref(5, 5)));
+    game.executeNextTick();
+    const tank = attacker.units(UnitType.Tank)[0];
+    const start = tank.tile();
+
+    game.addExecution(new TankExecution(attacker, game.ref(18, 5)));
+    game.executeNextTick();
+    expect(tank.tile()).toBe(start);
+    game.executeNextTick();
+    expect(tank.tile()).not.toBe(start);
+    expect(game.manhattanDist(start, tank.tile())).toBeGreaterThanOrEqual(4);
+    expect(Number.isFinite(tank.trajectoryAngle())).toBe(true);
+  });
 });

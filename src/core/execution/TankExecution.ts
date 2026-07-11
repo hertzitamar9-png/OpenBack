@@ -15,7 +15,6 @@ export class TankExecution implements Execution {
   private tank: Unit | null = null;
   private target: Player | TerraNullius;
   private launched = false;
-  private moveBudget = 0;
 
   constructor(
     private player: Player,
@@ -68,6 +67,7 @@ export class TankExecution implements Execution {
     this.target = owner;
     this.tank.setLoaded(false);
     this.tank.setTargetTile(this.dst);
+    this.tank.setTrajectoryAngle(this.angleTo(this.tank.tile(), this.dst));
     this.launched = true;
   }
 
@@ -76,49 +76,59 @@ export class TankExecution implements Execution {
       this.active = false;
       return;
     }
-    // Intentionally slow: roughly one land tile every four simulation ticks.
-    if (++this.moveBudget < 4) return;
-    this.moveBudget = 0;
-    const current = this.tank.tile();
-    if (current === this.dst) {
-      this.tank.setReachedTarget();
-      this.active = false;
-      return;
+    // Cover four land tiles per simulation tick. Each intermediate tile still
+    // checks mines and applies damage, so the speed-up cannot skip defenses.
+    for (let step = 0; step < 4 && this.active; step++) {
+      const current = this.tank.tile();
+      if (current === this.dst) {
+        this.tank.setReachedTarget();
+        this.active = false;
+        return;
+      }
+      const next = this.game
+        .neighbors(current)
+        .filter((tile) => this.game.isLand(tile))
+        .sort(
+          (a, b) =>
+            this.game.manhattanDist(a, this.dst) -
+            this.game.manhattanDist(b, this.dst),
+        )[0];
+      if (
+        next === undefined ||
+        this.game.manhattanDist(next, this.dst) >=
+          this.game.manhattanDist(current, this.dst)
+      ) {
+        this.active = false;
+        return;
+      }
+      this.tank.move(next);
+      // Keep the hull/turret aimed downrange, including on diagonal paths.
+      this.tank.setTrajectoryAngle(this.angleTo(next, this.dst));
+      const mine = this.game
+        .units(UnitType.TankMine)
+        .find(
+          (u) =>
+            u.isActive() &&
+            !u.isUnderConstruction() &&
+            !this.player.isFriendly(u.owner()) &&
+            this.game.euclideanDistSquared(next, u.tile()) <=
+              this.game.config().tankMineRange(u.level()) ** 2,
+        );
+      if (mine) {
+        mine.decreaseLevel(this.player);
+        this.tank.delete(false);
+        this.active = false;
+        return;
+      }
+      this.damageArea(next);
     }
-    const next = this.game
-      .neighbors(current)
-      .filter((tile) => this.game.isLand(tile))
-      .sort(
-        (a, b) =>
-          this.game.manhattanDist(a, this.dst) -
-          this.game.manhattanDist(b, this.dst),
-      )[0];
-    if (
-      next === undefined ||
-      this.game.manhattanDist(next, this.dst) >=
-        this.game.manhattanDist(current, this.dst)
-    ) {
-      this.active = false;
-      return;
-    }
-    this.tank.move(next);
-    const mine = this.game
-      .units(UnitType.TankMine)
-      .find(
-        (u) =>
-          u.isActive() &&
-          !u.isUnderConstruction() &&
-          !this.player.isFriendly(u.owner()) &&
-          this.game.euclideanDistSquared(next, u.tile()) <=
-            this.game.config().tankMineRange(u.level()) ** 2,
-      );
-    if (mine) {
-      mine.decreaseLevel(this.player);
-      this.tank.delete(false);
-      this.active = false;
-      return;
-    }
-    this.damageArea(next);
+  }
+
+  private angleTo(from: TileRef, to: TileRef): number {
+    if (from === to) return this.tank?.trajectoryAngle() ?? 0;
+    const dx = this.game.x(to) - this.game.x(from);
+    const dy = this.game.y(to) - this.game.y(from);
+    return Math.atan2(dx, -dy);
   }
 
   private damageArea(center: TileRef): void {

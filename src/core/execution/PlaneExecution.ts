@@ -12,7 +12,6 @@ import { TileRef } from "../game/GameMap";
 import { UniversalPathFinding } from "../pathfinding/PathFinder";
 import type { SteppingPathFinder } from "../pathfinding/types";
 import { PathStatus } from "../pathfinding/types";
-import { AttackExecution } from "./AttackExecution";
 import { SAMMissileExecution } from "./SAMMissileExecution";
 
 const LOADING_TICKS = 5 * 10;
@@ -299,21 +298,12 @@ export class PlaneExecution implements Execution {
     }
     this.active = false;
     if (!deployTroops || !this.game.isLand(tile)) return;
-    // Grab the crater the blast just cleared, then push the carried troops
-    // outward from it to take the surrounding bombed land.
-    this.player.conquer(tile);
+    // Capture the cleared footprint exactly once. Starting a second
+    // AttackExecution here caused the freshly captured crater to be processed
+    // again on following ticks, producing a visible ownership snap/flicker.
     for (const impactedTile of capturableLand) {
       this.player.conquer(impactedTile);
     }
-    this.game.addExecution(
-      new AttackExecution(
-        this.carriedTroops,
-        this.player,
-        this.target.isPlayer() ? this.target.id() : null,
-        tile,
-        false,
-      ),
-    );
   }
 
   private angleTo(from: TileRef, to: TileRef): number {

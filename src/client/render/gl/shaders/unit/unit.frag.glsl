@@ -109,17 +109,36 @@ void main() {
     }
   }
 
-  // Animated exhaust while an aircraft is loading or counting down to launch.
+  // Dense animated startup cloud while loading/counting down. Several offset
+  // puffs fill the enlarged quad instead of drawing a single thin exhaust.
   if (abs(vAtlasCol - float(PLANE_COL)) < 0.5 &&
       abs(vFlags - FLAG_LAUNCH_SMOKE) < 0.1 && texel.a < 0.01) {
     vec2 p = vCellUV - 0.5;
-    float plume = smoothstep(0.16, 0.02,
-        abs(p.x) + 0.05 * sin(uTick * 0.22 + p.y * 30.0))
-        * smoothstep(0.12, 0.24, p.y)
-        * smoothstep(0.52, 0.27, p.y);
-    float puff = 0.45 + 0.35 * sin(uTick * 0.31 + p.y * 46.0);
-    if (plume > 0.01) {
-      fragColor = vec4(mix(vec3(0.34), vec3(0.88), puff), plume * 0.72);
+    float time = uTick * 0.075;
+    float smoke = 0.0;
+    float brightness = 0.0;
+    for (int i = 0; i < 9; i++) {
+      float fi = float(i);
+      float rise = fract(time + fi * 0.137);
+      vec2 center = vec2(
+        sin(fi * 8.31 + time * 1.7) * (0.12 + rise * 0.22),
+        0.20 - rise * 0.92
+      );
+      float radius = 0.12 + rise * 0.23;
+      float cloud = 1.0 - smoothstep(radius * 0.55, radius, length(p - center));
+      smoke = max(smoke, cloud * (1.0 - rise * 0.38));
+      brightness += cloud * (0.22 + 0.55 * rise);
+    }
+    // Hot, turbulent exhaust at the engines beneath the broad gray cloud.
+    float exhaust = smoothstep(0.15, 0.01,
+        abs(p.x) + 0.045 * sin(uTick * 0.35 + p.y * 34.0))
+        * smoothstep(0.08, 0.18, p.y)
+        * smoothstep(0.58, 0.22, p.y);
+    smoke = max(smoke, exhaust);
+    if (smoke > 0.01) {
+      vec3 smokeColor = mix(vec3(0.16), vec3(0.78), clamp(brightness, 0.0, 1.0));
+      smokeColor = mix(smokeColor, vec3(0.92, 0.48, 0.12), exhaust * 0.75);
+      fragColor = vec4(smokeColor, smoke * 0.86);
       return;
     }
   }

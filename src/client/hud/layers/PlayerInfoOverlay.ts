@@ -47,6 +47,12 @@ const missileSiloIcon = assetUrl("images/MissileSiloIconWhite.svg");
 const portIcon = assetUrl("images/PortIcon.svg");
 const samLauncherIcon = assetUrl("images/SamLauncherIconWhite.svg");
 const soldierIcon = assetUrl("images/SoldierIcon.svg");
+const planeIcon = assetUrl("images/PlaneIconWhite.svg");
+const manpadIcon = assetUrl("images/ManpadIconWhite.svg");
+const runwayIcon = assetUrl("images/RunwayIconWhite.svg");
+const militaryBaseIcon = assetUrl("images/MilitaryBaseIconWhite.svg");
+const tankIcon = assetUrl("images/TankIconWhite.svg");
+const tankMineIcon = assetUrl("images/TankMineIconWhite.svg");
 
 function euclideanDistWorld(
   coord: { x: number; y: number },
@@ -389,6 +395,16 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
               samLauncherIcon,
             )}
             ${this.displayUnitCount(player, UnitType.Warship, warshipIcon)}
+            ${this.displayUnitCount(player, UnitType.Plane, planeIcon)}
+            ${this.displayUnitCount(player, UnitType.Runway, runwayIcon)}
+            ${this.displayUnitCount(player, UnitType.MANPAD, manpadIcon)}
+            ${this.displayUnitCount(
+              player,
+              UnitType.MilitaryBase,
+              militaryBaseIcon,
+            )}
+            ${this.displayUnitCount(player, UnitType.Tank, tankIcon)}
+            ${this.displayUnitCount(player, UnitType.TankMine, tankMineIcon)}
           </div>
         </div>
       </div>
