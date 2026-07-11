@@ -980,8 +980,10 @@ export class Config {
   // launch runway. Every completed runway adds another full base radius.
   // 1 runway = 100%, 2 = 200%, 3 = 300%, ...
   planeMaxFlightRadius(runwayCount: number = 1): number {
+    // Each additional completed runway adds 50% (not 100%) of the base range.
+    // 1 runway = 100%, 2 = 150%, 3 = 200%, ...
     const runways = Math.max(1, runwayCount);
-    return this.defaultSamRange() * runways;
+    return this.defaultSamRange() * (1 + 0.5 * (runways - 1));
   }
 
   manpadRange(level: number = 1): number {
