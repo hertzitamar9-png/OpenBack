@@ -469,7 +469,7 @@ export class Config {
       case UnitType.Plane:
         info = {
           // Plane price is intentionally flat (does not scale with count).
-          cost: this.costWrapper(() => 2_000_000, UnitType.Plane),
+          cost: this.costWrapper(() => 1_000_000, UnitType.Plane),
         };
         break;
       case UnitType.MANPAD:
