@@ -877,6 +877,7 @@ export class AccountModal extends BaseModal {
   }
 
   protected onOpen(): void {
+    document.body.classList.add("account-flow-open");
     this.isLoadingUser = true;
 
     this.refreshCrazyGamesUser();
@@ -909,6 +910,7 @@ export class AccountModal extends BaseModal {
   }
 
   protected onClose(): void {
+    document.body.classList.remove("account-flow-open");
     this.dispatchEvent(
       new CustomEvent("close", { bubbles: true, composed: true }),
     );

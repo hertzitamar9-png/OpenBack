@@ -1,5 +1,23 @@
 @import "tailwindcss";
 
+/* Login/profile is an optional focused flow: obscure the main menu while it
+   is open, but keep the account page and its working Back arrow available. */
+body.account-flow-open #main-menu-shell {
+  background: #000 !important;
+}
+
+body.account-flow-open desktop-nav-bar,
+body.account-flow-open mobile-nav-bar,
+body.account-flow-open homepage-promos,
+body.account-flow-open page-footer {
+  display: none !important;
+}
+
+body.account-flow-open main-layout main {
+  background: #000 !important;
+  padding-top: 0 !important;
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 @custom-variant hover (&:hover);
 
