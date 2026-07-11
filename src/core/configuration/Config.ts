@@ -458,12 +458,14 @@ export class Config {
         break;
       case UnitType.Runway:
         info = {
-          cost: this.costWrapper(() => 2_000_000, UnitType.Runway),
+          cost: this.costWrapper(() => 350_000, UnitType.Runway),
           constructionDuration: this.instantBuild() ? 0 : 15 * 10,
         };
         break;
       case UnitType.Plane:
-        info = { cost: () => 0n };
+        info = {
+          cost: this.costWrapper(() => 2_000_000, UnitType.Plane),
+        };
         break;
       case UnitType.MANPAD:
         info = {
