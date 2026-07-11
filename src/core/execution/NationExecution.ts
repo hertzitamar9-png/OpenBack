@@ -179,6 +179,11 @@ export class NationExecution implements Execution {
       return;
     }
 
+    // MIRVs can cross the map between normal nation attack intervals. Check
+    // every tick so defensive retaliation cannot be delayed by routine
+    // structure construction (including the OpenBack unit build order).
+    this.mirvBehavior.considerMIRV();
+
     if (ticks % this.attackRate !== this.attackTick) {
       // Call handleStructures twice between regular attack ticks (at 1/3 and 2/3 of the interval)
       // Otherwise it is possible that we earn more gold than we can spend
@@ -201,7 +206,6 @@ export class NationExecution implements Execution {
     this.updateRelationsFromEmbargos();
     this.allianceBehavior.handleAllianceRequests();
     this.allianceBehavior.handleAllianceExtensionRequests();
-    this.mirvBehavior.considerMIRV();
     this.structureBehavior.handleStructures();
     this.warshipBehavior.maybeSpawnWarship();
     this.handleEmbargoesToHostileNations();
