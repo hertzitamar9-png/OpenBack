@@ -16,7 +16,7 @@ flat out float vOuterRadius;
 flat out float vRelation;
 flat out vec2 vTarget;
 flat out vec2 vSource;
-flat out float vAircraft;
+flat out float vRouteKind;
 out vec2 vWorld;
 
 void main() {
@@ -26,14 +26,15 @@ void main() {
   vRelation = aMeta.x;
   vTarget = aInstance.xy + 0.5;
   vSource = aMeta.yz + 0.5;
-  vAircraft = aMeta.w;
+  vRouteKind = aMeta.w;
 
   // Expand quad to cover outer circle bbox + padding
   float r = aInstance.w + 2.0;
   vec2 circleMin = vTarget - vec2(r);
   vec2 circleMax = vTarget + vec2(r);
-  vec2 boxMin = mix(circleMin, min(circleMin, vSource - vec2(2.0)), vAircraft);
-  vec2 boxMax = mix(circleMax, max(circleMax, vSource + vec2(2.0)), vAircraft);
+  float hasRoute = step(0.5, vRouteKind);
+  vec2 boxMin = mix(circleMin, min(circleMin, vSource - vec2(2.0)), hasRoute);
+  vec2 boxMax = mix(circleMax, max(circleMax, vSource + vec2(2.0)), hasRoute);
   vec2 worldPos = mix(boxMin, boxMax, aPos);
   vWorld = worldPos;
 

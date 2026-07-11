@@ -105,7 +105,7 @@ export class NukeTelegraphPass {
       buf[off + 4] = d.relation;
       buf[off + 5] = d.sourceX;
       buf[off + 6] = d.sourceY;
-      buf[off + 7] = d.isAircraft ? 1 : 0;
+      buf[off + 7] = d.routeKind;
     }
 
     this.instanceCount = count;

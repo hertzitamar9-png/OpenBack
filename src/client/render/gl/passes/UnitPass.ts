@@ -115,6 +115,7 @@ const FLAG_TRADE_FRIENDLY = 3;
 const FLAG_RETREATING = 4;
 const FLAG_FLICKER_UNTARGETABLE = 5;
 const FLAG_LAUNCH_SMOKE = 6;
+const FLAG_LAUNCH_FIRE = 7;
 
 /** Atlas column indices for train sub-types (resolved from trainType + loaded) */
 const TRAIN_ENGINE_COL = UNIT_ORDER.indexOf("TrainEngine");
@@ -501,10 +502,10 @@ export class UnitPass {
       let flags = FLAG_NORMAL;
       if (
         unit.unitType === UT_PLANE &&
-        (unit.underConstruction ||
-          (unit.targetTile !== null && unit.loaded === false))
+        (unit.launchPhase ?? 0) > 0
       ) {
-        flags = FLAG_LAUNCH_SMOKE;
+        flags =
+          unit.launchPhase === 2 ? FLAG_LAUNCH_FIRE : FLAG_LAUNCH_SMOKE;
       } else if (isTradeFriendly) {
         flags = FLAG_TRADE_FRIENDLY;
       } else if (isRetreatingWarship) {

@@ -41,6 +41,7 @@ describe("TankExecution", () => {
 
     const trailTile = game.ref(10, 7);
     expect(game.hasFallout(trailTile)).toBe(true);
+    expect(game.hasFallout(game.ref(10, 11))).toBe(true);
     expect(game.hasOwner(trailTile)).toBe(false);
   });
 

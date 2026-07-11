@@ -152,6 +152,10 @@
       "MANPAD": {
         "scale": 1.0,
         "iconFill": 0.85
+      },
+      "Military Base": {
+        "scale": 1.65,
+        "iconFill": 0.9
       }
     },
     "highlightOutlineWidth": 0.04,

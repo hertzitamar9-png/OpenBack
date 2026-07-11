@@ -1,4 +1,5 @@
 import { ConstructionExecution } from "../../../src/core/execution/ConstructionExecution";
+import { AttackExecution } from "../../../src/core/execution/AttackExecution";
 import { PlaneExecution } from "../../../src/core/execution/PlaneExecution";
 import {
   Game,
@@ -147,5 +148,28 @@ describe("PlaneExecution", () => {
     // actually fought over tile by tile.
     for (let i = 0; i < 60; i++) game.executeNextTick();
     expect(game.owner(target)).toBe(attacker);
+
+    // The separate under-100-tiles attack finisher must not transfer the
+    // player's remaining territory after taking a single beachhead tile.
+    defender.addTroops(100_000);
+    game.addExecution(
+      new AttackExecution(100_000, defender, attacker.id(), game.ref(12, 17)),
+    );
+    game.executeNextTick();
+    game.executeNextTick();
+    expect(game.owner(game.ref(5, 5))).toBe(attacker);
+  });
+
+  test("takeoff FX uses smoke, then fire and smoke, then stops", () => {
+    const plane = loadPlane(2_000);
+    game.addExecution(new PlaneExecution(attacker, game.ref(17, 17), 0));
+    game.executeNextTick();
+    expect(plane.launchPhase()).toBe(1);
+
+    for (let i = 0; i < 51; i++) game.executeNextTick();
+    expect(plane.launchPhase()).toBe(2);
+
+    for (let i = 0; i < 51; i++) game.executeNextTick();
+    expect(plane.launchPhase()).toBe(0);
   });
 });

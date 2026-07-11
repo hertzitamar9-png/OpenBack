@@ -21,6 +21,8 @@ import type {
 } from "../../../../../src/client/render/types";
 import {
   UT_ATOM_BOMB,
+  UT_PLANE,
+  UT_TANK,
   UT_WARSHIP,
 } from "../../../../../src/client/render/types";
 
@@ -173,5 +175,46 @@ describe("extractNukeTelegraphs", () => {
   it("marks everything as enemy without a local player (replay/spectator)", () => {
     const [t] = extractNukeTelegraphs(units(nuke({ ownerID: 1 })), MAP_W);
     expect(t.relation).toBe(TELEGRAPH_ENEMY);
+  });
+
+  it("shows plane routes to everyone", () => {
+    const [t] = extractNukeTelegraphs(
+      units(nuke({ unitType: UT_PLANE, ownerID: 2 })),
+      MAP_W,
+      1,
+    );
+    expect(t.routeKind).toBe(1);
+  });
+
+  it("shows tank routes to owners and allies but hides them from enemies", () => {
+    const tank = nuke({ unitType: UT_TANK, ownerID: 2 });
+    expect(extractNukeTelegraphs(units(tank), MAP_W, 2)[0].routeKind).toBe(2);
+
+    const rel = buildRelationMatrix(
+      new Map([
+        [1, ps({ smallID: 1, allies: [2] })],
+        [2, ps({ smallID: 2 })],
+      ]),
+    );
+    expect(
+      extractNukeTelegraphs(units(tank), MAP_W, 1, rel.matrix, rel.size)[0]
+        .routeKind,
+    ).toBe(2);
+
+    const enemyRel = buildRelationMatrix(
+      new Map([
+        [1, ps({ smallID: 1 })],
+        [2, ps({ smallID: 2 })],
+      ]),
+    );
+    expect(
+      extractNukeTelegraphs(
+        units(tank),
+        MAP_W,
+        1,
+        enemyRel.matrix,
+        enemyRel.size,
+      ),
+    ).toHaveLength(0);
   });
 });

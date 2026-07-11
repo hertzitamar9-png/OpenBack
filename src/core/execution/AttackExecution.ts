@@ -14,6 +14,7 @@ import {
 import { GameMap, TileRef } from "../game/GameMap";
 import { PseudoRandom } from "../PseudoRandom";
 import { assertNever } from "../Util";
+import { hasPlaneBeachhead } from "./AnnexationExemptions";
 import { FlatBinaryHeap } from "./utils/FlatBinaryHeap"; // adjust path if needed
 
 const malusForRetreat = 25;
@@ -381,6 +382,7 @@ export class AttackExecution implements Execution {
   private handleDeadDefender() {
     if (!(this.target.isPlayer() && this.target.numTilesOwned() < 100)) return;
     const target: Player = this.target;
+    if (hasPlaneBeachhead(this.mg, target)) return;
 
     this.mg.conquerPlayer(this._owner, target);
 

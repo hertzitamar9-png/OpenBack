@@ -193,6 +193,7 @@ export interface UnitUpdate {
   trainType?: TrainType; // Only for trains
   loaded?: boolean; // Only for trains
   trajectoryAngle?: number; // Sprite heading (radians, math convention, y-up)
+  launchPhase?: number; // Plane countdown FX: 0=none, 1=smoke, 2=smoke+fire
 }
 
 export interface AttackUpdate {

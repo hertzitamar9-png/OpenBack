@@ -7,7 +7,7 @@ flat in float vOuterRadius;
 flat in float vRelation;        // 0 = self, 1 = ally, 2 = enemy
 flat in vec2 vTarget;
 flat in vec2 vSource;
-flat in float vAircraft;
+flat in float vRouteKind;
 in vec2 vWorld;
 
 uniform float uTime;            // seconds
@@ -61,13 +61,15 @@ void main() {
   float t = clamp(dot(vWorld - vSource, ab) / ab2, 0.0, 1.0);
   float lineDist = length(vWorld - (vSource + ab * t));
   float lineDash = step(fract((t * sqrt(ab2) + uTime * 2.5) / 5.0), 0.62);
-  float routeAlpha = vAircraft * (1.0 - smoothstep(0.25, 0.65, lineDist)) * lineDash * 0.9;
+  float hasRoute = step(0.5, vRouteKind);
+  float routeAlpha = hasRoute * (1.0 - smoothstep(0.25, 0.65, lineDist)) * lineDash * 0.9;
 
   float alpha = max(max(max(fillAlpha, strokeAlpha), outerAlpha), routeAlpha);
   if (alpha < 0.01) discard;
 
+  vec3 routeColor = vRouteKind > 1.5 ? vec3(0.2, 1.0, 0.32) : vec3(1.0, 0.08, 0.04);
   vec3 color = routeAlpha >= max(max(fillAlpha, strokeAlpha), outerAlpha)
-             ? vec3(1.0, 0.08, 0.04)
+             ? routeColor
              : vRelation < 0.5 ? uColorSelf
              : vRelation < 1.5 ? uColorAlly
              : uColorEnemy;

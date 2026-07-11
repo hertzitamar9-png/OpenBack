@@ -102,6 +102,7 @@ export interface UnitState {
   trainType: number | null; // 0=Engine, 1=TailEngine, 2=Carriage
   loaded: boolean | null;
   trajectoryAngle?: number; // Sprite heading (radians, math convention, y-up)
+  launchPhase?: number;
   constructionStartTick: number | null;
 }
 
@@ -215,7 +216,8 @@ export interface NukeTelegraphData {
   relation: number;
   sourceX: number;
   sourceY: number;
-  isAircraft: boolean;
+  /** 0=bomb, 1=public plane route, 2=friendly-only tank route. */
+  routeKind: number;
 }
 
 /** Lean config for constructing the GPU renderer — no replay-specific fields. */

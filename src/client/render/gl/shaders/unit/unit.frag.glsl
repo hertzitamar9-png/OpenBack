@@ -31,6 +31,7 @@ const float FLAG_TRADE_FRIENDLY = 3.0;
 const float FLAG_RETREATING     = 4.0;
 const float FLAG_FLICKER_UNTARGETABLE = 5.0; // nuke out of SAM range — dimmed
 const float FLAG_LAUNCH_SMOKE = 6.0;
+const float FLAG_LAUNCH_FIRE = 7.0;
 
 // Ally color for trade-friendly override (yellow — matches affiliation.ts ALLY)
 const vec3 ALLY_COLOR = vec3(1.0, 1.0, 0.0);
@@ -112,7 +113,8 @@ void main() {
   // Dense animated startup cloud while loading/counting down. Several offset
   // puffs fill the enlarged quad instead of drawing a single thin exhaust.
   if (abs(vAtlasCol - float(PLANE_COL)) < 0.5 &&
-      abs(vFlags - FLAG_LAUNCH_SMOKE) < 0.1 && texel.a < 0.01) {
+      (abs(vFlags - FLAG_LAUNCH_SMOKE) < 0.1 ||
+       abs(vFlags - FLAG_LAUNCH_FIRE) < 0.1) && texel.a < 0.01) {
     vec2 p = vCellUV - 0.5;
     float time = uTick * 0.075;
     float smoke = 0.0;
@@ -130,7 +132,8 @@ void main() {
       brightness += cloud * (0.22 + 0.55 * rise);
     }
     // Hot, turbulent exhaust at the engines beneath the broad gray cloud.
-    float exhaust = smoothstep(0.15, 0.01,
+    float firePhase = step(abs(vFlags - FLAG_LAUNCH_FIRE), 0.1);
+    float exhaust = firePhase * smoothstep(0.15, 0.01,
         abs(p.x) + 0.045 * sin(uTick * 0.35 + p.y * 34.0))
         * smoothstep(0.08, 0.18, p.y)
         * smoothstep(0.58, 0.22, p.y);

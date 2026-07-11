@@ -123,7 +123,29 @@ export class TankExecution implements Execution {
         this.active = false;
         return;
       }
-      this.damageArea(next);
+      this.damageSweptArea(current, next);
+    }
+  }
+
+  /** Two side brushes sweep fallout beyond the tank's own footprint. */
+  private damageSweptArea(from: TileRef, center: TileRef): void {
+    this.damageArea(center);
+    const dx = Math.sign(this.game.x(center) - this.game.x(from));
+    const dy = Math.sign(this.game.y(center) - this.game.y(from));
+    const cx = this.game.x(center);
+    const cy = this.game.y(center);
+    for (const side of [-1, 1]) {
+      const x = cx - dy * side * 2;
+      const y = cy + dx * side * 2;
+      if (
+        x >= 0 &&
+        y >= 0 &&
+        x < this.game.width() &&
+        y < this.game.height()
+      ) {
+        const brush = this.game.ref(x, y);
+        if (this.game.isLand(brush)) this.damageArea(brush);
+      }
     }
   }
 

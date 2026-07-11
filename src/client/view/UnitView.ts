@@ -69,6 +69,7 @@ function unitStateFromUpdate(u: UnitUpdate): UnitState {
     trainType: trainTypeToNum(u.trainType),
     loaded: u.loaded ?? null,
     trajectoryAngle: u.trajectoryAngle,
+    launchPhase: u.launchPhase ?? 0,
     constructionStartTick: null, // GameView fills in createdAt when underConstruction
   };
 }
@@ -98,6 +99,7 @@ function applyUpdateInPlace(target: UnitState, u: UnitUpdate): void {
   target.trainType = trainTypeToNum(u.trainType);
   target.loaded = u.loaded ?? null;
   target.trajectoryAngle = u.trajectoryAngle;
+  target.launchPhase = u.launchPhase ?? 0;
 }
 
 export class UnitView {

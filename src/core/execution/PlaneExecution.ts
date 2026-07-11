@@ -97,6 +97,7 @@ export class PlaneExecution implements Execution {
     this.warningTicks = DEPLOYMENT_WARNING_TICKS;
     this.plane.setLoaded(false);
     this.plane.setTargetTile(this.dst);
+    this.plane.setLaunchPhase(1);
     this.pathFinder = UniversalPathFinding.Air(game);
     // Point the nose at the target from the get-go.
     this.plane.setTrajectoryAngle(this.angleTo(this.src, this.dst));
@@ -133,8 +134,10 @@ export class PlaneExecution implements Execution {
       return;
     }
     if (!this.launched) {
+      if (this.warningTicks === 50) this.plane.setLaunchPhase(2);
       if (this.warningTicks-- > 0) return;
       this.launched = true;
+      this.plane.setLaunchPhase(0);
       this.recordMotionPlan(ticks);
       return;
     }

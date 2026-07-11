@@ -46,7 +46,10 @@ void main() {
   // Aircraft need a readable silhouette at normal map zoom.
   // Give loading smoke room around the parked plane. The tank stays compact
   // enough to fit comfortably within one territory tile.
-  float launchSmoke = isPlane * step(abs(vFlags - 6.0), 0.1);
+  float launchSmoke = isPlane * max(
+    step(abs(vFlags - 6.0), 0.1),
+    step(abs(vFlags - 7.0), 0.1)
+  );
   scale = mix(scale, mix(1.30, 2.65, launchSmoke), isPlane);
   scale = mix(scale, 0.92, isTank);
 

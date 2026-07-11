@@ -48,3 +48,18 @@ export function isPlaneBeachhead(
   if (protectedTiles.size === 0) byPlayer!.delete(player.smallID());
   return intersects;
 }
+
+/** True while at least one original landing tile still belongs to the player. */
+export function hasPlaneBeachhead(game: Game, player: Player): boolean {
+  const byPlayer = planeBeachheads.get(game);
+  const protectedTiles = byPlayer?.get(player.smallID());
+  if (protectedTiles === undefined) return false;
+  for (const tile of protectedTiles) {
+    if (game.ownerID(tile) !== player.smallID()) protectedTiles.delete(tile);
+  }
+  if (protectedTiles.size === 0) {
+    byPlayer!.delete(player.smallID());
+    return false;
+  }
+  return true;
+}

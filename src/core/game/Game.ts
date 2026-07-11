@@ -496,6 +496,8 @@ export interface Unit {
   /** Heading (radians, math convention) the unit sprite should face. */
   setTrajectoryAngle(angle: number): void;
   trajectoryAngle(): number;
+  setLaunchPhase(phase: number): void;
+  launchPhase(): number;
   trajectoryIndex(): number;
   trajectory(): TrajectoryTile[];
   setTargetUnit(unit: Unit | undefined): void;
