@@ -496,7 +496,11 @@ export class Config {
         info = {
           cost: this.costWrapper(
             (numUnits: number) =>
-              numUnits < 15 ? 500_000 : numUnits < 35 ? 750_000 : 1_000_000,
+              numUnits === 0
+                ? 500_000
+                : numUnits === 1
+                  ? 750_000
+                  : 1_000_000,
             UnitType.Tank,
           ),
         };
