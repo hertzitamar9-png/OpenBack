@@ -496,11 +496,7 @@ export class Config {
         info = {
           cost: this.costWrapper(
             (numUnits: number) =>
-              numUnits === 0
-                ? 500_000
-                : numUnits === 1
-                  ? 750_000
-                  : 1_000_000,
+              numUnits === 0 ? 500_000 : numUnits === 1 ? 750_000 : 1_000_000,
             UnitType.Tank,
           ),
         };
@@ -509,11 +505,7 @@ export class Config {
         info = {
           cost: this.costWrapper(
             (numUnits: number) =>
-              numUnits === 0
-                ? 200_000
-                : numUnits === 1
-                  ? 400_000
-                  : 800_000,
+              numUnits === 0 ? 200_000 : numUnits === 1 ? 400_000 : 800_000,
             UnitType.TankMine,
           ),
           constructionDuration: this.instantBuild() ? 0 : 5 * 10,

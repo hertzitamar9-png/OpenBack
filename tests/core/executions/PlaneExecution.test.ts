@@ -38,7 +38,7 @@ describe("PlaneExecution", () => {
     // In-range target (~17 tiles from the runway, within the 20-tile test SAM
     // radius) and an out-of-range target (~106 tiles away).
     defender.conquer(game.ref(17, 17));
-    defender.conquer(game.ref(35, 5));
+    defender.conquer(game.ref(29, 5));
     defender.conquer(game.ref(80, 80));
     attacker.addTroops(10_000);
     attacker.buildUnit(UnitType.Runway, game.ref(5, 5), {});
@@ -83,10 +83,10 @@ describe("PlaneExecution", () => {
     game.executeNextTick();
     expect(attacker.units(UnitType.Runway)).toHaveLength(1);
     expect(attacker.units(UnitType.Runway)[0].level()).toBe(2);
-    game.addExecution(new PlaneExecution(attacker, game.ref(35, 5), 0));
+    game.addExecution(new PlaneExecution(attacker, game.ref(29, 5), 0));
     game.executeNextTick();
     expect(plane.isLoaded()).toBe(false);
-    expect(plane.targetTile()).toBe(game.ref(35, 5));
+    expect(plane.targetTile()).toBe(game.ref(29, 5));
   });
 
   test("a MANPAD destroys itself, the plane, and every carried troop", () => {
