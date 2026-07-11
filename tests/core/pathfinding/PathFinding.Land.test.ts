@@ -14,12 +14,17 @@ describe("PathFinding.Land", () => {
     const path = findLandPath(game, game.ref(0, 0), game.ref(7, 15));
     expect(path).not.toBeNull();
     expect(path!.every((tile) => game.isLand(tile))).toBe(true);
-    expect(path).toHaveLength(23);
-    const directions = path!.slice(1).map((tile, index) => {
+    expect(path![path!.length - 1]).toBe(game.ref(7, 15));
+    // Diagonal (8-neighbor) movement shortens the route below the old
+    // 4-neighbor length of 23 and lets the unit face slant directions.
+    expect(path!.length).toBeLessThan(23);
+    const hasDiagonal = path!.slice(1).some((tile, index) => {
       const previous = path![index];
-      return game.x(tile) !== game.x(previous) ? "x" : "y";
+      return (
+        game.x(tile) !== game.x(previous) && game.y(tile) !== game.y(previous)
+      );
     });
-    expect(new Set(directions.slice(0, 10)).size).toBe(2);
+    expect(hasDiagonal).toBe(true);
   });
 
   it("rejects destinations across a water barrier", () => {
