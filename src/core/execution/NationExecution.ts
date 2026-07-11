@@ -220,7 +220,7 @@ export class NationExecution implements Execution {
       this.mg.ticks() % (this.attackRate * 5) !== this.attackTick
     )
       return;
-    let tank = player
+    const tank = player
       .units(UnitType.Tank)
       .find((u) => u.isActive() && u.isLoaded() === true);
     if (!tank) {
