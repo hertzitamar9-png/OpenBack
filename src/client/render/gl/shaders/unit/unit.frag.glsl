@@ -55,13 +55,29 @@ void main() {
   if (inSprite) {
     if (abs(vAtlasCol - float(PLANE_COL)) < 0.5) {
       vec2 p = vCellUV - 0.5;
-      float fuselage = step(abs(p.x), 0.075) * step(abs(p.y), 0.43);
-      float wingWidth = mix(0.38, 0.08, smoothstep(0.02, 0.22, abs(p.y + 0.03)));
-      float wings = step(abs(p.x), wingWidth) * step(abs(p.y + 0.03), 0.09);
-      float tail = step(abs(p.x), 0.20) * step(abs(p.y - 0.31), 0.055);
-      float nose = step(length(vec2(p.x, (p.y + 0.43) * 0.7)), 0.09);
-      float planeMask = max(max(fuselage, wings), max(tail, nose));
-      texel = vec4(vec3(p.y < -0.1 ? 0.71 : 0.28), planeMask);
+      float aa = 0.02;
+
+      // Tapered fuselage: pointed nose/tail, fuller mid-body.
+      float t = clamp((p.y + 0.44) / 0.88, 0.0, 1.0);
+      float halfW = 0.095 * sin(t * 3.14159);
+      float body = smoothstep(halfW + aa, halfW - aa, abs(p.x));
+
+      // Swept main wings (nose points toward -y).
+      float wLead = -0.06 + 0.38 * abs(p.x);
+      float wings = smoothstep(0.42 + aa, 0.42 - aa, abs(p.x))
+                  * smoothstep(wLead - aa, wLead + aa, p.y)
+                  * smoothstep(0.16 + aa, 0.16 - aa, p.y);
+
+      // Swept tailplane near the rear.
+      float tLead = 0.24 + 0.30 * abs(p.x);
+      float tail = smoothstep(0.17 + aa, 0.17 - aa, abs(p.x))
+                 * smoothstep(tLead - aa, tLead + aa, p.y)
+                 * smoothstep(0.40 + aa, 0.40 - aa, p.y);
+
+      float planeMask = clamp(max(body, max(wings, tail)), 0.0, 1.0);
+      // Brighter forward fuselage/cockpit, darker aft for readability.
+      float shade = mix(0.30, 0.78, smoothstep(0.05, -0.35, p.y));
+      texel = vec4(vec3(shade), planeMask);
     } else {
       vec2 atlasUV = vec2((vAtlasCol + vCellUV.x) / float(ATLAS_COLS), vCellUV.y);
       texel = texture(uAtlas, atlasUV);

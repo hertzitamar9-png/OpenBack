@@ -223,6 +223,7 @@ export class PlaneExecution implements Execution {
       (_, next) =>
         this.game.euclideanDistSquared(tile, next) <= radius * radius,
     );
+    const clearedLand: TileRef[] = [];
     for (const impactedTile of impacted) {
       if (!this.game.isLand(impactedTile)) continue;
       const owner = this.game.owner(impactedTile);
@@ -235,10 +236,13 @@ export class PlaneExecution implements Execution {
               owner.troops(),
               Math.max(1, owner.numTilesOwned()),
               this.game.config().maxTroops(owner),
-            ) / 2,
+            ) / 4,
         );
         owner.removeTroops(deaths);
-        owner.relinquish(impactedTile);
+        if (owner !== this.player) {
+          owner.relinquish(impactedTile);
+          clearedLand.push(impactedTile);
+        }
       }
       this.game.setFallout(impactedTile, true);
     }
@@ -249,12 +253,17 @@ export class PlaneExecution implements Execution {
     }
     this.active = false;
     if (!deployTroops || !this.game.isLand(tile)) return;
+    // Grab the crater the blast just cleared, then push the carried troops
+    // outward from it to take the surrounding bombed land.
     this.player.conquer(tile);
+    for (const cleared of clearedLand) {
+      this.player.conquer(cleared);
+    }
     this.game.addExecution(
       new AttackExecution(
         this.carriedTroops,
         this.player,
-        this.target.id(),
+        this.target.isPlayer() ? this.target.id() : null,
         tile,
         false,
       ),

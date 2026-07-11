@@ -943,11 +943,13 @@ export class Config {
   }
 
   planeSpeed(): number {
-    return this.defaultNukeSpeed() / 3;
+    // 33% faster than a third of the default nuke speed.
+    return (this.defaultNukeSpeed() * 4) / 9;
   }
 
   planeFalloutRadius(): number {
-    return this.nukeMagnitudes(UnitType.AtomBomb).outer / 2;
+    // Half the previous blast footprint.
+    return this.nukeMagnitudes(UnitType.AtomBomb).outer / 4;
   }
 
   // The plane's maximum flight distance ("fuel range"), measured from the

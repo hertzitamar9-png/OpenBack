@@ -41,7 +41,7 @@ void main() {
   vGlow = isHBomb;
   float scale = mix(1.0, uHBombGlowScale, isHBomb);
   // Aircraft need a readable silhouette at normal map zoom.
-  scale = mix(scale, 2.25, isPlane);
+  scale = mix(scale, 1.5, isPlane);
 
   // UNIT_SIZE is in world-space tiles — no zoom division needed.
   // Units scale with the map like territory tiles do.

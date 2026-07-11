@@ -50,7 +50,6 @@ void main() {
 
   int shapeIdx = int(aInst1.x);
   float shapeScale = uShapeScales[shapeIdx];
-  if (shapeIdx == 6) shapeScale = 1.35;
   vShapeScale = shapeScale;
 
   float halfSize = uIconSize * iconScale * 0.5 / uZoom * shapeScale;

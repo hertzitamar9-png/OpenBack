@@ -146,11 +146,11 @@
         "iconFill": 0.85
       },
       "Runway": {
-        "scale": 1.35,
+        "scale": 0.95,
         "iconFill": 0.85
       },
       "MANPAD": {
-        "scale": 1.4,
+        "scale": 1.0,
         "iconFill": 0.85
       }
     },
