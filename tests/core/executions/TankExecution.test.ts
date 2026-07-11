@@ -42,7 +42,9 @@ describe("TankExecution", () => {
     const trailTile = game.ref(10, 7);
     expect(game.hasFallout(trailTile)).toBe(true);
     expect(game.hasFallout(game.ref(10, 11))).toBe(true);
+    expect(game.hasFallout(game.ref(18, 9))).toBe(true);
     expect(game.hasOwner(trailTile)).toBe(false);
+    expect(tank.isActive()).toBe(false);
   });
 
   test("moves 50% faster than a transport and keeps aimed at its target", () => {

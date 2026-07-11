@@ -53,6 +53,7 @@ void main() {
   // The sprite lives in the central cell-space region [0,1]; for the enlarged
   // hydrogen-bomb quad, anything outside that range is glow-only margin.
   vec4 texel = vec4(0.0);
+  float blackOutline = 0.0;
   bool inSprite = vCellUV.x >= 0.0 && vCellUV.x <= 1.0 &&
                   vCellUV.y >= 0.0 && vCellUV.y <= 1.0;
   if (inSprite) {
@@ -86,10 +87,24 @@ void main() {
           length((p - vec2(0.0, -0.25)) * vec2(1.0, 1.8)));
       float planeMask = smoothstep(0.08, 0.42,
           clamp(max(max(body, wings), max(tail, engines)), 0.0, 1.0));
+      float bodyOuter = smoothstep(halfW + aa * 2.8, halfW - aa * 2.8, abs(p.x));
+      float wingsOuter = smoothstep(0.45, 0.39, abs(p.x))
+                       * smoothstep(wLead - aa * 2.8, wLead + aa * 2.8, p.y)
+                       * smoothstep(0.19, 0.13, p.y);
+      float tailOuter = smoothstep(0.20, 0.14, abs(p.x))
+                      * smoothstep(tLead - aa * 2.8, tLead + aa * 2.8, p.y)
+                      * smoothstep(0.43, 0.37, p.y);
+      float enginesOuter = smoothstep(0.11, 0.07,
+          min(length(p - vec2(-0.17, 0.02)), length(p - vec2(0.17, 0.02))));
+      float planeOuter = clamp(max(max(bodyOuter, wingsOuter),
+          max(tailOuter, enginesOuter)), 0.0, 1.0);
+      float cockpitOuter = smoothstep(0.085, 0.055,
+          length((p - vec2(0.0, -0.25)) * vec2(1.0, 1.8)));
+      blackOutline = max(planeOuter - planeMask, cockpitOuter - cockpit);
       // Brighter forward fuselage/cockpit, darker aft for readability.
       float shade = mix(0.30, 0.78, smoothstep(0.05, -0.35, p.y));
       vec3 aircraftShade = mix(vec3(shade), vec3(0.86, 0.95, 1.0), cockpit);
-      texel = vec4(aircraftShade, planeMask);
+      texel = vec4(aircraftShade, max(planeOuter, cockpitOuter));
     } else if (abs(vAtlasCol - float(TANK_COL)) < 0.5) {
       vec2 p = vCellUV - 0.5;
       float aa = 0.025;
@@ -102,8 +117,19 @@ void main() {
                    * smoothstep(-0.05, 0.39, -p.y);
       float mask = smoothstep(0.08, 0.42,
           max(tracks, max(hull, max(turret, barrel))));
+      float hullOuter = smoothstep(0.38, 0.34, abs(p.x))
+                      * smoothstep(0.31, 0.27, abs(p.y));
+      float tracksOuter = smoothstep(0.48, 0.44, abs(p.x))
+                        * smoothstep(0.38, 0.34, abs(p.y));
+      float turretOuter = smoothstep(0.20, 0.16, length(p));
+      float barrelOuter = smoothstep(0.075, 0.045, abs(p.x))
+                        * smoothstep(-0.08, 0.42, -p.y);
+      float outerMask = max(tracksOuter,
+          max(hullOuter, max(turretOuter, barrelOuter)));
+      blackOutline = max(max(outerMask - mask, turretOuter - turret),
+                         barrelOuter - barrel);
       float shade = tracks > hull ? 0.25 : (turret > 0.5 ? 0.78 : 0.52);
-      texel = vec4(vec3(shade), mask);
+      texel = vec4(vec3(shade), outerMask);
     } else {
       vec2 atlasUV = vec2((vAtlasCol + vCellUV.x) / float(ATLAS_COLS), vCellUV.y);
       texel = texture(uAtlas, atlasUV);
@@ -137,10 +163,18 @@ void main() {
         abs(p.x) + 0.045 * sin(uTick * 0.35 + p.y * 34.0))
         * smoothstep(0.08, 0.18, p.y)
         * smoothstep(0.58, 0.22, p.y);
-    smoke = max(smoke, exhaust);
+    float flameY = smoothstep(0.14, 0.24, p.y) * smoothstep(0.92, 0.48, p.y);
+    float flameWidth = 0.055 + max(0.0, p.y - 0.20) * 0.16;
+    float twinFlame = firePhase * flameY * max(
+      smoothstep(flameWidth, flameWidth * 0.25, abs(p.x - 0.17)),
+      smoothstep(flameWidth, flameWidth * 0.25, abs(p.x + 0.17))
+    );
+    float fire = max(exhaust, twinFlame);
+    smoke = max(smoke, fire);
     if (smoke > 0.01) {
       vec3 smokeColor = mix(vec3(0.16), vec3(0.78), clamp(brightness, 0.0, 1.0));
-      smokeColor = mix(smokeColor, vec3(0.92, 0.48, 0.12), exhaust * 0.75);
+      smokeColor = mix(smokeColor, vec3(1.0, 0.18, 0.01), fire * 0.88);
+      smokeColor = mix(smokeColor, vec3(1.0, 0.92, 0.2), exhaust);
       fragColor = vec4(smokeColor, smoke * 0.86);
       return;
     }
@@ -168,6 +202,7 @@ void main() {
     vec3 ac = abs(vFlags - FLAG_TRADE_FRIENDLY) < 0.1
       ? ALLY_COLOR
       : texelFetch(uAffiliation, ivec2(int(vOwnerID), 1), 0).rgb;
+    ac = mix(ac, vec3(0.01), clamp(blackOutline * 2.0, 0.0, 1.0));
     fragColor = vec4(ac, texel.a * alphaMul);
     return;
   }
@@ -220,6 +255,8 @@ void main() {
     // Dark band (70) -> border color
     color = borderColor;
   }
+
+  color = mix(color, vec3(0.01), clamp(blackOutline * 2.0, 0.0, 1.0));
 
   fragColor = vec4(color, texel.a * alphaMul);
 }

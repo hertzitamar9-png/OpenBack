@@ -382,7 +382,12 @@ export class AttackExecution implements Execution {
   private handleDeadDefender() {
     if (!(this.target.isPlayer() && this.target.numTilesOwned() < 100)) return;
     const target: Player = this.target;
-    if (hasPlaneBeachhead(this.mg, target)) return;
+    if (
+      hasPlaneBeachhead(this.mg, target) ||
+      hasPlaneBeachhead(this.mg, this._owner)
+    ) {
+      return;
+    }
 
     this.mg.conquerPlayer(this._owner, target);
 

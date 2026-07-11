@@ -9,7 +9,7 @@ import {
 } from "../game/Game";
 import { GameMap, TileRef } from "../game/GameMap";
 import { calculateBoundingBox, getMode, inscribed, simpleHash } from "../Util";
-import { isPlaneBeachhead } from "./AnnexationExemptions";
+import { hasPlaneBeachhead, isPlaneBeachhead } from "./AnnexationExemptions";
 
 interface ClusterTraversalState {
   visited: Uint32Array;
@@ -264,6 +264,9 @@ export class PlayerExecution implements Execution {
     if (capturing === null) {
       return;
     }
+    // A plane beachhead may expand only through normal combat; it cannot use
+    // surrounded-cluster annexation against the much larger defender either.
+    if (hasPlaneBeachhead(this.mg, capturing)) return;
 
     const firstTile = cluster.values().next().value;
     if (!firstTile) {

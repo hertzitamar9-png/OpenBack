@@ -62,7 +62,7 @@ export function extractNukeTelegraphs(
     // their route and destination. Enemies still see the unit and its trail.
     if (isTank && relation === TELEGRAPH_ENEMY) continue;
     const mag = isTank
-      ? { inner: 0.8, outer: 2.4 }
+      ? NUKE_MAGNITUDES[UT_PLANE]
       : NUKE_MAGNITUDES[u.unitType];
     if (!mag) continue;
     telegraphs.push({

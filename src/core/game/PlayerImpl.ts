@@ -8,6 +8,7 @@ import {
   toInt,
   within,
 } from "../Util";
+import { findLandPath } from "../pathfinding/PathFinder.Land";
 import { AttackImpl } from "./AttackImpl";
 import {
   Alliance,
@@ -1478,7 +1479,8 @@ export class PlayerImpl implements Player {
             return (
               baseLevel > 0 &&
               this.mg.euclideanDistSquared(unit.tile(), targetTile) <=
-                range * range
+                range * range &&
+              findLandPath(this.mg, unit.tile(), targetTile) !== null
             );
           },
         );

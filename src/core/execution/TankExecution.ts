@@ -7,6 +7,7 @@ import {
   UnitType,
 } from "../game/Game";
 import { TileRef } from "../game/GameMap";
+import { findLandPath } from "../pathfinding/PathFinder.Land";
 
 /** Builds a tank at a military base, then drives that parked tank over land. */
 export class TankExecution implements Execution {
@@ -16,6 +17,8 @@ export class TankExecution implements Execution {
   private target: Player | TerraNullius;
   private launched = false;
   private movementCredit = 0;
+  private path: TileRef[] = [];
+  private pathIndex = 0;
 
   constructor(
     private player: Player,
@@ -65,10 +68,19 @@ export class TankExecution implements Execution {
       this.active = false;
       return;
     }
+    const path = findLandPath(game, this.tank.tile(), this.dst);
+    if (path === null) {
+      // Do not consume the parked tank when water cuts the destination off.
+      this.active = false;
+      return;
+    }
+    this.path = path;
+    this.pathIndex = 0;
     this.target = owner;
     this.tank.setLoaded(false);
     this.tank.setTargetTile(this.dst);
-    this.tank.setTrajectoryAngle(this.angleTo(this.tank.tile(), this.dst));
+    const firstStep = this.path[1] ?? this.dst;
+    this.tank.setTrajectoryAngle(this.angleTo(this.tank.tile(), firstStep));
     this.launched = true;
   }
 
@@ -84,29 +96,18 @@ export class TankExecution implements Execution {
       this.movementCredit -= 2;
       const current = this.tank.tile();
       if (current === this.dst) {
-        this.tank.setReachedTarget();
-        this.active = false;
+        this.explodeAtDestination();
         return;
       }
-      const next = this.game
-        .neighbors(current)
-        .filter((tile) => this.game.isLand(tile))
-        .sort(
-          (a, b) =>
-            this.game.manhattanDist(a, this.dst) -
-            this.game.manhattanDist(b, this.dst),
-        )[0];
-      if (
-        next === undefined ||
-        this.game.manhattanDist(next, this.dst) >=
-          this.game.manhattanDist(current, this.dst)
-      ) {
+      const next = this.path[++this.pathIndex];
+      if (next === undefined || !this.game.isLand(next)) {
         this.active = false;
         return;
       }
       this.tank.move(next);
-      // Keep the hull/turret aimed downrange, including on diagonal paths.
-      this.tank.setTrajectoryAngle(this.angleTo(next, this.dst));
+      // Face the immediate path segment, never the final destination.
+      const following = this.path[this.pathIndex + 1] ?? next;
+      this.tank.setTrajectoryAngle(this.angleTo(next, following));
       const mine = this.game
         .units(UnitType.TankMine)
         .find(
@@ -124,6 +125,10 @@ export class TankExecution implements Execution {
         return;
       }
       this.damageSweptArea(current, next);
+      if (next === this.dst) {
+        this.explodeAtDestination();
+        return;
+      }
     }
   }
 
@@ -151,8 +156,18 @@ export class TankExecution implements Execution {
     return Math.atan2(dx, -dy);
   }
 
-  private damageArea(center: TileRef): void {
-    const radius = this.game.config().tankDamageRadius();
+  private explodeAtDestination(): void {
+    if (!this.tank?.isActive()) return;
+    this.damageArea(this.dst, this.game.config().planeFalloutRadius());
+    this.tank.setReachedTarget();
+    this.tank.delete(false);
+    this.active = false;
+  }
+
+  private damageArea(
+    center: TileRef,
+    radius = this.game.config().tankDamageRadius(),
+  ): void {
     const radiusSquared = radius * radius;
 
     for (const unit of this.game.units()) {
