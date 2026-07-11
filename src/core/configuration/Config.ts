@@ -459,15 +459,8 @@ export class Config {
       case UnitType.Runway:
         info = {
           cost: this.costWrapper(
-            // Tiered by how many you currently own (drops back down if some are
-            // destroyed): 350k for the first 15, 500k up to 20, 750k up to 25,
-            // then capped at 1M.
-            (numUnits: number) => {
-              if (numUnits < 15) return 350_000;
-              if (numUnits < 20) return 500_000;
-              if (numUnits < 25) return 750_000;
-              return 1_000_000;
-            },
+            (numUnits: number) =>
+              numUnits === 0 ? 350_000 : numUnits === 1 ? 700_000 : 1_000_000,
             UnitType.Runway,
           ),
           constructionDuration: this.instantBuild() ? 0 : 15 * 10,
@@ -482,17 +475,40 @@ export class Config {
       case UnitType.MANPAD:
         info = {
           cost: this.costWrapper(
-            // Tiered by current owned count: 300k for the first 15, 500k up to
-            // 20, 750k up to 30, then capped at 1M.
-            (numUnits: number) => {
-              if (numUnits < 15) return 300_000;
-              if (numUnits < 20) return 500_000;
-              if (numUnits < 30) return 750_000;
-              return 1_000_000;
-            },
+            (numUnits: number) =>
+              numUnits === 0 ? 300_000 : numUnits === 1 ? 600_000 : 1_000_000,
             UnitType.MANPAD,
           ),
           constructionDuration: this.instantBuild() ? 0 : 10 * 10,
+        };
+        break;
+      case UnitType.MilitaryBase:
+        info = {
+          cost: this.costWrapper(
+            (numUnits: number) =>
+              numUnits === 0 ? 275_000 : numUnits === 1 ? 550_000 : 1_000_000,
+            UnitType.MilitaryBase,
+          ),
+          constructionDuration: this.instantBuild() ? 0 : 15 * 10,
+        };
+        break;
+      case UnitType.Tank:
+        info = {
+          cost: this.costWrapper(
+            (numUnits: number) =>
+              numUnits < 15 ? 500_000 : numUnits < 35 ? 750_000 : 1_000_000,
+            UnitType.Tank,
+          ),
+        };
+        break;
+      case UnitType.TankMine:
+        info = {
+          cost: this.costWrapper(
+            (numUnits: number) =>
+              numUnits < 10 ? 200_000 : numUnits < 15 ? 350_000 : 500_000,
+            UnitType.TankMine,
+          ),
+          constructionDuration: this.instantBuild() ? 0 : 5 * 10,
         };
         break;
       default:
@@ -943,8 +959,9 @@ export class Config {
   }
 
   planeSpeed(): number {
-    // 33% faster than a third of the default nuke speed.
-    return (this.defaultNukeSpeed() * 4) / 9;
+    // Aircraft must read as fast-moving strategic units, while still leaving
+    // enough warning time for a MANPAD response.
+    return this.defaultNukeSpeed() * 0.75;
   }
 
   planeFalloutRadius(): number {

@@ -76,7 +76,19 @@ float shapeSDF(vec2 p, float R) {
     return sdPolygon(p, R, 3.0, PI * 0.5);    // Missile Silo
   if (vAtlasIdx < 6.5)
     return max(abs(p.x) - 0.20, abs(p.y) - 0.44); // Runway strip
-  return sdPolygon(p, R, 6.0, 0.0);          // MANPAD
+  if (vAtlasIdx < 7.5)
+    return sdPolygon(p, R, 6.0, 0.0);          // MANPAD
+  if (vAtlasIdx < 8.5)
+    return max(abs(p.x) - 0.42, abs(p.y) - 0.34); // Military base
+  if (vAtlasIdx < 9.5)
+    return sdPolygon(p, R, 4.0, PI * 0.25);       // Tank mine
+  if (vAtlasIdx < 10.5) {
+    float body = max(abs(p.x) - 0.07, abs(p.y) - 0.40);
+    float wings = max(abs(p.x) - 0.42, abs(p.y) - 0.09);
+    float tail = max(abs(p.x) - 0.18, abs(p.y - 0.27) - 0.06);
+    return min(body, min(wings, tail));            // Aircraft ghost
+  }
+  return max(abs(p.x) - 0.42, abs(p.y) - 0.30);   // Tank ghost
 }
 
 void main() {
@@ -136,6 +148,33 @@ void main() {
     float inBounds = step(colStart, vAtlasUV.x) * step(vAtlasUV.x, colEnd)
                    * step(0.0, vAtlasUV.y) * step(vAtlasUV.y, 1.0);
     iconAlpha = iconSample.a * borderMask * inBounds;
+    // The OpenBack structures use crisp procedural map glyphs so their
+    // placed models remain as readable as their build-bar artwork.
+    if (vAtlasIdx > 5.5) {
+      float g = 0.0;
+      if (vAtlasIdx < 6.5) {
+        float center = 1.0 - smoothstep(0.018, 0.04, abs(vLocalPos.x));
+        float bars = 1.0 - smoothstep(0.018, 0.04,
+          abs(fract((vLocalPos.y + 0.42) * 7.0) - 0.5));
+        g = center * bars;
+      } else if (vAtlasIdx < 7.5) {
+        float tube = (1.0 - smoothstep(0.035, 0.065, abs(vLocalPos.x + vLocalPos.y * 0.45)))
+                   * step(-0.27, vLocalPos.y) * step(vLocalPos.y, 0.25);
+        float sight = 1.0 - smoothstep(0.07, 0.11, length(vLocalPos - vec2(0.12, -0.19)));
+        g = max(tube, sight);
+      } else if (vAtlasIdx < 8.5) {
+        float wall = 1.0 - smoothstep(0.025, 0.055,
+          min(abs(abs(vLocalPos.x) - 0.25), abs(abs(vLocalPos.y) - 0.18)));
+        float cross = max(1.0 - smoothstep(0.035, 0.065, abs(vLocalPos.x)),
+                          1.0 - smoothstep(0.035, 0.065, abs(vLocalPos.y)));
+        g = max(wall, cross * step(length(vLocalPos), 0.16));
+      } else if (vAtlasIdx < 9.5) {
+        float x1 = 1.0 - smoothstep(0.025, 0.055, abs(vLocalPos.x - vLocalPos.y));
+        float x2 = 1.0 - smoothstep(0.025, 0.055, abs(vLocalPos.x + vLocalPos.y));
+        g = max(x1, x2) * step(length(vLocalPos), 0.30);
+      }
+      iconAlpha = g * borderMask;
+    }
   }
 
   // Composite: tinted icon over player-colored shape.

@@ -275,7 +275,9 @@ export class PlaneExecution implements Execution {
     if (from === to) return 0;
     const dx = this.game.x(to) - this.game.x(from);
     const dy = this.game.y(to) - this.game.y(from);
-    return Math.atan2(dy, dx);
+    // Aircraft artwork points toward local -Y, so rotate it onto the travel
+    // vector instead of treating +X as the model's forward axis.
+    return Math.atan2(dy, dx) + Math.PI / 2;
   }
 
   private trajectory(): TrajectoryTile[] {

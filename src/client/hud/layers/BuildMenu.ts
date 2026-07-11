@@ -40,6 +40,9 @@ const shieldIcon = assetUrl("images/ShieldIconWhite.svg");
 const planeIcon = assetUrl("images/PlaneIconWhite.svg");
 const manpadIcon = assetUrl("images/ManpadIconWhite.svg");
 const runwayIcon = assetUrl("images/RunwayIconWhite.svg");
+const militaryBaseIcon = assetUrl("images/MilitaryBaseIconWhite.svg");
+const tankIcon = assetUrl("images/TankIconWhite.svg");
+const tankMineIcon = assetUrl("images/TankMineIconWhite.svg");
 
 export interface BuildItemDisplay {
   unitType: PlayerBuildableUnitType;
@@ -140,6 +143,27 @@ export const buildTable: BuildItemDisplay[][] = [
       icon: manpadIcon,
       description: "build_menu.desc.manpad",
       key: "unit_type.manpad",
+      countable: true,
+    },
+    {
+      unitType: UnitType.MilitaryBase,
+      icon: militaryBaseIcon,
+      description: "build_menu.desc.military_base",
+      key: "unit_type.military_base",
+      countable: true,
+    },
+    {
+      unitType: UnitType.Tank,
+      icon: tankIcon,
+      description: "build_menu.desc.tank",
+      key: "unit_type.tank",
+      countable: true,
+    },
+    {
+      unitType: UnitType.TankMine,
+      icon: tankMineIcon,
+      description: "build_menu.desc.tank_mine",
+      key: "unit_type.tank_mine",
       countable: true,
     },
   ],

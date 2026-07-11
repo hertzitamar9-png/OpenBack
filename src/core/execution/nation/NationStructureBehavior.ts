@@ -68,6 +68,14 @@ function getStructureRatios(
       ratioPerCity: 0.3,
       perceivedCostIncreasePerOwned: 0.3,
     },
+    [UnitType.MilitaryBase]: {
+      ratioPerCity: 0.2,
+      perceivedCostIncreasePerOwned: 0.7,
+    },
+    [UnitType.TankMine]: {
+      ratioPerCity: 0.25,
+      perceivedCostIncreasePerOwned: 0.25,
+    },
   };
 }
 
@@ -893,6 +901,10 @@ export class NationStructureBehavior {
       case UnitType.Runway:
         return this.missileSiloValue();
       case UnitType.MANPAD:
+        return this.samLauncherValue();
+      case UnitType.MilitaryBase:
+        return this.missileSiloValue();
+      case UnitType.TankMine:
         return this.samLauncherValue();
       default:
         throw new Error(`Value function not implemented for ${type}`);

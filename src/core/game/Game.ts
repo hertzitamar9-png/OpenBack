@@ -182,6 +182,9 @@ export enum UnitType {
   Runway = "Runway",
   Plane = "Plane",
   MANPAD = "MANPAD",
+  MilitaryBase = "Military Base",
+  Tank = "Tank",
+  TankMine = "Tank Mine",
 }
 
 export enum TrainType {
@@ -203,6 +206,7 @@ export const BuildableAttacks = unitTypeGroup([
   UnitType.MIRV,
   UnitType.Warship,
   UnitType.Plane,
+  UnitType.Tank,
 ] as const);
 
 export const Structures = unitTypeGroup([
@@ -214,6 +218,8 @@ export const Structures = unitTypeGroup([
   UnitType.Factory,
   UnitType.Runway,
   UnitType.MANPAD,
+  UnitType.MilitaryBase,
+  UnitType.TankMine,
 ] as const);
 
 export const BuildMenus = unitTypeGroup([
@@ -279,8 +285,17 @@ export interface UnitParamsMap {
 
   [UnitType.MANPAD]: Record<string, never>;
 
+  [UnitType.MilitaryBase]: Record<string, never>;
+
+  [UnitType.TankMine]: Record<string, never>;
+
   [UnitType.Plane]: {
     troops?: number;
+    targetTile?: TileRef;
+    trajectory: TrajectoryTile[];
+  };
+
+  [UnitType.Tank]: {
     targetTile?: TileRef;
     trajectory: TrajectoryTile[];
   };

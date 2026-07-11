@@ -3,12 +3,14 @@ import { TileRef } from "../game/GameMap";
 import { CityExecution } from "./CityExecution";
 import { DefensePostExecution } from "./DefensePostExecution";
 import { FactoryExecution } from "./FactoryExecution";
+import { MilitaryBaseExecution } from "./MilitaryBaseExecution";
 import { MirvExecution } from "./MIRVExecution";
 import { MissileSiloExecution } from "./MissileSiloExecution";
 import { NukeExecution } from "./NukeExecution";
 import { PlaneExecution } from "./PlaneExecution";
 import { PortExecution } from "./PortExecution";
 import { SAMLauncherExecution } from "./SAMLauncherExecution";
+import { TankExecution } from "./TankExecution";
 import { WarshipExecution } from "./WarshipExecution";
 
 export class ConstructionExecution implements Execution {
@@ -147,6 +149,9 @@ export class ConstructionExecution implements Execution {
           new PlaneExecution(player, this.tile, this.troops ?? 0),
         );
         break;
+      case UnitType.Tank:
+        this.mg.addExecution(new TankExecution(player, this.tile));
+        break;
       case UnitType.Port:
         this.mg.addExecution(new PortExecution(this.structure!));
         break;
@@ -167,8 +172,12 @@ export class ConstructionExecution implements Execution {
       case UnitType.Factory:
         this.mg.addExecution(new FactoryExecution(this.structure!));
         break;
+      case UnitType.MilitaryBase:
+        this.mg.addExecution(new MilitaryBaseExecution(this.structure!));
+        break;
       case UnitType.Runway:
       case UnitType.MANPAD:
+      case UnitType.TankMine:
         break;
       default:
         console.warn(
@@ -188,6 +197,8 @@ export class ConstructionExecution implements Execution {
       case UnitType.Factory:
       case UnitType.Runway:
       case UnitType.MANPAD:
+      case UnitType.MilitaryBase:
+      case UnitType.TankMine:
         return true;
       default:
         return false;

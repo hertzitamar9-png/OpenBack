@@ -5,6 +5,10 @@ in vec2 vLocal;
 flat in float vInnerRadius;
 flat in float vOuterRadius;
 flat in float vRelation;        // 0 = self, 1 = ally, 2 = enemy
+flat in vec2 vTarget;
+flat in vec2 vSource;
+flat in float vAircraft;
+in vec2 vWorld;
 
 uniform float uTime;            // seconds
 uniform vec4 uTelegraphStyle;   // (strokeWidth, dashLen, gapLen, rotationSpeed)
@@ -25,8 +29,7 @@ void main() {
   float pulseSpd = uTelegraphAlpha.z;
   float fillAlphaOff = uTelegraphAlpha.w;
 
-  float paddedR = vOuterRadius + 2.0;
-  float dist = length(vLocal) * paddedR;
+  float dist = length(vWorld - vTarget);
 
   // Base alpha with gentle pulsation
   float baseAlpha = baseAlphaVal + pulseAmp * sin(uTime * pulseSpd);
@@ -52,10 +55,20 @@ void main() {
   float strokeAlpha = innerStroke * baseAlpha;
   float outerAlpha = outerRing * dashAlpha * baseAlpha;
 
-  float alpha = max(max(fillAlpha, strokeAlpha), outerAlpha);
+  // Every client sees the aircraft's strategic route as a red dashed line.
+  vec2 ab = vTarget - vSource;
+  float ab2 = max(dot(ab, ab), 0.001);
+  float t = clamp(dot(vWorld - vSource, ab) / ab2, 0.0, 1.0);
+  float lineDist = length(vWorld - (vSource + ab * t));
+  float lineDash = step(fract((t * sqrt(ab2) + uTime * 2.5) / 5.0), 0.62);
+  float routeAlpha = vAircraft * (1.0 - smoothstep(0.25, 0.65, lineDist)) * lineDash * 0.9;
+
+  float alpha = max(max(max(fillAlpha, strokeAlpha), outerAlpha), routeAlpha);
   if (alpha < 0.01) discard;
 
-  vec3 color = vRelation < 0.5 ? uColorSelf
+  vec3 color = routeAlpha >= max(max(fillAlpha, strokeAlpha), outerAlpha)
+             ? vec3(1.0, 0.08, 0.04)
+             : vRelation < 0.5 ? uColorSelf
              : vRelation < 1.5 ? uColorAlly
              : uColorEnemy;
   fragColor = vec4(color, alpha);

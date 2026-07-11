@@ -213,6 +213,9 @@ export interface NukeTelegraphData {
   outerRadius: number;
   /** Launcher vs local player: 0 = self, 1 = ally/teammate, 2 = enemy. */
   relation: number;
+  sourceX: number;
+  sourceY: number;
+  isAircraft: boolean;
 }
 
 /** Lean config for constructing the GPU renderer — no replay-specific fields. */

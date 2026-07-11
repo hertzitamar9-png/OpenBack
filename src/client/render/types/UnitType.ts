@@ -22,6 +22,7 @@ export const UT_SHELL = "Shell" as const;
 export const UT_MIRV_WARHEAD = "MIRV Warhead" as const;
 export const UT_TRAIN = "Train" as const;
 export const UT_PLANE = "Plane" as const;
+export const UT_TANK = "Tank" as const;
 
 // Structures
 export const UT_CITY = "City" as const;
@@ -32,6 +33,8 @@ export const UT_SAM_LAUNCHER = "SAM Launcher" as const;
 export const UT_MISSILE_SILO = "Missile Silo" as const;
 export const UT_RUNWAY = "Runway" as const;
 export const UT_MANPAD = "MANPAD" as const;
+export const UT_MILITARY_BASE = "Military Base" as const;
+export const UT_TANK_MINE = "Tank Mine" as const;
 
 // ---------------------------------------------------------------------------
 // Derived sets
@@ -46,6 +49,8 @@ export const STRUCTURE_TYPES: ReadonlySet<string> = new Set([
   UT_MISSILE_SILO,
   UT_RUNWAY,
   UT_MANPAD,
+  UT_MILITARY_BASE,
+  UT_TANK_MINE,
 ]);
 
 export const NUKE_TYPES: ReadonlySet<string> = new Set([
@@ -73,7 +78,7 @@ export const NUKE_MAGNITUDES: Readonly<
   [UT_ATOM_BOMB]: { inner: 12, outer: 30 },
   [UT_HYDROGEN_BOMB]: { inner: 80, outer: 100 },
   [UT_MIRV_WARHEAD]: { inner: 12, outer: 18 },
-  [UT_PLANE]: { inner: 6, outer: 15 },
+  [UT_PLANE]: { inner: 3, outer: 8 },
 };
 
 // ---------------------------------------------------------------------------
@@ -101,4 +106,7 @@ export const ALL_UNIT_TYPES = [
   UT_PLANE,
   UT_RUNWAY,
   UT_MANPAD,
+  UT_MILITARY_BASE,
+  UT_TANK,
+  UT_TANK_MINE,
 ] as const;

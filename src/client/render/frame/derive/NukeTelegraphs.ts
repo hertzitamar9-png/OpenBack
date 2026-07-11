@@ -64,6 +64,9 @@ export function extractNukeTelegraphs(
         relationMatrix,
         relationSize,
       ),
+      sourceX: u.pos % mapW,
+      sourceY: Math.floor(u.pos / mapW),
+      isAircraft: u.unitType === "Plane",
     });
   }
   return telegraphs;
@@ -98,6 +101,9 @@ export function extractNukeTelegraphsFromIds(
         relationMatrix,
         relationSize,
       ),
+      sourceX: u.pos % mapW,
+      sourceY: Math.floor(u.pos / mapW),
+      isAircraft: u.unitType === "Plane",
     });
   }
   return telegraphs;

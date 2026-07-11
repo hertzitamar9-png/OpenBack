@@ -1440,6 +1440,34 @@ export class PlayerImpl implements Player {
         );
         return readyPlane?.tile() ?? false;
       }
+      case UnitType.Tank: {
+        if (!this.mg.hasOwner(targetTile)) return false;
+        const owner = this.mg.owner(targetTile);
+        if (owner === this) {
+          const base = findClosestBy(
+            this.units(UnitType.MilitaryBase),
+            (unit) => this.mg.manhattanDist(unit.tile(), targetTile),
+            (unit) =>
+              unit.isActive() &&
+              !unit.isUnderConstruction() &&
+              !this.units(UnitType.Tank).some(
+                (tank) => tank.isActive() && tank.tile() === unit.tile(),
+              ),
+          );
+          return base &&
+            this.mg.euclideanDistSquared(base.tile(), targetTile) <=
+              this.mg.config().structureMinDist() ** 2
+            ? base.tile()
+            : false;
+        }
+        if (owner.isPlayer() && this.isFriendly(owner)) return false;
+        const readyTank = findClosestBy(
+          this.units(UnitType.Tank),
+          (unit) => this.mg.manhattanDist(unit.tile(), targetTile),
+          (unit) => unit.isActive() && unit.isLoaded() === true,
+        );
+        return readyTank?.tile() ?? false;
+      }
       case UnitType.Port:
         return this.portSpawn(targetTile, validTiles);
       case UnitType.Warship:
@@ -1459,6 +1487,8 @@ export class PlayerImpl implements Player {
       case UnitType.City:
       case UnitType.Factory:
       case UnitType.MANPAD:
+      case UnitType.MilitaryBase:
+      case UnitType.TankMine:
         return this.landBasedStructureSpawn(targetTile, validTiles);
       case UnitType.Runway: {
         if (this.mg.owner(targetTile) !== this) return false;

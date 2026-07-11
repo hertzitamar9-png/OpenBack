@@ -15,7 +15,7 @@ import fragSrc from "../shaders/nuke-telegraph/nuke-telegraph.frag.glsl?raw";
 import vertSrc from "../shaders/nuke-telegraph/nuke-telegraph.vert.glsl?raw";
 
 // Per-instance: x, y, innerRadius, outerRadius, relation
-const FLOATS_PER_INSTANCE = 5;
+const FLOATS_PER_INSTANCE = 8;
 
 export class NukeTelegraphPass {
   private gl: WebGL2RenderingContext;
@@ -70,7 +70,7 @@ export class NukeTelegraphPass {
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
 
     // Attribute 1: per-instance vec4 (x, y, innerR, outerR)
-    // Attribute 2: per-instance float (relation: 0=self, 1=ally, 2=enemy)
+    // Attribute 2: relation, sourceX, sourceY, aircraft flag
     const glBuf = gl.createBuffer()!;
     this.instanceBuf = new DynamicInstanceBuffer(
       gl,
@@ -84,7 +84,7 @@ export class NukeTelegraphPass {
     gl.vertexAttribPointer(1, 4, gl.FLOAT, false, stride, 0);
     gl.vertexAttribDivisor(1, 1);
     gl.enableVertexAttribArray(2);
-    gl.vertexAttribPointer(2, 1, gl.FLOAT, false, stride, 16);
+    gl.vertexAttribPointer(2, 4, gl.FLOAT, false, stride, 16);
     gl.vertexAttribDivisor(2, 1);
 
     gl.bindVertexArray(null);
@@ -103,6 +103,9 @@ export class NukeTelegraphPass {
       buf[off + 2] = d.innerRadius;
       buf[off + 3] = d.outerRadius;
       buf[off + 4] = d.relation;
+      buf[off + 5] = d.sourceX;
+      buf[off + 6] = d.sourceY;
+      buf[off + 7] = d.isAircraft ? 1 : 0;
     }
 
     this.instanceCount = count;

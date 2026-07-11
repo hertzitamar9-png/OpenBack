@@ -45,6 +45,7 @@ import {
   UT_PLANE,
   UT_SAM_MISSILE,
   UT_SHELL,
+  UT_TANK,
   UT_TRADE_SHIP,
   UT_TRAIN,
   UT_TRANSPORT,
@@ -85,6 +86,7 @@ const UNIT_ORDER = [
 
 const ATLAS_COLS = UNIT_ORDER.length;
 const PLANE_COL = ATLAS_COLS;
+const TANK_COL = ATLAS_COLS + 1;
 
 /** Atlas column of the hydrogen bomb — drives the GPU glow halo. */
 const HYDROGEN_BOMB_COL = UNIT_ORDER.indexOf(UT_HYDROGEN_BOMB);
@@ -112,6 +114,7 @@ const FLAG_ANGRY = 2;
 const FLAG_TRADE_FRIENDLY = 3;
 const FLAG_RETREATING = 4;
 const FLAG_FLICKER_UNTARGETABLE = 5;
+const FLAG_LAUNCH_SMOKE = 6;
 
 /** Atlas column indices for train sub-types (resolved from trainType + loaded) */
 const TRAIN_ENGINE_COL = UNIT_ORDER.indexOf("TrainEngine");
@@ -272,15 +275,22 @@ export class UnitPass {
       }
     }
     this.typeToAtlasCol.set(UT_PLANE, PLANE_COL);
+    this.typeToAtlasCol.set(UT_TANK, TANK_COL);
 
     // Compile shaders
     this.program = createProgram(
       gl,
-      shaderSrc(unitVertSrc, { ATLAS_COLS, HYDROGEN_BOMB_COL, PLANE_COL }),
+      shaderSrc(unitVertSrc, {
+        ATLAS_COLS,
+        HYDROGEN_BOMB_COL,
+        PLANE_COL,
+        TANK_COL,
+      }),
       shaderSrc(unitFragSrc, {
         PALETTE_SIZE: getPaletteSize(),
         ATLAS_COLS,
         PLANE_COL,
+        TANK_COL,
       }),
     );
     this.uCamera = gl.getUniformLocation(this.program, "uCamera")!;
@@ -488,7 +498,13 @@ export class UnitPass {
       }
 
       let flags = FLAG_NORMAL;
-      if (isTradeFriendly) {
+      if (
+        unit.unitType === UT_PLANE &&
+        (unit.underConstruction ||
+          (unit.targetTile !== null && unit.loaded === false))
+      ) {
+        flags = FLAG_LAUNCH_SMOKE;
+      } else if (isTradeFriendly) {
         flags = FLAG_TRADE_FRIENDLY;
       } else if (isRetreatingWarship) {
         flags = FLAG_RETREATING;
@@ -508,7 +524,7 @@ export class UnitPass {
       // units derive it from their lastPos→pos trail (no-op for static ones).
       let angle = 0;
       if (unit.unitType === UT_PLANE && unit.trajectoryAngle !== undefined) {
-        angle = -unit.trajectoryAngle;
+        angle = unit.trajectoryAngle;
       } else if (unit.lastPos !== unit.pos) {
         const lx = unit.lastPos % this.mapW;
         const ly = (unit.lastPos - lx) / this.mapW;

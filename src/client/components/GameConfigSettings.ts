@@ -121,6 +121,9 @@ const unitOptions: { type: UnitType; translationKey: string }[] = [
   { type: UnitType.Runway, translationKey: "unit_type.runway" },
   { type: UnitType.Plane, translationKey: "unit_type.plane" },
   { type: UnitType.MANPAD, translationKey: "unit_type.manpad" },
+  { type: UnitType.MilitaryBase, translationKey: "unit_type.military_base" },
+  { type: UnitType.Tank, translationKey: "unit_type.tank" },
+  { type: UnitType.TankMine, translationKey: "unit_type.tank_mine" },
 ];
 
 const MAP_ICON = svg`<path

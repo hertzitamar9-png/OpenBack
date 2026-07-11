@@ -131,14 +131,17 @@ export class BuildPreviewController implements Controller {
             (ghost.ghostType === UnitType.Plane ||
               ghost.ghostType === UnitType.Runway) &&
             ghost.canBuild;
+          const anchoredVehicle =
+            (ghost.ghostType === UnitType.Plane ||
+              ghost.ghostType === UnitType.Tank) &&
+            ghost.canBuild;
           const radiusFollowsCursor = !(
             (ghost.canUpgrade && ghost.upgradeTargetTile !== null) ||
             anchoredToSnappedRunway
           );
           this.view.updateGhostPreview({
             ...ghost,
-            tileX: w.x - 0.5,
-            tileY: w.y - 0.5,
+            ...(anchoredVehicle ? {} : { tileX: w.x - 0.5, tileY: w.y - 0.5 }),
             ...(radiusFollowsCursor
               ? { radiusTileX: w.x - 0.5, radiusTileY: w.y - 0.5 }
               : {}),
@@ -451,6 +454,13 @@ export class BuildPreviewController implements Controller {
         break;
       }
       case UnitType.Plane: {
+        // While placing a new aircraft, show only its silhouette on a valid
+        // runway. Flight range appears only when selecting a ready aircraft
+        // for an actual deployment target.
+        if (this.game.owner(tileRef) === myPlayer) {
+          rangeRadius = 0;
+          break;
+        }
         const runwayTile = u.canBuild !== false ? u.canBuild : tileRef;
         const stack = myPlayer
           .units(UnitType.Runway)
@@ -484,8 +494,16 @@ export class BuildPreviewController implements Controller {
     const cost = u.cost;
     return {
       ghostType: u.type,
-      tileX: this.game.x(tileRef),
-      tileY: this.game.y(tileRef),
+      tileX:
+        (u.type === UnitType.Plane || u.type === UnitType.Tank) &&
+        u.canBuild !== false
+          ? this.game.x(u.canBuild)
+          : this.game.x(tileRef),
+      tileY:
+        (u.type === UnitType.Plane || u.type === UnitType.Tank) &&
+        u.canBuild !== false
+          ? this.game.y(u.canBuild)
+          : this.game.y(tileRef),
       radiusTileX,
       radiusTileY,
       canBuild: u.canBuild !== false,

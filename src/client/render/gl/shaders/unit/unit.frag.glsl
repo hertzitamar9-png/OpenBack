@@ -30,6 +30,7 @@ const float FLAG_ANGRY          = 2.0;
 const float FLAG_TRADE_FRIENDLY = 3.0;
 const float FLAG_RETREATING     = 4.0;
 const float FLAG_FLICKER_UNTARGETABLE = 5.0; // nuke out of SAM range — dimmed
+const float FLAG_LAUNCH_SMOKE = 6.0;
 
 // Ally color for trade-friendly override (yellow — matches affiliation.ts ALLY)
 const vec3 ALLY_COLOR = vec3(1.0, 1.0, 0.0);
@@ -55,14 +56,9 @@ void main() {
                   vCellUV.y >= 0.0 && vCellUV.y <= 1.0;
   if (inSprite) {
     if (abs(vAtlasCol - float(PLANE_COL)) < 0.5) {
-      // The quad is rotated to face the travel direction; counter-rotate the
-      // sprite sample space so the silhouette nose tracks that heading.
-      float ca = cos(-vAngle);
-      float sa = sin(-vAngle);
-      vec2 p = vec2(
-        (vCellUV.x - 0.5) * ca - (vCellUV.y - 0.5) * sa,
-        (vCellUV.x - 0.5) * sa + (vCellUV.y - 0.5) * ca
-      );
+      // The vertex shader rotates the complete aircraft quad. Keeping the
+      // model in local coordinates makes its nose visibly face the target.
+      vec2 p = vCellUV - 0.5;
       float aa = 0.02;
 
       // Tapered fuselage: pointed nose/tail, fuller mid-body.
@@ -82,13 +78,47 @@ void main() {
                  * smoothstep(tLead - aa, tLead + aa, p.y)
                  * smoothstep(0.40 + aa, 0.40 - aa, p.y);
 
-      float planeMask = clamp(max(body, max(wings, tail)), 0.0, 1.0);
+      // Twin engine pods make this read as an aircraft instead of a dart.
+      float engines = smoothstep(0.075 + aa, 0.075 - aa,
+          min(length(p - vec2(-0.17, 0.02)), length(p - vec2(0.17, 0.02))));
+      float cockpit = smoothstep(0.055 + aa, 0.055 - aa,
+          length((p - vec2(0.0, -0.25)) * vec2(1.0, 1.8)));
+      float planeMask = clamp(max(max(body, wings), max(tail, engines)), 0.0, 1.0);
       // Brighter forward fuselage/cockpit, darker aft for readability.
       float shade = mix(0.30, 0.78, smoothstep(0.05, -0.35, p.y));
-      texel = vec4(vec3(shade), planeMask);
+      vec3 aircraftShade = mix(vec3(shade), vec3(0.86, 0.95, 1.0), cockpit);
+      texel = vec4(aircraftShade, planeMask);
+    } else if (abs(vAtlasCol - float(TANK_COL)) < 0.5) {
+      vec2 p = vCellUV - 0.5;
+      float aa = 0.025;
+      float hull = smoothstep(0.34 + aa, 0.34 - aa, abs(p.x))
+                 * smoothstep(0.27 + aa, 0.27 - aa, abs(p.y));
+      float tracks = smoothstep(0.44 + aa, 0.44 - aa, abs(p.x))
+                   * smoothstep(0.34 + aa, 0.34 - aa, abs(p.y));
+      float turret = smoothstep(0.16 + aa, 0.16 - aa, length(p));
+      float barrel = smoothstep(0.045 + aa, 0.045 - aa, abs(p.x))
+                   * smoothstep(-0.05, 0.39, -p.y);
+      float mask = max(tracks * 0.75, max(hull, max(turret, barrel)));
+      float shade = tracks > hull ? 0.25 : (turret > 0.5 ? 0.78 : 0.52);
+      texel = vec4(vec3(shade), mask);
     } else {
       vec2 atlasUV = vec2((vAtlasCol + vCellUV.x) / float(ATLAS_COLS), vCellUV.y);
       texel = texture(uAtlas, atlasUV);
+    }
+  }
+
+  // Animated exhaust while an aircraft is loading or counting down to launch.
+  if (abs(vAtlasCol - float(PLANE_COL)) < 0.5 &&
+      abs(vFlags - FLAG_LAUNCH_SMOKE) < 0.1 && texel.a < 0.01) {
+    vec2 p = vCellUV - 0.5;
+    float plume = smoothstep(0.16, 0.02,
+        abs(p.x) + 0.05 * sin(uTick * 0.22 + p.y * 30.0))
+        * smoothstep(0.12, 0.24, p.y)
+        * smoothstep(0.52, 0.27, p.y);
+    float puff = 0.45 + 0.35 * sin(uTick * 0.31 + p.y * 46.0);
+    if (plume > 0.01) {
+      fragColor = vec4(mix(vec3(0.34), vec3(0.88), puff), plume * 0.72);
+      return;
     }
   }
 

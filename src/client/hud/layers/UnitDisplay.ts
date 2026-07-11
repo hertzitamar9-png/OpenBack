@@ -29,6 +29,9 @@ const defensePostIcon = assetUrl("images/ShieldIconWhite.svg");
 const planeIcon = assetUrl("images/PlaneIconWhite.svg");
 const manpadIcon = assetUrl("images/ManpadIconWhite.svg");
 const runwayIcon = assetUrl("images/RunwayIconWhite.svg");
+const militaryBaseIcon = assetUrl("images/MilitaryBaseIconWhite.svg");
+const tankIcon = assetUrl("images/TankIconWhite.svg");
+const tankMineIcon = assetUrl("images/TankMineIconWhite.svg");
 
 @customElement("unit-display")
 export class UnitDisplay extends LitElement implements Controller {
@@ -46,6 +49,9 @@ export class UnitDisplay extends LitElement implements Controller {
   private _samLauncher = 0;
   private _runway = 0;
   private _manpad = 0;
+  private _militaryBase = 0;
+  private _tank = 0;
+  private _tankMine = 0;
   private allDisabled = false;
   private _hoveredUnit: PlayerBuildableUnitType | null = null;
 
@@ -93,6 +99,11 @@ export class UnitDisplay extends LitElement implements Controller {
           this.cost(item) <= (player?.gold() ?? 0n) &&
           (player?.units(UnitType.Runway).length ?? 0) > 0
         );
+      case UnitType.Tank:
+        return (
+          this.cost(item) <= (player?.gold() ?? 0n) &&
+          (player?.units(UnitType.MilitaryBase).length ?? 0) > 0
+        );
       default:
         return this.cost(item) <= (player?.gold() ?? 0n);
     }
@@ -113,6 +124,9 @@ export class UnitDisplay extends LitElement implements Controller {
     this._warships = player.totalUnitLevels(UnitType.Warship);
     this._runway = player.totalUnitLevels(UnitType.Runway);
     this._manpad = player.totalUnitLevels(UnitType.MANPAD);
+    this._militaryBase = player.totalUnitLevels(UnitType.MilitaryBase);
+    this._tank = player.totalUnitLevels(UnitType.Tank);
+    this._tankMine = player.totalUnitLevels(UnitType.TankMine);
     this.requestUpdate();
   }
 
@@ -132,7 +146,7 @@ export class UnitDisplay extends LitElement implements Controller {
 
     return html`
       <div class="border-t border-white/10 px-1 py-0.5 w-full">
-        <div class="grid grid-cols-[repeat(13,minmax(0,1fr))] gap-0.5 w-full">
+        <div class="grid grid-cols-[repeat(16,minmax(0,1fr))] gap-px w-full">
           ${this.renderUnitItem(
             cityIcon,
             this._cities,
@@ -224,6 +238,27 @@ export class UnitDisplay extends LitElement implements Controller {
             "runway",
             this.keybinds["buildRunway"]?.key ?? "Shift+Digit3",
           )}
+          ${this.renderUnitItem(
+            militaryBaseIcon,
+            this._militaryBase,
+            UnitType.MilitaryBase,
+            "military_base",
+            "⇧4",
+          )}
+          ${this.renderUnitItem(
+            tankIcon,
+            this._tank,
+            UnitType.Tank,
+            "tank",
+            "⇧5",
+          )}
+          ${this.renderUnitItem(
+            tankMineIcon,
+            this._tankMine,
+            UnitType.TankMine,
+            "tank_mine",
+            "⇧6",
+          )}
         </div>
       </div>
     `;
@@ -292,7 +327,7 @@ export class UnitDisplay extends LitElement implements Controller {
           title=${translateText("unit_type." + structureKey)}
           class="${this.canBuild(unitType)
             ? ""
-            : "opacity-40"} min-w-0 h-10 border border-slate-500 rounded-sm px-0.5 py-0.5 flex flex-col items-center justify-center cursor-pointer
+            : "opacity-40"} min-w-0 h-9 border border-slate-500 rounded-sm px-px py-px flex flex-col items-center justify-center cursor-pointer
              ${selected ? "hover:bg-gray-400/10" : "hover:bg-gray-800"}
              rounded-sm text-white ${selected ? "bg-slate-400/20" : ""}"
           @click=${() => {
@@ -320,6 +355,14 @@ export class UnitDisplay extends LitElement implements Controller {
               case UnitType.Plane:
                 this.eventBus?.emit(
                   new ToggleStructureEvent([UnitType.Runway, UnitType.Plane]),
+                );
+                break;
+              case UnitType.Tank:
+                this.eventBus?.emit(
+                  new ToggleStructureEvent([
+                    UnitType.MilitaryBase,
+                    UnitType.Tank,
+                  ]),
                 );
                 break;
               default:

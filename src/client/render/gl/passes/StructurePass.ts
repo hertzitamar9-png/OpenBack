@@ -20,10 +20,14 @@ import {
   UT_DEFENSE_POST,
   UT_FACTORY,
   UT_MANPAD,
+  UT_MILITARY_BASE,
   UT_MISSILE_SILO,
+  UT_PLANE,
   UT_PORT,
   UT_RUNWAY,
   UT_SAM_LAUNCHER,
+  UT_TANK,
+  UT_TANK_MINE,
 } from "../../types";
 import { DynamicInstanceBuffer } from "../DynamicBuffer";
 import type { RenderSettings } from "../RenderSettings";
@@ -53,12 +57,14 @@ const STRUCTURE_ORDER = [
   UT_MISSILE_SILO,
   UT_RUNWAY,
   UT_MANPAD,
+  UT_MILITARY_BASE,
+  UT_TANK_MINE,
 ] as const;
 
 // One atlas column per structure type (icon-atlas.png is a single row of
 // 64x64 cells; regenerate with src/scripts/generate-icon-atlas.mjs).
-const ATLAS_COLS = STRUCTURE_ORDER.length;
-const STRUCTURE_TYPES_COUNT = STRUCTURE_ORDER.length;
+const ATLAS_COLS = STRUCTURE_ORDER.length + 2;
+const STRUCTURE_TYPES_COUNT = ATLAS_COLS;
 
 // ---------------------------------------------------------------------------
 // Instance data layout
@@ -113,6 +119,10 @@ export class StructurePass {
 
   /** unitType string → atlas column index (0 .. STRUCTURE_ORDER.length-1) */
   private typeToAtlasCol = new Map<string, number>();
+  private ghostOnlyTypeToAtlasCol = new Map<string, number>([
+    [UT_PLANE, STRUCTURE_ORDER.length],
+    [UT_TANK, STRUCTURE_ORDER.length + 1],
+  ]);
   private mapW: number;
 
   /** Build-button hover highlight: bitmask of atlas columns (0 = off). */
@@ -353,7 +363,9 @@ export class StructurePass {
 
   draw(cameraMatrix: Float32Array, zoom: number): void {
     const hasGhost =
-      this.ghost !== null && this.typeToAtlasCol.has(this.ghost.ghostType);
+      this.ghost !== null &&
+      (this.typeToAtlasCol.has(this.ghost.ghostType) ||
+        this.ghostOnlyTypeToAtlasCol.has(this.ghost.ghostType));
     if (this.instanceCount === 0 && !hasGhost) return;
 
     const gl = this.gl;
@@ -416,7 +428,9 @@ export class StructurePass {
     // --- Ghost structure (1 translucent instance with outline) ---
     if (hasGhost) {
       const g = this.ghost!;
-      const atlasIdx = this.typeToAtlasCol.get(g.ghostType)!;
+      const atlasIdx =
+        this.typeToAtlasCol.get(g.ghostType) ??
+        this.ghostOnlyTypeToAtlasCol.get(g.ghostType)!;
 
       // Temporarily rebind instance attrs to ghost buffer
       gl.bindBuffer(gl.ARRAY_BUFFER, this.ghostInstanceBuf);
@@ -449,7 +463,7 @@ export class StructurePass {
       this.ghostBuf[5] = 0;
       gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.ghostBuf);
 
-      gl.uniform1f(this.uGhostAlpha, 0.5);
+      gl.uniform1f(this.uGhostAlpha, g.canBuild ? 0.78 : 0.22);
       if (g.canUpgrade) {
         gl.uniform3f(this.uOutlineColor, 0.0, 0.8, 0.0); // green tint — upgrade
       } else if (g.canBuild) {

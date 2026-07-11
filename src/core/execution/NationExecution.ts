@@ -209,6 +209,54 @@ export class NationExecution implements Execution {
     this.warshipBehavior.counterWarshipInfestation();
     this.nukeBehavior.maybeSendNuke();
     this.maybeSendPlane();
+    this.maybeSendTank();
+  }
+
+  private maybeSendTank(): void {
+    const player = this.player;
+    if (
+      player === null ||
+      this.mg.config().isUnitDisabled(UnitType.Tank) ||
+      this.mg.ticks() % (this.attackRate * 5) !== this.attackTick
+    )
+      return;
+    let tank = player
+      .units(UnitType.Tank)
+      .find((u) => u.isActive() && u.isLoaded() === true);
+    if (!tank) {
+      const base = player
+        .units(UnitType.MilitaryBase)
+        .find(
+          (u) =>
+            u.isActive() &&
+            !u.isUnderConstruction() &&
+            !player
+              .units(UnitType.Tank)
+              .some((t) => t.isActive() && t.tile() === u.tile()),
+        );
+      if (base)
+        this.mg.addExecution(
+          new ConstructionExecution(player, UnitType.Tank, base.tile()),
+        );
+      return;
+    }
+    const targets = this.mg
+      .players()
+      .filter(
+        (other) =>
+          other !== player &&
+          other.isAlive() &&
+          player.canAttackPlayer(other) &&
+          other.borderTiles().size > 0,
+      );
+    if (targets.length === 0) return;
+    const target = this.random.randElement(targets);
+    const tile = this.random.randElement(Array.from(target.borderTiles()));
+    if (player.canBuild(UnitType.Tank, tile) !== false) {
+      this.mg.addExecution(
+        new ConstructionExecution(player, UnitType.Tank, tile),
+      );
+    }
   }
 
   private maybeSendPlane(): void {
