@@ -76,11 +76,26 @@ export class PlaneExecution implements Execution {
     }
 
     // Capture how many completed runways the player owns now (before this one
-    // is consumed on launch). The impact radius scales with this count:
-    // 1 runway = 100% of a SAM's radius, +35% per extra runway.
+    // is consumed on launch). The plane's maximum flight distance scales with
+    // this count: 1 runway = 100% of a SAM's radius, +35% per extra runway.
     this.runwayCount = this.player
       .units(UnitType.Runway)
       .filter((unit) => unit.isActive() && !unit.isUnderConstruction()).length;
+
+    // Enforce the runway-derived flight range: the destination must be within
+    // the plane's maximum flight radius of the launch runway, otherwise it
+    // would run out of fuel before arriving. Reject here (before any troops are
+    // committed) so nothing is wasted.
+    const maxFlightRadius = game
+      .config()
+      .planeMaxFlightRadius(this.runwayCount);
+    if (
+      game.euclideanDistSquared(this.src, this.dst) >
+      maxFlightRadius * maxFlightRadius
+    ) {
+      this.active = false;
+      return;
+    }
 
     this.carriedTroops = Math.max(
       0,
@@ -165,7 +180,7 @@ export class PlaneExecution implements Execution {
   }
 
   private crash(tile: TileRef, deployTroops: boolean): void {
-    const radius = this.game.config().planeFalloutRadius(this.runwayCount);
+    const radius = this.game.config().planeFalloutRadius();
     const impacted = this.game.bfs(tile, (_, next) => {
       return this.game.euclideanDistSquared(tile, next) <= radius * radius;
     });

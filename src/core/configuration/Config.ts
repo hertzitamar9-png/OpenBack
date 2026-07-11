@@ -459,7 +459,15 @@ export class Config {
       case UnitType.Runway:
         info = {
           cost: this.costWrapper(
-            (numUnits: number) => Math.min(1_400_000, (numUnits + 1) * 350_000),
+            // Tiered by how many you currently own (drops back down if some are
+            // destroyed): 350k for the first 15, 500k up to 20, 750k up to 25,
+            // then capped at 1M.
+            (numUnits: number) => {
+              if (numUnits < 15) return 350_000;
+              if (numUnits < 20) return 500_000;
+              if (numUnits < 25) return 750_000;
+              return 1_000_000;
+            },
             UnitType.Runway,
           ),
           constructionDuration: this.instantBuild() ? 0 : 15 * 10,
@@ -474,7 +482,14 @@ export class Config {
       case UnitType.MANPAD:
         info = {
           cost: this.costWrapper(
-            (numUnits: number) => Math.min(1_200_000, (numUnits + 1) * 300_000),
+            // Tiered by current owned count: 300k for the first 15, 500k up to
+            // 20, 750k up to 30, then capped at 1M.
+            (numUnits: number) => {
+              if (numUnits < 15) return 300_000;
+              if (numUnits < 20) return 500_000;
+              if (numUnits < 30) return 750_000;
+              return 1_000_000;
+            },
             UnitType.MANPAD,
           ),
           constructionDuration: this.instantBuild() ? 0 : 10 * 10,
@@ -931,10 +946,15 @@ export class Config {
     return this.defaultNukeSpeed() / 3;
   }
 
-  planeFalloutRadius(runwayCount: number = 1): number {
-    // 1 runway gives the plane an impact radius equal to a SAM's radius (100%).
-    // Each additional runway the player owns adds 35% of a SAM's radius:
-    // 1 runway = 100%, 2 = 135%, 3 = 170%, ...
+  planeFalloutRadius(): number {
+    return this.nukeMagnitudes(UnitType.AtomBomb).outer / 3;
+  }
+
+  // The plane's maximum flight distance ("fuel range"), measured from the
+  // launch runway. More runways = longer range: 1 runway gives a range equal to
+  // a SAM's radius (100%), each additional runway adds 35% of a SAM's radius.
+  // 1 runway = 100%, 2 = 135%, 3 = 170%, ...
+  planeMaxFlightRadius(runwayCount: number = 1): number {
     const runways = Math.max(1, runwayCount);
     return this.defaultSamRange() * (1 + 0.35 * (runways - 1));
   }

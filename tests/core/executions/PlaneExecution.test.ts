@@ -24,6 +24,9 @@ describe("PlaneExecution", () => {
     attacker = game.player(attackerInfo.id);
     defender = game.player(defenderInfo.id);
     attacker.conquer(game.ref(5, 5));
+    // In-range target (~17 tiles from the runway, within the 20-tile test SAM
+    // radius) and an out-of-range target (~106 tiles away).
+    defender.conquer(game.ref(17, 17));
     defender.conquer(game.ref(80, 80));
     attacker.addTroops(10_000);
     attacker.buildUnit(UnitType.Runway, game.ref(5, 5), {});
@@ -31,7 +34,7 @@ describe("PlaneExecution", () => {
 
   test("loads exactly the requested troops and consumes the runway", () => {
     const troopsBefore = attacker.troops();
-    game.addExecution(new PlaneExecution(attacker, game.ref(80, 80), 1_234));
+    game.addExecution(new PlaneExecution(attacker, game.ref(17, 17), 1_234));
 
     game.executeNextTick();
     const plane = attacker.units(UnitType.Plane)[0];
@@ -45,10 +48,21 @@ describe("PlaneExecution", () => {
     expect(plane.isUnderConstruction()).toBe(false);
   });
 
+  test("refuses to launch beyond the runway's flight radius", () => {
+    const troopsBefore = attacker.troops();
+    game.addExecution(new PlaneExecution(attacker, game.ref(80, 80), 1_234));
+
+    game.executeNextTick();
+    expect(attacker.units(UnitType.Plane)).toHaveLength(0);
+    // No troops committed and the runway is left intact.
+    expect(attacker.troops()).toBe(troopsBefore);
+    expect(attacker.units(UnitType.Runway)).toHaveLength(1);
+  });
+
   test("a MANPAD destroys itself, the plane, and every carried troop", () => {
-    const interceptTile = game.ref(40, 40);
+    const interceptTile = game.ref(11, 11);
     defender.buildUnit(UnitType.MANPAD, interceptTile, {});
-    game.addExecution(new PlaneExecution(attacker, game.ref(80, 80), 2_000));
+    game.addExecution(new PlaneExecution(attacker, game.ref(17, 17), 2_000));
 
     game.executeNextTick();
     const plane = attacker.units(UnitType.Plane)[0];
