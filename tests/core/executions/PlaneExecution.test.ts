@@ -126,4 +126,26 @@ describe("PlaneExecution", () => {
     expect(game.owner(target)).toBe(attacker);
     expect(game.owner(nearbyNeutral)).toBe(attacker);
   });
+
+  test("a surrounded crash beachhead cannot be automatically annexed", () => {
+    // Fill the target region so the landing is completely enclosed by the
+    // defender and would normally be removed by PlayerExecution annexation.
+    for (let y = 12; y <= 22; y++) {
+      for (let x = 12; x <= 22; x++) {
+        defender.conquer(game.ref(x, y));
+      }
+    }
+    const plane = loadPlane(2_000);
+    const target = game.ref(17, 17);
+    game.addExecution(new PlaneExecution(attacker, target, 0));
+    for (let i = 0; i < 200 && plane.isActive(); i++) {
+      game.executeNextTick();
+    }
+    expect(game.owner(target)).toBe(attacker);
+
+    // More than two annexation scans: the beachhead must remain until it is
+    // actually fought over tile by tile.
+    for (let i = 0; i < 60; i++) game.executeNextTick();
+    expect(game.owner(target)).toBe(attacker);
+  });
 });

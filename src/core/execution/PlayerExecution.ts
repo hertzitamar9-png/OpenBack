@@ -9,6 +9,7 @@ import {
 } from "../game/Game";
 import { GameMap, TileRef } from "../game/GameMap";
 import { calculateBoundingBox, getMode, inscribed, simpleHash } from "../Util";
+import { isPlaneBeachhead } from "./AnnexationExemptions";
 
 interface ClusterTraversalState {
   visited: Uint32Array;
@@ -247,6 +248,10 @@ export class PlayerExecution implements Execution {
   }
 
   private removeCluster(cluster: Set<TileRef>) {
+    // Airborne beachheads must be conquered through normal attacks. Their
+    // intentionally surrounded placement must not trigger free annexation.
+    if (isPlaneBeachhead(this.mg, this.player, cluster)) return;
+
     for (const t of cluster) {
       if (this.mg?.ownerID(t) !== this.player?.smallID()) {
         // Other removeCluster operations could change tile owners,

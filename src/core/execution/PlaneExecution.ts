@@ -12,6 +12,7 @@ import { TileRef } from "../game/GameMap";
 import { UniversalPathFinding } from "../pathfinding/PathFinder";
 import type { SteppingPathFinder } from "../pathfinding/types";
 import { PathStatus } from "../pathfinding/types";
+import { registerPlaneBeachhead } from "./AnnexationExemptions";
 import { SAMMissileExecution } from "./SAMMissileExecution";
 
 const LOADING_TICKS = 5 * 10;
@@ -304,6 +305,7 @@ export class PlaneExecution implements Execution {
     for (const impactedTile of capturableLand) {
       this.player.conquer(impactedTile);
     }
+    registerPlaneBeachhead(this.game, this.player, capturableLand);
   }
 
   private angleTo(from: TileRef, to: TileRef): number {
