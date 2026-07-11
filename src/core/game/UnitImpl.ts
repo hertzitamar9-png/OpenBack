@@ -43,6 +43,7 @@ export class UnitImpl implements Unit {
   // Nuke only
   private _trajectoryIndex: number = 0;
   private _trajectory: TrajectoryTile[];
+  private _trajectoryAngle = 0;
   private _deletionAt: number | null = null;
 
   constructor(
@@ -151,6 +152,7 @@ export class UnitImpl implements Unit {
       hasTrainStation: this._hasTrainStation,
       trainType: this._trainType,
       loaded: this._loaded,
+      trajectoryAngle: this._trajectoryAngle,
     };
   }
 
@@ -488,6 +490,15 @@ export class UnitImpl implements Unit {
 
   trajectory(): TrajectoryTile[] {
     return this._trajectory;
+  }
+
+  setTrajectoryAngle(angle: number): void {
+    this._trajectoryAngle = angle;
+    this.mg.addUpdate(this.toUpdate());
+  }
+
+  trajectoryAngle(): number {
+    return this._trajectoryAngle;
   }
 
   setTargetUnit(target: Unit | undefined): void {

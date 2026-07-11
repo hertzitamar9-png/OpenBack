@@ -478,6 +478,9 @@ export interface Unit {
   targetTile(): TileRef | undefined;
   setTrajectoryIndex(i: number): void;
   setTrajectory(trajectory: TrajectoryTile[]): void;
+  /** Heading (radians, math convention) the unit sprite should face. */
+  setTrajectoryAngle(angle: number): void;
+  trajectoryAngle(): number;
   trajectoryIndex(): number;
   trajectory(): TrajectoryTile[];
   setTargetUnit(unit: Unit | undefined): void;

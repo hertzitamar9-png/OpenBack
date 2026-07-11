@@ -192,6 +192,7 @@ export interface UnitUpdate {
   hasTrainStation: boolean;
   trainType?: TrainType; // Only for trains
   loaded?: boolean; // Only for trains
+  trajectoryAngle?: number; // Sprite heading (radians, math convention, y-up)
 }
 
 export interface AttackUpdate {

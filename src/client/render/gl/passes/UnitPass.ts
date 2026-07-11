@@ -94,14 +94,15 @@ const HYDROGEN_BOMB_COL = UNIT_ORDER.indexOf(UT_HYDROGEN_BOMB);
 // ---------------------------------------------------------------------------
 
 /**
- * Per-instance data (16 bytes):
+ * Per-instance data (20 bytes):
  *   float x, y, ownerID   — 12 bytes (3 floats)
+ *   float angle           —  4 bytes  (sprite heading, radians; screen space)
  *   uint8 atlasIdx         —  1 byte  (atlas column 0–11)
  *   uint8 flags            —  1 byte  (0 = normal, 1 = flicker, 2 = angry, 3 = trade-friendly, 4 = retreating, 5 = flicker-untargetable)
  *   uint8 flickerHash      —  1 byte  (per-instance flicker phase offset)
  *   1 byte padding         — aligns to 4-byte boundary
  */
-const FLOATS_PER_INSTANCE = 4;
+const FLOATS_PER_INSTANCE = 5;
 const BYTES_PER_INSTANCE = FLOATS_PER_INSTANCE * 4;
 
 /** Flag values — passed as uint8, received as float in shader via normalized attribute */
@@ -170,16 +171,21 @@ function createUnitVao(
   gl.enableVertexAttribArray(0);
   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
 
-  // Attribute 1: per-instance vec3 (x, y, ownerID) — 3 floats at offset 0
+  // Attribute 1: per-instance (x, y, ownerID) — 3 floats at offset 0
   gl.bindBuffer(gl.ARRAY_BUFFER, instanceBuf);
   gl.enableVertexAttribArray(1);
   gl.vertexAttribPointer(1, 3, gl.FLOAT, false, BYTES_PER_INSTANCE, 0);
   gl.vertexAttribDivisor(1, 1);
 
-  // Attribute 2: per-instance (atlasIdx, flags, flickerHash) — 3 uint8s at offset 12, converted to float
+  // Attribute 2: per-instance (atlasIdx, flags, flickerHash) — 3 uint8s at offset 16, converted to float
   gl.enableVertexAttribArray(2);
-  gl.vertexAttribPointer(2, 3, gl.UNSIGNED_BYTE, false, BYTES_PER_INSTANCE, 12);
+  gl.vertexAttribPointer(2, 3, gl.UNSIGNED_BYTE, false, BYTES_PER_INSTANCE, 16);
   gl.vertexAttribDivisor(2, 1);
+
+  // Attribute 3: per-instance sprite heading (radians) — float at offset 12
+  gl.enableVertexAttribArray(3);
+  gl.vertexAttribPointer(3, 1, gl.FLOAT, false, BYTES_PER_INSTANCE, 12);
+  gl.vertexAttribDivisor(3, 1);
 
   gl.bindVertexArray(null);
   return vao;
@@ -382,16 +388,18 @@ export class UnitPass {
     ownerID: number,
     atlasIdx: number,
     flags: number,
+    angle: number,
   ): void {
     this.groundBuf.ensureCapacity(this.groundCount + 1);
     const off = this.groundCount * FLOATS_PER_INSTANCE;
     this.groundBuf.float32[off + 0] = x;
     this.groundBuf.float32[off + 1] = y;
     this.groundBuf.float32[off + 2] = ownerID;
+    this.groundBuf.float32[off + 3] = angle;
     const byteOff = this.groundCount * BYTES_PER_INSTANCE;
-    this.groundBuf.uint8[byteOff + 12] = atlasIdx;
-    this.groundBuf.uint8[byteOff + 13] = flags;
-    this.groundBuf.uint8[byteOff + 14] = flickerHashByte(x, y);
+    this.groundBuf.uint8[byteOff + 16] = atlasIdx;
+    this.groundBuf.uint8[byteOff + 17] = flags;
+    this.groundBuf.uint8[byteOff + 18] = flickerHashByte(x, y);
     this.groundCount++;
   }
 
@@ -401,17 +409,27 @@ export class UnitPass {
     ownerID: number,
     atlasIdx: number,
     flags: number,
+    angle: number,
   ): void {
     this.missileBuf.ensureCapacity(this.missileCount + 1);
     const off = this.missileCount * FLOATS_PER_INSTANCE;
     this.missileBuf.float32[off + 0] = x;
     this.missileBuf.float32[off + 1] = y;
     this.missileBuf.float32[off + 2] = ownerID;
+    this.missileBuf.float32[off + 3] = angle;
     const byteOff = this.missileCount * BYTES_PER_INSTANCE;
-    this.missileBuf.uint8[byteOff + 12] = atlasIdx;
-    this.missileBuf.uint8[byteOff + 13] = flags;
-    this.missileBuf.uint8[byteOff + 14] = flickerHashByte(x, y);
+    this.missileBuf.uint8[byteOff + 16] = atlasIdx;
+    this.missileBuf.uint8[byteOff + 17] = flags;
+    this.missileBuf.uint8[byteOff + 18] = flickerHashByte(x, y);
     this.missileCount++;
+  }
+
+  /** Sprite heading from a screen-space direction (dx, dy): the rotation that
+   *  maps the sprite's default "up" facing (0,-1) onto the travel direction.
+   *  Convention matches y-down screen space. */
+  private headingFromDir(dx: number, dy: number): number {
+    if (dx === 0 && dy === 0) return 0;
+    return Math.atan2(dx, -dy);
   }
 
   updateUnits(units: Map<number, UnitState>, tick: number): void {
@@ -485,6 +503,18 @@ export class UnitPass {
       const x = unit.pos % this.mapW;
       const y = (unit.pos - x) / this.mapW;
 
+      // Sprite heading (screen space, 0 = up/north). For planes we use the
+      // server-provided travel angle so the nose tracks the flight path; other
+      // units derive it from their lastPos→pos trail (no-op for static ones).
+      let angle = 0;
+      if (unit.unitType === UT_PLANE && unit.trajectoryAngle !== undefined) {
+        angle = -unit.trajectoryAngle;
+      } else if (unit.lastPos !== unit.pos) {
+        const lx = unit.lastPos % this.mapW;
+        const ly = (unit.lastPos - lx) / this.mapW;
+        angle = this.headingFromDir(x - lx, y - ly);
+      }
+
       if (isMissile) {
         if (
           SMOOTHED_NUKE_TYPES.has(unit.unitType) &&
@@ -494,16 +524,16 @@ export class UnitPass {
           const ly = (unit.lastPos - lx) / this.mapW;
           this.smoothSegs.push(this.missileCount, lx, ly, x, y);
         }
-        this.emitMissile(x, y, unit.ownerID, atlasIdx, flags);
+        this.emitMissile(x, y, unit.ownerID, atlasIdx, flags, angle);
 
         // Shells emit a second instance at lastPos (2-pixel trail effect)
         if (unit.unitType === UT_SHELL && unit.lastPos !== unit.pos) {
           const lx = unit.lastPos % this.mapW;
           const ly = (unit.lastPos - lx) / this.mapW;
-          this.emitMissile(lx, ly, unit.ownerID, atlasIdx, flags);
+          this.emitMissile(lx, ly, unit.ownerID, atlasIdx, flags, angle);
         }
       } else {
-        this.emitGround(x, y, unit.ownerID, atlasIdx, flags);
+        this.emitGround(x, y, unit.ownerID, atlasIdx, flags, angle);
       }
     }
 

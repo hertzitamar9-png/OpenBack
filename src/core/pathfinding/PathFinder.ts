@@ -32,6 +32,10 @@ export class UniversalPathFinding {
   ): ParabolaUniversalPathFinder {
     return new ParabolaUniversalPathFinder(gameMap, options);
   }
+
+  static Air(game: Game): SteppingPathFinder<TileRef> {
+    return PathFinding.Air(game);
+  }
 }
 
 // Shared water-pathfinder chain cache. The transformer chain wraps the

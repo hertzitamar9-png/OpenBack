@@ -101,6 +101,7 @@ export interface UnitState {
   hasTrainStation: boolean;
   trainType: number | null; // 0=Engine, 1=TailEngine, 2=Carriage
   loaded: boolean | null;
+  trajectoryAngle?: number; // Sprite heading (radians, math convention, y-up)
   constructionStartTick: number | null;
 }
 

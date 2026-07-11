@@ -17,7 +17,7 @@ import {
   UnitPass,
 } from "../../../../src/client/render/gl/passes/UnitPass";
 
-const FLOATS_PER_INSTANCE = 4;
+const FLOATS_PER_INSTANCE = 5;
 const TICK_MS = 100;
 
 interface SmoothingHarness {
@@ -112,10 +112,10 @@ describe("UnitPass.applyMissileSmoothing", () => {
   it("overwrites only x/y, preserving the packed ownerID/atlas/flags floats", () => {
     const h = makeSmoothingHarness([0, 10, 20, 30, 40], 1, 1050, 1000);
     h.f32[2] = 999; // ownerID slot
-    h.f32[3] = 888; // packed atlasIdx/flags/flickerHash slot
+    h.f32[4] = 888; // packed atlasIdx/flags/flickerHash slot (angle at [3])
     runSmoothing(h);
     expect(h.f32[2]).toBe(999);
-    expect(h.f32[3]).toBe(888);
+    expect(h.f32[4]).toBe(888);
   });
 
   it("handles multiple smoothed nukes in one pass", () => {

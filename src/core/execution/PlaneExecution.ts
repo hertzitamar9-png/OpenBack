@@ -10,7 +10,7 @@ import {
 } from "../game/Game";
 import { TileRef } from "../game/GameMap";
 import { UniversalPathFinding } from "../pathfinding/PathFinder";
-import { ParabolaUniversalPathFinder } from "../pathfinding/PathFinder.Parabola";
+import type { SteppingPathFinder } from "../pathfinding/types";
 import { PathStatus } from "../pathfinding/types";
 import { AttackExecution } from "./AttackExecution";
 import { SAMMissileExecution } from "./SAMMissileExecution";
@@ -25,7 +25,8 @@ export class PlaneExecution implements Execution {
   private plane: Unit | null = null;
   private src: TileRef;
   private target: Player | TerraNullius;
-  private pathFinder: ParabolaUniversalPathFinder;
+  private pathFinder: SteppingPathFinder<TileRef>;
+  private prevTile: TileRef | null = null;
   private carriedTroops = 0;
   private loadingTicks = 0;
   private warningTicks = 0;
@@ -97,12 +98,10 @@ export class PlaneExecution implements Execution {
     this.warningTicks = DEPLOYMENT_WARNING_TICKS;
     this.plane.setLoaded(false);
     this.plane.setTargetTile(this.dst);
-    const speed = game.config().planeSpeed();
-    this.pathFinder = UniversalPathFinding.Parabola(game, {
-      increment: speed,
-      distanceBasedHeight: true,
-      directionUp: true,
-    });
+    this.pathFinder = UniversalPathFinding.Air(game);
+    this.prevTile = this.src;
+    // Point the nose at the target from the get-go.
+    this.plane.setTrajectoryAngle(this.angleTo(this.src, this.dst));
     this.plane.setTrajectory(this.trajectory());
     if (this.target.isPlayer()) {
       game.displayIncomingUnit(
@@ -151,8 +150,10 @@ export class PlaneExecution implements Execution {
       return;
     }
     if (result.status === PathStatus.NEXT) {
+      const prev = this.prevTile ?? this.plane.tile();
       this.plane.move(result.node);
-      this.plane.setTrajectoryIndex(this.pathFinder.currentIndex());
+      this.prevTile = prev;
+      this.plane.setTrajectoryAngle(this.angleTo(prev, result.node));
       const interceptor = this.findInterceptor(result.node);
       if (interceptor !== null) {
         this.interceptionStarted = true;
@@ -268,6 +269,13 @@ export class PlaneExecution implements Execution {
         false,
       ),
     );
+  }
+
+  private angleTo(from: TileRef, to: TileRef): number {
+    if (from === to) return 0;
+    const dx = this.game.x(to) - this.game.x(from);
+    const dy = this.game.y(to) - this.game.y(from);
+    return Math.atan2(dy, dx);
   }
 
   private trajectory(): TrajectoryTile[] {

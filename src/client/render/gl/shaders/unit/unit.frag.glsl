@@ -20,6 +20,7 @@ flat in float vOwnerID;
 flat in float vFlags;
 flat in float vHash;
 flat in float vGlow;
+in float vAngle;
 
 out vec4 fragColor;
 
@@ -54,7 +55,14 @@ void main() {
                   vCellUV.y >= 0.0 && vCellUV.y <= 1.0;
   if (inSprite) {
     if (abs(vAtlasCol - float(PLANE_COL)) < 0.5) {
-      vec2 p = vCellUV - 0.5;
+      // The quad is rotated to face the travel direction; counter-rotate the
+      // sprite sample space so the silhouette nose tracks that heading.
+      float ca = cos(-vAngle);
+      float sa = sin(-vAngle);
+      vec2 p = vec2(
+        (vCellUV.x - 0.5) * ca - (vCellUV.y - 0.5) * sa,
+        (vCellUV.x - 0.5) * sa + (vCellUV.y - 0.5) * ca
+      );
       float aa = 0.02;
 
       // Tapered fuselage: pointed nose/tail, fuller mid-body.
