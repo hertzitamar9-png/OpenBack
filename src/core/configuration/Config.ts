@@ -980,10 +980,10 @@ export class Config {
   // launch runway. Every completed runway adds another full base radius.
   // 1 runway = 100%, 2 = 200%, 3 = 300%, ...
   planeMaxFlightRadius(runwayCount: number = 1): number {
-    // Each additional completed runway adds 50% (not 100%) of the base range.
-    // 1 runway = 100%, 2 = 150%, 3 = 200%, ...
+    // Each additional completed runway adds 35% of the base range.
+    // 1 runway = 100%, 2 = 135%, 3 = 170%, ...
     const runways = Math.max(1, runwayCount);
-    return this.defaultSamRange() * (1 + 0.5 * (runways - 1));
+    return this.defaultSamRange() * (1 + 0.35 * (runways - 1));
   }
 
   manpadRange(level: number = 1): number {
@@ -995,7 +995,9 @@ export class Config {
   }
 
   tankMaxDriveRadius(baseLevel: number = 1): number {
-    return this.defaultSamRange() * (1.2 + 0.9 * Math.max(0, baseLevel - 1));
+    // Each additional military base level on the tank's tile adds 40% of the
+    // base range. Level 1 keeps the 1.2x baseline; 2 = 160%, 3 = 200%, ...
+    return this.defaultSamRange() * (1.2 + 0.4 * Math.max(0, baseLevel - 1));
   }
 
   tankDamageRadius(): number {
