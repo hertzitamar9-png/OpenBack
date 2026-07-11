@@ -111,29 +111,10 @@ export class AccountModal extends BaseModal {
   }
 
   protected renderHeaderSlot() {
-    const isLoggedIn = !!this.userMeResponse?.user;
-    const publicId = this.userMeResponse?.player?.publicId ?? "";
-    const displayId = publicId || translateText("account_modal.not_found");
     return modalHeader({
       title: translateText("account_modal.title"),
       onBack: () => this.close(),
       ariaLabel: translateText("common.back"),
-      rightContent:
-        isLoggedIn && !this.isLoadingUser
-          ? html`
-              <div class="flex items-center gap-2">
-                <span
-                  class="text-xs text-blue-400 font-bold uppercase tracking-wider"
-                  >${translateText("account_modal.public_player_id")}</span
-                >
-                <copy-button
-                  .lobbyId=${publicId}
-                  .copyText=${publicId}
-                  .displayText=${displayId}
-                ></copy-button>
-              </div>
-            `
-          : undefined,
     });
   }
 
@@ -197,7 +178,31 @@ export class AccountModal extends BaseModal {
 
   private renderFriendsTab(): TemplateResult {
     const myPublicId = this.userMeResponse?.player?.publicId ?? "";
-    return html`<friends-list .myPublicId=${myPublicId}></friends-list>`;
+    return html`
+      <div class="flex flex-col gap-4">
+        ${this.renderPublicPlayerId()}
+        <friends-list .myPublicId=${myPublicId}></friends-list>
+      </div>
+    `;
+  }
+
+  private renderPublicPlayerId(): TemplateResult {
+    const publicId = this.userMeResponse?.player?.publicId ?? "";
+    if (!publicId) return html``;
+    return html`
+      <div
+        class="flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/5 px-5 py-4"
+      >
+        <span class="text-xs font-bold uppercase tracking-wider text-blue-400">
+          ${translateText("account_modal.public_player_id")}
+        </span>
+        <copy-button
+          .lobbyId=${publicId}
+          .copyText=${publicId}
+          .displayText=${publicId}
+        ></copy-button>
+      </div>
+    `;
   }
 
   private renderAccountTab(): TemplateResult {
@@ -206,6 +211,7 @@ export class AccountModal extends BaseModal {
     }
     return html`
       <div class="flex flex-col gap-6">
+        ${this.renderPublicPlayerId()}
         <div class="bg-white/5 rounded-xl border border-white/10 p-6">
           <div class="flex flex-col items-center gap-4">
             <div
@@ -347,7 +353,9 @@ export class AccountModal extends BaseModal {
   // sign-in prompt (no Discord/Google/email on CrazyGames).
   private renderCrazyGamesSignIn(): TemplateResult {
     return html`
-      <div class="flex items-center justify-center p-6 min-h-full">
+      <div
+        class="flex items-start justify-center px-6 pb-6 pt-[16vh] min-h-full"
+      >
         <div
           class="w-full max-w-md bg-white/5 rounded-2xl border border-white/10 p-8 text-center"
         >
@@ -507,16 +515,8 @@ export class AccountModal extends BaseModal {
         detail: { displayName: updated.user.displayName },
       }),
     );
-    // Completing the required first-time profile is the only action that
-    // unlocks the rest of the application.
-    document.body.classList.remove("profile-setup-required");
     this.close();
   };
-
-  public override close(args?: Record<string, unknown>): void {
-    if (document.body.classList.contains("profile-setup-required")) return;
-    super.close(args);
-  }
 
   private async viewGame(gameId: string): Promise<void> {
     this.close();
@@ -542,7 +542,9 @@ export class AccountModal extends BaseModal {
 
   private renderLoginOptions() {
     return html`
-      <div class="flex items-center justify-center p-6 min-h-full">
+      <div
+        class="flex items-start justify-center px-6 pb-6 pt-[16vh] min-h-full"
+      >
         <div
           class="w-full max-w-md bg-white/5 rounded-2xl border border-white/10 p-8"
         >

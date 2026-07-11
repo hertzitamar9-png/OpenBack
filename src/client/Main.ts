@@ -203,17 +203,6 @@ function updateAccountNavButton(userMeResponse: UserMeResponse | false) {
   showSignIn();
 }
 
-function updateProfileSetupGate(userMeResponse: UserMeResponse | false) {
-  const required =
-    userMeResponse !== false && !userMeResponse.user.displayName?.trim();
-  document.body.classList.toggle("profile-setup-required", required);
-  if (required) {
-    // Defer until navigation has mounted, then replace the home screen with
-    // the required first-time profile screen.
-    queueMicrotask(() => window.showPage?.("page-account"));
-  }
-}
-
 declare global {
   interface Window {
     turnstile: any;
@@ -531,7 +520,6 @@ class Client {
       } else {
         updateAccountNavButton(userMeResponse);
       }
-      updateProfileSetupGate(userMeResponse);
       // OpenBack does not bundle the upstream advertising service.
       window.adsEnabled = false;
       setLastUserMe(userMeResponse);
@@ -583,7 +571,6 @@ class Client {
       }
       const detail = (event as CustomEvent<UserMeResponse | false>).detail;
       updateAccountNavButton(detail);
-      updateProfileSetupGate(detail);
     });
 
     const settingsModal = document.querySelector(
