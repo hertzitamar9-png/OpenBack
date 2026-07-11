@@ -458,18 +458,25 @@ export class Config {
         break;
       case UnitType.Runway:
         info = {
-          cost: this.costWrapper(() => 350_000, UnitType.Runway),
+          cost: this.costWrapper(
+            (numUnits: number) => Math.min(1_400_000, (numUnits + 1) * 350_000),
+            UnitType.Runway,
+          ),
           constructionDuration: this.instantBuild() ? 0 : 15 * 10,
         };
         break;
       case UnitType.Plane:
         info = {
+          // Plane price is intentionally flat (does not scale with count).
           cost: this.costWrapper(() => 2_000_000, UnitType.Plane),
         };
         break;
       case UnitType.MANPAD:
         info = {
-          cost: this.costWrapper(() => 300_000, UnitType.MANPAD),
+          cost: this.costWrapper(
+            (numUnits: number) => Math.min(1_200_000, (numUnits + 1) * 300_000),
+            UnitType.MANPAD,
+          ),
           constructionDuration: this.instantBuild() ? 0 : 10 * 10,
         };
         break;
@@ -924,8 +931,12 @@ export class Config {
     return this.defaultNukeSpeed() / 3;
   }
 
-  planeFalloutRadius(): number {
-    return this.nukeMagnitudes(UnitType.AtomBomb).outer / 3;
+  planeFalloutRadius(runwayCount: number = 1): number {
+    // 1 runway gives the plane an impact radius equal to a SAM's radius (100%).
+    // Each additional runway the player owns adds 35% of a SAM's radius:
+    // 1 runway = 100%, 2 = 135%, 3 = 170%, ...
+    const runways = Math.max(1, runwayCount);
+    return this.defaultSamRange() * (1 + 0.35 * (runways - 1));
   }
 
   manpadRange(): number {
