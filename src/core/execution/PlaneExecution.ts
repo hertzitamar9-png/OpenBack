@@ -49,14 +49,13 @@ export class PlaneExecution implements Execution {
     const completedRunways = this.completedRunways();
     const owner = game.owner(this.dst);
 
-    // Stage one: clicking a completed owned runway builds and loads a plane.
+    // Stage one: clicking on (or near) a completed owned runway builds and
+    // loads a plane on it. canBuild snaps to the nearest runway without a
+    // parked plane so the click doesn't have to be pixel-perfect.
     if (owner === this.player) {
-      const runwayHere = completedRunways.some((u) => u.tile() === this.dst);
-      const planeHere = this.player
-        .units(UnitType.Plane)
-        .some((u) => u.isActive() && u.tile() === this.dst);
+      const spawn = this.player.canBuild(UnitType.Plane, this.dst);
       const cost = game.unitInfo(UnitType.Plane).cost(game, this.player);
-      if (!runwayHere || planeHere || this.player.gold() < cost) {
+      if (spawn === false || this.player.gold() < cost) {
         this.active = false;
         return;
       }
@@ -68,7 +67,7 @@ export class PlaneExecution implements Execution {
         this.active = false;
         return;
       }
-      this.src = this.dst;
+      this.src = spawn;
       this.mode = "loading";
       this.loadingTicks = LOADING_TICKS;
       this.plane = this.player.buildUnit(UnitType.Plane, this.src, {

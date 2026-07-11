@@ -1411,13 +1411,10 @@ export class PlayerImpl implements Player {
           (unit) => unit.isActive() && !unit.isUnderConstruction(),
         );
         if (owner === this) {
-          const runwayHere = completedRunways.some(
-            (unit) => unit.tile() === targetTile,
-          );
-          const planeHere = this.units(UnitType.Plane).some(
-            (unit) => unit.isActive() && unit.tile() === targetTile,
-          );
-          return runwayHere && !planeHere ? targetTile : false;
+          // Snap to the nearest completed runway (that has no plane parked on
+          // it yet) so clicking on or near a runway builds/parks a plane there.
+          const runwayTile = this.nearestOwnedRunwayTile(targetTile, true);
+          return runwayTile ?? false;
         }
         if (owner.isPlayer() && this.isFriendly(owner)) return false;
         const readyPlane = findClosestBy(
@@ -1465,12 +1462,12 @@ export class PlayerImpl implements Player {
         return this.landBasedStructureSpawn(targetTile, validTiles);
       case UnitType.Runway: {
         if (this.mg.owner(targetTile) !== this) return false;
-        const existingRunway = this.units(UnitType.Runway).some(
-          (unit) => unit.isActive() && unit.tile() === targetTile,
+        // Snap to a nearby existing runway so clicking on or near one stacks
+        // it (increases its level) instead of forcing a pixel-perfect click.
+        const stackTarget = this.nearestOwnedRunwayTile(targetTile);
+        return (
+          stackTarget ?? this.landBasedStructureSpawn(targetTile, validTiles)
         );
-        return existingRunway
-          ? targetTile
-          : this.landBasedStructureSpawn(targetTile, validTiles);
       }
       default:
         assertNever(unitType);
@@ -1577,6 +1574,36 @@ export class PlayerImpl implements Player {
       return false;
     }
     return tiles[0];
+  }
+
+  /**
+   * Returns the tile of the nearest completed runway we own within snapping
+   * range of `targetTile`, or null if none. Used so clicking on or near a
+   * runway snaps to it (to stack runways or park a plane) instead of requiring
+   * a pixel-perfect click. When `requireNoParkedPlane` is true, runways that
+   * already have an active plane parked on them are skipped.
+   */
+  private nearestOwnedRunwayTile(
+    targetTile: TileRef,
+    requireNoParkedPlane = false,
+  ): TileRef | null {
+    const snapRadiusSquared = this.mg.config().structureMinDist() ** 2;
+    let best: TileRef | null = null;
+    let bestDist = Infinity;
+    for (const runway of this.units(UnitType.Runway)) {
+      if (!runway.isActive() || runway.isUnderConstruction()) continue;
+      const dist = this.mg.euclideanDistSquared(runway.tile(), targetTile);
+      if (dist > snapRadiusSquared || dist >= bestDist) continue;
+      if (requireNoParkedPlane) {
+        const planeHere = this.units(UnitType.Plane).some(
+          (plane) => plane.isActive() && plane.tile() === runway.tile(),
+        );
+        if (planeHere) continue;
+      }
+      best = runway.tile();
+      bestDist = dist;
+    }
+    return best;
   }
 
   private validStructureSpawnTiles(tile: TileRef): TileRef[] {

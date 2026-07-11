@@ -125,8 +125,15 @@ export class BuildPreviewController implements Controller {
           // follows the cursor, so smooth it the same way as the icon. When
           // upgrading, the circle is anchored to the existing structure's tile
           // (stationary, correctly snapped) — leave it alone in that case.
+          // Snapped plane/runway placement is likewise anchored to the runway
+          // it snapped to, so its flight-range circle stays put too.
+          const anchoredToSnappedRunway =
+            (ghost.ghostType === UnitType.Plane ||
+              ghost.ghostType === UnitType.Runway) &&
+            ghost.canBuild;
           const radiusFollowsCursor = !(
-            ghost.canUpgrade && ghost.upgradeTargetTile !== null
+            (ghost.canUpgrade && ghost.upgradeTargetTile !== null) ||
+            anchoredToSnappedRunway
           );
           this.view.updateGhostPreview({
             ...ghost,
@@ -430,11 +437,14 @@ export class BuildPreviewController implements Controller {
         rangeRadius = this.game.config().manpadRange();
         break;
       case UnitType.Runway: {
+        // canBuild snaps to a nearby runway when stacking; anchor/measure the
+        // preview on that snapped tile so it reflects the stacked level.
+        const runwayTile = u.canBuild !== false ? u.canBuild : tileRef;
         const completed = myPlayer
           .units(UnitType.Runway)
           .filter(
             (runway) =>
-              !runway.isUnderConstruction() && runway.tile() === tileRef,
+              !runway.isUnderConstruction() && runway.tile() === runwayTile,
           )
           .reduce((sum, runway) => sum + runway.level(), 0);
         rangeRadius = this.game.config().planeMaxFlightRadius(completed + 1);
@@ -455,7 +465,10 @@ export class BuildPreviewController implements Controller {
     }
     let radiusTileX = this.game.x(tileRef);
     let radiusTileY = this.game.y(tileRef);
-    if (u.type === UnitType.Plane && u.canBuild !== false) {
+    if (
+      (u.type === UnitType.Plane || u.type === UnitType.Runway) &&
+      u.canBuild !== false
+    ) {
       radiusTileX = this.game.x(u.canBuild);
       radiusTileY = this.game.y(u.canBuild);
     }
