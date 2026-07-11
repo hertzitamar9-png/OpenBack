@@ -19,10 +19,12 @@ import {
   UT_DEFENSE_POST,
   UT_FACTORY,
   UT_MANPAD,
+  UT_MILITARY_BASE,
   UT_MISSILE_SILO,
   UT_PORT,
   UT_RUNWAY,
   UT_SAM_LAUNCHER,
+  UT_TANK_MINE,
 } from "../../types";
 import { DynamicInstanceBuffer } from "../DynamicBuffer";
 import type { RenderSettings } from "../RenderSettings";
@@ -55,6 +57,8 @@ const STRUCTURE_ORDER = [
   UT_MISSILE_SILO,
   UT_RUNWAY,
   UT_MANPAD,
+  UT_MILITARY_BASE,
+  UT_TANK_MINE,
 ] as const;
 
 /** Max characters per level label (handles up to "99"). */

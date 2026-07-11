@@ -83,7 +83,7 @@ export class SAMMissileExecution implements Execution {
 
         // A MANPAD is a one-shot interceptor and is consumed with its missile.
         if (this.ownerUnit.type() === UnitType.MANPAD) {
-          this.ownerUnit.delete(true, this.target.owner());
+          this.ownerUnit.decreaseLevel(this.target.owner());
         }
 
         // Record stats

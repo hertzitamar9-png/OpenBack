@@ -1,6 +1,12 @@
-# OpenBack v0.32.8
+# OpenBack v0.32.9
 
-- Rebased the workspace on the complete OpenBack v0.32.8 simulation, renderer, maps, and local server.
+- Updated the upstream OpenFront base to v0.32.9.
+- Fixed aircraft and tank fallout crashes on owned tiles.
+- Restored the original City, Port, Factory, Defense Post, SAM, and Silo map art.
+- Added polished atlas models and stack levels for Runway, MANPAD, Military Base, and Tank Mine.
+- Added visible Tank Mine range, stackable MANPADs/mines/bases, and stack-scaled ranges.
+- Increased aircraft speed and corrected its live heading through turns.
+- Reduced OpenBack unit snapping distance and added tank range scaling from stacked bases.
 - Replaced the product-facing name and restricted upstream logo assets with original OpenBack SVG branding.
 - Removed third-party advertising and analytics boot scripts from the local build.
 - Preserved the upstream AGPL copyright notices, source history, and contributor credits.

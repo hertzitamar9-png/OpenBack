@@ -26,7 +26,6 @@ export class PlaneExecution implements Execution {
   private src: TileRef;
   private target: Player | TerraNullius;
   private pathFinder: SteppingPathFinder<TileRef>;
-  private prevTile: TileRef | null = null;
   private carriedTroops = 0;
   private loadingTicks = 0;
   private warningTicks = 0;
@@ -99,7 +98,6 @@ export class PlaneExecution implements Execution {
     this.plane.setLoaded(false);
     this.plane.setTargetTile(this.dst);
     this.pathFinder = UniversalPathFinding.Air(game);
-    this.prevTile = this.src;
     // Point the nose at the target from the get-go.
     this.plane.setTrajectoryAngle(this.angleTo(this.src, this.dst));
     this.plane.setTrajectory(this.trajectory());
@@ -150,11 +148,10 @@ export class PlaneExecution implements Execution {
       return;
     }
     if (result.status === PathStatus.NEXT) {
-      const prev = this.prevTile ?? this.plane.tile();
+      const prev = this.plane.tile();
       this.plane.move(result.node);
-      this.prevTile = prev;
       this.plane.setTrajectoryAngle(this.angleTo(prev, result.node));
-      const interceptor = this.findInterceptor(result.node);
+      const interceptor = this.findInterceptor(prev, result.node);
       if (interceptor !== null) {
         this.interceptionStarted = true;
         this.plane.setTargetedBySAM(true);
@@ -201,9 +198,8 @@ export class PlaneExecution implements Execution {
     return best;
   }
 
-  private findInterceptor(tile: TileRef): Unit | null {
+  private findInterceptor(from: TileRef, to: TileRef): Unit | null {
     if (this.interceptionStarted) return null;
-    const rangeSquared = this.game.config().manpadRange() ** 2;
     return (
       this.game
         .units(UnitType.MANPAD)
@@ -212,9 +208,36 @@ export class PlaneExecution implements Execution {
             unit.isActive() &&
             !unit.isUnderConstruction() &&
             !this.player.isFriendly(unit.owner()) &&
-            this.game.euclideanDistSquared(tile, unit.tile()) <= rangeSquared,
+            this.distanceToFlightSegmentSquared(unit.tile(), from, to) <=
+              this.game.config().manpadRange(unit.level()) ** 2,
         ) ?? null
     );
+  }
+
+  private distanceToFlightSegmentSquared(
+    tile: TileRef,
+    from: TileRef,
+    to: TileRef,
+  ): number {
+    const ax = this.game.x(from);
+    const ay = this.game.y(from);
+    const bx = this.game.x(to);
+    const by = this.game.y(to);
+    const px = this.game.x(tile);
+    const py = this.game.y(tile);
+    const dx = bx - ax;
+    const dy = by - ay;
+    const lengthSquared = dx * dx + dy * dy;
+    const t =
+      lengthSquared === 0
+        ? 0
+        : Math.max(
+            0,
+            Math.min(1, ((px - ax) * dx + (py - ay) * dy) / lengthSquared),
+          );
+    const closestX = ax + dx * t;
+    const closestY = ay + dy * t;
+    return (px - closestX) ** 2 + (py - closestY) ** 2;
   }
 
   private crash(tile: TileRef, deployTroops: boolean): void {
@@ -240,10 +263,8 @@ export class PlaneExecution implements Execution {
             ) / 4,
         );
         owner.removeTroops(deaths);
-        if (owner !== this.player) {
-          owner.relinquish(impactedTile);
-          clearedLand.push(impactedTile);
-        }
+        owner.relinquish(impactedTile);
+        clearedLand.push(impactedTile);
       }
       this.game.setFallout(impactedTile, true);
     }

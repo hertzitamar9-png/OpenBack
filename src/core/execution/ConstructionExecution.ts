@@ -65,18 +65,25 @@ export class ConstructionExecution implements Execution {
         this.active = false;
         return;
       }
-      if (this.constructionType === UnitType.Runway) {
-        const stackedRunway = this.player
-          .units(UnitType.Runway)
+      if (
+        [
+          UnitType.Runway,
+          UnitType.MANPAD,
+          UnitType.MilitaryBase,
+          UnitType.TankMine,
+        ].includes(this.constructionType)
+      ) {
+        const stackedStructure = this.player
+          .units(this.constructionType)
           .find(
             (unit) =>
               unit.isActive() &&
               !unit.isUnderConstruction() &&
               unit.tile() === spawnTile,
           );
-        if (stackedRunway) {
+        if (stackedStructure) {
           this.player.removeGold(info.cost(this.mg, this.player));
-          stackedRunway.increaseLevel();
+          stackedStructure.increaseLevel();
           this.active = false;
           return;
         }

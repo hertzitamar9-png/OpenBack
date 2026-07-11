@@ -959,9 +959,8 @@ export class Config {
   }
 
   planeSpeed(): number {
-    // Aircraft must read as fast-moving strategic units, while still leaving
-    // enough warning time for a MANPAD response.
-    return this.defaultNukeSpeed() * 0.75;
+    // Four times the previous aircraft speed.
+    return this.defaultNukeSpeed() * 3;
   }
 
   planeFalloutRadius(): number {
@@ -977,8 +976,20 @@ export class Config {
     return this.defaultSamRange() * runways;
   }
 
-  manpadRange(): number {
-    return (this.defensePostRange() * 5) / 3;
+  manpadRange(level: number = 1): number {
+    return ((this.defensePostRange() * 5) / 3) * Math.max(1, level);
+  }
+
+  tankMineRange(level: number = 1): number {
+    return 6 * Math.max(1, level);
+  }
+
+  tankMaxDriveRadius(baseLevel: number = 1): number {
+    return this.defaultSamRange() * (1.2 + 0.9 * Math.max(0, baseLevel - 1));
+  }
+
+  openBackSnapRadius(): number {
+    return 8;
   }
 
   defaultNukeTargetableRange(): number {

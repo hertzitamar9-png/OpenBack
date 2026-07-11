@@ -61,10 +61,10 @@ const STRUCTURE_ORDER = [
   UT_TANK_MINE,
 ] as const;
 
-// One atlas column per structure type (icon-atlas.png is a single row of
-// 64x64 cells; regenerate with src/scripts/generate-icon-atlas.mjs).
-const ATLAS_COLS = STRUCTURE_ORDER.length + 2;
-const STRUCTURE_TYPES_COUNT = ATLAS_COLS;
+// The first six atlas cells remain byte-for-byte upstream art. The four
+// OpenBack structure cells use the same polished SVGs as the build bar.
+const ATLAS_COLS = 10;
+const STRUCTURE_TYPES_COUNT = STRUCTURE_ORDER.length + 2;
 
 // ---------------------------------------------------------------------------
 // Instance data layout

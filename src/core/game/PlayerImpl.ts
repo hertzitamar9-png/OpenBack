@@ -1456,7 +1456,7 @@ export class PlayerImpl implements Player {
           );
           return base &&
             this.mg.euclideanDistSquared(base.tile(), targetTile) <=
-              this.mg.config().structureMinDist() ** 2
+              this.mg.config().openBackSnapRadius() ** 2
             ? base.tile()
             : false;
         }
@@ -1464,7 +1464,23 @@ export class PlayerImpl implements Player {
         const readyTank = findClosestBy(
           this.units(UnitType.Tank),
           (unit) => this.mg.manhattanDist(unit.tile(), targetTile),
-          (unit) => unit.isActive() && unit.isLoaded() === true,
+          (unit) => {
+            if (!unit.isActive() || unit.isLoaded() !== true) return false;
+            const baseLevel = this.units(UnitType.MilitaryBase)
+              .filter(
+                (base) =>
+                  base.isActive() &&
+                  !base.isUnderConstruction() &&
+                  base.tile() === unit.tile(),
+              )
+              .reduce((sum, base) => sum + base.level(), 0);
+            const range = this.mg.config().tankMaxDriveRadius(baseLevel);
+            return (
+              baseLevel > 0 &&
+              this.mg.euclideanDistSquared(unit.tile(), targetTile) <=
+                range * range
+            );
+          },
         );
         return readyTank?.tile() ?? false;
       }
@@ -1486,10 +1502,19 @@ export class PlayerImpl implements Player {
       case UnitType.SAMLauncher:
       case UnitType.City:
       case UnitType.Factory:
+        return this.landBasedStructureSpawn(targetTile, validTiles);
       case UnitType.MANPAD:
       case UnitType.MilitaryBase:
-      case UnitType.TankMine:
-        return this.landBasedStructureSpawn(targetTile, validTiles);
+      case UnitType.TankMine: {
+        if (this.mg.owner(targetTile) !== this) return false;
+        const stackTarget = this.nearestOwnedStackableTile(
+          unitType,
+          targetTile,
+        );
+        return (
+          stackTarget ?? this.landBasedStructureSpawn(targetTile, validTiles)
+        );
+      }
       case UnitType.Runway: {
         if (this.mg.owner(targetTile) !== this) return false;
         // Snap to a nearby existing runway so clicking on or near one stacks
@@ -1617,7 +1642,7 @@ export class PlayerImpl implements Player {
     targetTile: TileRef,
     requireNoParkedPlane = false,
   ): TileRef | null {
-    const snapRadiusSquared = this.mg.config().structureMinDist() ** 2;
+    const snapRadiusSquared = this.mg.config().openBackSnapRadius() ** 2;
     let best: TileRef | null = null;
     let bestDist = Infinity;
     for (const runway of this.units(UnitType.Runway)) {
@@ -1632,6 +1657,24 @@ export class PlayerImpl implements Player {
       }
       best = runway.tile();
       bestDist = dist;
+    }
+    return best;
+  }
+
+  private nearestOwnedStackableTile(
+    type: UnitType.MANPAD | UnitType.MilitaryBase | UnitType.TankMine,
+    targetTile: TileRef,
+  ): TileRef | null {
+    const snapRadiusSquared = this.mg.config().openBackSnapRadius() ** 2;
+    let best: TileRef | null = null;
+    let bestDist = Infinity;
+    for (const unit of this.units(type)) {
+      if (!unit.isActive() || unit.isUnderConstruction()) continue;
+      const dist = this.mg.euclideanDistSquared(unit.tile(), targetTile);
+      if (dist <= snapRadiusSquared && dist < bestDist) {
+        best = unit.tile();
+        bestDist = dist;
+      }
     }
     return best;
   }

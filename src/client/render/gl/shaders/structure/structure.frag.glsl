@@ -150,19 +150,9 @@ void main() {
     iconAlpha = iconSample.a * borderMask * inBounds;
     // The OpenBack structures use crisp procedural map glyphs so their
     // placed models remain as readable as their build-bar artwork.
-    if (vAtlasIdx > 5.5) {
+    if (vAtlasIdx > 9.5) {
       float g = 0.0;
-      if (vAtlasIdx < 6.5) {
-        float center = 1.0 - smoothstep(0.018, 0.04, abs(vLocalPos.x));
-        float bars = 1.0 - smoothstep(0.018, 0.04,
-          abs(fract((vLocalPos.y + 0.42) * 7.0) - 0.5));
-        g = center * bars;
-      } else if (vAtlasIdx < 7.5) {
-        float tube = (1.0 - smoothstep(0.035, 0.065, abs(vLocalPos.x + vLocalPos.y * 0.45)))
-                   * step(-0.27, vLocalPos.y) * step(vLocalPos.y, 0.25);
-        float sight = 1.0 - smoothstep(0.07, 0.11, length(vLocalPos - vec2(0.12, -0.19)));
-        g = max(tube, sight);
-      } else if (vAtlasIdx < 8.5) {
+      if (vAtlasIdx < 8.5) {
         float wall = 1.0 - smoothstep(0.025, 0.055,
           min(abs(abs(vLocalPos.x) - 0.25), abs(abs(vLocalPos.y) - 0.18)));
         float cross = max(1.0 - smoothstep(0.035, 0.065, abs(vLocalPos.x)),

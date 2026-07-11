@@ -3,7 +3,7 @@
 // The atlas is a single-row grid of 64x64 cells, one column per structure type
 // in STRUCTURE_ORDER (see src/client/render/gl/passes/StructurePass.ts):
 //   0 City, 1 Port, 2 Factory, 3 DefensePost, 4 SAM, 5 MissileSilo,
-//   6 Runway, 7 MANPAD
+//   6 Runway, 7 MANPAD, 8 MilitaryBase, 9 TankMine
 //
 // The original 6 columns (0-5) are preserved byte-for-byte from the existing
 // atlas so those structures keep their exact look. Runway and MANPAD (columns
@@ -28,6 +28,8 @@ const atlasPath = path.join(root, "resources/atlases/icon-atlas.png");
 const NEW_ICONS = [
   { col: 6, svg: "resources/images/RunwayIconWhite.svg" },
   { col: 7, svg: "resources/images/ManpadIconWhite.svg" },
+  { col: 8, svg: "resources/images/MilitaryBaseIconWhite.svg" },
+  { col: 9, svg: "resources/images/TankMineIconWhite.svg" },
 ];
 
 async function renderGlyphCell(svgRelPath) {

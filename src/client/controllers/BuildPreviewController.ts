@@ -436,9 +436,45 @@ export class BuildPreviewController implements Controller {
       case UnitType.DefensePost:
         rangeRadius = this.game.config().defensePostRange();
         break;
-      case UnitType.MANPAD:
-        rangeRadius = this.game.config().manpadRange();
+      case UnitType.MANPAD: {
+        const stackTile = u.canBuild !== false ? u.canBuild : tileRef;
+        const level =
+          myPlayer
+            .units(UnitType.MANPAD)
+            .filter(
+              (unit) =>
+                !unit.isUnderConstruction() && unit.tile() === stackTile,
+            )
+            .reduce((sum, unit) => sum + unit.level(), 0) + 1;
+        rangeRadius = this.game.config().manpadRange(level);
         break;
+      }
+      case UnitType.TankMine: {
+        const stackTile = u.canBuild !== false ? u.canBuild : tileRef;
+        const level =
+          myPlayer
+            .units(UnitType.TankMine)
+            .filter(
+              (unit) =>
+                !unit.isUnderConstruction() && unit.tile() === stackTile,
+            )
+            .reduce((sum, unit) => sum + unit.level(), 0) + 1;
+        rangeRadius = this.game.config().tankMineRange(level);
+        break;
+      }
+      case UnitType.MilitaryBase: {
+        const stackTile = u.canBuild !== false ? u.canBuild : tileRef;
+        const level =
+          myPlayer
+            .units(UnitType.MilitaryBase)
+            .filter(
+              (unit) =>
+                !unit.isUnderConstruction() && unit.tile() === stackTile,
+            )
+            .reduce((sum, unit) => sum + unit.level(), 0) + 1;
+        rangeRadius = this.game.config().tankMaxDriveRadius(level);
+        break;
+      }
       case UnitType.Runway: {
         // canBuild snaps to a nearby runway when stacking; anchor/measure the
         // preview on that snapped tile so it reflects the stacked level.
@@ -472,11 +508,31 @@ export class BuildPreviewController implements Controller {
         rangeRadius = this.game.config().planeMaxFlightRadius(stack);
         break;
       }
+      case UnitType.Tank: {
+        if (this.game.owner(tileRef) === myPlayer) {
+          rangeRadius = 0;
+          break;
+        }
+        const baseTile = u.canBuild !== false ? u.canBuild : tileRef;
+        const level = myPlayer
+          .units(UnitType.MilitaryBase)
+          .filter(
+            (unit) => !unit.isUnderConstruction() && unit.tile() === baseTile,
+          )
+          .reduce((sum, unit) => sum + unit.level(), 0);
+        rangeRadius = this.game.config().tankMaxDriveRadius(level);
+        break;
+      }
     }
     let radiusTileX = this.game.x(tileRef);
     let radiusTileY = this.game.y(tileRef);
     if (
-      (u.type === UnitType.Plane || u.type === UnitType.Runway) &&
+      (u.type === UnitType.Plane ||
+        u.type === UnitType.Runway ||
+        u.type === UnitType.Tank ||
+        u.type === UnitType.MANPAD ||
+        u.type === UnitType.MilitaryBase ||
+        u.type === UnitType.TankMine) &&
       u.canBuild !== false
     ) {
       radiusTileX = this.game.x(u.canBuild);

@@ -110,10 +110,11 @@ export class TankExecution implements Execution {
           u.isActive() &&
           !u.isUnderConstruction() &&
           !this.player.isFriendly(u.owner()) &&
-          this.game.euclideanDistSquared(next, u.tile()) <= 4,
+          this.game.euclideanDistSquared(next, u.tile()) <=
+            this.game.config().tankMineRange(u.level()) ** 2,
       );
     if (mine) {
-      mine.delete(false);
+      mine.decreaseLevel(this.player);
       this.tank.delete(false);
       this.active = false;
       return;
@@ -134,11 +135,11 @@ export class TankExecution implements Execution {
         }
       }
       owner.relinquish(next);
-      this.player.conquer(next);
       this.game.setFallout(next, true);
+      this.player.conquer(next);
     } else if (!owner.isPlayer()) {
-      this.player.conquer(next);
       this.game.setFallout(next, true);
+      this.player.conquer(next);
     }
   }
 
