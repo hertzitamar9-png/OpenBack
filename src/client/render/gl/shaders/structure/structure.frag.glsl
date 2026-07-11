@@ -75,7 +75,7 @@ float shapeSDF(vec2 p, float R) {
   if (vAtlasIdx < 5.5)
     return sdPolygon(p, R, 3.0, PI * 0.5);    // Missile Silo
   if (vAtlasIdx < 6.5)
-    return sdPolygon(p, R, 4.0, PI * 0.25);   // Runway
+    return max(abs(p.x) - 0.20, abs(p.y) - 0.44); // Runway strip
   return sdPolygon(p, R, 6.0, 0.0);          // MANPAD
 }
 

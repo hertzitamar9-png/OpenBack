@@ -477,6 +477,7 @@ export interface Unit {
   setTargetTile(cell: TileRef | undefined): void;
   targetTile(): TileRef | undefined;
   setTrajectoryIndex(i: number): void;
+  setTrajectory(trajectory: TrajectoryTile[]): void;
   trajectoryIndex(): number;
   trajectory(): TrajectoryTile[];
   setTargetUnit(unit: Unit | undefined): void;

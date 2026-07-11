@@ -1324,7 +1324,19 @@ export class PlayerImpl implements Player {
       let canUpgrade: number | false = false;
       let canBuild: TileRef | false = false;
 
-      if (tile !== null && this.canBuildUnitType(u, cost) && !inSpawnPhase) {
+      const launchingReadyPlane =
+        u === UnitType.Plane &&
+        this.units(UnitType.Plane).some(
+          (plane) =>
+            plane.isActive() &&
+            !plane.isUnderConstruction() &&
+            plane.isLoaded() === true,
+        );
+      if (
+        tile !== null &&
+        (launchingReadyPlane || this.canBuildUnitType(u, cost)) &&
+        !inSpawnPhase
+      ) {
         if (this.canUpgradeUnitType(u)) {
           const existingUnit = this.findExistingUnitToUpgrade(u, tile);
           if (
@@ -1361,7 +1373,15 @@ export class PlayerImpl implements Player {
     targetTile: TileRef,
     validTiles: TileRef[] | null = null,
   ): TileRef | false {
-    if (!this.canBuildUnitType(unitType)) {
+    const hasReadyPlane =
+      unitType === UnitType.Plane &&
+      this.units(UnitType.Plane).some(
+        (plane) =>
+          plane.isActive() &&
+          !plane.isUnderConstruction() &&
+          plane.isLoaded() === true,
+      );
+    if (!hasReadyPlane && !this.canBuildUnitType(unitType)) {
       return false;
     }
 
@@ -1387,13 +1407,41 @@ export class PlayerImpl implements Player {
       case UnitType.Plane: {
         if (!this.mg.hasOwner(targetTile)) return false;
         const owner = this.mg.owner(targetTile);
-        if (owner.isPlayer() && this.isFriendly(owner)) return false;
-        const runway = findClosestBy(
-          this.units(UnitType.Runway),
-          (unit) => this.mg.manhattanDist(unit.tile(), targetTile),
+        const completedRunways = this.units(UnitType.Runway).filter(
           (unit) => unit.isActive() && !unit.isUnderConstruction(),
         );
-        return runway?.tile() ?? false;
+        if (owner === this) {
+          const runwayHere = completedRunways.some(
+            (unit) => unit.tile() === targetTile,
+          );
+          const planeHere = this.units(UnitType.Plane).some(
+            (unit) => unit.isActive() && unit.tile() === targetTile,
+          );
+          return runwayHere && !planeHere ? targetTile : false;
+        }
+        if (owner.isPlayer() && this.isFriendly(owner)) return false;
+        const readyPlane = findClosestBy(
+          this.units(UnitType.Plane),
+          (unit) => this.mg.manhattanDist(unit.tile(), targetTile),
+          (unit) => {
+            if (
+              !unit.isActive() ||
+              unit.isUnderConstruction() ||
+              unit.isLoaded() !== true
+            ) {
+              return false;
+            }
+            const stack = completedRunways
+              .filter((runway) => runway.tile() === unit.tile())
+              .reduce((sum, runway) => sum + runway.level(), 0);
+            const range = this.mg.config().planeMaxFlightRadius(stack);
+            return (
+              this.mg.euclideanDistSquared(unit.tile(), targetTile) <=
+              range * range
+            );
+          },
+        );
+        return readyPlane?.tile() ?? false;
       }
       case UnitType.Port:
         return this.portSpawn(targetTile, validTiles);
@@ -1413,9 +1461,17 @@ export class PlayerImpl implements Player {
       case UnitType.SAMLauncher:
       case UnitType.City:
       case UnitType.Factory:
-      case UnitType.Runway:
       case UnitType.MANPAD:
         return this.landBasedStructureSpawn(targetTile, validTiles);
+      case UnitType.Runway: {
+        if (this.mg.owner(targetTile) !== this) return false;
+        const existingRunway = this.units(UnitType.Runway).some(
+          (unit) => unit.isActive() && unit.tile() === targetTile,
+        );
+        return existingRunway
+          ? targetTile
+          : this.landBasedStructureSpawn(targetTile, validTiles);
+      }
       default:
         assertNever(unitType);
     }

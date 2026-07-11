@@ -131,10 +131,8 @@ export class UnitDisplay extends LitElement implements Controller {
     }
 
     return html`
-      <div class="border-t border-white/10 px-2 py-1 w-full overflow-x-auto">
-        <div
-          class="grid grid-rows-1 auto-cols-[minmax(58px,1fr)] grid-flow-col gap-1.5 min-w-max w-fit mx-auto"
-        >
+      <div class="border-t border-white/10 px-1 py-0.5 w-full">
+        <div class="grid grid-cols-[repeat(13,minmax(0,1fr))] gap-0.5 w-full">
           ${this.renderUnitItem(
             cityIcon,
             this._cities,
@@ -251,7 +249,7 @@ export class UnitDisplay extends LitElement implements Controller {
 
     return html`
       <div
-        class="flex flex-col items-center relative"
+        class="flex flex-col items-stretch min-w-0 relative"
         @mouseenter=${() => {
           this._hoveredUnit = unitType;
           this.requestUpdate();
@@ -291,9 +289,10 @@ export class UnitDisplay extends LitElement implements Controller {
             `
           : null}
         <div
+          title=${translateText("unit_type." + structureKey)}
           class="${this.canBuild(unitType)
             ? ""
-            : "opacity-40"} min-w-[58px] min-h-9 border border-slate-500 rounded-sm px-1.5 py-1 flex items-center justify-center gap-1 cursor-pointer
+            : "opacity-40"} min-w-0 h-10 border border-slate-500 rounded-sm px-0.5 py-0.5 flex flex-col items-center justify-center cursor-pointer
              ${selected ? "hover:bg-gray-400/10" : "hover:bg-gray-800"}
              rounded-sm text-white ${selected ? "bg-slate-400/20" : ""}"
           @click=${() => {
@@ -318,6 +317,11 @@ export class UnitDisplay extends LitElement implements Controller {
               case UnitType.Warship:
                 this.eventBus?.emit(new ToggleStructureEvent([UnitType.Port]));
                 break;
+              case UnitType.Plane:
+                this.eventBus?.emit(
+                  new ToggleStructureEvent([UnitType.Runway, UnitType.Plane]),
+                );
+                break;
               default:
                 this.eventBus?.emit(new ToggleStructureEvent([unitType]));
             }
@@ -325,14 +329,17 @@ export class UnitDisplay extends LitElement implements Controller {
           @mouseleave=${() =>
             this.eventBus?.emit(new ToggleStructureEvent(null))}
         >
-          ${html`<div class="text-[10px] text-gray-400 shrink-0">
-            ${displayHotkey}
-          </div>`}
-          <div class="flex items-center gap-1">
-            <img src=${icon} alt=${structureKey} class="align-middle size-6" />
+          <div class="flex items-center justify-center gap-0.5 h-5">
+            <span class="text-[8px] text-gray-400">${displayHotkey}</span>
+            <img src=${icon} alt=${structureKey} class="align-middle size-4" />
             ${number !== null
-              ? html`<span class="text-xs">${renderNumber(number)}</span>`
+              ? html`<span class="text-[9px]">${renderNumber(number)}</span>`
               : null}
+          </div>
+          <div
+            class="w-full truncate text-center text-[8px] leading-3 font-semibold text-white/90"
+          >
+            ${translateText("unit_type." + structureKey)}
           </div>
         </div>
       </div>

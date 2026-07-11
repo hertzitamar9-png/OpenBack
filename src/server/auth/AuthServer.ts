@@ -866,7 +866,7 @@ export function authRouter(): express.Router {
 
   router.get("/public/clan/:tag/exists", (req, res) => {
     if (!clanForRequest(req)) {
-      res.status(404).json({ exists: false });
+      res.json({ exists: false });
       return;
     }
     res.json({ exists: true });

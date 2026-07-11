@@ -37,6 +37,9 @@ const atomBombIcon = assetUrl("images/NukeIconWhite.svg");
 const portIcon = assetUrl("images/PortIcon.svg");
 const samlauncherIcon = assetUrl("images/SamLauncherIconWhite.svg");
 const shieldIcon = assetUrl("images/ShieldIconWhite.svg");
+const planeIcon = assetUrl("images/PlaneIconWhite.svg");
+const manpadIcon = assetUrl("images/ManpadIconWhite.svg");
+const runwayIcon = assetUrl("images/RunwayIconWhite.svg");
 
 export interface BuildItemDisplay {
   unitType: PlayerBuildableUnitType;
@@ -120,21 +123,21 @@ export const buildTable: BuildItemDisplay[][] = [
     },
     {
       unitType: UnitType.Runway,
-      icon: atomBombIcon,
+      icon: runwayIcon,
       description: "build_menu.desc.runway",
       key: "unit_type.runway",
       countable: true,
     },
     {
       unitType: UnitType.Plane,
-      icon: atomBombIcon,
+      icon: planeIcon,
       description: "build_menu.desc.plane",
       key: "unit_type.plane",
       countable: false,
     },
     {
       unitType: UnitType.MANPAD,
-      icon: samlauncherIcon,
+      icon: manpadIcon,
       description: "build_menu.desc.manpad",
       key: "unit_type.manpad",
       countable: true,

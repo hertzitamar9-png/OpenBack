@@ -63,6 +63,7 @@ export class HomepagePromos extends LitElement {
   public close(): void {
     this.isVisible = false;
     this.adLoaded = false;
+    if (!window.adsEnabled || !window.ramp?.destroyUnits) return;
     try {
       // Only destroy gutter ads; bottom_rail persists into spawn phase.
       window.ramp.destroyUnits(this.leftAdType);

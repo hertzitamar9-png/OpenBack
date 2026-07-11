@@ -429,9 +429,36 @@ export class BuildPreviewController implements Controller {
       case UnitType.MANPAD:
         rangeRadius = this.game.config().manpadRange();
         break;
+      case UnitType.Runway: {
+        const completed = myPlayer
+          .units(UnitType.Runway)
+          .filter(
+            (runway) =>
+              !runway.isUnderConstruction() && runway.tile() === tileRef,
+          )
+          .reduce((sum, runway) => sum + runway.level(), 0);
+        rangeRadius = this.game.config().planeMaxFlightRadius(completed + 1);
+        break;
+      }
+      case UnitType.Plane: {
+        const runwayTile = u.canBuild !== false ? u.canBuild : tileRef;
+        const stack = myPlayer
+          .units(UnitType.Runway)
+          .filter(
+            (runway) =>
+              !runway.isUnderConstruction() && runway.tile() === runwayTile,
+          )
+          .reduce((sum, runway) => sum + runway.level(), 0);
+        rangeRadius = this.game.config().planeMaxFlightRadius(stack);
+        break;
+      }
     }
     let radiusTileX = this.game.x(tileRef);
     let radiusTileY = this.game.y(tileRef);
+    if (u.type === UnitType.Plane && u.canBuild !== false) {
+      radiusTileX = this.game.x(u.canBuild);
+      radiusTileY = this.game.y(u.canBuild);
+    }
     if (
       rangeRadius > 0 &&
       u.canUpgrade !== false &&
@@ -506,6 +533,12 @@ export class BuildPreviewController implements Controller {
           unitType,
           this.game.ref(tile.x, tile.y),
           rocketDirectionUp,
+          unitType === UnitType.Plane
+            ? Math.floor(
+                (this.game.myPlayer()?.troops() ?? 0) *
+                  this.uiState.attackRatio,
+              )
+            : undefined,
         ),
       );
       if (!shouldPreserveGhostAfterBuild(unitType)) {

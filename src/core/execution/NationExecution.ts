@@ -221,6 +221,41 @@ export class NationExecution implements Execution {
     ) {
       return;
     }
+    const readyPlane = player
+      .units(UnitType.Plane)
+      .find(
+        (plane) =>
+          plane.isActive() &&
+          !plane.isUnderConstruction() &&
+          plane.isLoaded() === true,
+      );
+    if (!readyPlane) {
+      const runway = player
+        .units(UnitType.Runway)
+        .find(
+          (unit) =>
+            unit.isActive() &&
+            !unit.isUnderConstruction() &&
+            !player
+              .units(UnitType.Plane)
+              .some(
+                (plane) => plane.isActive() && plane.tile() === unit.tile(),
+              ),
+        );
+      const troops = Math.floor(player.troops() * 0.15);
+      if (runway && troops > 0) {
+        this.mg.addExecution(
+          new ConstructionExecution(
+            player,
+            UnitType.Plane,
+            runway.tile(),
+            undefined,
+            troops,
+          ),
+        );
+      }
+      return;
+    }
     const targets = this.mg
       .players()
       .filter(
@@ -233,16 +268,9 @@ export class NationExecution implements Execution {
     if (targets.length === 0) return;
     const target = this.random.randElement(targets);
     const tile = this.random.randElement(Array.from(target.borderTiles()));
-    const troops = Math.floor(player.troops() * 0.15);
-    if (troops <= 0 || player.canBuild(UnitType.Plane, tile) === false) return;
+    if (player.canBuild(UnitType.Plane, tile) === false) return;
     this.mg.addExecution(
-      new ConstructionExecution(
-        player,
-        UnitType.Plane,
-        tile,
-        undefined,
-        troops,
-      ),
+      new ConstructionExecution(player, UnitType.Plane, tile, undefined, 0),
     );
   }
 

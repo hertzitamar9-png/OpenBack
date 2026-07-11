@@ -476,6 +476,12 @@ export class UnitImpl implements Unit {
     this._trajectoryIndex = i < 0 ? 0 : i > max ? max : i;
   }
 
+  setTrajectory(trajectory: TrajectoryTile[]): void {
+    this._trajectory = trajectory;
+    this._trajectoryIndex = 0;
+    this.mg.addUpdate(this.toUpdate());
+  }
+
   trajectoryIndex(): number {
     return this._trajectoryIndex;
   }

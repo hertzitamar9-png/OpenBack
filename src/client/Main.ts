@@ -1143,7 +1143,22 @@ if (document.readyState === "loading") {
   bootstrap();
 }
 
+let turnstileInFlight: Promise<{ token: string; createdAt: number }> | null =
+  null;
+
 async function getTurnstileToken(): Promise<{
+  token: string;
+  createdAt: number;
+}> {
+  turnstileInFlight ??= createTurnstileToken();
+  try {
+    return await turnstileInFlight;
+  } finally {
+    turnstileInFlight = null;
+  }
+}
+
+async function createTurnstileToken(): Promise<{
   token: string;
   createdAt: number;
 }> {
