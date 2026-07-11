@@ -129,32 +129,13 @@ void main() {
   if (vZoom > uDotsThreshold) {
     // Clamp UV to this atlas column to prevent bleeding into neighbours
     // when uIconFill shrinks the icon (expanding UV range beyond column).
-    if (vAtlasIdx > 5.5) {
-      vec2 p = vLocalPos;
-      if (vAtlasIdx < 6.5) {
-        float edges = step(abs(abs(p.x) - 0.19), 0.025) * step(abs(p.y), 0.31);
-        float lane = mod(p.y + 0.31, 0.12);
-        float dash = step(abs(p.x), 0.025) * step(0.045, lane)
-                   * step(lane, 0.09) * step(abs(p.y), 0.31);
-        float threshold = step(abs(p.y - 0.25), 0.025) * step(abs(p.x), 0.18);
-        iconAlpha = max(max(edges, dash), threshold) * borderMask;
-      } else {
-        float tube = step(abs(p.y - p.x * 0.38), 0.045) * step(abs(p.x), 0.25);
-        float sight = step(length(p - vec2(0.06, 0.10)), 0.065);
-        float stem = step(abs(p.x), 0.025) * step(abs(p.y + 0.15), 0.16);
-        float legs = step(abs(abs(p.x) + p.y * 0.65 - 0.11), 0.035)
-                   * step(-p.y, 0.32);
-        iconAlpha = max(max(tube, sight), max(stem, legs)) * borderMask;
-      }
-    } else {
-      float colStart = vAtlasIdx / float(ATLAS_COLS);
-      float colEnd = (vAtlasIdx + 1.0) / float(ATLAS_COLS);
-      vec2 safeUV = vec2(clamp(vAtlasUV.x, colStart, colEnd), clamp(vAtlasUV.y, 0.0, 1.0));
-      vec4 iconSample = texture(uAtlas, safeUV);
-      float inBounds = step(colStart, vAtlasUV.x) * step(vAtlasUV.x, colEnd)
-                     * step(0.0, vAtlasUV.y) * step(vAtlasUV.y, 1.0);
-      iconAlpha = iconSample.a * borderMask * inBounds;
-    }
+    float colStart = vAtlasIdx / float(ATLAS_COLS);
+    float colEnd = (vAtlasIdx + 1.0) / float(ATLAS_COLS);
+    vec2 safeUV = vec2(clamp(vAtlasUV.x, colStart, colEnd), clamp(vAtlasUV.y, 0.0, 1.0));
+    vec4 iconSample = texture(uAtlas, safeUV);
+    float inBounds = step(colStart, vAtlasUV.x) * step(vAtlasUV.x, colEnd)
+                   * step(0.0, vAtlasUV.y) * step(vAtlasUV.y, 1.0);
+    iconAlpha = iconSample.a * borderMask * inBounds;
   }
 
   // Composite: tinted icon over player-colored shape.

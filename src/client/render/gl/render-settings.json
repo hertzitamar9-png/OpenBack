@@ -144,6 +144,14 @@
       "Missile Silo": {
         "scale": 1.55,
         "iconFill": 0.85
+      },
+      "Runway": {
+        "scale": 1.35,
+        "iconFill": 0.85
+      },
+      "MANPAD": {
+        "scale": 1.4,
+        "iconFill": 0.85
       }
     },
     "highlightOutlineWidth": 0.04,

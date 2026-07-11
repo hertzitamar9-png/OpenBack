@@ -55,7 +55,9 @@ const STRUCTURE_ORDER = [
   UT_MANPAD,
 ] as const;
 
-const ATLAS_COLS = 6;
+// One atlas column per structure type (icon-atlas.png is a single row of
+// 64x64 cells; regenerate with src/scripts/generate-icon-atlas.mjs).
+const ATLAS_COLS = STRUCTURE_ORDER.length;
 const STRUCTURE_TYPES_COUNT = STRUCTURE_ORDER.length;
 
 // ---------------------------------------------------------------------------
@@ -109,7 +111,7 @@ export class StructurePass {
 
   private instanceCount = 0;
 
-  /** unitType string → atlas column index (0–5) */
+  /** unitType string → atlas column index (0 .. STRUCTURE_ORDER.length-1) */
   private typeToAtlasCol = new Map<string, number>();
   private mapW: number;
 
