@@ -969,6 +969,13 @@ export class Config {
     return this.nukeMagnitudes(UnitType.AtomBomb).outer / 4;
   }
 
+  // How long a plane's landing tiles are exempt from the automatic
+  // surrounded-cluster annexation sweep (15 seconds). After this window the
+  // beachhead is treated like any other pocket and can be annexed.
+  planeBeachheadGraceTicks(): number {
+    return 10 * 15;
+  }
+
   // The plane's maximum flight distance ("fuel range"), measured from the
   // launch runway. Every completed runway adds another full base radius.
   // 1 runway = 100%, 2 = 200%, 3 = 300%, ...

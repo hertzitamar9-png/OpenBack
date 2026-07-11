@@ -4,15 +4,22 @@ import { TileRef } from "../game/GameMap";
 /**
  * Plane landings are intentionally disconnected beachheads. Automatic
  * surrounded-cluster annexation would erase them without combat, so remember
- * their tiles while they remain owned by the landing player.
+ * their tiles (with a registration tick) while they remain owned by the
+ * landing player. The exemption only lasts a short grace window
+ * (Config.planeBeachheadGraceTicks) — after that the beachhead is annexed
+ * like any other pocket, and the player can still be annexed elsewhere.
+ *
+ * Stored as Map<tile, tick> so each landing tile is tracked individually and
+ * expires on its own 15-second timer.
  */
-const planeBeachheads = new WeakMap<Game, Map<number, Set<TileRef>>>();
+const planeBeachheads = new WeakMap<Game, Map<number, Map<TileRef, number>>>();
 
 export function registerPlaneBeachhead(
   game: Game,
   player: Player,
   tiles: Iterable<TileRef>,
 ): void {
+  const tick = game.ticks();
   let byPlayer = planeBeachheads.get(game);
   if (byPlayer === undefined) {
     byPlayer = new Map();
@@ -20,12 +27,13 @@ export function registerPlaneBeachhead(
   }
   let protectedTiles = byPlayer.get(player.smallID());
   if (protectedTiles === undefined) {
-    protectedTiles = new Set();
+    protectedTiles = new Map();
     byPlayer.set(player.smallID(), protectedTiles);
   }
-  for (const tile of tiles) protectedTiles.add(tile);
+  for (const tile of tiles) protectedTiles.set(tile, tick);
 }
 
+/** True if `cluster` overlaps a still-active plane beachhead of `player`. */
 export function isPlaneBeachhead(
   game: Game,
   player: Player,
@@ -33,29 +41,36 @@ export function isPlaneBeachhead(
 ): boolean {
   const byPlayer = planeBeachheads.get(game);
   const protectedTiles = byPlayer?.get(player.smallID());
-  if (protectedTiles === undefined) return false;
+  if (protectedTiles === undefined || protectedTiles.size === 0) return false;
 
+  const now = game.ticks();
+  const grace = game.config().planeBeachheadGraceTicks();
   let intersects = false;
-  for (const tile of protectedTiles) {
-    // Once an enemy fights for and captures a landing tile, it permanently
-    // loses its exemption. Recapturing it later does not restore protection.
-    if (game.ownerID(tile) !== player.smallID()) {
+  for (const [tile, registered] of protectedTiles) {
+    // Expired or captured by an enemy: the exemption is gone for good.
+    if (now - registered > grace || game.ownerID(tile) !== player.smallID()) {
       protectedTiles.delete(tile);
-    } else if (cluster.has(tile)) {
-      intersects = true;
+      continue;
     }
+    if (cluster.has(tile)) intersects = true;
   }
   if (protectedTiles.size === 0) byPlayer!.delete(player.smallID());
   return intersects;
 }
 
-/** True while at least one original landing tile still belongs to the player. */
+/** True while at least one original landing tile still belongs to the player
+ *  and is within the grace window. */
 export function hasPlaneBeachhead(game: Game, player: Player): boolean {
   const byPlayer = planeBeachheads.get(game);
   const protectedTiles = byPlayer?.get(player.smallID());
   if (protectedTiles === undefined) return false;
-  for (const tile of protectedTiles) {
-    if (game.ownerID(tile) !== player.smallID()) protectedTiles.delete(tile);
+
+  const now = game.ticks();
+  const grace = game.config().planeBeachheadGraceTicks();
+  for (const [tile, registered] of protectedTiles) {
+    if (now - registered > grace || game.ownerID(tile) !== player.smallID()) {
+      protectedTiles.delete(tile);
+    }
   }
   if (protectedTiles.size === 0) {
     byPlayer!.delete(player.smallID());
