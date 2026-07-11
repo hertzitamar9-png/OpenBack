@@ -412,7 +412,9 @@ export class NukeExecution implements Execution {
         type === UnitType.HydrogenBomb ||
         type === UnitType.MIRVWarhead ||
         type === UnitType.MIRV ||
-        type === UnitType.SAMMissile
+        type === UnitType.SAMMissile ||
+        type === UnitType.Plane ||
+        type === UnitType.Tank
       ) {
         continue;
       }

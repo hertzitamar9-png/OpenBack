@@ -15,6 +15,7 @@ export class TankExecution implements Execution {
   private tank: Unit | null = null;
   private target: Player | TerraNullius;
   private launched = false;
+  private movementCredit = 0;
 
   constructor(
     private player: Player,
@@ -76,9 +77,11 @@ export class TankExecution implements Execution {
       this.active = false;
       return;
     }
-    // Cover four land tiles per simulation tick. Each intermediate tile still
-    // checks mines and applies damage, so the speed-up cannot skip defenses.
-    for (let step = 0; step < 4 && this.active; step++) {
+    // Transport ships advance one tile per tick. Three half-tile credits per
+    // tick makes tanks average exactly 1.5 tiles/tick using integer arithmetic.
+    this.movementCredit += 3;
+    while (this.movementCredit >= 2 && this.active) {
+      this.movementCredit -= 2;
       const current = this.tank.tile();
       if (current === this.dst) {
         this.tank.setReachedTarget();

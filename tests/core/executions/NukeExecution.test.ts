@@ -71,6 +71,24 @@ describe("NukeExecution", () => {
     expect(defensePost.touch).not.toHaveBeenCalled();
   });
 
+  test("bomb blasts do not destroy planes or tanks", () => {
+    const blastTile = game.ref(20, 20);
+    player.conquer(blastTile);
+    const plane = player.buildUnit(UnitType.Plane, blastTile, {
+      troops: 1_000,
+      trajectory: [],
+    });
+    const tank = player.buildUnit(UnitType.Tank, blastTile, { trajectory: [] });
+
+    game.addExecution(
+      new NukeExecution(UnitType.AtomBomb, otherPlayer, blastTile, null),
+    );
+    executeTicks(game, 100);
+
+    expect(plane.isActive()).toBe(true);
+    expect(tank.isActive()).toBe(true);
+  });
+
   test("nuke should only be targetable near src and dst", async () => {
     player.buildUnit(UnitType.MissileSilo, game.ref(1, 1), {});
     const nukeExec = new NukeExecution(
