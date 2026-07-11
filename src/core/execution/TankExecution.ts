@@ -137,12 +137,7 @@ export class TankExecution implements Execution {
     for (const side of [-1, 1]) {
       const x = cx - dy * side * 2;
       const y = cy + dx * side * 2;
-      if (
-        x >= 0 &&
-        y >= 0 &&
-        x < this.game.width() &&
-        y < this.game.height()
-      ) {
+      if (x >= 0 && y >= 0 && x < this.game.width() && y < this.game.height()) {
         const brush = this.game.ref(x, y);
         if (this.game.isLand(brush)) this.damageArea(brush);
       }

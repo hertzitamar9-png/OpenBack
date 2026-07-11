@@ -1,5 +1,5 @@
-import { ConstructionExecution } from "../../../src/core/execution/ConstructionExecution";
 import { AttackExecution } from "../../../src/core/execution/AttackExecution";
+import { ConstructionExecution } from "../../../src/core/execution/ConstructionExecution";
 import { PlaneExecution } from "../../../src/core/execution/PlaneExecution";
 import {
   Game,
