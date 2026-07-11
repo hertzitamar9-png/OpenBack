@@ -73,9 +73,9 @@
       "manpad": "Intercepts one enemy plane, then is destroyed",
       "mirv": "Huge explosion, only targets selected player",
       "missile_silo": "Used to launch nukes",
-      "plane": "Deploy the selected percentage of troops from a completed runway",
+      "plane": "Load troops for 5 seconds, then launch from a completed runway",
       "port": "Sends trade ships to generate gold",
-      "runway": "Builds a one-use plane runway in 15 seconds",
+      "runway": "Builds a reusable runway; every runway doubles total flight range",
       "sam_launcher": "Defends against incoming nukes",
       "warship": "Captures trade ships, destroys ships and boats"
     },

@@ -37,8 +37,11 @@ void main() {
   // Hydrogen bombs render an enlarged quad so there's room for a glow halo
   // around the sprite. All other units keep scale 1 (no behavior change).
   float isHBomb = step(abs(atlasCol - float(HYDROGEN_BOMB_COL)), 0.5);
+  float isPlane = step(abs(atlasCol - float(PLANE_COL)), 0.5);
   vGlow = isHBomb;
   float scale = mix(1.0, uHBombGlowScale, isHBomb);
+  // Aircraft need a readable silhouette at normal map zoom.
+  scale = mix(scale, 2.25, isPlane);
 
   // UNIT_SIZE is in world-space tiles — no zoom division needed.
   // Units scale with the map like territory tiles do.
@@ -54,5 +57,5 @@ void main() {
 
   // Map the enlarged quad back to sprite cell space: the central 1/scale
   // portion is the sprite, anything outside [0,1] is glow-only margin.
-  vCellUV = (aPos - 0.5) * scale + 0.5;
+  vCellUV = isPlane > 0.5 ? aPos : (aPos - 0.5) * scale + 0.5;
 }

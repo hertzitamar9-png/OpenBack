@@ -269,7 +269,7 @@ export class UnitPass {
     // Compile shaders
     this.program = createProgram(
       gl,
-      shaderSrc(unitVertSrc, { ATLAS_COLS, HYDROGEN_BOMB_COL }),
+      shaderSrc(unitVertSrc, { ATLAS_COLS, HYDROGEN_BOMB_COL, PLANE_COL }),
       shaderSrc(unitFragSrc, {
         PALETTE_SIZE: getPaletteSize(),
         ATLAS_COLS,

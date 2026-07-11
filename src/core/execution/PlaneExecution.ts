@@ -13,7 +13,9 @@ import { UniversalPathFinding } from "../pathfinding/PathFinder";
 import { ParabolaUniversalPathFinder } from "../pathfinding/PathFinder.Parabola";
 import { PathStatus } from "../pathfinding/types";
 import { AttackExecution } from "./AttackExecution";
+import { SAMMissileExecution } from "./SAMMissileExecution";
 
+const LOADING_TICKS = 5 * 10;
 const DEPLOYMENT_WARNING_TICKS = 10 * 10;
 
 /**
@@ -28,11 +30,13 @@ export class PlaneExecution implements Execution {
   private runway: Unit | null = null;
   private src: TileRef;
   private warningTicks = DEPLOYMENT_WARNING_TICKS;
+  private loadingTicks = LOADING_TICKS;
   private pathFinder: ParabolaUniversalPathFinder;
   private target: Player | TerraNullius;
   private carriedTroops = 0;
   private launched = false;
   private runwayCount = 1;
+  private interceptionStarted = false;
 
   constructor(
     private player: Player,
@@ -75,9 +79,7 @@ export class PlaneExecution implements Execution {
       return;
     }
 
-    // Capture how many completed runways the player owns now (before this one
-    // is consumed on launch). The plane's maximum flight distance scales with
-    // this count: 1 runway = 100% of a SAM's radius, +35% per extra runway.
+    // Every completed runway contributes one full base flight radius.
     this.runwayCount = this.player
       .units(UnitType.Runway)
       .filter((unit) => unit.isActive() && !unit.isUnderConstruction()).length;
@@ -130,16 +132,24 @@ export class PlaneExecution implements Execution {
   }
 
   tick(ticks: number): void {
-    if (!this.active || this.plane === null || !this.plane.isActive()) {
+    if (!this.active || this.plane === null) {
       this.active = false;
+      return;
+    }
+    if (!this.plane.isActive()) {
+      if (this.interceptionStarted) this.crash(this.plane.tile(), false);
+      else this.active = false;
       return;
     }
 
     if (!this.launched) {
+      // The aircraft is visibly parked on its runway while troops load.
+      if (this.loadingTicks-- > 0) return;
+      this.plane.setUnderConstruction(false);
+      // It then remains ready on the runway during the globally visible
+      // deployment warning before takeoff.
       if (this.warningTicks-- > 0) return;
       this.launched = true;
-      this.plane.setUnderConstruction(false);
-      this.runway?.delete(false);
       this.recordMotionPlan(ticks);
       return;
     }
@@ -158,8 +168,17 @@ export class PlaneExecution implements Execution {
       this.plane.setTrajectoryIndex(this.pathFinder.currentIndex());
       const interceptor = this.findInterceptor(result.node);
       if (interceptor !== null) {
-        interceptor.delete(true, this.player);
-        this.crash(result.node, false);
+        this.interceptionStarted = true;
+        this.plane.setTargetedBySAM(true);
+        this.game.addExecution(
+          new SAMMissileExecution(
+            interceptor.tile(),
+            interceptor.owner(),
+            interceptor,
+            this.plane,
+            result.node,
+          ),
+        );
       }
     }
   }
@@ -173,6 +192,7 @@ export class PlaneExecution implements Execution {
           (unit) =>
             unit.isActive() &&
             !unit.isUnderConstruction() &&
+            !this.interceptionStarted &&
             !this.player.isFriendly(unit.owner()) &&
             this.game.euclideanDistSquared(tile, unit.tile()) <= rangeSquared,
         ) ?? null
@@ -187,12 +207,26 @@ export class PlaneExecution implements Execution {
     for (const impactedTile of impacted) {
       if (!this.game.isLand(impactedTile)) continue;
       const owner = this.game.owner(impactedTile);
-      if (owner.isPlayer()) owner.relinquish(impactedTile);
+      if (owner.isPlayer()) {
+        // Plane crashes have half an atom bomb's troop damage.
+        const deaths = Math.floor(
+          this.game
+            .config()
+            .nukeDeathFactor(
+              UnitType.AtomBomb,
+              owner.troops(),
+              Math.max(1, owner.numTilesOwned()),
+              this.game.config().maxTroops(owner),
+            ) / 2,
+        );
+        owner.removeTroops(deaths);
+        owner.relinquish(impactedTile);
+      }
       this.game.setFallout(impactedTile, true);
     }
 
     this.plane?.setReachedTarget();
-    this.plane?.delete(false);
+    if (this.plane?.isActive()) this.plane.delete(false);
     this.active = false;
 
     if (!deployTroops || !this.game.isLand(tile)) return;

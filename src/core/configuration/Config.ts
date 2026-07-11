@@ -947,16 +947,15 @@ export class Config {
   }
 
   planeFalloutRadius(): number {
-    return this.nukeMagnitudes(UnitType.AtomBomb).outer / 3;
+    return this.nukeMagnitudes(UnitType.AtomBomb).outer / 2;
   }
 
   // The plane's maximum flight distance ("fuel range"), measured from the
-  // launch runway. More runways = longer range: 1 runway gives a range equal to
-  // a SAM's radius (100%), each additional runway adds 35% of a SAM's radius.
-  // 1 runway = 100%, 2 = 135%, 3 = 170%, ...
+  // launch runway. Every completed runway adds another full base radius.
+  // 1 runway = 100%, 2 = 200%, 3 = 300%, ...
   planeMaxFlightRadius(runwayCount: number = 1): number {
     const runways = Math.max(1, runwayCount);
-    return this.defaultSamRange() * (1 + 0.35 * (runways - 1));
+    return this.defaultSamRange() * runways;
   }
 
   manpadRange(): number {

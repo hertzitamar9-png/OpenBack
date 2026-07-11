@@ -73,7 +73,7 @@ export const NUKE_MAGNITUDES: Readonly<
   [UT_ATOM_BOMB]: { inner: 12, outer: 30 },
   [UT_HYDROGEN_BOMB]: { inner: 80, outer: 100 },
   [UT_MIRV_WARHEAD]: { inner: 12, outer: 18 },
-  [UT_PLANE]: { inner: 3, outer: 10 },
+  [UT_PLANE]: { inner: 6, outer: 15 },
 };
 
 // ---------------------------------------------------------------------------

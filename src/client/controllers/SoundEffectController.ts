@@ -42,6 +42,9 @@ export class SoundEffectController implements Controller {
       case UnitType.HydrogenBomb:
         this.onNukeDetonation(unit, "hydrogen-hit");
         break;
+      case UnitType.Plane:
+        this.onNukeDetonation(unit, "atom-hit");
+        break;
     }
   }
 

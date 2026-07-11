@@ -32,7 +32,7 @@ describe("PlaneExecution", () => {
     attacker.buildUnit(UnitType.Runway, game.ref(5, 5), {});
   });
 
-  test("loads exactly the requested troops and consumes the runway", () => {
+  test("loads exactly the requested troops and keeps the reusable runway", () => {
     const troopsBefore = attacker.troops();
     game.addExecution(new PlaneExecution(attacker, game.ref(17, 17), 1_234));
 
@@ -43,8 +43,8 @@ describe("PlaneExecution", () => {
     expect(attacker.troops()).toBe(troopsBefore - 1_234);
     expect(attacker.units(UnitType.Runway)).toHaveLength(1);
 
-    for (let i = 0; i < 102; i++) game.executeNextTick();
-    expect(attacker.units(UnitType.Runway)).toHaveLength(0);
+    for (let i = 0; i < 152; i++) game.executeNextTick();
+    expect(attacker.units(UnitType.Runway)).toHaveLength(1);
     expect(plane.isUnderConstruction()).toBe(false);
   });
 
@@ -69,6 +69,9 @@ describe("PlaneExecution", () => {
     for (let i = 0; i < 2_000 && plane.isActive(); i++) {
       game.executeNextTick();
     }
+    // The plane execution resolves the crash/fallout on the tick after the
+    // interceptor's missile destroys the aircraft.
+    game.executeNextTick();
 
     expect(plane.isActive()).toBe(false);
     expect(defender.units(UnitType.MANPAD)).toHaveLength(0);

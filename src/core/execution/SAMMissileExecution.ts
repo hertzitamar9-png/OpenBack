@@ -43,7 +43,11 @@ export class SAMMissileExecution implements Execution {
       return;
     }
     // Mirv warheads are too fast, and mirv shouldn't be stopped ever
-    const nukesWhitelist = [UnitType.AtomBomb, UnitType.HydrogenBomb];
+    const nukesWhitelist = [
+      UnitType.AtomBomb,
+      UnitType.HydrogenBomb,
+      UnitType.Plane,
+    ];
     if (
       !this.target.isActive() ||
       !this.ownerUnit.isActive() ||
@@ -61,7 +65,9 @@ export class SAMMissileExecution implements Execution {
     for (let i = 0; i < this.speed; i++) {
       const result = this.pathFinder.next(
         this.SAMMissile.tile(),
-        this.targetTile,
+        this.target.type() === UnitType.Plane
+          ? this.target.tile()
+          : this.targetTile,
       );
       if (result.status === PathStatus.COMPLETE) {
         this.mg.displayMessage(
@@ -75,10 +81,17 @@ export class SAMMissileExecution implements Execution {
         this.target.delete(true, this._owner);
         this.SAMMissile.delete(false);
 
+        // A MANPAD is a one-shot interceptor and is consumed with its missile.
+        if (this.ownerUnit.type() === UnitType.MANPAD) {
+          this.ownerUnit.delete(true, this.target.owner());
+        }
+
         // Record stats
-        this.mg
-          .stats()
-          .bombIntercept(this._owner, this.target.type() as NukeType, 1);
+        if (this.target.type() !== UnitType.Plane) {
+          this.mg
+            .stats()
+            .bombIntercept(this._owner, this.target.type() as NukeType, 1);
+        }
         return;
       } else if (result.status === PathStatus.NEXT) {
         this.SAMMissile.move(result.node);
