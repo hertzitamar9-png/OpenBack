@@ -97,6 +97,14 @@ const UPGRADE_DENSITY_THRESHOLD = 1 / 1500;
 /** Estimated number of tiles per city equivalent, used when cities are disabled */
 const TILES_PER_CITY_EQUIVALENT = 2000;
 
+/** Nations should unlock the complete OpenBack counter/assault toolkit. */
+const REQUIRED_OPENBACK_STRUCTURES = new Set<UnitType>([
+  UnitType.Runway,
+  UnitType.MANPAD,
+  UnitType.MilitaryBase,
+  UnitType.TankMine,
+]);
+
 /**
  * When map-wide nation density (nations per land tile) is above this threshold,
  * a nation's very first structure is a port (or factory if no water access)
@@ -593,7 +601,10 @@ export class NationStructureBehavior {
       ratio = FIRST_MISSILE_SILO_RATIO;
     }
 
-    const targetCount = Math.floor(cityCount * ratio);
+    const targetCount = Math.max(
+      REQUIRED_OPENBACK_STRUCTURES.has(type) ? 1 : 0,
+      Math.floor(cityCount * ratio),
+    );
 
     return owned < targetCount;
   }

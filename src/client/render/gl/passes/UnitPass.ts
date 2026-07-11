@@ -600,7 +600,13 @@ export class UnitPass {
 
     const us = this.settings.unit;
     gl.uniformMatrix3fv(this.uCamera, false, cameraMatrix);
-    gl.uniform1f(this.uTick, this.frameTick);
+    // Smooth procedural flames/smoke between simulation updates instead of
+    // visibly jumping at the 10 Hz game-tick rate.
+    const subTick = Math.min(
+      1,
+      (performance.now() - this.lastUnitsUpdateMs) / this.tickIntervalMs,
+    );
+    gl.uniform1f(this.uTick, this.frameTick + subTick);
     gl.uniform1f(this.uUnitSize, us.unitSize);
     gl.uniform1f(this.uFlickerSpeed, us.flickerSpeed);
     gl.uniform3f(this.uAngryColor, us.angryR, us.angryG, us.angryB);

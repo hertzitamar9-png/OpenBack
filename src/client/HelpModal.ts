@@ -122,6 +122,33 @@ export class HelpModal extends BaseModal {
             </div>
           </section>
 
+          <!-- OpenBack Units Section -->
+          <div class="flex items-center gap-3 mb-3">
+            <div class="text-emerald-400 text-2xl">⚙</div>
+            <h3
+              class="text-xl font-bold uppercase tracking-widest text-white/90"
+            >
+              ${translateText("help_modal.openback_units_title")}
+            </h3>
+            <div
+              class="flex-1 h-px bg-gradient-to-r from-emerald-500/50 to-transparent"
+            ></div>
+          </div>
+          <section
+            class="bg-emerald-950/20 rounded-xl border border-emerald-400/20 p-5 mb-8"
+          >
+            <p>${translateText("help_modal.openback_units_intro")}</p>
+            <ul>
+              <li>${translateText("help_modal.openback_runway")}</li>
+              <li>${translateText("help_modal.openback_plane")}</li>
+              <li>${translateText("help_modal.openback_manpad")}</li>
+              <li>${translateText("help_modal.openback_military_base")}</li>
+              <li>${translateText("help_modal.openback_tank")}</li>
+              <li>${translateText("help_modal.openback_tank_mine")}</li>
+              <li>${translateText("help_modal.openback_visibility")}</li>
+            </ul>
+          </section>
+
           <!-- Troubleshooting Section -->
           <div class="flex items-center gap-3 mb-3">
             <div class="text-blue-400">

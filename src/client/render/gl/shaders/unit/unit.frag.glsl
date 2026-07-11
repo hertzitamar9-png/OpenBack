@@ -101,10 +101,9 @@ void main() {
       float cockpitOuter = smoothstep(0.085, 0.055,
           length((p - vec2(0.0, -0.25)) * vec2(1.0, 1.8)));
       blackOutline = max(planeOuter - planeMask, cockpitOuter - cockpit);
-      // Brighter forward fuselage/cockpit, darker aft for readability.
-      float shade = mix(0.30, 0.78, smoothstep(0.05, -0.35, p.y));
-      vec3 aircraftShade = mix(vec3(shade), vec3(0.86, 0.95, 1.0), cockpit);
-      texel = vec4(aircraftShade, max(planeOuter, cockpitOuter));
+      // One uniform light band makes every aircraft panel use the owner's
+      // spawn color; blackOutline supplies separation around every component.
+      texel = vec4(vec3(0.72), max(planeOuter, cockpitOuter));
     } else if (abs(vAtlasCol - float(TANK_COL)) < 0.5) {
       vec2 p = vCellUV - 0.5;
       float aa = 0.025;
@@ -128,7 +127,8 @@ void main() {
           max(hullOuter, max(turretOuter, barrelOuter)));
       blackOutline = max(max(outerMask - mask, turretOuter - turret),
                          barrelOuter - barrel);
-      float shade = tracks > hull ? 0.25 : (turret > 0.5 ? 0.78 : 0.52);
+      // Hull and turret share the exact player-color band. Tracks remain dark.
+      float shade = tracks > hull ? 0.25 : 0.72;
       texel = vec4(vec3(shade), outerMask);
     } else {
       vec2 atlasUV = vec2((vAtlasCol + vCellUV.x) / float(ATLAS_COLS), vCellUV.y);
@@ -163,19 +163,30 @@ void main() {
         abs(p.x) + 0.045 * sin(uTick * 0.35 + p.y * 34.0))
         * smoothstep(0.08, 0.18, p.y)
         * smoothstep(0.58, 0.22, p.y);
-    float flameY = smoothstep(0.14, 0.24, p.y) * smoothstep(0.92, 0.48, p.y);
-    float flameWidth = 0.055 + max(0.0, p.y - 0.20) * 0.16;
-    float twinFlame = firePhase * flameY * max(
-      smoothstep(flameWidth, flameWidth * 0.25, abs(p.x - 0.17)),
-      smoothstep(flameWidth, flameWidth * 0.25, abs(p.x + 0.17))
+    float flameY = smoothstep(0.10, 0.22, p.y) * smoothstep(1.12, 0.56, p.y);
+    float flameWidth = 0.075 + max(0.0, p.y - 0.18) * 0.19;
+    float flameWave = sin(p.y * 31.0 - uTick * 1.45) * 0.035
+                    + sin(p.y * 57.0 + uTick * 2.1) * 0.018;
+    float leftFlame = smoothstep(flameWidth, flameWidth * 0.18,
+        abs(p.x + 0.17 + flameWave));
+    float rightFlame = smoothstep(flameWidth, flameWidth * 0.18,
+        abs(p.x - 0.17 - flameWave));
+    float breakup = 0.72 + 0.28 * sin(p.y * 46.0 - uTick * 2.8);
+    float twinFlame = firePhase * flameY * max(leftFlame, rightFlame)
+                    * smoothstep(0.18, 0.78, breakup);
+    float coreWidth = flameWidth * 0.34;
+    float flameCore = firePhase * flameY * max(
+      smoothstep(coreWidth, coreWidth * 0.15, abs(p.x + 0.17 + flameWave * 0.4)),
+      smoothstep(coreWidth, coreWidth * 0.15, abs(p.x - 0.17 - flameWave * 0.4))
     );
     float fire = max(exhaust, twinFlame);
     smoke = max(smoke, fire);
     if (smoke > 0.01) {
       vec3 smokeColor = mix(vec3(0.16), vec3(0.78), clamp(brightness, 0.0, 1.0));
-      smokeColor = mix(smokeColor, vec3(1.0, 0.18, 0.01), fire * 0.88);
-      smokeColor = mix(smokeColor, vec3(1.0, 0.92, 0.2), exhaust);
-      fragColor = vec4(smokeColor, smoke * 0.86);
+      smokeColor = mix(smokeColor, vec3(1.0, 0.06, 0.0), fire);
+      smokeColor = mix(smokeColor, vec3(1.0, 0.58, 0.02), twinFlame);
+      smokeColor = mix(smokeColor, vec3(1.0, 0.98, 0.72), flameCore);
+      fragColor = vec4(smokeColor, max(smoke * 0.86, fire * 0.98));
       return;
     }
   }

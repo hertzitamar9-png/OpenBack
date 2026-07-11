@@ -18,7 +18,16 @@ export function findLandPath(
     open.sort((a, b) => {
       const scoreA = cost.get(a)! + game.manhattanDist(a, goal);
       const scoreB = cost.get(b)! + game.manhattanDist(b, goal);
-      return scoreA - scoreB || a - b;
+      // All equal-score choices are equally short. Prefer the tile whose X/Y
+      // progress is most balanced so open ground becomes a plane-like
+      // staircase instead of one long straight followed by a hard turn.
+      const balanceA = Math.abs(
+        Math.abs(game.x(goal) - game.x(a)) - Math.abs(game.y(goal) - game.y(a)),
+      );
+      const balanceB = Math.abs(
+        Math.abs(game.x(goal) - game.x(b)) - Math.abs(game.y(goal) - game.y(b)),
+      );
+      return scoreA - scoreB || balanceA - balanceB || a - b;
     });
     const current = open.shift()!;
     openSet.delete(current);

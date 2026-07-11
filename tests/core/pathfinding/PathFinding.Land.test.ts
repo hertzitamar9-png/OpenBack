@@ -14,6 +14,12 @@ describe("PathFinding.Land", () => {
     const path = findLandPath(game, game.ref(0, 0), game.ref(7, 15));
     expect(path).not.toBeNull();
     expect(path!.every((tile) => game.isLand(tile))).toBe(true);
+    expect(path).toHaveLength(23);
+    const directions = path!.slice(1).map((tile, index) => {
+      const previous = path![index];
+      return game.x(tile) !== game.x(previous) ? "x" : "y";
+    });
+    expect(new Set(directions.slice(0, 10)).size).toBe(2);
   });
 
   it("rejects destinations across a water barrier", () => {

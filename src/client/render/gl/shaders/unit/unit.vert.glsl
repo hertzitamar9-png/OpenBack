@@ -51,7 +51,8 @@ void main() {
     step(abs(vFlags - 7.0), 0.1)
   );
   scale = mix(scale, mix(1.30, 2.65, launchSmoke), isPlane);
-  scale = mix(scale, 0.92, isTank);
+  // Tank is 70% of the military-base model's configured 1.188 scale.
+  scale = mix(scale, 0.83, isTank);
 
   // UNIT_SIZE is in world-space tiles — no zoom division needed.
   // Units scale with the map like territory tiles do.
