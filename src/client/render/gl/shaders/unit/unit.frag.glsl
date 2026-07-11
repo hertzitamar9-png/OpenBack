@@ -61,7 +61,7 @@ void main() {
       // The vertex shader rotates the complete aircraft quad. Keeping the
       // model in local coordinates makes its nose visibly face the target.
       vec2 p = vCellUV - 0.5;
-      float aa = 0.02;
+      float aa = 0.009;
 
       // Tapered fuselage: pointed nose/tail, fuller mid-body.
       float t = clamp((p.y + 0.44) / 0.88, 0.0, 1.0);
@@ -100,13 +100,19 @@ void main() {
           max(tailOuter, enginesOuter)), 0.0, 1.0);
       float cockpitOuter = smoothstep(0.085, 0.055,
           length((p - vec2(0.0, -0.25)) * vec2(1.0, 1.8)));
-      blackOutline = max(planeOuter - planeMask, cockpitOuter - cockpit);
+      float planeSeams = max(
+        max(bodyOuter - body, wingsOuter - wings),
+        max(max(tailOuter - tail, enginesOuter - engines),
+            cockpitOuter - cockpit)
+      );
+      blackOutline = smoothstep(0.025, 0.16, planeSeams);
       // One uniform light band makes every aircraft panel use the owner's
       // spawn color; blackOutline supplies separation around every component.
-      texel = vec4(vec3(0.72), max(planeOuter, cockpitOuter));
+      float planeAlpha = step(0.035, max(planeOuter, cockpitOuter));
+      texel = vec4(vec3(0.72), planeAlpha);
     } else if (abs(vAtlasCol - float(TANK_COL)) < 0.5) {
       vec2 p = vCellUV - 0.5;
-      float aa = 0.025;
+      float aa = 0.012;
       float hull = smoothstep(0.34 + aa, 0.34 - aa, abs(p.x))
                  * smoothstep(0.27 + aa, 0.27 - aa, abs(p.y));
       float tracks = smoothstep(0.44 + aa, 0.44 - aa, abs(p.x))
@@ -125,11 +131,17 @@ void main() {
                         * smoothstep(-0.08, 0.42, -p.y);
       float outerMask = max(tracksOuter,
           max(hullOuter, max(turretOuter, barrelOuter)));
-      blackOutline = max(max(outerMask - mask, turretOuter - turret),
-                         barrelOuter - barrel);
-      // Hull and turret share the exact player-color band. Tracks remain dark.
+      float tankSeams = max(
+        max(tracksOuter - tracks, hullOuter - hull),
+        max(turretOuter - turret, barrelOuter - barrel)
+      );
+      blackOutline = smoothstep(0.025, 0.14, tankSeams);
+      // Tracks stay dark; the turret/barrel use the spawn-color band so the
+      // former white highlight follows the owner (green in the example).
       float shade = tracks > hull ? 0.25 : 0.72;
-      texel = vec4(vec3(shade), outerMask);
+      if (turret > 0.5 || barrel > 0.5) shade = 0.51;
+      float tankAlpha = step(0.035, outerMask);
+      texel = vec4(vec3(shade), tankAlpha);
     } else {
       vec2 atlasUV = vec2((vAtlasCol + vCellUV.x) / float(ATLAS_COLS), vCellUV.y);
       texel = texture(uAtlas, atlasUV);
