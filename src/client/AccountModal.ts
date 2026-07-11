@@ -467,14 +467,20 @@ export class AccountModal extends BaseModal {
   }
 
   private syncProfileFields(userMe: UserMeResponse) {
-    this.profileDisplayName =
-      userMe.user.displayName ?? userMe.user.email?.split("@")[0] ?? "Player";
+    this.profileDisplayName = userMe.user.displayName ?? "";
     this.profileBio = userMe.user.bio ?? "";
     this.profileBannerColor = userMe.user.bannerColor ?? "#1689d8";
   }
 
   private handleSaveProfile = async () => {
     if (this.profileSaving) return;
+    if (!this.profileDisplayName.trim()) {
+      this.profileMessageError = true;
+      this.profileMessage = translateText(
+        "account_modal.display_name_required",
+      );
+      return;
+    }
     this.profileSaving = true;
     this.profileMessage = "";
     const updated = await updateMyProfile({
@@ -501,7 +507,16 @@ export class AccountModal extends BaseModal {
         detail: { displayName: updated.user.displayName },
       }),
     );
+    // Completing the required first-time profile is the only action that
+    // unlocks the rest of the application.
+    document.body.classList.remove("profile-setup-required");
+    this.close();
   };
+
+  public override close(args?: Record<string, unknown>): void {
+    if (document.body.classList.contains("profile-setup-required")) return;
+    super.close(args);
+  }
 
   private async viewGame(gameId: string): Promise<void> {
     this.close();

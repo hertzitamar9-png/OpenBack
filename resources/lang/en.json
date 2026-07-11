@@ -10,6 +10,7 @@
     "connected_as": "Connected as",
     "dev_code": "Dev login code: {code} (also printed in the server logs)",
     "display_name": "Display Name",
+    "display_name_required": "Choose a display name before continuing.",
     "email_placeholder": "Enter your email address",
     "enter_code": "Please enter the 6-digit code we emailed you",
     "enter_email_address": "Please enter an email address",

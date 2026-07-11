@@ -1,5 +1,23 @@
 @import "tailwindcss";
 
+/* First-time accounts must finish their profile before seeing or navigating
+   the main screen. The account page remains the sole visible application UI. */
+body.profile-setup-required desktop-nav-bar,
+body.profile-setup-required mobile-nav-bar,
+body.profile-setup-required homepage-promos,
+body.profile-setup-required page-footer {
+  display: none !important;
+}
+
+body.profile-setup-required main-layout main {
+  padding: 0 !important;
+}
+
+body.profile-setup-required main-layout main > div {
+  max-width: none !important;
+  padding: 0 !important;
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 @custom-variant hover (&:hover);
 
