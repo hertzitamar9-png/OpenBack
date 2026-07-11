@@ -959,8 +959,9 @@ export class Config {
   }
 
   planeSpeed(): number {
-    // Four times the previous aircraft speed.
-    return this.defaultNukeSpeed() * 3;
+    // AirPathFinder advances one path node per step. PlaneExecution consumes
+    // this many nodes per simulation tick (8x the old one-node movement).
+    return 8;
   }
 
   planeFalloutRadius(): number {
@@ -988,8 +989,16 @@ export class Config {
     return this.defaultSamRange() * (1.2 + 0.9 * Math.max(0, baseLevel - 1));
   }
 
+  tankDamageRadius(): number {
+    return 4;
+  }
+
   openBackSnapRadius(): number {
     return 8;
+  }
+
+  openBackVehicleSnapRadius(): number {
+    return 3;
   }
 
   defaultNukeTargetableRange(): number {

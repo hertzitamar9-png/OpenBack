@@ -7,6 +7,8 @@
 - Added visible Tank Mine range, stackable MANPADs/mines/bases, and stack-scaled ranges.
 - Increased aircraft speed and corrected its live heading through turns.
 - Reduced OpenBack unit snapping distance and added tank range scaling from stacked bases.
+- Made aircraft genuinely fast and diagonally oriented, strengthened tank fallout damage, and added white/gray vehicle aiming crosshairs with source-only range previews.
+- Fixed single-charge tank construction, ready-vehicle deployment without extra gold, full aircraft crater capture, and bot base/tank targeting.
 - Replaced the product-facing name and restricted upstream logo assets with original OpenBack SVG branding.
 - Removed third-party advertising and analytics boot scripts from the local build.
 - Preserved the upstream AGPL copyright notices, source history, and contributor credits.

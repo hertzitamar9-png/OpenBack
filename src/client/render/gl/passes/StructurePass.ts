@@ -364,6 +364,8 @@ export class StructurePass {
   draw(cameraMatrix: Float32Array, zoom: number): void {
     const hasGhost =
       this.ghost !== null &&
+      this.ghost.ghostType !== UT_PLANE &&
+      this.ghost.ghostType !== UT_TANK &&
       (this.typeToAtlasCol.has(this.ghost.ghostType) ||
         this.ghostOnlyTypeToAtlasCol.has(this.ghost.ghostType));
     if (this.instanceCount === 0 && !hasGhost) return;

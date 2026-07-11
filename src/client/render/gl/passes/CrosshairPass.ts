@@ -7,14 +7,14 @@
  */
 
 import type { GhostPreviewData } from "../../types";
-import { UT_MIRV, UT_WARSHIP } from "../../types";
+import { UT_MIRV, UT_PLANE, UT_TANK, UT_WARSHIP } from "../../types";
 import { createProgram } from "../utils/GlUtils";
 
 import fragSrc from "../shaders/crosshair/crosshair.frag.glsl?raw";
 import vertSrc from "../shaders/crosshair/crosshair.vert.glsl?raw";
 
 /** Half-size of the crosshair quad in screen pixels. */
-const CROSSHAIR_PX = 20;
+const CROSSHAIR_PX = 24;
 
 export class CrosshairPass {
   private gl: WebGL2RenderingContext;
@@ -31,6 +31,7 @@ export class CrosshairPass {
   private centerX = 0;
   private centerY = 0;
   private canBuild = false;
+  private neutralVehicleCursor = false;
 
   constructor(gl: WebGL2RenderingContext) {
     this.gl = gl;
@@ -58,11 +59,19 @@ export class CrosshairPass {
   }
 
   updateGhostPreview(data: GhostPreviewData | null): void {
-    if (data && (data.ghostType === UT_WARSHIP || data.ghostType === UT_MIRV)) {
+    if (
+      data &&
+      (data.ghostType === UT_WARSHIP ||
+        data.ghostType === UT_MIRV ||
+        data.ghostType === UT_PLANE ||
+        data.ghostType === UT_TANK)
+    ) {
       this.active = true;
       this.centerX = data.tileX;
       this.centerY = data.tileY;
       this.canBuild = data.canBuild || data.canUpgrade;
+      this.neutralVehicleCursor =
+        data.ghostType === UT_PLANE || data.ghostType === UT_TANK;
     } else {
       this.active = false;
     }
@@ -78,7 +87,11 @@ export class CrosshairPass {
     gl.uniform1f(this.uHalfSize, CROSSHAIR_PX);
     gl.uniform2f(this.uViewport, gl.drawingBufferWidth, gl.drawingBufferHeight);
 
-    if (this.canBuild) {
+    if (this.neutralVehicleCursor && this.canBuild) {
+      gl.uniform3f(this.uColor, 1.0, 1.0, 1.0);
+    } else if (this.neutralVehicleCursor) {
+      gl.uniform3f(this.uColor, 0.62, 0.62, 0.62);
+    } else if (this.canBuild) {
       gl.uniform3f(this.uColor, 0.9, 0.15, 0.15); // red crosshair
     } else {
       gl.uniform3f(this.uColor, 0.4, 0.1, 0.1); // dark red = can't build

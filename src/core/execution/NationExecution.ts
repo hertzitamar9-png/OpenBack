@@ -250,13 +250,16 @@ export class NationExecution implements Execution {
           other.borderTiles().size > 0,
       );
     if (targets.length === 0) return;
-    const target = this.random.randElement(targets);
-    const tile = this.random.randElement(Array.from(target.borderTiles()));
-    if (player.canBuild(UnitType.Tank, tile) !== false) {
-      this.mg.addExecution(
-        new ConstructionExecution(player, UnitType.Tank, tile),
-      );
-    }
+    const reachableTiles = targets.flatMap((target) =>
+      Array.from(target.borderTiles()).filter(
+        (tile) => player.canBuild(UnitType.Tank, tile) !== false,
+      ),
+    );
+    if (reachableTiles.length === 0) return;
+    const tile = this.random.randElement(reachableTiles);
+    this.mg.addExecution(
+      new ConstructionExecution(player, UnitType.Tank, tile),
+    );
   }
 
   private maybeSendPlane(): void {
@@ -314,9 +317,13 @@ export class NationExecution implements Execution {
           other.borderTiles().size > 0,
       );
     if (targets.length === 0) return;
-    const target = this.random.randElement(targets);
-    const tile = this.random.randElement(Array.from(target.borderTiles()));
-    if (player.canBuild(UnitType.Plane, tile) === false) return;
+    const reachableTiles = targets.flatMap((target) =>
+      Array.from(target.borderTiles()).filter(
+        (tile) => player.canBuild(UnitType.Plane, tile) !== false,
+      ),
+    );
+    if (reachableTiles.length === 0) return;
+    const tile = this.random.randElement(reachableTiles);
     this.mg.addExecution(
       new ConstructionExecution(player, UnitType.Plane, tile, undefined, 0),
     );

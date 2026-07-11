@@ -1,0 +1,46 @@
+import { TankExecution } from "../../../src/core/execution/TankExecution";
+import {
+  Game,
+  Player,
+  PlayerInfo,
+  PlayerType,
+  UnitType,
+} from "../../../src/core/game/Game";
+import { setup } from "../../util/Setup";
+
+describe("TankExecution", () => {
+  let game: Game;
+  let attacker: Player;
+  let defender: Player;
+  const attackerInfo = new PlayerInfo("attacker", PlayerType.Human, null, "a");
+  const defenderInfo = new PlayerInfo("defender", PlayerType.Human, null, "d");
+
+  beforeEach(async () => {
+    game = await setup(
+      "plains",
+      { instantBuild: true, startingGold: 5_000_000 },
+      [attackerInfo, defenderInfo],
+    );
+    attacker = game.player(attackerInfo.id);
+    defender = game.player(defenderInfo.id);
+    attacker.conquer(game.ref(5, 5));
+    defender.conquer(game.ref(18, 5));
+    attacker.buildUnit(UnitType.MilitaryBase, game.ref(5, 5), {});
+  });
+
+  test("charges once, launches from its base, and leaves a wide fallout trail", () => {
+    const before = attacker.gold();
+    game.addExecution(new TankExecution(attacker, game.ref(5, 5)));
+    game.executeNextTick();
+    expect(before - attacker.gold()).toBe(500_000n);
+
+    const tank = attacker.units(UnitType.Tank)[0];
+    expect(tank.isLoaded()).toBe(true);
+    game.addExecution(new TankExecution(attacker, game.ref(18, 5)));
+    for (let i = 0; i < 100 && tank.isActive(); i++) game.executeNextTick();
+
+    const trailTile = game.ref(10, 7);
+    expect(game.hasFallout(trailTile)).toBe(true);
+    expect(game.hasOwner(trailTile)).toBe(false);
+  });
+});

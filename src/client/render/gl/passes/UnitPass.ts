@@ -141,6 +141,7 @@ const MISSILE_TYPES: ReadonlySet<string> = new Set([
   UT_SHELL,
   UT_MIRV_WARHEAD,
   UT_PLANE,
+  UT_TANK,
 ]);
 
 /** Values per smoothing segment in the flat `smoothSegs` array:

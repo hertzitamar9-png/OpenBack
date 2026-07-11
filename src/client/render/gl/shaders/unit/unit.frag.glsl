@@ -83,7 +83,8 @@ void main() {
           min(length(p - vec2(-0.17, 0.02)), length(p - vec2(0.17, 0.02))));
       float cockpit = smoothstep(0.055 + aa, 0.055 - aa,
           length((p - vec2(0.0, -0.25)) * vec2(1.0, 1.8)));
-      float planeMask = clamp(max(max(body, wings), max(tail, engines)), 0.0, 1.0);
+      float planeMask = smoothstep(0.08, 0.42,
+          clamp(max(max(body, wings), max(tail, engines)), 0.0, 1.0));
       // Brighter forward fuselage/cockpit, darker aft for readability.
       float shade = mix(0.30, 0.78, smoothstep(0.05, -0.35, p.y));
       vec3 aircraftShade = mix(vec3(shade), vec3(0.86, 0.95, 1.0), cockpit);
@@ -98,7 +99,8 @@ void main() {
       float turret = smoothstep(0.16 + aa, 0.16 - aa, length(p));
       float barrel = smoothstep(0.045 + aa, 0.045 - aa, abs(p.x))
                    * smoothstep(-0.05, 0.39, -p.y);
-      float mask = max(tracks * 0.75, max(hull, max(turret, barrel)));
+      float mask = smoothstep(0.08, 0.42,
+          max(tracks, max(hull, max(turret, barrel))));
       float shade = tracks > hull ? 0.25 : (turret > 0.5 ? 0.78 : 0.52);
       texel = vec4(vec3(shade), mask);
     } else {

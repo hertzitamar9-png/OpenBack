@@ -128,20 +128,20 @@ export class BuildPreviewController implements Controller {
           // Snapped plane/runway placement is likewise anchored to the runway
           // it snapped to, so its flight-range circle stays put too.
           const anchoredToSnappedRunway =
-            (ghost.ghostType === UnitType.Plane ||
-              ghost.ghostType === UnitType.Runway) &&
-            ghost.canBuild;
-          const anchoredVehicle =
+            ghost.ghostType === UnitType.Runway && ghost.canBuild;
+          const anchoredVehicleRange =
             (ghost.ghostType === UnitType.Plane ||
               ghost.ghostType === UnitType.Tank) &&
-            ghost.canBuild;
+            ghost.rangeRadius > 0;
           const radiusFollowsCursor = !(
             (ghost.canUpgrade && ghost.upgradeTargetTile !== null) ||
-            anchoredToSnappedRunway
+            anchoredToSnappedRunway ||
+            anchoredVehicleRange
           );
           this.view.updateGhostPreview({
             ...ghost,
-            ...(anchoredVehicle ? {} : { tileX: w.x - 0.5, tileY: w.y - 0.5 }),
+            tileX: w.x - 0.5,
+            tileY: w.y - 0.5,
             ...(radiusFollowsCursor
               ? { radiusTileX: w.x - 0.5, radiusTileY: w.y - 0.5 }
               : {}),
@@ -420,6 +420,7 @@ export class BuildPreviewController implements Controller {
     // Range circle: SAM placement preview shows targetable radius; nuke
     // previews show the outer blast radius at the target tile.
     let rangeRadius = 0;
+    let vehicleRangeSourceTile: TileRef | null = null;
     switch (u.type) {
       case UnitType.SAMLauncher: {
         const level = this.resolveGhostRangeLevel(u) ?? 1;
@@ -490,14 +491,16 @@ export class BuildPreviewController implements Controller {
         break;
       }
       case UnitType.Plane: {
-        // While placing a new aircraft, show only its silhouette on a valid
-        // runway. Flight range appears only when selecting a ready aircraft
-        // for an actual deployment target.
-        if (this.game.owner(tileRef) === myPlayer) {
+        const runwayTile = this.hoveredCompletedSourceTile(
+          myPlayer,
+          UnitType.Runway,
+          tileRef,
+        );
+        if (runwayTile === null) {
           rangeRadius = 0;
           break;
         }
-        const runwayTile = u.canBuild !== false ? u.canBuild : tileRef;
+        vehicleRangeSourceTile = runwayTile;
         const stack = myPlayer
           .units(UnitType.Runway)
           .filter(
@@ -509,11 +512,16 @@ export class BuildPreviewController implements Controller {
         break;
       }
       case UnitType.Tank: {
-        if (this.game.owner(tileRef) === myPlayer) {
+        const baseTile = this.hoveredCompletedSourceTile(
+          myPlayer,
+          UnitType.MilitaryBase,
+          tileRef,
+        );
+        if (baseTile === null) {
           rangeRadius = 0;
           break;
         }
-        const baseTile = u.canBuild !== false ? u.canBuild : tileRef;
+        vehicleRangeSourceTile = baseTile;
         const level = myPlayer
           .units(UnitType.MilitaryBase)
           .filter(
@@ -527,9 +535,7 @@ export class BuildPreviewController implements Controller {
     let radiusTileX = this.game.x(tileRef);
     let radiusTileY = this.game.y(tileRef);
     if (
-      (u.type === UnitType.Plane ||
-        u.type === UnitType.Runway ||
-        u.type === UnitType.Tank ||
+      (u.type === UnitType.Runway ||
         u.type === UnitType.MANPAD ||
         u.type === UnitType.MilitaryBase ||
         u.type === UnitType.TankMine) &&
@@ -537,6 +543,10 @@ export class BuildPreviewController implements Controller {
     ) {
       radiusTileX = this.game.x(u.canBuild);
       radiusTileY = this.game.y(u.canBuild);
+    }
+    if (vehicleRangeSourceTile !== null) {
+      radiusTileX = this.game.x(vehicleRangeSourceTile);
+      radiusTileY = this.game.y(vehicleRangeSourceTile);
     }
     if (
       rangeRadius > 0 &&
@@ -550,16 +560,8 @@ export class BuildPreviewController implements Controller {
     const cost = u.cost;
     return {
       ghostType: u.type,
-      tileX:
-        (u.type === UnitType.Plane || u.type === UnitType.Tank) &&
-        u.canBuild !== false
-          ? this.game.x(u.canBuild)
-          : this.game.x(tileRef),
-      tileY:
-        (u.type === UnitType.Plane || u.type === UnitType.Tank) &&
-        u.canBuild !== false
-          ? this.game.y(u.canBuild)
-          : this.game.y(tileRef),
+      tileX: this.game.x(tileRef),
+      tileY: this.game.y(tileRef),
       radiusTileX,
       radiusTileY,
       canBuild: u.canBuild !== false,
@@ -682,5 +684,24 @@ export class BuildPreviewController implements Controller {
       }
     }
     return 1;
+  }
+
+  private hoveredCompletedSourceTile(
+    player: NonNullable<ReturnType<GameView["myPlayer"]>>,
+    type: UnitType.Runway | UnitType.MilitaryBase,
+    hoverTile: TileRef,
+  ): TileRef | null {
+    const rangeSquared = this.game.config().openBackVehicleSnapRadius() ** 2;
+    let best: TileRef | null = null;
+    let bestDistance = Infinity;
+    for (const unit of player.units(type)) {
+      if (!unit.isActive() || unit.isUnderConstruction()) continue;
+      const distance = this.game.euclideanDistSquared(unit.tile(), hoverTile);
+      if (distance <= rangeSquared && distance < bestDistance) {
+        best = unit.tile();
+        bestDistance = distance;
+      }
+    }
+    return best;
   }
 }

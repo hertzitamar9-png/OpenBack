@@ -36,7 +36,6 @@ export class TankExecution implements Execution {
         this.active = false;
         return;
       }
-      this.player.removeGold(cost);
       this.tank = this.player.buildUnit(UnitType.Tank, spawn, {
         trajectory: [],
       });
@@ -56,12 +55,12 @@ export class TankExecution implements Execution {
     this.tank =
       this.player
         .units(UnitType.Tank)
-        .filter((u) => u.isActive() && u.isLoaded() === true)
-        .sort(
-          (a, b) =>
-            game.manhattanDist(a.tile(), this.dst) -
-            game.manhattanDist(b.tile(), this.dst),
-        )[0] ?? null;
+        .find(
+          (unit) =>
+            unit.isActive() &&
+            unit.isLoaded() === true &&
+            unit.tile() === spawn,
+        ) ?? null;
     if (!this.tank) {
       this.active = false;
       return;
@@ -119,27 +118,40 @@ export class TankExecution implements Execution {
       this.active = false;
       return;
     }
-    const owner = this.game.owner(next);
-    if (
-      owner.isPlayer() &&
-      owner !== this.player &&
-      !this.player.isFriendly(owner)
-    ) {
-      for (const unit of this.game.units()) {
-        if (
-          unit.isActive() &&
-          unit.tile() === next &&
-          !this.player.isFriendly(unit.owner())
-        ) {
-          unit.delete(false);
-        }
+    this.damageArea(next);
+  }
+
+  private damageArea(center: TileRef): void {
+    const radius = this.game.config().tankDamageRadius();
+    const radiusSquared = radius * radius;
+
+    for (const unit of this.game.units()) {
+      if (
+        unit.isActive() &&
+        unit !== this.tank &&
+        unit.owner() !== this.player &&
+        !this.player.isFriendly(unit.owner()) &&
+        this.game.euclideanDistSquared(center, unit.tile()) <= radiusSquared
+      ) {
+        unit.delete(false, this.player);
       }
-      owner.relinquish(next);
-      this.game.setFallout(next, true);
-      this.player.conquer(next);
-    } else if (!owner.isPlayer()) {
-      this.game.setFallout(next, true);
-      this.player.conquer(next);
+    }
+
+    for (const tile of this.game.bfs(
+      center,
+      (_, next) =>
+        this.game.euclideanDistSquared(center, next) <= radiusSquared,
+    )) {
+      if (!this.game.isLand(tile)) continue;
+      const owner = this.game.owner(tile);
+      if (
+        owner.isPlayer() &&
+        (owner === this.player || this.player.isFriendly(owner))
+      ) {
+        continue;
+      }
+      if (owner.isPlayer()) owner.relinquish(tile);
+      this.game.setFallout(tile, true);
     }
   }
 

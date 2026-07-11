@@ -8,6 +8,13 @@ import {
   UnitType,
 } from "../../../src/core/game/Game";
 import { setup } from "../../util/Setup";
+import { TestConfig } from "../../util/TestConfig";
+
+class PlaneTestConfig extends TestConfig {
+  planeFalloutRadius(): number {
+    return 2;
+  }
+}
 
 describe("PlaneExecution", () => {
   let game: Game;
@@ -21,6 +28,8 @@ describe("PlaneExecution", () => {
       "plains",
       { infiniteGold: true, instantBuild: true, infiniteTroops: false },
       [attackerInfo, defenderInfo],
+      undefined,
+      PlaneTestConfig,
     );
     attacker = game.player(attackerInfo.id);
     defender = game.player(defenderInfo.id);
@@ -95,5 +104,26 @@ describe("PlaneExecution", () => {
     expect(plane.isActive()).toBe(false);
     expect(defender.units(UnitType.MANPAD)).toHaveLength(0);
     expect(game.hasFallout(plane.tile())).toBe(true);
+  });
+
+  test("flies multiple tiles per tick and captures the full crash area", () => {
+    const plane = loadPlane(2_000);
+    const start = plane.tile();
+    const target = game.ref(17, 17);
+    const nearbyNeutral = game.ref(18, 17);
+    game.addExecution(new PlaneExecution(attacker, target, 0));
+
+    let firstMovedTile = start;
+    for (let i = 0; i < 120 && plane.isActive(); i++) {
+      game.executeNextTick();
+      if (plane.tile() !== start && firstMovedTile === start) {
+        firstMovedTile = plane.tile();
+      }
+    }
+
+    expect(game.manhattanDist(start, firstMovedTile)).toBeGreaterThanOrEqual(4);
+    expect(plane.isActive()).toBe(false);
+    expect(game.owner(target)).toBe(attacker);
+    expect(game.owner(nearbyNeutral)).toBe(attacker);
   });
 });

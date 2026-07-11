@@ -1170,7 +1170,6 @@ export class GPURenderer {
     this.samRadiusPass.draw(cam);
     this.rangeCirclePass.draw(cam);
     this.nukeTrajectoryPass.draw(cam);
-    this.crosshairPass.draw(cam);
     if (pe.structure) this.structurePass.draw(cam, zoom);
     if (pe.structure) this.structureLevelPass.draw(cam, zoom);
     // Small-player glow draws after structures so buildings can't hide it.
@@ -1182,6 +1181,7 @@ export class GPURenderer {
     this.nukeTelegraphPass.draw(cam);
     if (pe.trail) this.trailPass.draw(cam);
     if (pe.unit) this.unitPass.drawMissiles(cam);
+    this.crosshairPass.draw(cam);
 
     if (pe.fx) {
       this.fxPass.tick();

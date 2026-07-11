@@ -138,33 +138,41 @@ export class PlaneExecution implements Execution {
       this.recordMotionPlan(ticks);
       return;
     }
-    const result = this.pathFinder.next(
-      this.plane.tile(),
-      this.dst,
-      this.game.config().planeSpeed(),
-    );
-    if (result.status === PathStatus.COMPLETE) {
-      this.crash(this.dst, true);
-      return;
-    }
-    if (result.status === PathStatus.NEXT) {
-      const prev = this.plane.tile();
-      this.plane.move(result.node);
-      this.plane.setTrajectoryAngle(this.angleTo(prev, result.node));
-      const interceptor = this.findInterceptor(prev, result.node);
-      if (interceptor !== null) {
-        this.interceptionStarted = true;
-        this.plane.setTargetedBySAM(true);
-        this.game.addExecution(
-          new SAMMissileExecution(
-            interceptor.tile(),
-            interceptor.owner(),
-            interceptor,
-            this.plane,
-            result.node,
-          ),
-        );
+    const steps = Math.max(1, Math.floor(this.game.config().planeSpeed()));
+    const tickStart = this.plane.tile();
+    let current = tickStart;
+    let interceptor: Unit | null = null;
+    for (let step = 0; step < steps && this.active; step++) {
+      const result = this.pathFinder.next(current, this.dst);
+      if (result.status === PathStatus.COMPLETE) {
+        this.crash(this.dst, true);
+        return;
       }
+      if (result.status !== PathStatus.NEXT) return;
+
+      const previous = current;
+      current = result.node;
+      interceptor = this.findInterceptor(previous, current);
+      if (interceptor !== null) {
+        break;
+      }
+    }
+    if (current !== tickStart) {
+      this.plane.move(current);
+      this.plane.setTrajectoryAngle(this.angleTo(tickStart, current));
+    }
+    if (interceptor !== null) {
+      this.interceptionStarted = true;
+      this.plane.setTargetedBySAM(true);
+      this.game.addExecution(
+        new SAMMissileExecution(
+          interceptor.tile(),
+          interceptor.owner(),
+          interceptor,
+          this.plane,
+          current,
+        ),
+      );
     }
   }
 
@@ -247,26 +255,42 @@ export class PlaneExecution implements Execution {
       (_, next) =>
         this.game.euclideanDistSquared(tile, next) <= radius * radius,
     );
-    const clearedLand: TileRef[] = [];
+    const capturableLand: TileRef[] = [];
+    const affectedOwners = new Set<Player>();
     for (const impactedTile of impacted) {
       if (!this.game.isLand(impactedTile)) continue;
       const owner = this.game.owner(impactedTile);
       if (owner.isPlayer()) {
-        const deaths = Math.floor(
-          this.game
-            .config()
-            .nukeDeathFactor(
-              UnitType.AtomBomb,
-              owner.troops(),
-              Math.max(1, owner.numTilesOwned()),
-              this.game.config().maxTroops(owner),
-            ) / 4,
-        );
-        owner.removeTroops(deaths);
+        if (owner === this.player || this.player.isFriendly(owner)) continue;
+        affectedOwners.add(owner);
         owner.relinquish(impactedTile);
-        clearedLand.push(impactedTile);
       }
       this.game.setFallout(impactedTile, true);
+      capturableLand.push(impactedTile);
+    }
+    for (const owner of affectedOwners) {
+      const deaths = Math.floor(
+        this.game
+          .config()
+          .nukeDeathFactor(
+            UnitType.AtomBomb,
+            owner.troops(),
+            Math.max(1, owner.numTilesOwned()),
+            this.game.config().maxTroops(owner),
+          ) / 4,
+      );
+      owner.removeTroops(deaths);
+    }
+    const capturableSet = new Set(capturableLand);
+    for (const unit of this.game.units()) {
+      if (
+        unit.isActive() &&
+        capturableSet.has(unit.tile()) &&
+        unit.owner() !== this.player &&
+        !this.player.isFriendly(unit.owner())
+      ) {
+        unit.delete(false, this.player);
+      }
     }
     const plane = this.plane;
     if (plane !== null) {
@@ -278,8 +302,8 @@ export class PlaneExecution implements Execution {
     // Grab the crater the blast just cleared, then push the carried troops
     // outward from it to take the surrounding bombed land.
     this.player.conquer(tile);
-    for (const cleared of clearedLand) {
-      this.player.conquer(cleared);
+    for (const impactedTile of capturableLand) {
+      this.player.conquer(impactedTile);
     }
     this.game.addExecution(
       new AttackExecution(
@@ -309,7 +333,13 @@ export class PlaneExecution implements Execution {
   }
 
   private recordMotionPlan(ticks: number): void {
-    const path = this.pathFinder.findPath(this.src, this.dst) ?? [this.src];
+    const fullPath = this.pathFinder.findPath(this.src, this.dst) ?? [this.src];
+    const stride = Math.max(1, Math.floor(this.game.config().planeSpeed()));
+    const path = fullPath.filter(
+      (_, index) => index === 0 || index % stride === 0,
+    );
+    const finalTile = fullPath[fullPath.length - 1];
+    if (path[path.length - 1] !== finalTile) path.push(finalTile);
     this.game.recordMotionPlan({
       kind: "grid",
       unitId: this.plane!.id(),

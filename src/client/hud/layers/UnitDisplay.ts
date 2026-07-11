@@ -96,12 +96,25 @@ export class UnitDisplay extends LitElement implements Controller {
         );
       case UnitType.Plane:
         return (
-          this.cost(item) <= (player?.gold() ?? 0n) &&
+          (this.cost(item) <= (player?.gold() ?? 0n) ||
+            (player
+              ?.units(UnitType.Plane)
+              .some(
+                (plane) =>
+                  plane.isActive() &&
+                  !plane.isUnderConstruction() &&
+                  plane.isLoaded() === true,
+              ) ??
+              false)) &&
           (player?.units(UnitType.Runway).length ?? 0) > 0
         );
       case UnitType.Tank:
         return (
-          this.cost(item) <= (player?.gold() ?? 0n) &&
+          (this.cost(item) <= (player?.gold() ?? 0n) ||
+            (player
+              ?.units(UnitType.Tank)
+              .some((tank) => tank.isActive() && tank.isLoaded() === true) ??
+              false)) &&
           (player?.units(UnitType.MilitaryBase).length ?? 0) > 0
         );
       default:

@@ -488,6 +488,8 @@ export class NationStructureBehavior {
       UnitType.MissileSilo,
       UnitType.Runway,
       UnitType.MANPAD,
+      UnitType.MilitaryBase,
+      UnitType.TankMine,
     ];
 
     const nukesEnabled =

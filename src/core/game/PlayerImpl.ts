@@ -1324,17 +1324,17 @@ export class PlayerImpl implements Player {
       let canUpgrade: number | false = false;
       let canBuild: TileRef | false = false;
 
-      const launchingReadyPlane =
-        u === UnitType.Plane &&
-        this.units(UnitType.Plane).some(
-          (plane) =>
-            plane.isActive() &&
-            !plane.isUnderConstruction() &&
-            plane.isLoaded() === true,
+      const launchingReadyVehicle =
+        (u === UnitType.Plane || u === UnitType.Tank) &&
+        this.units(u).some(
+          (vehicle) =>
+            vehicle.isActive() &&
+            !vehicle.isUnderConstruction() &&
+            vehicle.isLoaded() === true,
         );
       if (
         tile !== null &&
-        (launchingReadyPlane || this.canBuildUnitType(u, cost)) &&
+        (launchingReadyVehicle || this.canBuildUnitType(u, cost)) &&
         !inSpawnPhase
       ) {
         if (this.canUpgradeUnitType(u)) {
@@ -1373,15 +1373,15 @@ export class PlayerImpl implements Player {
     targetTile: TileRef,
     validTiles: TileRef[] | null = null,
   ): TileRef | false {
-    const hasReadyPlane =
-      unitType === UnitType.Plane &&
-      this.units(UnitType.Plane).some(
-        (plane) =>
-          plane.isActive() &&
-          !plane.isUnderConstruction() &&
-          plane.isLoaded() === true,
+    const hasReadyVehicle =
+      (unitType === UnitType.Plane || unitType === UnitType.Tank) &&
+      this.units(unitType).some(
+        (vehicle) =>
+          vehicle.isActive() &&
+          !vehicle.isUnderConstruction() &&
+          vehicle.isLoaded() === true,
       );
-    if (!hasReadyPlane && !this.canBuildUnitType(unitType)) {
+    if (!hasReadyVehicle && !this.canBuildUnitType(unitType)) {
       return false;
     }
 
@@ -1456,7 +1456,7 @@ export class PlayerImpl implements Player {
           );
           return base &&
             this.mg.euclideanDistSquared(base.tile(), targetTile) <=
-              this.mg.config().openBackSnapRadius() ** 2
+              this.mg.config().openBackVehicleSnapRadius() ** 2
             ? base.tile()
             : false;
         }
@@ -1642,7 +1642,10 @@ export class PlayerImpl implements Player {
     targetTile: TileRef,
     requireNoParkedPlane = false,
   ): TileRef | null {
-    const snapRadiusSquared = this.mg.config().openBackSnapRadius() ** 2;
+    const snapRadius = requireNoParkedPlane
+      ? this.mg.config().openBackVehicleSnapRadius()
+      : this.mg.config().openBackSnapRadius();
+    const snapRadiusSquared = snapRadius ** 2;
     let best: TileRef | null = null;
     let bestDist = Infinity;
     for (const runway of this.units(UnitType.Runway)) {
