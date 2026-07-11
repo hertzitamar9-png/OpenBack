@@ -84,6 +84,7 @@ const UNIT_ORDER = [
 ] as const;
 
 const ATLAS_COLS = UNIT_ORDER.length;
+const PLANE_COL = ATLAS_COLS;
 
 /** Atlas column of the hydrogen bomb — drives the GPU glow halo. */
 const HYDROGEN_BOMB_COL = UNIT_ORDER.indexOf(UT_HYDROGEN_BOMB);
@@ -263,13 +264,17 @@ export class UnitPass {
         this.typeToAtlasCol.set(header.unitTypes[i], col);
       }
     }
-    this.typeToAtlasCol.set(UT_PLANE, UNIT_ORDER.indexOf(UT_ATOM_BOMB));
+    this.typeToAtlasCol.set(UT_PLANE, PLANE_COL);
 
     // Compile shaders
     this.program = createProgram(
       gl,
       shaderSrc(unitVertSrc, { ATLAS_COLS, HYDROGEN_BOMB_COL }),
-      shaderSrc(unitFragSrc, { PALETTE_SIZE: getPaletteSize(), ATLAS_COLS }),
+      shaderSrc(unitFragSrc, {
+        PALETTE_SIZE: getPaletteSize(),
+        ATLAS_COLS,
+        PLANE_COL,
+      }),
     );
     this.uCamera = gl.getUniformLocation(this.program, "uCamera")!;
     this.uTick = gl.getUniformLocation(this.program, "uTick")!;

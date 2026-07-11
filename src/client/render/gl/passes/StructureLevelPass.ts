@@ -18,8 +18,10 @@ import {
   UT_CITY,
   UT_DEFENSE_POST,
   UT_FACTORY,
+  UT_MANPAD,
   UT_MISSILE_SILO,
   UT_PORT,
+  UT_RUNWAY,
   UT_SAM_LAUNCHER,
 } from "../../types";
 import { DynamicInstanceBuffer } from "../DynamicBuffer";
@@ -51,6 +53,8 @@ const STRUCTURE_ORDER = [
   UT_DEFENSE_POST,
   UT_SAM_LAUNCHER,
   UT_MISSILE_SILO,
+  UT_RUNWAY,
+  UT_MANPAD,
 ] as const;
 
 /** Max characters per level label (handles up to "99"). */
@@ -169,8 +173,6 @@ export class StructureLevelPass {
       );
       if (col >= 0) this.typeToAtlasCol.set(header.unitTypes[i], col);
     }
-    this.typeToAtlasCol.set("Runway", STRUCTURE_ORDER.indexOf("Missile Silo"));
-    this.typeToAtlasCol.set("MANPAD", STRUCTURE_ORDER.indexOf("SAM Launcher"));
 
     this.kernTable = new Int8Array(CHAR_RANGE * CHAR_RANGE); // digits don't kern
 

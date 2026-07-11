@@ -51,9 +51,12 @@ const STRUCTURE_ORDER = [
   UT_DEFENSE_POST,
   UT_SAM_LAUNCHER,
   UT_MISSILE_SILO,
+  UT_RUNWAY,
+  UT_MANPAD,
 ] as const;
 
-const ATLAS_COLS = STRUCTURE_ORDER.length;
+const ATLAS_COLS = 6;
+const STRUCTURE_TYPES_COUNT = STRUCTURE_ORDER.length;
 
 // ---------------------------------------------------------------------------
 // Instance data layout
@@ -138,22 +141,15 @@ export class StructurePass {
         this.typeToAtlasCol.set(header.unitTypes[i], col);
       }
     }
-    this.typeToAtlasCol.set(
-      UT_RUNWAY,
-      STRUCTURE_ORDER.indexOf(UT_MISSILE_SILO),
-    );
-    this.typeToAtlasCol.set(
-      UT_MANPAD,
-      STRUCTURE_ORDER.indexOf(UT_SAM_LAUNCHER),
-    );
 
     // Compile shaders
     this.program = createProgram(
       gl,
-      shaderSrc(structureVertSrc, { ATLAS_COLS }),
+      shaderSrc(structureVertSrc, { ATLAS_COLS, STRUCTURE_TYPES_COUNT }),
       shaderSrc(structureFragSrc, {
         PALETTE_SIZE: getPaletteSize(),
         ATLAS_COLS,
+        STRUCTURE_TYPES_COUNT,
       }),
     );
     this.uLocalPlayerID = gl.getUniformLocation(
@@ -372,8 +368,8 @@ export class StructurePass {
     gl.uniform1f(this.uIconGrowZoom, ss.iconGrowZoom);
 
     // Build per-structure uniform arrays from settings, ordered by atlas column
-    const scales = new Float32Array(ATLAS_COLS);
-    const fills = new Float32Array(ATLAS_COLS);
+    const scales = new Float32Array(STRUCTURE_TYPES_COUNT);
+    const fills = new Float32Array(STRUCTURE_TYPES_COUNT);
     for (let i = 0; i < STRUCTURE_ORDER.length; i++) {
       const cfg = ss.shapes[STRUCTURE_ORDER[i]];
       scales[i] = cfg?.scale ?? 1.0;

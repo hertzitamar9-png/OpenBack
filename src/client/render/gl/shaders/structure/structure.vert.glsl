@@ -15,8 +15,8 @@ uniform float uDotsThreshold;
 uniform float uDotScale;
 uniform float uScaleFactor;
 uniform float uIconGrowZoom;
-uniform float uShapeScales[ATLAS_COLS];
-uniform float uIconFills[ATLAS_COLS];
+uniform float uShapeScales[STRUCTURE_TYPES_COUNT];
+uniform float uIconFills[STRUCTURE_TYPES_COUNT];
 
 out vec2  vLocalPos;
 out vec2  vAtlasUV;

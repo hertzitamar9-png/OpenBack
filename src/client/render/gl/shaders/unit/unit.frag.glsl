@@ -53,8 +53,19 @@ void main() {
   bool inSprite = vCellUV.x >= 0.0 && vCellUV.x <= 1.0 &&
                   vCellUV.y >= 0.0 && vCellUV.y <= 1.0;
   if (inSprite) {
-    vec2 atlasUV = vec2((vAtlasCol + vCellUV.x) / float(ATLAS_COLS), vCellUV.y);
-    texel = texture(uAtlas, atlasUV);
+    if (abs(vAtlasCol - float(PLANE_COL)) < 0.5) {
+      vec2 p = vCellUV - 0.5;
+      float fuselage = step(abs(p.x), 0.075) * step(abs(p.y), 0.43);
+      float wingWidth = mix(0.38, 0.08, smoothstep(0.02, 0.22, abs(p.y + 0.03)));
+      float wings = step(abs(p.x), wingWidth) * step(abs(p.y + 0.03), 0.09);
+      float tail = step(abs(p.x), 0.20) * step(abs(p.y - 0.31), 0.055);
+      float nose = step(length(vec2(p.x, (p.y + 0.43) * 0.7)), 0.09);
+      float planeMask = max(max(fuselage, wings), max(tail, nose));
+      texel = vec4(vec3(p.y < -0.1 ? 0.71 : 0.28), planeMask);
+    } else {
+      vec2 atlasUV = vec2((vAtlasCol + vCellUV.x) / float(ATLAS_COLS), vCellUV.y);
+      texel = texture(uAtlas, atlasUV);
+    }
   }
 
   // Outside the sprite: render the steady soft glow under the hydrogen bomb,

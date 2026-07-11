@@ -190,19 +190,14 @@ function updateAccountNavButton(userMeResponse: UserMeResponse | false) {
     }
   }
 
-  // Once authenticated we ALWAYS show the profile button, never "Sign in".
-  // A brand-new email account may not have set a display name yet, so fall
-  // back to the email's local part and finally the public player ID. Without
-  // this fallback the button wrongly stayed on "Sign in" after logging in.
   if (userMeResponse !== false) {
     const trimmedName = userMeResponse.user.displayName?.trim();
-    const displayName = trimmedName === "" ? undefined : trimmedName;
-    const email = userMeResponse.user.email;
-    const emailLocalPart = email ? email.split("@")[0] : undefined;
-    const name =
-      displayName ?? emailLocalPart ?? userMeResponse.player.publicId;
-    showEmailLoggedIn(name);
-    return;
+    // A session/game ID is not a profile name. Keep the Log in label until
+    // the player deliberately saves a display name.
+    if (trimmedName) {
+      showEmailLoggedIn(trimmedName);
+      return;
+    }
   }
 
   showSignIn();

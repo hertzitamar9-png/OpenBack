@@ -26,6 +26,9 @@ const atomBombIcon = assetUrl("images/NukeIconWhite.svg");
 const portIcon = assetUrl("images/PortIcon.svg");
 const samLauncherIcon = assetUrl("images/SamLauncherIconWhite.svg");
 const defensePostIcon = assetUrl("images/ShieldIconWhite.svg");
+const planeIcon = assetUrl("images/PlaneIconWhite.svg");
+const manpadIcon = assetUrl("images/ManpadIconWhite.svg");
+const runwayIcon = assetUrl("images/RunwayIconWhite.svg");
 
 @customElement("unit-display")
 export class UnitDisplay extends LitElement implements Controller {
@@ -128,9 +131,9 @@ export class UnitDisplay extends LitElement implements Controller {
     }
 
     return html`
-      <div class="border-t border-white/10 p-0.5 w-full">
+      <div class="border-t border-white/10 px-2 py-1 w-full overflow-x-auto">
         <div
-          class="grid grid-rows-1 auto-cols-max grid-flow-col gap-0.5 w-fit mx-auto"
+          class="grid grid-rows-1 auto-cols-[minmax(58px,1fr)] grid-flow-col gap-1.5 min-w-max w-fit mx-auto"
         >
           ${this.renderUnitItem(
             cityIcon,
@@ -203,21 +206,21 @@ export class UnitDisplay extends LitElement implements Controller {
             this.keybinds["buildMIRV"]?.key ?? "0",
           )}
           ${this.renderUnitItem(
-            atomBombIcon,
+            planeIcon,
             null,
             UnitType.Plane,
             "plane",
             this.keybinds["buildPlane"]?.key ?? "Shift+Digit1",
           )}
           ${this.renderUnitItem(
-            samLauncherIcon,
+            manpadIcon,
             this._manpad,
             UnitType.MANPAD,
             "manpad",
             this.keybinds["buildManpad"]?.key ?? "Shift+Digit2",
           )}
           ${this.renderUnitItem(
-            atomBombIcon,
+            runwayIcon,
             this._runway,
             UnitType.Runway,
             "runway",
@@ -290,7 +293,7 @@ export class UnitDisplay extends LitElement implements Controller {
         <div
           class="${this.canBuild(unitType)
             ? ""
-            : "opacity-40"} border border-slate-500 rounded-sm px-0.5 pb-0.5 flex items-center gap-0.5 cursor-pointer
+            : "opacity-40"} min-w-[58px] min-h-9 border border-slate-500 rounded-sm px-1.5 py-1 flex items-center justify-center gap-1 cursor-pointer
              ${selected ? "hover:bg-gray-400/10" : "hover:bg-gray-800"}
              rounded-sm text-white ${selected ? "bg-slate-400/20" : ""}"
           @click=${() => {
@@ -322,11 +325,11 @@ export class UnitDisplay extends LitElement implements Controller {
           @mouseleave=${() =>
             this.eventBus?.emit(new ToggleStructureEvent(null))}
         >
-          ${html`<div class="ml-0.5 text-[10px] relative -top-1 text-gray-400">
+          ${html`<div class="text-[10px] text-gray-400 shrink-0">
             ${displayHotkey}
           </div>`}
-          <div class="flex items-center gap-0.5 pt-0.5">
-            <img src=${icon} alt=${structureKey} class="align-middle size-5" />
+          <div class="flex items-center gap-1">
+            <img src=${icon} alt=${structureKey} class="align-middle size-6" />
             ${number !== null
               ? html`<span class="text-xs">${renderNumber(number)}</span>`
               : null}
