@@ -130,10 +130,7 @@ export class OModal extends LitElement {
       "relative flex-1 min-h-0 flex flex-col text-white bg-black/70 backdrop-blur-xl lg:rounded-2xl lg:border border-white/10 overflow-hidden";
 
     return html`
-      <aside
-        class="${backdropClass}"
-        @click=${this.inline ? null : () => this.close()}
-      >
+      <aside class="${backdropClass}">
         <div
           @click=${(e: Event) => e.stopPropagation()}
           class="${wrapperClass}"

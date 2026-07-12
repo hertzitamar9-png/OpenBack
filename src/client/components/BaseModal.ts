@@ -252,24 +252,12 @@ export abstract class BaseModal extends LitElement {
     super.disconnectedCallback();
   }
 
-  private handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === "Escape" && this.isModalOpen) {
-      e.preventDefault();
-      if (!this.confirmBeforeClose()) {
-        return;
-      }
-      this.close();
-    }
-  };
-
   protected registerEscapeHandler() {
     this.isModalOpen = true;
-    window.addEventListener("keydown", this.handleKeyDown);
   }
 
   protected unregisterEscapeHandler() {
     this.isModalOpen = false;
-    window.removeEventListener("keydown", this.handleKeyDown);
   }
 
   protected renderLoadingSpinner(
