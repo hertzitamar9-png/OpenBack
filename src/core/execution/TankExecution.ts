@@ -170,7 +170,7 @@ export class TankExecution implements Execution {
     if (!this.tank?.isActive() || this.selfDestructTicks >= 0) return;
     this.selfDestructTile = tile;
     this.selfDestructTicks = 30;
-    this.tank.setLaunchPhase(3); // turret rises
+    this.tank.setLaunchPhase(20);
   }
 
   private tickSelfDestruct(): void {
@@ -178,8 +178,9 @@ export class TankExecution implements Execution {
       this.active = false;
       return;
     }
-    if (this.selfDestructTicks === 20) this.tank.setLaunchPhase(4); // bomb fired
-    if (this.selfDestructTicks === 10) this.tank.setLaunchPhase(5); // turret lowers
+    // Send smooth animation progress to every client: the turret rises fully,
+    // launches its fireball along an arc, then lowers before impact.
+    this.tank.setLaunchPhase(20 + (30 - this.selfDestructTicks));
     if (this.selfDestructTicks-- > 0) return;
 
     this.damageArea(this.selfDestructTile);

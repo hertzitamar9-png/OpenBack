@@ -49,7 +49,9 @@ describe("TankExecution", () => {
     expect(game.hasFallout(game.ref(18, 9))).toBe(true);
     expect(game.hasOwner(trailTile)).toBe(false);
     expect(tank.isActive()).toBe(false);
-    expect([...destructionPhases]).toEqual(expect.arrayContaining([3, 4, 5]));
+    expect([...destructionPhases]).toEqual(
+      expect.arrayContaining([20, 30, 40]),
+    );
   });
 
   test("moves 50% faster than a transport and keeps aimed at its target", () => {

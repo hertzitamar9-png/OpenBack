@@ -41,7 +41,7 @@ void main() {
   float isHBomb = step(abs(atlasCol - float(HYDROGEN_BOMB_COL)), 0.5);
   float isPlane = step(abs(atlasCol - float(PLANE_COL)), 0.5);
   float isTank = step(abs(atlasCol - float(TANK_COL)), 0.5);
-  float tankSelfDestruct = isTank * step(7.5, vFlags);
+  float tankSelfDestruct = isTank * step(19.5, vFlags);
   vGlow = isHBomb;
   float scale = mix(1.0, uHBombGlowScale, isHBomb);
   // Aircraft need a readable silhouette at normal map zoom.
@@ -53,7 +53,7 @@ void main() {
   );
   scale = mix(scale, mix(1.30, 2.65, launchSmoke), isPlane);
   // Tank is kept smaller than the military-base model (configured ~1.2 scale).
-  scale = mix(scale, mix(0.6, 1.05, tankSelfDestruct), isTank);
+  scale = mix(scale, mix(0.6, 1.45, tankSelfDestruct), isTank);
 
   // UNIT_SIZE is in world-space tiles — no zoom division needed.
   // Units scale with the map like territory tiles do.

@@ -32,10 +32,6 @@ const float FLAG_RETREATING     = 4.0;
 const float FLAG_FLICKER_UNTARGETABLE = 5.0; // nuke out of SAM range — dimmed
 const float FLAG_LAUNCH_SMOKE = 6.0;
 const float FLAG_LAUNCH_FIRE = 7.0;
-const float FLAG_TANK_TURRET_UP = 8.0;
-const float FLAG_TANK_BOMB_UP = 9.0;
-const float FLAG_TANK_TURRET_DOWN = 10.0;
-
 // Ally color for trade-friendly override (yellow — matches affiliation.ts ALLY)
 const vec3 ALLY_COLOR = vec3(1.0, 1.0, 0.0);
 
@@ -57,6 +53,8 @@ void main() {
   // hydrogen-bomb quad, anything outside that range is glow-only margin.
   vec4 texel = vec4(0.0);
   float blackOutline = 0.0;
+  float tankFireball = 0.0;
+  float tankArcGuide = 0.0;
   bool inSprite = vCellUV.x >= 0.0 && vCellUV.x <= 1.0 &&
                   vCellUV.y >= 0.0 && vCellUV.y <= 1.0;
   if (inSprite) {
@@ -116,10 +114,11 @@ void main() {
     } else if (abs(vAtlasCol - float(TANK_COL)) < 0.5) {
       vec2 p = vCellUV - 0.5;
       float aa = 0.012;
-      float turretLift = 0.0;
-      if (abs(vFlags - FLAG_TANK_TURRET_UP) < 0.1) turretLift = -0.11;
-      if (abs(vFlags - FLAG_TANK_BOMB_UP) < 0.1) turretLift = -0.15;
-      if (abs(vFlags - FLAG_TANK_TURRET_DOWN) < 0.1) turretLift = -0.055;
+      float selfDestruct = step(19.5, vFlags);
+      float sequence = clamp((vFlags - 20.0) / 30.0, 0.0, 1.0);
+      float turretLift = -0.25
+        * smoothstep(0.0, 0.24, sequence)
+        * (1.0 - smoothstep(0.72, 1.0, sequence));
       vec2 turretP = p - vec2(0.0, turretLift);
       float hull = smoothstep(0.34 + aa, 0.34 - aa, abs(p.x))
                  * smoothstep(0.27 + aa, 0.27 - aa, abs(p.y));
@@ -128,11 +127,24 @@ void main() {
       float turret = smoothstep(0.16 + aa, 0.16 - aa, length(turretP));
       float barrel = smoothstep(0.045 + aa, 0.045 - aa, abs(turretP.x))
                    * smoothstep(-0.05, 0.39, -turretP.y);
-      float bombPhase = step(abs(vFlags - FLAG_TANK_BOMB_UP), 0.1);
-      float bomb = bombPhase * smoothstep(0.095, 0.055,
-          length(p - vec2(0.0, -0.43)));
+      float flight = clamp((sequence - 0.24) / 0.58, 0.0, 1.0);
+      float bombVisible = selfDestruct
+        * step(0.24, sequence) * (1.0 - step(0.83, sequence));
+      vec2 bombPos = vec2(
+        mix(-0.18, 0.18, flight),
+        -0.18 - 0.62 * (4.0 * flight * (1.0 - flight))
+      );
+      float bomb = bombVisible * smoothstep(0.105, 0.045,
+          length(p - bombPos));
+      float arcX = clamp(p.x / 0.18, -1.0, 1.0);
+      float arcY = -0.18 - 0.62 * (1.0 - arcX * arcX);
+      float arcDash = step(fract((p.x + 0.18) * 18.0), 0.55);
+      tankArcGuide = selfDestruct * (1.0 - smoothstep(0.018, 0.035,
+          abs(p.y - arcY))) * step(abs(p.x), 0.19) * arcDash * 0.8;
+      tankFireball = bomb;
       float mask = smoothstep(0.08, 0.42,
-          max(tracks, max(hull, max(turret, max(barrel, bomb)))));
+          max(tracks, max(hull, max(turret,
+              max(barrel, max(bomb, tankArcGuide))))));
       float hullOuter = smoothstep(0.38, 0.34, abs(p.x))
                       * smoothstep(0.31, 0.27, abs(p.y));
       float tracksOuter = smoothstep(0.48, 0.44, abs(p.x))
@@ -140,10 +152,11 @@ void main() {
       float turretOuter = smoothstep(0.20, 0.16, length(turretP));
       float barrelOuter = smoothstep(0.075, 0.045, abs(turretP.x))
                         * smoothstep(-0.08, 0.42, -turretP.y);
-      float bombOuter = bombPhase * smoothstep(0.125, 0.09,
-          length(p - vec2(0.0, -0.43)));
+      float bombOuter = bombVisible * smoothstep(0.14, 0.095,
+          length(p - bombPos));
       float outerMask = max(tracksOuter,
-          max(hullOuter, max(turretOuter, max(barrelOuter, bombOuter))));
+          max(hullOuter, max(turretOuter,
+              max(barrelOuter, max(bombOuter, tankArcGuide)))));
       float tankSeams = max(
         max(tracksOuter - tracks, hullOuter - hull),
         max(turretOuter - turret,
@@ -294,6 +307,11 @@ void main() {
   }
 
   color = mix(color, vec3(0.01), clamp(blackOutline * 2.0, 0.0, 1.0));
+
+  // The tank's projectile is a real hot fireball, while its dashed parabola
+  // makes the upward-and-back-down self-destruct path readable at map scale.
+  color = mix(color, vec3(1.0, 0.18, 0.01), tankArcGuide);
+  color = mix(color, vec3(1.0, 0.72, 0.04), tankFireball);
 
   fragColor = vec4(color, texel.a * alphaMul);
 }

@@ -502,8 +502,8 @@ export class UnitPass {
       let flags = FLAG_NORMAL;
       if (unit.unitType === UT_PLANE && (unit.launchPhase ?? 0) > 0) {
         flags = unit.launchPhase === 2 ? FLAG_LAUNCH_FIRE : FLAG_LAUNCH_SMOKE;
-      } else if (unit.unitType === UT_TANK && (unit.launchPhase ?? 0) >= 3) {
-        flags = 5 + (unit.launchPhase ?? 3);
+      } else if (unit.unitType === UT_TANK && (unit.launchPhase ?? 0) >= 20) {
+        flags = unit.launchPhase ?? 20;
       } else if (isTradeFriendly) {
         flags = FLAG_TRADE_FRIENDLY;
       } else if (isRetreatingWarship) {
