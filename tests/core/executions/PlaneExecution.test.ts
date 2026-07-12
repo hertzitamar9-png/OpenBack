@@ -126,6 +126,10 @@ describe("PlaneExecution", () => {
     expect(plane.isActive()).toBe(false);
     expect(game.owner(target)).toBe(attacker);
     expect(game.owner(nearbyNeutral)).toBe(attacker);
+    expect(attacker.hasLandAnnexationProtection()).toBe(true);
+
+    for (let i = 0; i < 150; i++) game.executeNextTick();
+    expect(attacker.hasLandAnnexationProtection()).toBe(false);
   });
 
   test("a surrounded crash beachhead cannot be automatically annexed", () => {
@@ -157,6 +161,7 @@ describe("PlaneExecution", () => {
     );
     game.executeNextTick();
     game.executeNextTick();
+    expect(attacker.hasLandAnnexationProtection()).toBe(true);
     expect(game.owner(game.ref(5, 5))).toBe(attacker);
   });
 

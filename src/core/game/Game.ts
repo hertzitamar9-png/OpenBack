@@ -697,6 +697,8 @@ export interface Player {
   canAttack(tile: TileRef): boolean;
   canAttackPlayer(player: Player, treatAFKFriendly?: boolean): boolean;
   isImmune(): boolean;
+  grantLandAnnexationProtection(durationTicks: Tick): void;
+  hasLandAnnexationProtection(): boolean;
 
   createAttack(
     target: Player | TerraNullius,

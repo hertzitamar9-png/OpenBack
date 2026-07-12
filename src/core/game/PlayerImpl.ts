@@ -123,6 +123,7 @@ export class PlayerImpl implements Player {
 
   private lastDeleteUnitTick: Tick = -1;
   private lastEmbargoAllTick: Tick = -1;
+  private landAnnexationProtectionUntilTick: Tick = -1;
 
   public _incomingAttacks: Attack[] = [];
   public _outgoingAttacks: Attack[] = [];
@@ -1806,6 +1807,17 @@ export class PlayerImpl implements Player {
     return false;
   }
 
+  public grantLandAnnexationProtection(durationTicks: Tick): void {
+    this.landAnnexationProtectionUntilTick = Math.max(
+      this.landAnnexationProtectionUntilTick,
+      this.mg.ticks() + durationTicks,
+    );
+  }
+
+  public hasLandAnnexationProtection(): boolean {
+    return this.mg.ticks() < this.landAnnexationProtectionUntilTick;
+  }
+
   public canAttackPlayer(
     player: Player,
     treatAFKFriendly: boolean = false,
@@ -1824,6 +1836,10 @@ export class PlayerImpl implements Player {
     }
 
     if (owner.isPlayer() && !this.canAttackPlayer(owner)) {
+      return false;
+    }
+
+    if (owner.isPlayer() && owner.hasLandAnnexationProtection()) {
       return false;
     }
 

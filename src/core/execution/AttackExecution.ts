@@ -110,6 +110,11 @@ export class AttackExecution implements Execution {
       return;
     }
 
+    if (this.target.isPlayer() && this.target.hasLandAnnexationProtection()) {
+      this.active = false;
+      return;
+    }
+
     this.startTroops ??= this.mg
       .config()
       .attackAmount(this._owner, this.target);
@@ -257,6 +262,14 @@ export class AttackExecution implements Execution {
 
     if (targetPlayer && this._owner.isFriendly(targetPlayer)) {
       // In this case a new alliance was created AFTER the attack started.
+      this.retreat();
+      return;
+    }
+
+    // A successful aircraft landing grants a short beachhead window. Check
+    // every tick so an attack that began before the crash cannot keep annexing
+    // the landing player's newly expanded territory during that window.
+    if (targetPlayer?.hasLandAnnexationProtection()) {
       this.retreat();
       return;
     }

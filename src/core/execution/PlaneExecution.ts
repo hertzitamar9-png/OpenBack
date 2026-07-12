@@ -17,6 +17,7 @@ import { SAMMissileExecution } from "./SAMMissileExecution";
 
 const LOADING_TICKS = 5 * 10;
 const DEPLOYMENT_WARNING_TICKS = 10 * 10;
+const LANDING_PROTECTION_TICKS = 15 * 10;
 
 /** Two-stage aircraft lifecycle: build/load on a runway, then launch later. */
 export class PlaneExecution implements Execution {
@@ -308,6 +309,7 @@ export class PlaneExecution implements Execution {
     for (const impactedTile of capturableLand) {
       this.player.conquer(impactedTile);
     }
+    this.player.grantLandAnnexationProtection(LANDING_PROTECTION_TICKS);
     registerPlaneBeachhead(this.game, this.player, capturableLand);
   }
 
