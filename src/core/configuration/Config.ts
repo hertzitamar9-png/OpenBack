@@ -1018,7 +1018,9 @@ export class Config {
   }
 
   openBackVehicleSnapRadius(): number {
-    return 3;
+    // Match the snap distance used for already-placed units so stacking a new
+    // unit onto an existing one behaves the same as the existing snapping.
+    return this.openBackSnapRadius();
   }
 
   defaultNukeTargetableRange(): number {
