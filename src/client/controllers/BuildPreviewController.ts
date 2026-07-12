@@ -135,13 +135,15 @@ export class BuildPreviewController implements Controller {
             ghost.rangeRadius > 0;
           const radiusFollowsCursor = !(
             (ghost.canUpgrade && ghost.upgradeTargetTile !== null) ||
+            ghost.snapTargetTile !== null ||
             anchoredToSnappedRunway ||
             anchoredVehicleRange
           );
           this.view.updateGhostPreview({
             ...ghost,
-            tileX: w.x - 0.5,
-            tileY: w.y - 0.5,
+            ...(ghost.snapTargetTile === null
+              ? { tileX: w.x - 0.5, tileY: w.y - 0.5 }
+              : {}),
             ...(radiusFollowsCursor
               ? { radiusTileX: w.x - 0.5, radiusTileY: w.y - 0.5 }
               : {}),
@@ -411,6 +413,26 @@ export class BuildPreviewController implements Controller {
 
     const u = this.ghostUnit.buildableUnit;
 
+    const stackableTypes: ReadonlySet<UnitType> = new Set([
+      UnitType.Runway,
+      UnitType.MANPAD,
+      UnitType.MilitaryBase,
+      UnitType.TankMine,
+    ]);
+    const snapTargetTile =
+      stackableTypes.has(u.type) &&
+      u.canBuild !== false &&
+      myPlayer
+        .units(u.type as UnitType.Runway)
+        .some(
+          (unit) =>
+            unit.isActive() &&
+            !unit.isUnderConstruction() &&
+            unit.tile() === u.canBuild,
+        )
+        ? u.canBuild
+        : null;
+
     // Upgrade-target tile — only when upgrading an existing unit.
     let upgradeTargetTile: number | null = null;
     if (u.canUpgrade !== false) {
@@ -560,8 +582,8 @@ export class BuildPreviewController implements Controller {
     const cost = u.cost;
     return {
       ghostType: u.type,
-      tileX: this.game.x(tileRef),
-      tileY: this.game.y(tileRef),
+      tileX: this.game.x(snapTargetTile ?? tileRef),
+      tileY: this.game.y(snapTargetTile ?? tileRef),
       radiusTileX,
       radiusTileY,
       canBuild: u.canBuild !== false,
@@ -573,6 +595,7 @@ export class BuildPreviewController implements Controller {
       overlappingRailroads: u.overlappingRailroads,
       ownerID: myPlayer.smallID(),
       upgradeTargetTile,
+      snapTargetTile,
       rangeRadius,
       rangeWarning: targetingAlly,
     };
@@ -641,6 +664,50 @@ export class BuildPreviewController implements Controller {
   private moveGhost(e: MouseMoveEvent) {
     this.mousePos.x = e.x;
     this.mousePos.y = e.y;
+    this.updateHoveredSourceRange();
+  }
+
+  private updateHoveredSourceRange(): void {
+    if (this.uiState.ghostStructure !== null || this.ghostUnit !== null) {
+      this.view.updateHoverRange(null);
+      return;
+    }
+    const player = this.game.myPlayer();
+    if (!player) return;
+    const hover = this.transformHandler.screenToWorldCoordinates(
+      this.mousePos.x,
+      this.mousePos.y,
+    );
+    if (!this.game.isValidCoord(hover.x, hover.y)) {
+      this.view.updateHoverRange(null);
+      return;
+    }
+    const hoverTile = this.game.ref(hover.x, hover.y);
+    const maxDistance = this.game.config().openBackVehicleSnapRadius() ** 2;
+    let best: { tile: TileRef; radius: number; distance: number } | undefined;
+    for (const type of [UnitType.Runway, UnitType.MilitaryBase] as const) {
+      for (const unit of player.units(type)) {
+        if (!unit.isActive() || unit.isUnderConstruction()) continue;
+        const distance = this.game.euclideanDistSquared(unit.tile(), hoverTile);
+        if (distance > maxDistance || (best && distance >= best.distance)) {
+          continue;
+        }
+        const radius =
+          type === UnitType.Runway
+            ? this.game.config().planeMaxFlightRadius(unit.level())
+            : this.game.config().tankMaxDriveRadius(unit.level());
+        best = { tile: unit.tile(), radius, distance };
+      }
+    }
+    this.view.updateHoverRange(
+      best
+        ? {
+            x: this.game.x(best.tile),
+            y: this.game.y(best.tile),
+            radius: best.radius,
+          }
+        : null,
+    );
   }
 
   private createGhostStructure(type: PlayerBuildableUnitType | null) {

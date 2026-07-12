@@ -47,8 +47,7 @@ export const FX_MINI_BIG_SMOKE = 8;
 export const FX_MINI_SMOKE_FIRE = 9;
 export const FX_DUST = 10;
 export const FX_CONQUEST = 11;
-export const FX_PLANE_WRECK = 12;
-const FX_TYPE_COUNT = 13;
+const FX_TYPE_COUNT = 12;
 
 // ---------------------------------------------------------------------------
 // FX sprite config (matches AnimatedSpriteLoader)
@@ -132,12 +131,6 @@ const FX_CONFIG: FxTypeConfig[] = [
     frameWidth: 21,
     frameCount: 10,
     frameDurationMs: 90,
-    looping: false,
-  },
-  /* 12 PlaneWreck    */ {
-    frameWidth: 1,
-    frameCount: 50,
-    frameDurationMs: 100,
     looping: false,
   },
 ];
@@ -309,15 +302,6 @@ export class FxSpritePass {
 
     for (let i = 0; i < FX_TYPE_COUNT; i++) {
       const row = meta.rows[i];
-      if (row === undefined) {
-        // Procedural aircraft wreck: no atlas row, only a 30x30 world quad.
-        uvData[i * 4 + 0] = 0;
-        uvData[i * 4 + 1] = 0;
-        uvData[i * 4 + 2] = 0;
-        worldData[i * 4 + 0] = 30;
-        worldData[i * 4 + 1] = 30;
-        continue;
-      }
       uvData[i * 4 + 0] = row.yOffset / meta.height;
       uvData[i * 4 + 1] = row.height / meta.height;
       uvData[i * 4 + 2] = row.worldWidth / meta.width;
@@ -381,15 +365,7 @@ export class FxSpritePass {
       if (unit.reachedTarget) {
         this.spawnNukeSprites(x, y, nukeRadius, now, unit.pos);
         if (typeName === UT_PLANE) {
-          this.activeFx.push({
-            x,
-            y,
-            fxType: FX_PLANE_WRECK,
-            startMs: now,
-            lifetimeMs: 5_000,
-            fadeIn: 0,
-            fadeOut: 0.35,
-          });
+          this.spawnPlaneCrashFire(x, y, now, unit.pos);
         }
       } else {
         this.pushFx(x, y, FX_SAM_EXPLOSION, now);
@@ -421,6 +397,27 @@ export class FxSpritePass {
 
     if (STRUCTURE_TYPES.has(typeName)) {
       this.pushFx(x, y, FX_BUILDING_EXPLOSION, now);
+    }
+  }
+
+  private spawnPlaneCrashFire(
+    x: number,
+    y: number,
+    now: number,
+    seed: number,
+  ): void {
+    for (let i = 0; i < 7; i++) {
+      const angle = seededRandom(seed * 31 + i) * Math.PI * 2;
+      const distance = seededRandom(seed * 67 + i) * 8;
+      this.activeFx.push({
+        x: x + Math.cos(angle) * distance,
+        y: y + Math.sin(angle) * distance,
+        fxType: i % 3 === 0 ? FX_MINI_BIG_SMOKE : FX_MINI_SMOKE_FIRE,
+        startMs: now,
+        lifetimeMs: 5_000,
+        fadeIn: 0,
+        fadeOut: 0.58,
+      });
     }
   }
 

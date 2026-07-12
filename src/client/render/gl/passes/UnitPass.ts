@@ -90,6 +90,7 @@ const TANK_COL = ATLAS_COLS + 1;
 
 /** Atlas column of the hydrogen bomb — drives the GPU glow halo. */
 const HYDROGEN_BOMB_COL = UNIT_ORDER.indexOf(UT_HYDROGEN_BOMB);
+const MIRV_COL = UNIT_ORDER.indexOf(UT_MIRV);
 
 // ---------------------------------------------------------------------------
 // Instance data layout
@@ -544,6 +545,38 @@ export class UnitPass {
           this.smoothSegs.push(this.missileCount, lx, ly, x, y);
         }
         this.emitMissile(x, y, unit.ownerID, atlasIdx, flags, angle);
+
+        // Tank self-destruction launches a separate MIRV-style projectile in
+        // world space. It is no longer part of the rotating tank quad, so it
+        // can climb high and return without ever being cropped by the sprite.
+        if (unit.unitType === UT_TANK && (unit.launchPhase ?? 0) >= 20) {
+          const sequence = Math.max(
+            0,
+            Math.min(1, ((unit.launchPhase ?? 20) - 20) / 30),
+          );
+          if (sequence >= 0.1 && sequence < 0.995) {
+            const flight = Math.max(0, Math.min(1, (sequence - 0.1) / 0.88));
+            const height = Math.sin(flight * Math.PI) * 22;
+            const projectileY = y - height;
+            this.emitMissile(
+              x,
+              projectileY,
+              unit.ownerID,
+              MIRV_COL,
+              FLAG_FLICKER,
+              0,
+            );
+            // Short fiery exhaust underneath the rising/falling projectile.
+            this.emitMissile(
+              x,
+              projectileY + 1.2,
+              unit.ownerID,
+              MIRV_COL,
+              FLAG_FLICKER,
+              0,
+            );
+          }
+        }
 
         // Shells emit a second instance at lastPos (2-pixel trail effect)
         if (unit.unitType === UT_SHELL && unit.lastPos !== unit.pos) {

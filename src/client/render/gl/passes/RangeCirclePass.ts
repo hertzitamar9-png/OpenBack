@@ -27,6 +27,8 @@ export class RangeCirclePass {
   private centerY = 0;
   private radius = 0;
   private warning = false;
+  private hoverRange: { x: number; y: number; radius: number } | null = null;
+  private ghostVisible = false;
 
   constructor(gl: WebGL2RenderingContext) {
     this.gl = gl;
@@ -54,27 +56,38 @@ export class RangeCirclePass {
 
   updateGhostPreview(data: GhostPreviewData | null): void {
     if (data && data.rangeRadius > 0) {
+      this.ghostVisible = true;
       this.centerX = data.radiusTileX;
       this.centerY = data.radiusTileY;
       this.radius = data.rangeRadius;
       this.warning = data.rangeWarning;
     } else {
+      this.ghostVisible = false;
       this.radius = 0;
       this.warning = false;
     }
   }
 
+  updateHoverRange(
+    data: { x: number; y: number; radius: number } | null,
+  ): void {
+    this.hoverRange = data;
+  }
+
   draw(cameraMatrix: Float32Array): void {
-    if (this.radius <= 0) return;
+    const shown = this.ghostVisible
+      ? { x: this.centerX, y: this.centerY, radius: this.radius }
+      : this.hoverRange;
+    if (shown === null || shown.radius <= 0) return;
 
     const gl = this.gl;
     gl.useProgram(this.program);
     gl.uniformMatrix3fv(this.uCamera, false, cameraMatrix);
     gl.bindVertexArray(this.vao);
 
-    gl.uniform2f(this.uCenter, this.centerX, this.centerY);
-    gl.uniform1f(this.uRadius, this.radius);
-    if (this.warning) {
+    gl.uniform2f(this.uCenter, shown.x, shown.y);
+    gl.uniform1f(this.uRadius, shown.radius);
+    if (this.ghostVisible && this.warning) {
       gl.uniform3f(this.uColor, 1.0, 0.2, 0.2);
     } else {
       gl.uniform3f(this.uColor, 1.0, 1.0, 1.0);

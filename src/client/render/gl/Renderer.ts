@@ -900,6 +900,12 @@ export class GPURenderer {
     );
   }
 
+  updateHoverRange(
+    data: { x: number; y: number; radius: number } | null,
+  ): void {
+    this.rangeCirclePass.updateHoverRange(data);
+  }
+
   updateNukeTrajectory(data: NukeTrajectoryData | null): void {
     this.nukeTrajectoryPass.update(data);
   }

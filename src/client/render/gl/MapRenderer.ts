@@ -205,6 +205,12 @@ export class MapRenderer {
     this.renderer?.updateGhostPreview(data);
   }
 
+  updateHoverRange(
+    data: { x: number; y: number; radius: number } | null,
+  ): void {
+    this.renderer?.updateHoverRange(data);
+  }
+
   // ---- Nuke UI ----
 
   /** Update nuke trajectory preview arc. null = hide. */
