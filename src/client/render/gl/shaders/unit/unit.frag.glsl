@@ -165,13 +165,14 @@ void main() {
       float muzzleWindow = selfDestruct * smoothstep(0.09, 0.12, sequence)
                          * (1.0 - smoothstep(0.18, 0.23, sequence));
       float muzzleAngle = atan(muzzleDelta.y, muzzleDelta.x);
-      float rays = 0.14 + 0.07 * sin(muzzleAngle * 7.0 + uTick * 0.9);
-      float flashStar = 1.0 - smoothstep(rays * 0.4, rays * 1.4,
+      // Larger, hotter muzzle blast so the turret fireball reads clearly bigger.
+      float rays = 0.28 + 0.14 * sin(muzzleAngle * 7.0 + uTick * 0.9);
+      float flashStar = 1.0 - smoothstep(rays * 0.4, rays * 1.5,
           length(muzzleDelta));
-      float sparks = (1.0 - smoothstep(0.015, 0.04,
+      float sparks = (1.0 - smoothstep(0.02, 0.05,
           abs(sin(muzzleAngle * 11.0)) * length(muzzleDelta)))
-          * (1.0 - smoothstep(0.12, 0.34, length(muzzleDelta)));
-      tankMuzzleFlash = muzzleWindow * max(flashStar, sparks * 0.85);
+          * (1.0 - smoothstep(0.20, 0.60, length(muzzleDelta)));
+      tankMuzzleFlash = muzzleWindow * max(flashStar, sparks * 0.9);
       float mask = smoothstep(0.08, 0.42,
           max(tracks, max(hull, max(turret,
               max(barrel, tankMuzzleFlash)))));
@@ -202,32 +203,37 @@ void main() {
     }
   }
 
-  // Thick diesel exhaust and occasional hot sparks trail military fuel trains.
+  // Front locomotive smokestack (ארובה) for fuel trains: a standout stack at
+  // the front of the train with a rising plume. Replaces the old trailing
+  // diesel exhaust.
   if (abs(vFlags - 8.0) < 0.1 && vAtlasCol < 9.5 && texel.a < 0.01) {
     vec2 p = vCellUV - 0.5;
+    // Stack body at the front (right) of the train, rising above the roofline.
+    float stack = step(0.18, p.x) * step(p.x, 0.27)
+                * step(0.10, p.y) * step(p.y, 0.32);
+    // Bright capped rim so the stack stands out against the camo body.
+    float rim = step(0.16, p.x) * step(p.x, 0.29)
+              * step(0.30, p.y) * step(p.y, 0.37);
+    // Plume rising from the top of the stack.
     float smoke = 0.0;
-    float smokeLight = 0.0;
-    for (int i = 0; i < 3; i++) {
+    float t = uTick * 0.05;
+    for (int i = 0; i < 4; i++) {
       float fi = float(i);
-      float phase = fract(uTick * 0.07 + fi * 0.19);
-      vec2 smokeCenter = vec2(
-        sin(uTick * 0.21 + fi * 2.7) * (0.04 + phase * 0.08),
-        0.30 + phase * 0.72
-      );
-      float puff = (1.0 - smoothstep(0.07 + phase * 0.09,
-          0.17 + phase * 0.16, length(p - smokeCenter))) * (1.0 - phase);
-      smoke = max(smoke, puff);
-      smokeLight += puff * (1.0 - phase);
+      float phase = fract(t + fi * 0.25);
+      vec2 center = vec2(0.225 + sin(uTick * 0.4 + fi * 2.1) * 0.05 * phase,
+                         0.37 + phase * 0.85);
+      float radius = 0.05 + phase * 0.14;
+      smoke = max(smoke,
+        (1.0 - smoothstep(radius * 0.5, radius, length(p - center)))
+          * (1.0 - phase * 0.55));
     }
-    float sparks = step(0.82, fract(sin(uTick * 3.1 + p.x * 91.0) * 123.4))
-      * (1.0 - smoothstep(0.02, 0.09, abs(p.x)))
-      * smoothstep(0.34, 0.42, p.y) * (1.0 - smoothstep(0.42, 0.72, p.y));
-    if (max(smoke, sparks) > 0.01) {
-      vec3 dieselSmoke = mix(vec3(0.10, 0.10, 0.11),
-          vec3(0.46, 0.46, 0.44), clamp(smokeLight, 0.0, 1.0));
-      vec3 exhaustColor = mix(dieselSmoke,
-          vec3(1.0, 0.45, 0.05), sparks);
-      fragColor = vec4(exhaustColor, max(smoke * 0.7, sparks));
+    vec3 stackColor = mix(vec3(0.12, 0.12, 0.14), vec3(0.85, 0.78, 0.45), rim);
+    vec3 smokeColor = vec3(0.50, 0.50, 0.52);
+    float stackA = max(stack, rim) * 0.96;
+    float a = max(stackA, smoke * 0.5);
+    if (a > 0.01) {
+      vec3 col = smoke * 0.5 > stackA ? smokeColor : stackColor;
+      fragColor = vec4(col, a);
       return;
     }
   }

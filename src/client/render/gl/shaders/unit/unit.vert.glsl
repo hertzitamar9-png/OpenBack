@@ -86,8 +86,14 @@ void main() {
 
   // Map the enlarged quad back to sprite cell space: the central 1/scale
   // portion is the sprite, anything outside [0,1] is glow-only margin.
+  float drawScale = scale;
+  if (fuelTrain > 0.5) {
+    // Shrink the visible train within its enlarged quad (kept for the front
+    // smokestack plume) so the camo train reads smaller.
+    drawScale = scale * 1.3;
+  }
   vCellUV = (isPlane > 0.5 && launchSmoke < 0.5) ||
             (isTank > 0.5 && tankSelfDestruct < 0.5)
     ? aPos
-    : (aPos - 0.5) * scale + 0.5;
+    : (aPos - 0.5) * drawScale + 0.5;
 }

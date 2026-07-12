@@ -144,7 +144,7 @@ export const NUKE_EXPLOSION_RADII: Readonly<Record<string, number>> = {
   [UT_ATOM_BOMB]: 70,
   [UT_HYDROGEN_BOMB]: 160,
   [UT_MIRV_WARHEAD]: 70,
-  [UT_PLANE]: 35,
+  [UT_PLANE]: 22,
 };
 
 // ---------------------------------------------------------------------------
@@ -417,7 +417,7 @@ export class FxSpritePass {
         rotation +
         (i * Math.PI * 2) / 2 +
         (seededRandom(seed * 43 + i) - 0.5) * 0.32;
-      const distance = 2 + seededRandom(seed * 67 + i) * 2;
+      const distance = 1 + seededRandom(seed * 67 + i) * 1.5;
       const fireX = x + Math.cos(angle) * distance;
       const fireY = y + Math.sin(angle) * distance;
       this.pushFx(fireX, fireY, FX_MINI_EXPLOSION, now);
@@ -427,7 +427,7 @@ export class FxSpritePass {
           y: fireY,
           fxType,
           startMs: now,
-          lifetimeMs: 2_200,
+          lifetimeMs: 1_500,
           fadeIn: 0,
           fadeOut: 0.5,
         });
