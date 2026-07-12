@@ -165,13 +165,13 @@ void main() {
       float muzzleWindow = selfDestruct * smoothstep(0.09, 0.12, sequence)
                          * (1.0 - smoothstep(0.18, 0.23, sequence));
       float muzzleAngle = atan(muzzleDelta.y, muzzleDelta.x);
-      float rays = 0.10 + 0.055 * sin(muzzleAngle * 7.0 + uTick * 0.9);
-      float flashStar = 1.0 - smoothstep(rays * 0.48, rays,
+      float rays = 0.14 + 0.07 * sin(muzzleAngle * 7.0 + uTick * 0.9);
+      float flashStar = 1.0 - smoothstep(rays * 0.4, rays * 1.4,
           length(muzzleDelta));
-      float sparks = (1.0 - smoothstep(0.01, 0.026,
+      float sparks = (1.0 - smoothstep(0.015, 0.04,
           abs(sin(muzzleAngle * 11.0)) * length(muzzleDelta)))
-          * (1.0 - smoothstep(0.08, 0.24, length(muzzleDelta)));
-      tankMuzzleFlash = muzzleWindow * max(flashStar, sparks * 0.7);
+          * (1.0 - smoothstep(0.12, 0.34, length(muzzleDelta)));
+      tankMuzzleFlash = muzzleWindow * max(flashStar, sparks * 0.85);
       float mask = smoothstep(0.08, 0.42,
           max(tracks, max(hull, max(turret,
               max(barrel, tankMuzzleFlash)))));
@@ -223,11 +223,11 @@ void main() {
       * (1.0 - smoothstep(0.02, 0.09, abs(p.x)))
       * smoothstep(0.34, 0.42, p.y) * (1.0 - smoothstep(0.42, 0.72, p.y));
     if (max(smoke, sparks) > 0.01) {
-      vec3 dieselSmoke = mix(vec3(0.07, 0.08, 0.055),
-          vec3(0.38, 0.40, 0.31), clamp(smokeLight, 0.0, 1.0));
+      vec3 dieselSmoke = mix(vec3(0.10, 0.10, 0.11),
+          vec3(0.46, 0.46, 0.44), clamp(smokeLight, 0.0, 1.0));
       vec3 exhaustColor = mix(dieselSmoke,
-          vec3(1.0, 0.42, 0.03), sparks);
-      fragColor = vec4(exhaustColor, max(smoke * 0.82, sparks));
+          vec3(1.0, 0.45, 0.05), sparks);
+      fragColor = vec4(exhaustColor, max(smoke * 0.7, sparks));
       return;
     }
   }
@@ -374,7 +374,9 @@ void main() {
 
   // The tank's projectile is a real hot fireball, while its dashed parabola
   // makes the upward-and-back-down self-destruct path readable at map scale.
-  color = mix(color, vec3(1.0, 0.42, 0.015), tankMuzzleFlash);
+  vec3 fireball = mix(vec3(1.0, 0.22, 0.02), vec3(1.0, 0.62, 0.12), tankMuzzleFlash);
+  fireball = mix(fireball, vec3(1.0, 0.96, 0.72), smoothstep(0.55, 1.0, tankMuzzleFlash));
+  color = mix(color, fireball, tankMuzzleFlash);
 
   fragColor = vec4(color, texel.a * alphaMul);
 }

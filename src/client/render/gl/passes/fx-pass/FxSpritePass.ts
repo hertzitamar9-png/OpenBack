@@ -410,26 +410,26 @@ export class FxSpritePass {
     // offsets change with the plane's impact tile, so repeated crashes never
     // leave the same pattern or cover the whole landing area in smoke.
     const rotation = seededRandom(seed * 31) * Math.PI * 2;
-    for (let i = 0; i < 3; i++) {
-      // Even thirds prevent random clustering at one point, while rotation,
-      // distance and a small jitter still vary for every aircraft.
+    for (let i = 0; i < 2; i++) {
+      // Two tight, short-lived burn sites so a crash reads as a small scorch
+      // rather than a smoke field covering the landing area.
       const angle =
         rotation +
-        (i * Math.PI * 2) / 3 +
+        (i * Math.PI * 2) / 2 +
         (seededRandom(seed * 43 + i) - 0.5) * 0.32;
-      const distance = 4 + seededRandom(seed * 67 + i) * 3;
+      const distance = 2 + seededRandom(seed * 67 + i) * 2;
       const fireX = x + Math.cos(angle) * distance;
       const fireY = y + Math.sin(angle) * distance;
       this.pushFx(fireX, fireY, FX_MINI_EXPLOSION, now);
-      for (const fxType of [FX_MINI_FIRE, FX_MINI_SMOKE]) {
+      for (const fxType of [FX_MINI_FIRE]) {
         this.activeFx.push({
           x: fireX,
           y: fireY,
           fxType,
           startMs: now,
-          lifetimeMs: 5_000,
+          lifetimeMs: 2_200,
           fadeIn: 0,
-          fadeOut: 0.58,
+          fadeOut: 0.5,
         });
       }
     }
