@@ -114,6 +114,12 @@ export class MatchmakingService {
     }
   }
 
+  private dequeueByPublicId(publicId: string): QueueEntry | null {
+    const i = this.queue.findIndex((e) => e.publicId === publicId);
+    if (i === -1) return null;
+    return this.queue.splice(i, 1)[0];
+  }
+
   // Oldest-waiting player is matched first with their closest eligible
   // opponent; tolerance widens with that player's wait time.
   private findMatch(): [QueueEntry, QueueEntry] | null {
@@ -156,9 +162,24 @@ export class MatchmakingService {
       return;
     }
 
-    const [a, b] = match;
-    this.removeByPublicId(a.publicId);
-    this.removeByPublicId(b.publicId);
+    const [matchedA, matchedB] = match;
+    // Dequeue without closing: the assignment must be delivered while both
+    // sockets are still OPEN. removeByPublicId() is only for replacing stale
+    // connections and closes the socket, so using it here discarded every
+    // match-assignment before the client could receive it.
+    const a = this.dequeueByPublicId(matchedA.publicId);
+    const b = this.dequeueByPublicId(matchedB.publicId);
+    if (!a || !b) {
+      // A disconnect can race with a worker check-in. Put the remaining live
+      // entry back instead of assigning a one-player ranked game.
+      const remaining = a ?? b;
+      if (remaining?.ws.readyState === WebSocket.OPEN) {
+        this.queue.push(remaining);
+      }
+      res.json({ assignment: false });
+      return;
+    }
+
     for (const entry of [a, b]) {
       try {
         entry.ws.send(JSON.stringify({ type: "match-assignment", gameId }));
