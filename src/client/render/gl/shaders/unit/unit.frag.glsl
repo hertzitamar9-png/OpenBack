@@ -66,21 +66,22 @@ void main() {
       float d = length(p);
       float turbulence = 0.5 + 0.5 * sin(
           atan(p.y, p.x) * 9.0 - uTick * 2.8 + d * 31.0);
-      float outer = 1.0 - smoothstep(0.50, 0.64, d);
-      float shell = 1.0 - smoothstep(0.33 + turbulence * 0.035,
-          0.50 + turbulence * 0.035, d);
-      float core = 1.0 - smoothstep(0.12, 0.27, d);
-      float hotCore = 1.0 - smoothstep(0.045, 0.14, d);
-      float emberRing = (1.0 - smoothstep(0.012, 0.035,
-          abs(d - (0.55 + 0.035 * sin(uTick * 1.9)))))
-          * step(0.64, fract(atan(p.y, p.x) * 4.2 + uTick * 0.7));
-      float alpha = max(outer, emberRing * 0.9);
+      // The alpha edge depends only on distance, guaranteeing a perfectly
+      // round ball. Animated turbulence changes detail inside, never shape.
+      float alpha = 1.0 - smoothstep(0.34, 0.39, d);
+      float shell = 1.0 - smoothstep(0.22 + turbulence * 0.018,
+          0.33 + turbulence * 0.018, d);
+      float core = 1.0 - smoothstep(0.085, 0.19, d);
+      float hotCore = 1.0 - smoothstep(0.03, 0.095, d);
+      float detail = smoothstep(0.58, 0.9, turbulence)
+                   * smoothstep(0.06, 0.27, d)
+                   * (1.0 - smoothstep(0.27, 0.33, d));
       if (alpha < 0.01) discard;
       vec3 color = vec3(0.28, 0.015, 0.005);
       color = mix(color, vec3(1.0, 0.10, 0.005), shell);
       color = mix(color, vec3(1.0, 0.52, 0.015), core);
       color = mix(color, vec3(1.0, 0.98, 0.72), hotCore);
-      color = mix(color, vec3(1.0, 0.30, 0.01), emberRing);
+      color = mix(color, vec3(1.0, 0.30, 0.01), detail);
       fragColor = vec4(color, alpha);
       return;
     } else if (abs(vFlags - 8.0) < 0.1 && vAtlasCol > 8.5 && vAtlasCol < 11.5) {

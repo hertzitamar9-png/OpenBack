@@ -455,7 +455,9 @@ export class StructurePass {
         this.ghostBuf[5] = 0;
         gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.ghostBuf);
 
-        gl.uniform1f(this.uGhostAlpha, g.snapTargetTile !== null ? 0.82 : 0.6);
+        // Snapped added units intentionally use the exact same alpha, green
+        // tint, model buffer and draw call as original city/unit upgrades.
+        gl.uniform1f(this.uGhostAlpha, 0.6);
         gl.uniform3f(this.uOutlineColor, 0.0, 0.8, 0.0); // green highlight
         gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, 1);
       }

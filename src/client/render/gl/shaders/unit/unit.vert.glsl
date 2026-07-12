@@ -61,7 +61,7 @@ void main() {
   // Fuel trains use an enlarged effect quad for smoke/sparks, but vCellUV
   // maps their actual model back to normal city/factory-train dimensions.
   scale = mix(scale, 1.7, fuelTrain);
-  scale = mix(scale, 2.45, tankFireball);
+  scale = mix(scale, 1.55, tankFireball);
 
   // UNIT_SIZE is in world-space tiles — no zoom division needed.
   // Units scale with the map like territory tiles do.
