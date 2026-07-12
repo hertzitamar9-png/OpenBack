@@ -303,7 +303,7 @@ describe("LeaderboardModal", () => {
       expect(modal.tagName.toLowerCase()).toBe("leaderboard-modal");
     });
 
-    it("should close on Escape when open", () => {
+    it("should stay open on Escape and require an explicit button", () => {
       const mockModalEl = { open: vi.fn(), close: vi.fn() };
       Object.defineProperty(modal, "modalEl", {
         get: () => mockModalEl,
@@ -318,9 +318,9 @@ describe("LeaderboardModal", () => {
 
       window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
       expect((modal as unknown as { isModalOpen: boolean }).isModalOpen).toBe(
-        false,
+        true,
       );
-      expect(mockModalEl.close).toHaveBeenCalled();
+      expect(mockModalEl.close).not.toHaveBeenCalled();
     });
   });
 

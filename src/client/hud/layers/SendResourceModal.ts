@@ -114,10 +114,6 @@ export class SendResourceModal extends LitElement {
   }
 
   private handleKeydown = (e: KeyboardEvent) => {
-    if (e.key === "Escape") {
-      e.preventDefault();
-      this.closeModal();
-    }
     if (e.key === "Enter") {
       e.preventDefault();
       this.confirm();
@@ -542,10 +538,7 @@ export class SendResourceModal extends LitElement {
 
     return html`
       <div class="absolute inset-0 z-1100 flex items-center justify-center p-4">
-        <div
-          class="absolute inset-0 bg-black/60 rounded-2xl"
-          @click=${() => this.closeModal()}
-        ></div>
+        <div class="absolute inset-0 bg-black/60 rounded-2xl"></div>
 
         <div
           role="dialog"

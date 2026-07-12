@@ -38,11 +38,13 @@ export class TroubleshootingModal extends BaseModal {
         <span
           class="text-white text-xl sm:text-2xl md:text-3xl font-bold uppercase tracking-widest break-words hyphens-auto"
         >
-          <a
+          <button
+            type="button"
             class="hover:text-blue-200 text-blue-400 cursor-pointer"
             @click=${this.close}
-            >${translateText("main.help")}</a
           >
+            ${translateText("main.help")}
+          </button>
           / ${translateText("troubleshooting.title")}
         </span>
         <o-button

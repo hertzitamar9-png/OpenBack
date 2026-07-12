@@ -138,12 +138,14 @@ export class OModal extends LitElement {
         >
           ${this.inline || this.hideCloseButton
             ? html``
-            : html`<div
+            : html`<button
+                type="button"
                 class="absolute top-5 right-5 z-10 text-white cursor-pointer"
                 @click=${() => this.close()}
+                aria-label="Close"
               >
                 ✕
-              </div>`}
+              </button>`}
           ${!this.hideHeader && this.title
             ? html`<div
                 class="px-[1.4rem] py-[1rem] text-2xl font-bold text-white"

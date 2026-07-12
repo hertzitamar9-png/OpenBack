@@ -62,9 +62,6 @@ export class IOSAddToHomeScreenBanner extends LitElement {
     return html`
       <div
         class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9999] flex items-end sm:items-center justify-center p-4"
-        @click=${(e: Event) => {
-          if (e.target === e.currentTarget) this.closeGuide();
-        }}
       >
         <div class="relative w-full max-w-sm">
           <div

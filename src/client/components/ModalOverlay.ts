@@ -15,7 +15,6 @@ export class ModalOverlay extends LitElement {
         class="absolute left-0 top-0 w-full h-full ${this.visible
           ? ""
           : "hidden"}"
-        @click=${() => (this.visible = false)}
       ></div>
     `;
   }

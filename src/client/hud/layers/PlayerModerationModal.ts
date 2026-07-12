@@ -37,13 +37,6 @@ export class PlayerModerationModal extends LitElement {
     this.dispatchEvent(new CustomEvent("close"));
   }
 
-  private handleKeydown = (e: KeyboardEvent) => {
-    if (e.key === "Escape") {
-      e.preventDefault();
-      this.closeModal();
-    }
-  };
-
   private canKick(my: PlayerView, other: PlayerView): boolean {
     return (
       (my.isLobbyCreator() || this.isAdmin) &&
@@ -96,10 +89,7 @@ export class PlayerModerationModal extends LitElement {
 
     return html`
       <div class="absolute inset-0 z-1200 flex items-center justify-center p-4">
-        <div
-          class="absolute inset-0 bg-black/60 rounded-2xl"
-          @click=${() => this.closeModal()}
-        ></div>
+        <div class="absolute inset-0 bg-black/60 rounded-2xl"></div>
 
         <div
           role="dialog"
@@ -107,7 +97,6 @@ export class PlayerModerationModal extends LitElement {
           aria-labelledby="moderation-title"
           class="relative z-10 w-full max-w-120 focus:outline-hidden"
           tabindex="0"
-          @keydown=${this.handleKeydown}
         >
           <div
             class="rounded-2xl bg-zinc-900 p-5 shadow-2xl ring-1 ring-zinc-800 max-h-[90vh] text-zinc-200"

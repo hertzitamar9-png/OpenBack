@@ -1,5 +1,5 @@
 import { html, LitElement } from "lit";
-import { customElement, property, query, state } from "lit/decorators.js";
+import { customElement, property, state } from "lit/decorators.js";
 import { crazyGamesSDK } from "src/client/CrazyGamesSDK";
 import { PauseGameIntentEvent } from "src/client/Transport";
 import { assetUrl } from "../../../core/AssetUrls";
@@ -147,9 +147,6 @@ export class GraphicsSettingsModal extends LitElement implements Controller {
   @state()
   private isVisible: boolean = false;
 
-  @query(".modal-overlay")
-  private modalOverlay!: HTMLElement;
-
   @property({ type: Boolean })
   shouldPause = false;
 
@@ -185,34 +182,6 @@ export class GraphicsSettingsModal extends LitElement implements Controller {
   createRenderRoot() {
     return this;
   }
-
-  connectedCallback() {
-    super.connectedCallback();
-    window.addEventListener("click", this.handleOutsideClick, true);
-    window.addEventListener("keydown", this.handleKeyDown);
-  }
-
-  disconnectedCallback() {
-    window.removeEventListener("click", this.handleOutsideClick, true);
-    window.removeEventListener("keydown", this.handleKeyDown);
-    super.disconnectedCallback();
-  }
-
-  private handleOutsideClick = (event: MouseEvent) => {
-    if (
-      this.isVisible &&
-      this.modalOverlay &&
-      event.target === this.modalOverlay
-    ) {
-      this.closeModal();
-    }
-  };
-
-  private handleKeyDown = (event: KeyboardEvent) => {
-    if (this.isVisible && event.key === "Escape") {
-      this.closeModal();
-    }
-  };
 
   public closeModal() {
     this.isVisible = false;
