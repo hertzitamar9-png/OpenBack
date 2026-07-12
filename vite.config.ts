@@ -100,6 +100,12 @@ export default defineConfig(({ mode }) => {
     ? buildPublicAssetManifest(sourceDirs)
     : {};
   const cdnBase = env.CDN_BASE ?? "";
+  const siteOrigin = (
+    env.AUTH_ORIGIN ??
+    (isProduction
+      ? `https://${(env.DOMAIN ?? "localhost").replace(/^https?:\/\//, "")}`
+      : "http://localhost:9000")
+  ).replace(/\/+$/, "");
   const htmlAssetData = {
     assetManifest: JSON.stringify(assetManifest),
     cdnBase: JSON.stringify(cdnBase),
@@ -120,6 +126,7 @@ export default defineConfig(({ mode }) => {
     ),
     instanceId: JSON.stringify(env.INSTANCE_ID ?? "DEV_ID"),
     shareOrigin: JSON.stringify(env.VITE_SHARE_ORIGIN ?? ""),
+    siteOrigin,
     manifestHref: buildAssetUrl("manifest.json", assetManifest, cdnBase),
     faviconHref: buildAssetUrl(
       "images/OpenBackMark.svg",

@@ -37,6 +37,37 @@ app.use(express.json());
 // same origin as the SPA so the browser can call it without CORS.
 app.use(authRouter());
 
+// Search-engine discovery files must be real text/XML responses. Without
+// these explicit routes, the SPA fallback returned index.html for sitemap.xml.
+app.get("/robots.txt", (_req, res) => {
+  const origin = ServerEnv.authOrigin().replace(/\/+$/, "");
+  res
+    .type("text/plain")
+    .send(
+      [`User-agent: *`, `Allow: /`, `Sitemap: ${origin}/sitemap.xml`, ``].join(
+        "\n",
+      ),
+    );
+});
+
+app.get("/sitemap.xml", (_req, res) => {
+  const origin = ServerEnv.authOrigin().replace(/\/+$/, "");
+  const lastmod = new Date().toISOString().slice(0, 10);
+  res
+    .type("application/xml")
+    .send(
+      `<?xml version="1.0" encoding="UTF-8"?>\n` +
+        `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+        `  <url>\n` +
+        `    <loc>${origin}/</loc>\n` +
+        `    <lastmod>${lastmod}</lastmod>\n` +
+        `    <changefreq>daily</changefreq>\n` +
+        `    <priority>1.0</priority>\n` +
+        `  </url>\n` +
+        `</urlset>\n`,
+    );
+});
+
 // Serve the shared app shell for the root document.
 app.use(async (req, res, next) => {
   if (req.path === "/") {

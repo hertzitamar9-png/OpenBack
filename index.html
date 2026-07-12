@@ -7,6 +7,7 @@
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <title data-i18n="main.title">OpenBack (ALPHA)</title>
+    <link rel="canonical" href="<%- siteOrigin %>/" />
     <link rel="manifest" href="<%- manifestHref %>" />
     <link rel="icon" type="image/svg+xml" href="<%- faviconHref %>" />
 
@@ -60,6 +61,7 @@
       name="description"
       content="Conquer the world in OpenBack. Expand your nation, build an economy, form alliances, and dominate the map in this open-source territorial RTS."
     />
+    <meta name="robots" content="index, follow" />
 
     <!-- Open Graph -->
     <meta property="og:title" content="OpenBack - Territorial RTS" />
@@ -69,6 +71,15 @@
     />
     <meta property="og:image" content="<%- gameplayScreenshotUrl %>" />
     <meta property="og:type" content="game" />
+    <meta property="og:url" content="<%- siteOrigin %>/" />
+    <meta property="og:site_name" content="OpenBack" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="OpenBack - Territorial RTS" />
+    <meta
+      name="twitter:description"
+      content="Expand your nation, build an economy, form alliances, and dominate the map in OpenBack."
+    />
+    <meta name="twitter:image" content="<%- gameplayScreenshotUrl %>" />
 
     <!-- Injected from Server env -->
     <script>

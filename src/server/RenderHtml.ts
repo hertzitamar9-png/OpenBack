@@ -34,6 +34,7 @@ export async function renderHtmlContent(htmlPath: string): Promise<string> {
     ),
     instanceId: JSON.stringify(ServerEnv.instanceId()),
     shareOrigin: JSON.stringify(ServerEnv.shareOrigin()),
+    siteOrigin: ServerEnv.authOrigin().replace(/\/+$/, ""),
     manifestHref: buildAssetUrl("manifest.json", assetManifest, cdnBase),
     faviconHref: buildAssetUrl(
       "images/OpenBackMark.svg",
