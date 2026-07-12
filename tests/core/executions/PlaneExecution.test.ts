@@ -127,7 +127,7 @@ describe("PlaneExecution", () => {
     expect(game.hasFallout(target)).toBe(true);
     expect(game.owner(target)).not.toBe(attacker);
 
-    for (let i = 0; i < 11; i++) game.executeNextTick();
+    for (let i = 0; i < 19; i++) game.executeNextTick();
     expect(game.owner(target)).toBe(attacker);
     expect(game.owner(nearbyNeutral)).toBe(attacker);
     expect(attacker.hasLandAnnexationProtection()).toBe(true);

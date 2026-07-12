@@ -248,6 +248,10 @@ export class PlayerExecution implements Execution {
   }
 
   private removeCluster(cluster: Set<TileRef>) {
+    // Aircraft deployment protects every current cluster, including territory
+    // gained by the expanding landing wave, from free surrounded annexation.
+    if (this.player.hasLandAnnexationProtection()) return;
+
     // Airborne beachheads must be conquered through normal attacks. Their
     // intentionally surrounded placement must not trigger free annexation.
     if (isPlaneBeachhead(this.mg, this.player, cluster)) return;

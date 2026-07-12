@@ -37,7 +37,11 @@ describe("TankExecution", () => {
     const tank = attacker.units(UnitType.Tank)[0];
     expect(tank.isLoaded()).toBe(true);
     game.addExecution(new TankExecution(attacker, game.ref(18, 5)));
-    for (let i = 0; i < 100 && tank.isActive(); i++) game.executeNextTick();
+    const destructionPhases = new Set<number>();
+    for (let i = 0; i < 100 && tank.isActive(); i++) {
+      game.executeNextTick();
+      destructionPhases.add(tank.launchPhase());
+    }
 
     const trailTile = game.ref(10, 7);
     expect(game.hasFallout(trailTile)).toBe(true);
@@ -45,6 +49,7 @@ describe("TankExecution", () => {
     expect(game.hasFallout(game.ref(18, 9))).toBe(true);
     expect(game.hasOwner(trailTile)).toBe(false);
     expect(tank.isActive()).toBe(false);
+    expect([...destructionPhases]).toEqual(expect.arrayContaining([3, 4, 5]));
   });
 
   test("moves 50% faster than a transport and keeps aimed at its target", () => {

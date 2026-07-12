@@ -22,6 +22,7 @@ const LOADING_TICKS = 5 * 10;
 const DEPLOYMENT_WARNING_TICKS = 10 * 10;
 const LANDING_PROTECTION_TICKS = 15 * 10;
 const CRASH_ANIMATION_TICKS = 10;
+const CAPTURE_WAVE_TICKS = 8;
 
 /** Two-stage aircraft lifecycle: build/load on a runway, then launch later. */
 export class PlaneExecution implements Execution {
@@ -39,6 +40,8 @@ export class PlaneExecution implements Execution {
   private interceptionStarted = false;
   private pendingCapture: TileRef[] | null = null;
   private crashAnimationTicks = 0;
+  private captureIndex = 0;
+  private captureStarted = false;
 
   constructor(
     private player: Player,
@@ -126,7 +129,7 @@ export class PlaneExecution implements Execution {
     }
     if (this.pendingCapture !== null) {
       if (this.crashAnimationTicks-- > 0) return;
-      this.finishLandingCapture();
+      this.advanceLandingCapture();
       return;
     }
     if (this.plane === null) {
@@ -323,22 +326,42 @@ export class PlaneExecution implements Execution {
     // Leave the cleared footprint glowing green briefly so every client sees
     // the crash before ownership appears. These tiles are reserved during the
     // visual phase, preventing another player from stealing the animation.
-    this.pendingCapture = capturableLand;
+    this.pendingCapture = capturableLand.sort(
+      (a, b) =>
+        this.game.euclideanDistSquared(tile, a) -
+        this.game.euclideanDistSquared(tile, b),
+    );
     this.crashAnimationTicks = CRASH_ANIMATION_TICKS;
     registerPlaneLandingAnimation(
       this.game,
       capturableLand,
-      CRASH_ANIMATION_TICKS + 1,
+      CRASH_ANIMATION_TICKS + CAPTURE_WAVE_TICKS + 2,
     );
   }
 
-  private finishLandingCapture(): void {
+  private advanceLandingCapture(): void {
     const capturableLand = this.pendingCapture ?? [];
-    for (const impactedTile of capturableLand) {
-      if (!this.game.hasOwner(impactedTile)) this.player.conquer(impactedTile);
+    if (!this.captureStarted) {
+      this.captureStarted = true;
+      this.player.grantLandAnnexationProtection(LANDING_PROTECTION_TICKS);
     }
-    this.player.grantLandAnnexationProtection(LANDING_PROTECTION_TICKS);
-    registerPlaneBeachhead(this.game, this.player, capturableLand);
+
+    const batchSize = Math.max(
+      1,
+      Math.ceil(capturableLand.length / CAPTURE_WAVE_TICKS),
+    );
+    const capturedThisTick: TileRef[] = [];
+    const end = Math.min(capturableLand.length, this.captureIndex + batchSize);
+    for (; this.captureIndex < end; this.captureIndex++) {
+      const impactedTile = capturableLand[this.captureIndex];
+      if (!this.game.hasOwner(impactedTile)) this.player.conquer(impactedTile);
+      if (this.game.owner(impactedTile) === this.player) {
+        capturedThisTick.push(impactedTile);
+      }
+    }
+    registerPlaneBeachhead(this.game, this.player, capturedThisTick);
+    if (this.captureIndex < capturableLand.length) return;
+
     this.pendingCapture = null;
     this.active = false;
   }

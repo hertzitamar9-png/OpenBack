@@ -19,6 +19,8 @@ export class TankExecution implements Execution {
   private movementCredit = 0;
   private path: TileRef[] = [];
   private pathIndex = 0;
+  private selfDestructTicks = -1;
+  private selfDestructTile: TileRef | null = null;
 
   constructor(
     private player: Player,
@@ -89,6 +91,10 @@ export class TankExecution implements Execution {
       this.active = false;
       return;
     }
+    if (this.selfDestructTicks >= 0) {
+      this.tickSelfDestruct();
+      return;
+    }
     // Transport ships advance one tile per tick. Three half-tile credits per
     // tick makes tanks average exactly 1.5 tiles/tick using integer arithmetic.
     this.movementCredit += 3;
@@ -120,8 +126,7 @@ export class TankExecution implements Execution {
         );
       if (mine) {
         mine.decreaseLevel(this.player);
-        this.tank.delete(false);
-        this.active = false;
+        this.beginSelfDestruct(next);
         return;
       }
       this.damageSweptArea(current, next);
@@ -158,7 +163,27 @@ export class TankExecution implements Execution {
 
   private explodeAtDestination(): void {
     if (!this.tank?.isActive()) return;
-    this.damageArea(this.dst, this.game.config().planeFalloutRadius());
+    this.beginSelfDestruct(this.dst);
+  }
+
+  private beginSelfDestruct(tile: TileRef): void {
+    if (!this.tank?.isActive() || this.selfDestructTicks >= 0) return;
+    this.selfDestructTile = tile;
+    this.selfDestructTicks = 30;
+    this.tank.setLaunchPhase(3); // turret rises
+  }
+
+  private tickSelfDestruct(): void {
+    if (!this.tank?.isActive() || this.selfDestructTile === null) {
+      this.active = false;
+      return;
+    }
+    if (this.selfDestructTicks === 20) this.tank.setLaunchPhase(4); // bomb fired
+    if (this.selfDestructTicks === 10) this.tank.setLaunchPhase(5); // turret lowers
+    if (this.selfDestructTicks-- > 0) return;
+
+    this.damageArea(this.selfDestructTile);
+    this.tank.setLaunchPhase(0);
     this.tank.setReachedTarget();
     this.tank.delete(false);
     this.active = false;

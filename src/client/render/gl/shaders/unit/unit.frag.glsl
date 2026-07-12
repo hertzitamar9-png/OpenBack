@@ -32,6 +32,9 @@ const float FLAG_RETREATING     = 4.0;
 const float FLAG_FLICKER_UNTARGETABLE = 5.0; // nuke out of SAM range — dimmed
 const float FLAG_LAUNCH_SMOKE = 6.0;
 const float FLAG_LAUNCH_FIRE = 7.0;
+const float FLAG_TANK_TURRET_UP = 8.0;
+const float FLAG_TANK_BOMB_UP = 9.0;
+const float FLAG_TANK_TURRET_DOWN = 10.0;
 
 // Ally color for trade-friendly override (yellow — matches affiliation.ts ALLY)
 const vec3 ALLY_COLOR = vec3(1.0, 1.0, 0.0);
@@ -113,27 +116,38 @@ void main() {
     } else if (abs(vAtlasCol - float(TANK_COL)) < 0.5) {
       vec2 p = vCellUV - 0.5;
       float aa = 0.012;
+      float turretLift = 0.0;
+      if (abs(vFlags - FLAG_TANK_TURRET_UP) < 0.1) turretLift = -0.11;
+      if (abs(vFlags - FLAG_TANK_BOMB_UP) < 0.1) turretLift = -0.15;
+      if (abs(vFlags - FLAG_TANK_TURRET_DOWN) < 0.1) turretLift = -0.055;
+      vec2 turretP = p - vec2(0.0, turretLift);
       float hull = smoothstep(0.34 + aa, 0.34 - aa, abs(p.x))
                  * smoothstep(0.27 + aa, 0.27 - aa, abs(p.y));
       float tracks = smoothstep(0.44 + aa, 0.44 - aa, abs(p.x))
                    * smoothstep(0.34 + aa, 0.34 - aa, abs(p.y));
-      float turret = smoothstep(0.16 + aa, 0.16 - aa, length(p));
-      float barrel = smoothstep(0.045 + aa, 0.045 - aa, abs(p.x))
-                   * smoothstep(-0.05, 0.39, -p.y);
+      float turret = smoothstep(0.16 + aa, 0.16 - aa, length(turretP));
+      float barrel = smoothstep(0.045 + aa, 0.045 - aa, abs(turretP.x))
+                   * smoothstep(-0.05, 0.39, -turretP.y);
+      float bombPhase = step(abs(vFlags - FLAG_TANK_BOMB_UP), 0.1);
+      float bomb = bombPhase * smoothstep(0.095, 0.055,
+          length(p - vec2(0.0, -0.43)));
       float mask = smoothstep(0.08, 0.42,
-          max(tracks, max(hull, max(turret, barrel))));
+          max(tracks, max(hull, max(turret, max(barrel, bomb)))));
       float hullOuter = smoothstep(0.38, 0.34, abs(p.x))
                       * smoothstep(0.31, 0.27, abs(p.y));
       float tracksOuter = smoothstep(0.48, 0.44, abs(p.x))
                         * smoothstep(0.38, 0.34, abs(p.y));
-      float turretOuter = smoothstep(0.20, 0.16, length(p));
-      float barrelOuter = smoothstep(0.075, 0.045, abs(p.x))
-                        * smoothstep(-0.08, 0.42, -p.y);
+      float turretOuter = smoothstep(0.20, 0.16, length(turretP));
+      float barrelOuter = smoothstep(0.075, 0.045, abs(turretP.x))
+                        * smoothstep(-0.08, 0.42, -turretP.y);
+      float bombOuter = bombPhase * smoothstep(0.125, 0.09,
+          length(p - vec2(0.0, -0.43)));
       float outerMask = max(tracksOuter,
-          max(hullOuter, max(turretOuter, barrelOuter)));
+          max(hullOuter, max(turretOuter, max(barrelOuter, bombOuter))));
       float tankSeams = max(
         max(tracksOuter - tracks, hullOuter - hull),
-        max(turretOuter - turret, barrelOuter - barrel)
+        max(turretOuter - turret,
+            max(barrelOuter - barrel, bombOuter - bomb))
       );
       blackOutline = smoothstep(0.025, 0.14, tankSeams);
       // Tracks stay dark; the turret/barrel use the spawn-color band so the
