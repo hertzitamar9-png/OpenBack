@@ -199,20 +199,29 @@ void main() {
   // Thick diesel exhaust and occasional hot sparks trail military fuel trains.
   if (abs(vFlags - 8.0) < 0.1 && texel.a < 0.01) {
     vec2 p = vCellUV - 0.5;
-    float phase = fract(uTick * 0.055);
-    vec2 smokeCenter = vec2(
-      sin(uTick * 0.17) * 0.05,
-      0.38 + phase * 0.55
-    );
-    float smoke = (1.0 - smoothstep(0.09 + phase * 0.08,
-        0.18 + phase * 0.14, length(p - smokeCenter))) * (1.0 - phase);
+    float smoke = 0.0;
+    float smokeLight = 0.0;
+    for (int i = 0; i < 5; i++) {
+      float fi = float(i);
+      float phase = fract(uTick * 0.07 + fi * 0.19);
+      vec2 smokeCenter = vec2(
+        sin(uTick * 0.21 + fi * 2.7) * (0.04 + phase * 0.08),
+        0.30 + phase * 0.72
+      );
+      float puff = (1.0 - smoothstep(0.07 + phase * 0.09,
+          0.17 + phase * 0.16, length(p - smokeCenter))) * (1.0 - phase);
+      smoke = max(smoke, puff);
+      smokeLight += puff * (1.0 - phase);
+    }
     float sparks = step(0.82, fract(sin(uTick * 3.1 + p.x * 91.0) * 123.4))
       * (1.0 - smoothstep(0.02, 0.09, abs(p.x)))
       * smoothstep(0.34, 0.42, p.y) * (1.0 - smoothstep(0.42, 0.72, p.y));
     if (max(smoke, sparks) > 0.01) {
-      vec3 exhaustColor = mix(vec3(0.12, 0.13, 0.10),
+      vec3 dieselSmoke = mix(vec3(0.07, 0.08, 0.055),
+          vec3(0.38, 0.40, 0.31), clamp(smokeLight, 0.0, 1.0));
+      vec3 exhaustColor = mix(dieselSmoke,
           vec3(1.0, 0.42, 0.03), sparks);
-      fragColor = vec4(exhaustColor, max(smoke * 0.72, sparks));
+      fragColor = vec4(exhaustColor, max(smoke * 0.82, sparks));
       return;
     }
   }

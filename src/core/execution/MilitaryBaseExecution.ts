@@ -25,13 +25,23 @@ export class MilitaryBaseExecution implements Execution {
     }
     // A convoy cadence is deliberately slower than normal passive income.
     if (ticks % 200 !== this.base.id() % 200) return;
+    this.createFuelStations();
     const links = this.game.nearbyUnits(
       this.base.tile(),
-      this.game.config().trainStationMaxRange(),
+      this.game.config().tankMaxDriveRadius(this.base.level()),
       [UnitType.Runway],
     );
     for (const { unit: runway } of links) {
       if (!runway.isActive() || runway.isUnderConstruction()) continue;
+      const range = this.game
+        .config()
+        .fuelRailMaxRange(this.base.level(), runway.level());
+      if (
+        this.game.euclideanDistSquared(this.base.tile(), runway.tile()) >
+        range * range
+      ) {
+        continue;
+      }
       const source = this.game
         .railNetwork()
         .stationManager()
@@ -55,24 +65,36 @@ export class MilitaryBaseExecution implements Execution {
           this.base.owner(),
           source,
           destination,
-          3,
+          // Match ordinary city/factory trains: tail engine + five carriages.
+          5,
         ),
       );
     }
   }
 
   private createFuelStations(): void {
-    const runways = this.game.nearbyUnits(
-      this.base.tile(),
-      this.game.config().trainStationMaxRange(),
-      [UnitType.Runway],
-    );
+    const runways = this.game
+      .nearbyUnits(
+        this.base.tile(),
+        this.game.config().tankMaxDriveRadius(this.base.level()),
+        [UnitType.Runway],
+      )
+      .filter(({ unit }) => {
+        if (unit.isUnderConstruction()) return false;
+        const range = this.game
+          .config()
+          .fuelRailMaxRange(this.base.level(), unit.level());
+        return (
+          this.game.euclideanDistSquared(this.base.tile(), unit.tile()) <=
+          range * range
+        );
+      });
     if (runways.length === 0) return;
     if (!this.base.hasTrainStation()) {
       this.game.addExecution(new TrainStationExecution(this.base));
     }
     for (const { unit } of runways) {
-      if (!unit.isUnderConstruction() && !unit.hasTrainStation()) {
+      if (!unit.hasTrainStation()) {
         this.game.addExecution(new TrainStationExecution(unit));
       }
     }

@@ -694,6 +694,7 @@
     "info_target": "Place a target mark on the player, marking it for all allies, used to coordinate attacks.",
     "info_title": "Info menu",
     "info_trade": "Use \"Stop trading\" to stop giving the player gold and receiving their gold via trade ships. If you both click \"Start trading\" it will start again.",
+    "openback_fuel_train": "Fuel Train — A completed Military Base automatically links to a completed Runway within rail range. Camouflaged fuel convoys travel on visible rails between them and earn half the normal city/factory train income.",
     "openback_manpad": "MANPAD — A defensive interceptor that automatically destroys an enemy plane entering its range. The MANPAD is consumed when it intercepts a plane.",
     "openback_military_base": "Military Base — Builds and stores tanks. Additional base levels increase a tank's maximum driving range.",
     "openback_plane": "Plane — Load troops onto a completed Runway, then select enemy land in range. Everyone sees its route and landing zone. A successful crash captures a beachhead that must be fought normally; MANPAD interception destroys the plane and its troops.",

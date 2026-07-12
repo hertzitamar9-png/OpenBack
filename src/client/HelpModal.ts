@@ -140,6 +140,7 @@ export class HelpModal extends BaseModal {
             <p>${translateText("help_modal.openback_units_intro")}</p>
             <ul>
               <li>${translateText("help_modal.openback_runway")}</li>
+              <li>${translateText("help_modal.openback_fuel_train")}</li>
               <li>${translateText("help_modal.openback_plane")}</li>
               <li>${translateText("help_modal.openback_manpad")}</li>
               <li>${translateText("help_modal.openback_military_base")}</li>

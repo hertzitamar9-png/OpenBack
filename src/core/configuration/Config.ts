@@ -293,6 +293,15 @@ export class Config {
   trainStationMaxRange(): number {
     return 110;
   }
+  fuelRailMaxRange(baseLevel: number = 1, runwayLevel: number = 1): number {
+    // A fuel link must fit inside both structures' displayed operational
+    // circles. This prevents military rails reaching farther than either the
+    // tank base or runway itself can operate.
+    return Math.min(
+      this.tankMaxDriveRadius(baseLevel),
+      this.planeMaxFlightRadius(runwayLevel),
+    );
+  }
   railroadMaxSize(): number {
     return this.trainStationMaxRange() * 1.4142;
   }

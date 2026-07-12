@@ -57,6 +57,8 @@ void main() {
   // The full vertical launch reaches well above the tank; reserve enough quad
   // space that the fireball never clips at the apex or on its descent.
   scale = mix(scale, mix(0.6, 1.8, tankSelfDestruct), isTank);
+  // Fuel trains use an enlarged effect quad for smoke/sparks, but vCellUV
+  // maps their actual model back to normal city/factory-train dimensions.
   scale = mix(scale, 1.7, fuelTrain);
 
   // UNIT_SIZE is in world-space tiles — no zoom division needed.
@@ -85,7 +87,7 @@ void main() {
   // Map the enlarged quad back to sprite cell space: the central 1/scale
   // portion is the sprite, anything outside [0,1] is glow-only margin.
   vCellUV = (isPlane > 0.5 && launchSmoke < 0.5) ||
-            (isTank > 0.5 && tankSelfDestruct < 0.5) || fuelTrain > 0.5
+            (isTank > 0.5 && tankSelfDestruct < 0.5)
     ? aPos
     : (aPos - 0.5) * scale + 0.5;
 }

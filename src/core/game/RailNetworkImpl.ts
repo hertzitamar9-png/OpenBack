@@ -117,6 +117,21 @@ export class RailNetworkImpl implements RailNetwork {
     return this.isMilitaryStation(a) === this.isMilitaryStation(b);
   }
 
+  private militaryLinkInRange(a: Unit, b: Unit): boolean {
+    const base = a.type() === UnitType.MilitaryBase ? a : b;
+    const runway = a.type() === UnitType.Runway ? a : b;
+    if (
+      base.type() !== UnitType.MilitaryBase ||
+      runway.type() !== UnitType.Runway
+    ) {
+      return false;
+    }
+    const range = this.game
+      .config()
+      .fuelRailMaxRange(base.level(), runway.level());
+    return this.game.euclideanDistSquared(a.tile(), b.tile()) <= range * range;
+  }
+
   recomputeClusters() {
     if (this.dirtyClusters.size === 0) return;
 
@@ -281,7 +296,12 @@ export class RailNetworkImpl implements RailNetwork {
       return [];
     }
 
-    const maxRange = this.game.config().trainStationMaxRange();
+    const maxRange =
+      unitType === UnitType.MilitaryBase
+        ? this.game.config().tankMaxDriveRadius(1)
+        : unitType === UnitType.Runway
+          ? this.game.config().planeMaxFlightRadius(1)
+          : this.game.config().trainStationMaxRange();
     const minRangeSquared = this.game.config().trainStationMinRange() ** 2;
     const maxPathSize = this.game.config().railroadMaxSize();
 
@@ -315,6 +335,16 @@ export class RailNetworkImpl implements RailNetwork {
       // Limit to the closest 5 stations to avoid running too many pathfinding calls.
       if (paths.length >= 5) break;
       if (neighbor.distSquared <= minRangeSquared) continue;
+      if (militaryBuilding) {
+        const baseLevel =
+          unitType === UnitType.MilitaryBase ? 1 : neighbor.unit.level();
+        const runwayLevel =
+          unitType === UnitType.Runway ? 1 : neighbor.unit.level();
+        const fuelRange = this.game
+          .config()
+          .fuelRailMaxRange(baseLevel, runwayLevel);
+        if (neighbor.distSquared > fuelRange * fuelRange) continue;
+      }
 
       const neighborStation = this._stationManager.findStation(neighbor.unit);
 
@@ -353,9 +383,14 @@ export class RailNetworkImpl implements RailNetwork {
 
   private connectToNearbyStations(station: TrainStation) {
     const military = this.isMilitaryStation(station);
+    const maxRange = military
+      ? station.unit.type() === UnitType.MilitaryBase
+        ? this.game.config().tankMaxDriveRadius(station.unit.level())
+        : this.game.config().planeMaxFlightRadius(station.unit.level())
+      : this.game.config().trainStationMaxRange();
     const neighbors = this.game.nearbyUnits(
       station.tile(),
-      this.game.config().trainStationMaxRange(),
+      maxRange,
       military
         ? [UnitType.MilitaryBase, UnitType.Runway]
         : [UnitType.City, UnitType.Factory, UnitType.Port],
@@ -369,6 +404,12 @@ export class RailNetworkImpl implements RailNetwork {
       const neighborStation = this._stationManager.findStation(neighbor.unit);
       if (!neighborStation) continue;
       if (!this.canShareRailNetwork(station, neighborStation)) continue;
+      if (
+        military &&
+        !this.militaryLinkInRange(station.unit, neighborStation.unit)
+      ) {
+        continue;
+      }
 
       const distanceToStation = this.distanceFrom(
         neighborStation,
