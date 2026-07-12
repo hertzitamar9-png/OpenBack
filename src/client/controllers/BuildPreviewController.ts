@@ -69,6 +69,9 @@ export class BuildPreviewController implements Controller {
   private readonly connectedAllySmallIds: Set<number> = new Set();
   private readonly mousePos = { x: 0, y: 0 };
   private lastGhostQueryAt: number = 0;
+  private ghostQueryInFlight = false;
+  private ghostQueryGeneration = 0;
+  private validatedTileRef: TileRef | undefined;
   private pendingConfirm: MouseUpEvent | null = null;
 
   // Buildable validation runs on the snapped tile under the cursor, but the
@@ -199,7 +202,7 @@ export class BuildPreviewController implements Controller {
     if (!this.ghostUnit) return;
 
     const now = performance.now();
-    if (now - this.lastGhostQueryAt < 50) return;
+    if (this.ghostQueryInFlight || now - this.lastGhostQueryAt < 35) return;
     this.lastGhostQueryAt = now;
     let tileRef: TileRef | undefined;
     const tile = this.transformHandler.screenToWorldCoordinates(
@@ -239,19 +242,32 @@ export class BuildPreviewController implements Controller {
       }
     }
 
-    this.game
-      ?.myPlayer()
-      ?.buildables(tileRef, [this.ghostUnit?.buildableUnit.type])
+    const player = this.game.myPlayer();
+    if (!player) return;
+    const requestedType = this.ghostUnit.buildableUnit.type;
+    const generation = this.ghostQueryGeneration;
+    this.ghostQueryInFlight = true;
+    player
+      .buildables(tileRef, [requestedType])
       .then((buildables) => {
-        if (!this.ghostUnit) {
-          this.pendingConfirm = null;
-          this.emitGhostPreview(tileRef, targetingAlly);
+        if (
+          !this.ghostUnit ||
+          generation !== this.ghostQueryGeneration ||
+          this.ghostUnit.buildableUnit.type !== requestedType
+        ) {
           return;
         }
 
-        const unit = buildables.find(
-          (u) => u.type === this.ghostUnit!.buildableUnit.type,
-        );
+        // Worker replies are asynchronous. Never let a result for an old
+        // cursor tile overwrite the current grey/white placement state.
+        if (this.currentCursorTileRef() !== tileRef) {
+          this.lastGhostQueryAt = 0;
+          return;
+        }
+
+        this.validatedTileRef = tileRef;
+
+        const unit = buildables.find((u) => u.type === requestedType);
         if (!unit) {
           Object.assign(this.ghostUnit.buildableUnit, {
             canBuild: false,
@@ -273,7 +289,26 @@ export class BuildPreviewController implements Controller {
         }
 
         this.emitGhostPreview(tileRef, targetingAlly);
+      })
+      .catch((error) => {
+        console.error("Failed to validate build preview", error);
+      })
+      .finally(() => {
+        this.ghostQueryInFlight = false;
+        if (this.currentCursorTileRef() !== tileRef) {
+          this.lastGhostQueryAt = 0;
+        }
       });
+  }
+
+  private currentCursorTileRef(): TileRef | undefined {
+    const tile = this.transformHandler.screenToWorldCoordinates(
+      this.mousePos.x,
+      this.mousePos.y,
+    );
+    return this.game.isValidCoord(tile.x, tile.y)
+      ? this.game.ref(tile.x, tile.y)
+      : undefined;
   }
 
   /**
@@ -664,6 +699,25 @@ export class BuildPreviewController implements Controller {
   private moveGhost(e: MouseMoveEvent) {
     this.mousePos.x = e.x;
     this.mousePos.y = e.y;
+    const currentTile = this.currentCursorTileRef();
+    if (this.ghostUnit !== null && currentTile !== this.validatedTileRef) {
+      // Invalidate immediately on movement so a white valid cursor can never
+      // linger over invalid land while the worker checks the new position.
+      this.ghostUnit.buildableUnit.canBuild = false;
+      this.ghostUnit.buildableUnit.canUpgrade = false;
+      if (this.lastGhostData !== null) {
+        this.lastGhostData = {
+          ...this.lastGhostData,
+          canBuild: false,
+          canUpgrade: false,
+          snapTargetTile: null,
+          tileX: currentTile === undefined ? 0 : this.game.x(currentTile),
+          tileY: currentTile === undefined ? 0 : this.game.y(currentTile),
+        };
+        this.view.updateGhostPreview(this.lastGhostData);
+      }
+      this.lastGhostQueryAt = 0;
+    }
     this.updateHoveredSourceRange();
   }
 
@@ -723,9 +777,14 @@ export class BuildPreviewController implements Controller {
         ghostRailPaths: [],
       },
     };
+    this.ghostQueryGeneration++;
+    this.validatedTileRef = undefined;
+    this.lastGhostQueryAt = 0;
   }
 
   private clearGhostStructure() {
+    this.ghostQueryGeneration++;
+    this.validatedTileRef = undefined;
     this.pendingConfirm = null;
     this.ghostUnit = null;
     this.lastGhostData = null;

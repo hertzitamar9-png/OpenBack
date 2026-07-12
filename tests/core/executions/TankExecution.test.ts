@@ -29,6 +29,9 @@ describe("TankExecution", () => {
   });
 
   test("charges once, launches from its base, and leaves a wide fallout trail", () => {
+    expect(
+      attacker.buildableUnits(game.ref(5, 5), [UnitType.Tank])[0].canBuild,
+    ).toBe(game.ref(5, 5));
     const before = attacker.gold();
     game.addExecution(new TankExecution(attacker, game.ref(5, 5)));
     game.executeNextTick();

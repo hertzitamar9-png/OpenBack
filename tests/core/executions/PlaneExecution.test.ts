@@ -53,6 +53,9 @@ describe("PlaneExecution", () => {
   }
 
   test("loads exactly the requested troops and parks on the runway", () => {
+    expect(
+      attacker.buildableUnits(game.ref(5, 5), [UnitType.Plane])[0].canBuild,
+    ).toBe(game.ref(5, 5));
     const troopsBefore = attacker.troops();
     const plane = loadPlane(1_234);
     expect(plane).toBeDefined();
