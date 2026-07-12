@@ -11,6 +11,9 @@ uniform vec4 uFxWorld[FX_TYPE_COUNT]; // worldW, worldH, 0, 0
 
 out vec2  vAtlasUV;
 flat out float vAlpha;
+out vec2 vLocal;
+flat out float vFxType;
+flat out float vFrame;
 
 void main() {
   int type = int(aInstPos.z + 0.5);
@@ -30,4 +33,7 @@ void main() {
   float v = uv.x + aPos.y * uv.y;
   vAtlasUV = vec2(u, v);
   vAlpha = alpha;
+  vLocal = aPos * 2.0 - 1.0;
+  vFxType = float(type);
+  vFrame = frameIdx;
 }

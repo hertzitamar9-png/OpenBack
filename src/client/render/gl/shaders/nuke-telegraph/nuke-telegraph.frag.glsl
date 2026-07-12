@@ -47,7 +47,11 @@ void main() {
                   * (1.0 - smoothstep(vOuterRadius + strokeWidth, vOuterRadius + strokeWidth + 0.5, dist));
 
   // Dash pattern on outer ring
-  float angle = atan(vLocal.y, vLocal.x);
+  // Use world-space direction. vLocal belongs to a route-expanded rectangle,
+  // so using it here stretched tank dashes into the asymmetric shape seen in
+  // game whenever source and target were far apart.
+  vec2 radial = vWorld - vTarget;
+  float angle = atan(radial.y, radial.x);
   float arcPos = angle * vOuterRadius;
   float period = dashLen + gapLen;
   float dashPhase = mod(arcPos + uTime * rotationSpeed, period);

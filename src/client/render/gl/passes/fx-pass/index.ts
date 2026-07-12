@@ -15,6 +15,7 @@ import type {
   DeadUnitFx,
   RendererConfig,
 } from "../../../types";
+import { UT_TANK } from "../../../types";
 import type { RenderSettings } from "../../RenderSettings";
 import { FxAttackRingPass } from "./FxAttackRingPass";
 import { FxShockwavePass } from "./FxShockwavePass";
@@ -73,6 +74,9 @@ export class FxPass {
 
     // All other units: sprite-only effects
     this.spritePass.spawnFxForUnit(unit, now);
+    if (typeName === UT_TANK && unit.reachedTarget) {
+      this.shockwavePass.pushSAMShockwave(x, y);
+    }
   }
 
   applyRailroadDust(tileRefs: number[]): void {

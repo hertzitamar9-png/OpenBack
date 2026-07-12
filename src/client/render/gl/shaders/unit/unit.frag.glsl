@@ -55,6 +55,7 @@ void main() {
   float blackOutline = 0.0;
   float tankFireball = 0.0;
   float tankArcGuide = 0.0;
+  float tankMuzzleFlash = 0.0;
   bool inSprite = vCellUV.x >= 0.0 && vCellUV.x <= 1.0 &&
                   vCellUV.y >= 0.0 && vCellUV.y <= 1.0;
   if (inSprite) {
@@ -116,7 +117,7 @@ void main() {
       float aa = 0.012;
       float selfDestruct = step(19.5, vFlags);
       float sequence = clamp((vFlags - 20.0) / 30.0, 0.0, 1.0);
-      float turretLift = -0.25
+      float turretLift = -0.30
         * smoothstep(0.0, 0.24, sequence)
         * (1.0 - smoothstep(0.72, 1.0, sequence));
       vec2 turretP = p - vec2(0.0, turretLift);
@@ -127,24 +128,48 @@ void main() {
       float turret = smoothstep(0.16 + aa, 0.16 - aa, length(turretP));
       float barrel = smoothstep(0.045 + aa, 0.045 - aa, abs(turretP.x))
                    * smoothstep(-0.05, 0.39, -turretP.y);
-      float flight = clamp((sequence - 0.24) / 0.58, 0.0, 1.0);
+      float flight = clamp((sequence - 0.14) / 0.78, 0.0, 1.0);
       float bombVisible = selfDestruct
-        * step(0.24, sequence) * (1.0 - step(0.83, sequence));
-      vec2 bombPos = vec2(
-        mix(-0.18, 0.18, flight),
-        -0.18 - 0.62 * (4.0 * flight * (1.0 - flight))
+        * step(0.14, sequence) * (1.0 - step(0.94, sequence));
+      float height = sin(flight * 3.14159265);
+      // Cancel the tank quad's heading for the projectile. The vehicle may be
+      // facing any direction, but this launch climbs vertically like a MIRV.
+      float effectC = cos(vAngle);
+      float effectS = sin(vAngle);
+      vec2 effectP = vec2(
+        p.x * effectC - p.y * effectS,
+        p.x * effectS + p.y * effectC
       );
-      float bomb = bombVisible * smoothstep(0.105, 0.045,
-          length(p - bombPos));
-      float arcX = clamp(p.x / 0.18, -1.0, 1.0);
-      float arcY = -0.18 - 0.62 * (1.0 - arcX * arcX);
-      float arcDash = step(fract((p.x + 0.18) * 18.0), 0.55);
-      tankArcGuide = selfDestruct * (1.0 - smoothstep(0.018, 0.035,
-          abs(p.y - arcY))) * step(abs(p.x), 0.19) * arcDash * 0.8;
+      vec2 bombPos = vec2(
+        0.0,
+        -0.22 - 0.72 * height
+      );
+      float bombRadius = mix(0.095, 0.055, height);
+      float bomb = bombVisible * smoothstep(bombRadius + 0.035, bombRadius,
+          length(effectP - bombPos));
+      float arcDash = step(fract((-effectP.y - 0.18) * 17.0), 0.52);
+      tankArcGuide = selfDestruct * (1.0 - smoothstep(0.014, 0.032,
+          abs(effectP.x))) * step(-0.96, effectP.y)
+          * step(effectP.y, -0.18) * arcDash * 0.8;
       tankFireball = bomb;
+
+      // Brief cinematic muzzle blast at the fully raised barrel tip: hot core,
+      // irregular star rays and sparks before the projectile begins climbing.
+      vec2 muzzle = vec2(0.0, turretLift - 0.38);
+      vec2 muzzleDelta = p - muzzle;
+      float muzzleWindow = selfDestruct * smoothstep(0.13, 0.18, sequence)
+                         * (1.0 - smoothstep(0.27, 0.34, sequence));
+      float muzzleAngle = atan(muzzleDelta.y, muzzleDelta.x);
+      float rays = 0.10 + 0.055 * sin(muzzleAngle * 7.0 + uTick * 0.9);
+      float flashStar = 1.0 - smoothstep(rays * 0.48, rays,
+          length(muzzleDelta));
+      float sparks = (1.0 - smoothstep(0.01, 0.026,
+          abs(sin(muzzleAngle * 11.0)) * length(muzzleDelta)))
+          * (1.0 - smoothstep(0.08, 0.24, length(muzzleDelta)));
+      tankMuzzleFlash = muzzleWindow * max(flashStar, sparks * 0.7);
       float mask = smoothstep(0.08, 0.42,
           max(tracks, max(hull, max(turret,
-              max(barrel, max(bomb, tankArcGuide))))));
+              max(barrel, max(bomb, max(tankArcGuide, tankMuzzleFlash)))))));
       float hullOuter = smoothstep(0.38, 0.34, abs(p.x))
                       * smoothstep(0.31, 0.27, abs(p.y));
       float tracksOuter = smoothstep(0.48, 0.44, abs(p.x))
@@ -153,10 +178,11 @@ void main() {
       float barrelOuter = smoothstep(0.075, 0.045, abs(turretP.x))
                         * smoothstep(-0.08, 0.42, -turretP.y);
       float bombOuter = bombVisible * smoothstep(0.14, 0.095,
-          length(p - bombPos));
+          length(effectP - bombPos));
       float outerMask = max(tracksOuter,
           max(hullOuter, max(turretOuter,
-              max(barrelOuter, max(bombOuter, tankArcGuide)))));
+              max(barrelOuter,
+                  max(bombOuter, max(tankArcGuide, tankMuzzleFlash))))));
       float tankSeams = max(
         max(tracksOuter - tracks, hullOuter - hull),
         max(turretOuter - turret,
@@ -312,6 +338,7 @@ void main() {
   // makes the upward-and-back-down self-destruct path readable at map scale.
   color = mix(color, vec3(1.0, 0.18, 0.01), tankArcGuide);
   color = mix(color, vec3(1.0, 0.72, 0.04), tankFireball);
+  color = mix(color, vec3(1.0, 0.42, 0.015), tankMuzzleFlash);
 
   fragColor = vec4(color, texel.a * alphaMul);
 }
