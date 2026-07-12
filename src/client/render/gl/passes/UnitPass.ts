@@ -117,6 +117,7 @@ const FLAG_RETREATING = 4;
 const FLAG_FLICKER_UNTARGETABLE = 5;
 const FLAG_LAUNCH_SMOKE = 6;
 const FLAG_LAUNCH_FIRE = 7;
+const FLAG_FUEL_TRAIN = 8;
 
 /** Atlas column indices for train sub-types (resolved from trainType + loaded) */
 const TRAIN_ENGINE_COL = UNIT_ORDER.indexOf("TrainEngine");
@@ -477,6 +478,13 @@ export class UnitPass {
       const isAngryWarship =
         unit.unitType === UT_WARSHIP && unit.targetUnitId !== null;
       const isFlicker = FLICKER_TYPES.has(unit.unitType);
+      const trainDestination =
+        unit.unitType === UT_TRAIN && unit.targetUnitId !== null
+          ? this.structures.get(unit.targetUnitId)
+          : undefined;
+      const isFuelTrain =
+        trainDestination?.unitType === "Runway" ||
+        trainDestination?.unitType === "Military Base";
 
       // Enemy trade ships heading to a self/allied port get FLAG_TRADE_FRIENDLY
       // so alt-view renders them yellow instead of red.
@@ -501,7 +509,9 @@ export class UnitPass {
       }
 
       let flags = FLAG_NORMAL;
-      if (unit.unitType === UT_PLANE && (unit.launchPhase ?? 0) > 0) {
+      if (isFuelTrain) {
+        flags = FLAG_FUEL_TRAIN;
+      } else if (unit.unitType === UT_PLANE && (unit.launchPhase ?? 0) > 0) {
         flags = unit.launchPhase === 2 ? FLAG_LAUNCH_FIRE : FLAG_LAUNCH_SMOKE;
       } else if (unit.unitType === UT_TANK && (unit.launchPhase ?? 0) >= 20) {
         flags = unit.launchPhase ?? 20;

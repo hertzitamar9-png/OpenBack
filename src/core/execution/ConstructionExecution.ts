@@ -9,6 +9,7 @@ import { MissileSiloExecution } from "./MissileSiloExecution";
 import { NukeExecution } from "./NukeExecution";
 import { PlaneExecution } from "./PlaneExecution";
 import { PortExecution } from "./PortExecution";
+import { RunwayExecution } from "./RunwayExecution";
 import { SAMLauncherExecution } from "./SAMLauncherExecution";
 import { TankExecution } from "./TankExecution";
 import { WarshipExecution } from "./WarshipExecution";
@@ -183,6 +184,8 @@ export class ConstructionExecution implements Execution {
         this.mg.addExecution(new MilitaryBaseExecution(this.structure!));
         break;
       case UnitType.Runway:
+        this.mg.addExecution(new RunwayExecution(this.structure!));
+        break;
       case UnitType.MANPAD:
       case UnitType.TankMine:
         break;

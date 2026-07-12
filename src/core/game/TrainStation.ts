@@ -45,6 +45,27 @@ class FactoryStopHandler implements TrainStopHandler {
   ): void {}
 }
 
+class FuelStopHandler implements TrainStopHandler {
+  onStop(
+    mg: Game,
+    station: TrainStation,
+    trainExecution: TrainExecution,
+  ): void {
+    const stationOwner = station.unit.owner();
+    const trainOwner = trainExecution.owner();
+    const gold =
+      mg
+        .config()
+        .trainGold(
+          rel(trainOwner, stationOwner),
+          trainExecution.tradeStopsVisited(),
+          trainOwner,
+        ) / 2n;
+    trainOwner.addGold(gold, station.tile());
+    mg.stats().trainSelfTrade(trainOwner, gold);
+  }
+}
+
 export function createTrainStopHandlers(
   random: PseudoRandom,
 ): Partial<Record<UnitType, TrainStopHandler>> {
@@ -52,6 +73,8 @@ export function createTrainStopHandlers(
     [UnitType.City]: new TradeStationStopHandler(),
     [UnitType.Port]: new TradeStationStopHandler(),
     [UnitType.Factory]: new FactoryStopHandler(),
+    [UnitType.MilitaryBase]: new FuelStopHandler(),
+    [UnitType.Runway]: new FuelStopHandler(),
   };
 }
 

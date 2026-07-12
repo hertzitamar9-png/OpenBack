@@ -54,10 +54,36 @@ void main() {
   vec4 texel = vec4(0.0);
   float blackOutline = 0.0;
   float tankMuzzleFlash = 0.0;
+  float fuelTrainMask = 0.0;
+  float fuelCamo = 0.0;
   bool inSprite = vCellUV.x >= 0.0 && vCellUV.x <= 1.0 &&
                   vCellUV.y >= 0.0 && vCellUV.y <= 1.0;
   if (inSprite) {
-    if (abs(vAtlasCol - float(PLANE_COL)) < 0.5) {
+    if (abs(vFlags - 8.0) < 0.1 && vAtlasCol > 8.5 && vAtlasCol < 11.5) {
+      vec2 p = vCellUV - 0.5;
+      float engine = 1.0 - step(9.5, vAtlasCol);
+      float carriage = 1.0 - engine;
+      float body = (1.0 - smoothstep(0.25, 0.29, abs(p.x)))
+                 * (1.0 - smoothstep(0.30, 0.37, abs(p.y)));
+      // Missile-head nose: a sharp armored wedge at the front of each engine.
+      float noseWidth = clamp((p.y + 0.49) * 1.05, 0.0, 0.29);
+      float nose = engine * step(-0.49, p.y) * (1.0 - step(-0.20, p.y))
+                 * (1.0 - smoothstep(noseWidth, noseWidth + 0.035, abs(p.x)));
+      float fuelTank = carriage * (1.0 - smoothstep(0.24, 0.31,
+          length(vec2(p.x * 0.78, p.y))));
+      fuelTrainMask = max(body, max(nose, fuelTank));
+      float outer = max(
+        (1.0 - smoothstep(0.29, 0.34, abs(p.x)))
+          * (1.0 - smoothstep(0.34, 0.41, abs(p.y))),
+        engine * step(-0.53, p.y) * (1.0 - step(-0.17, p.y))
+          * (1.0 - smoothstep(noseWidth + 0.04, noseWidth + 0.075, abs(p.x)))
+      );
+      blackOutline = smoothstep(0.02, 0.13, outer - fuelTrainMask);
+      fuelCamo = step(0.52, fract(
+          sin(dot(floor((p + 0.8) * 8.0), vec2(12.9898, 78.233)))
+          * 43758.5453));
+      texel = vec4(vec3(0.72), step(0.02, max(outer, fuelTrainMask)));
+    } else if (abs(vAtlasCol - float(PLANE_COL)) < 0.5) {
       // The vertex shader rotates the complete aircraft quad. Keeping the
       // model in local coordinates makes its nose visibly face the target.
       vec2 p = vCellUV - 0.5;
@@ -167,6 +193,27 @@ void main() {
     } else {
       vec2 atlasUV = vec2((vAtlasCol + vCellUV.x) / float(ATLAS_COLS), vCellUV.y);
       texel = texture(uAtlas, atlasUV);
+    }
+  }
+
+  // Thick diesel exhaust and occasional hot sparks trail military fuel trains.
+  if (abs(vFlags - 8.0) < 0.1 && texel.a < 0.01) {
+    vec2 p = vCellUV - 0.5;
+    float phase = fract(uTick * 0.055);
+    vec2 smokeCenter = vec2(
+      sin(uTick * 0.17) * 0.05,
+      0.38 + phase * 0.55
+    );
+    float smoke = (1.0 - smoothstep(0.09 + phase * 0.08,
+        0.18 + phase * 0.14, length(p - smokeCenter))) * (1.0 - phase);
+    float sparks = step(0.82, fract(sin(uTick * 3.1 + p.x * 91.0) * 123.4))
+      * (1.0 - smoothstep(0.02, 0.09, abs(p.x)))
+      * smoothstep(0.34, 0.42, p.y) * (1.0 - smoothstep(0.42, 0.72, p.y));
+    if (max(smoke, sparks) > 0.01) {
+      vec3 exhaustColor = mix(vec3(0.12, 0.13, 0.10),
+          vec3(1.0, 0.42, 0.03), sparks);
+      fragColor = vec4(exhaustColor, max(smoke * 0.72, sparks));
+      return;
     }
   }
 
@@ -302,6 +349,12 @@ void main() {
   }
 
   color = mix(color, vec3(0.01), clamp(blackOutline * 2.0, 0.0, 1.0));
+  if (fuelTrainMask > 0.0) {
+    vec3 camoA = vec3(0.16, 0.23, 0.11);
+    vec3 camoB = vec3(0.34, 0.38, 0.20);
+    color = mix(camoA, camoB, fuelCamo);
+    color = mix(color, vec3(0.025), clamp(blackOutline * 2.0, 0.0, 1.0));
+  }
 
   // The tank's projectile is a real hot fireball, while its dashed parabola
   // makes the upward-and-back-down self-destruct path readable at map scale.

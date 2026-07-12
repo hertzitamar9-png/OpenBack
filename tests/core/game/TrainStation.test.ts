@@ -145,6 +145,19 @@ describe("TrainStation", () => {
     );
   });
 
+  it("pays military fuel stops at half normal train income", () => {
+    unit.type.mockReturnValue(UnitType.Runway);
+    const trainGoldSpy = vi.fn().mockReturnValue(500n);
+    (game.config as any).mockReturnValue({ trainGold: trainGoldSpy });
+    const trainOwner = trainExecution.owner();
+    const station = new TrainStation(game, unit);
+
+    station.onTrainStop(trainExecution);
+
+    expect(trainOwner.addGold).toHaveBeenCalledWith(250n, unit.tile());
+    expect(gameStats.trainSelfTrade).toHaveBeenCalledWith(trainOwner, 250n);
+  });
+
   it("checks trade availability (same owner)", () => {
     const otherUnit = {
       owner: vi.fn().mockReturnValue(unit.owner()),

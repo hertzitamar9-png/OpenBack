@@ -409,21 +409,29 @@ export class FxSpritePass {
     // Exactly three compact, deterministic-random burn sites per crash. Their
     // offsets change with the plane's impact tile, so repeated crashes never
     // leave the same pattern or cover the whole landing area in smoke.
+    const rotation = seededRandom(seed * 31) * Math.PI * 2;
     for (let i = 0; i < 3; i++) {
-      const angle = seededRandom(seed * 31 + i) * Math.PI * 2;
-      const distance = 2 + seededRandom(seed * 67 + i) * 5;
+      // Even thirds prevent random clustering at one point, while rotation,
+      // distance and a small jitter still vary for every aircraft.
+      const angle =
+        rotation +
+        (i * Math.PI * 2) / 3 +
+        (seededRandom(seed * 43 + i) - 0.5) * 0.32;
+      const distance = 4 + seededRandom(seed * 67 + i) * 3;
       const fireX = x + Math.cos(angle) * distance;
       const fireY = y + Math.sin(angle) * distance;
       this.pushFx(fireX, fireY, FX_MINI_EXPLOSION, now);
-      this.activeFx.push({
-        x: fireX,
-        y: fireY,
-        fxType: FX_MINI_SMOKE_FIRE,
-        startMs: now,
-        lifetimeMs: 5_000,
-        fadeIn: 0,
-        fadeOut: 0.58,
-      });
+      for (const fxType of [FX_MINI_FIRE, FX_MINI_SMOKE]) {
+        this.activeFx.push({
+          x: fireX,
+          y: fireY,
+          fxType,
+          startMs: now,
+          lifetimeMs: 5_000,
+          fadeIn: 0,
+          fadeOut: 0.58,
+        });
+      }
     }
   }
 

@@ -107,6 +107,16 @@ export class RailNetworkImpl implements RailNetwork {
     }
   }
 
+  private isMilitaryStation(station: TrainStation): boolean {
+    return [UnitType.MilitaryBase, UnitType.Runway].includes(
+      station.unit.type(),
+    );
+  }
+
+  private canShareRailNetwork(a: TrainStation, b: TrainStation): boolean {
+    return this.isMilitaryStation(a) === this.isMilitaryStation(b);
+  }
+
   recomputeClusters() {
     if (this.dirtyClusters.size === 0) return;
 
@@ -166,6 +176,12 @@ export class RailNetworkImpl implements RailNetwork {
     for (const rail of rails) {
       const from = rail.from;
       const to = rail.to;
+      if (
+        !this.canShareRailNetwork(station, from) ||
+        !this.canShareRailNetwork(station, to)
+      ) {
+        continue;
+      }
       const originalId = rail.id;
       const closestRailIndex = rail.getClosestTileIndex(
         this.game,
@@ -224,7 +240,15 @@ export class RailNetworkImpl implements RailNetwork {
   }
 
   overlappingRailroads(unitType: UnitType, tile: TileRef): TileRef[] {
-    if (![UnitType.City, UnitType.Port, UnitType.Factory].includes(unitType)) {
+    if (
+      ![
+        UnitType.City,
+        UnitType.Port,
+        UnitType.Factory,
+        UnitType.MilitaryBase,
+        UnitType.Runway,
+      ].includes(unitType)
+    ) {
       return [];
     }
     const tiles = new Set<TileRef>();
@@ -241,7 +265,15 @@ export class RailNetworkImpl implements RailNetwork {
   }
 
   computeGhostRailPaths(unitType: UnitType, tile: TileRef): TileRef[][] {
-    if (![UnitType.City, UnitType.Port, UnitType.Factory].includes(unitType)) {
+    if (
+      ![
+        UnitType.City,
+        UnitType.Port,
+        UnitType.Factory,
+        UnitType.MilitaryBase,
+        UnitType.Runway,
+      ].includes(unitType)
+    ) {
       return [];
     }
 
@@ -257,19 +289,24 @@ export class RailNetworkImpl implements RailNetwork {
     // range (see CityExecution/PortExecution). A Factory always becomes a
     // station and pulls nearby City/Port/Factory into the network itself, so
     // it needs no pre-existing factory to connect to.
+    const militaryBuilding =
+      unitType === UnitType.MilitaryBase || unitType === UnitType.Runway;
     const buildingFactory = unitType === UnitType.Factory;
     if (
+      !militaryBuilding &&
       !buildingFactory &&
       !this.game.hasUnitNearby(tile, maxRange, UnitType.Factory)
     ) {
       return [];
     }
 
-    const neighbors = this.game.nearbyUnits(tile, maxRange, [
-      UnitType.City,
-      UnitType.Factory,
-      UnitType.Port,
-    ]);
+    const neighbors = this.game.nearbyUnits(
+      tile,
+      maxRange,
+      militaryBuilding
+        ? [UnitType.MilitaryBase, UnitType.Runway]
+        : [UnitType.City, UnitType.Factory, UnitType.Port],
+    );
     neighbors.sort((a, b) => a.distSquared - b.distSquared);
 
     const paths: TileRef[][] = [];
@@ -296,7 +333,7 @@ export class RailNetworkImpl implements RailNetwork {
         );
         if (alreadyReachable) continue;
         targetTile = neighborStation.tile();
-      } else if (buildingFactory) {
+      } else if (buildingFactory || militaryBuilding) {
         targetTile = neighbor.unit.tile();
       } else {
         continue;
@@ -315,10 +352,13 @@ export class RailNetworkImpl implements RailNetwork {
   }
 
   private connectToNearbyStations(station: TrainStation) {
+    const military = this.isMilitaryStation(station);
     const neighbors = this.game.nearbyUnits(
       station.tile(),
       this.game.config().trainStationMaxRange(),
-      [UnitType.City, UnitType.Factory, UnitType.Port],
+      military
+        ? [UnitType.MilitaryBase, UnitType.Runway]
+        : [UnitType.City, UnitType.Factory, UnitType.Port],
     );
 
     const editedClusters = new Set<Cluster>();
@@ -328,6 +368,7 @@ export class RailNetworkImpl implements RailNetwork {
       if (neighbor.unit === station.unit) continue;
       const neighborStation = this._stationManager.findStation(neighbor.unit);
       if (!neighborStation) continue;
+      if (!this.canShareRailNetwork(station, neighborStation)) continue;
 
       const distanceToStation = this.distanceFrom(
         neighborStation,
