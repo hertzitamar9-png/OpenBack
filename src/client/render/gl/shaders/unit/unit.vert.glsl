@@ -53,7 +53,9 @@ void main() {
   );
   scale = mix(scale, mix(1.30, 2.65, launchSmoke), isPlane);
   // Tank is kept smaller than the military-base model (configured ~1.2 scale).
-  scale = mix(scale, mix(0.6, 1.45, tankSelfDestruct), isTank);
+  // The full vertical launch reaches well above the tank; reserve enough quad
+  // space that the fireball never clips at the apex or on its descent.
+  scale = mix(scale, mix(0.6, 2.25, tankSelfDestruct), isTank);
 
   // UNIT_SIZE is in world-space tiles — no zoom division needed.
   // Units scale with the map like territory tiles do.

@@ -128,9 +128,9 @@ void main() {
       float turret = smoothstep(0.16 + aa, 0.16 - aa, length(turretP));
       float barrel = smoothstep(0.045 + aa, 0.045 - aa, abs(turretP.x))
                    * smoothstep(-0.05, 0.39, -turretP.y);
-      float flight = clamp((sequence - 0.14) / 0.78, 0.0, 1.0);
+      float flight = clamp((sequence - 0.10) / 0.88, 0.0, 1.0);
       float bombVisible = selfDestruct
-        * step(0.14, sequence) * (1.0 - step(0.94, sequence));
+        * step(0.10, sequence) * (1.0 - step(0.995, sequence));
       float height = sin(flight * 3.14159265);
       // Cancel the tank quad's heading for the projectile. The vehicle may be
       // facing any direction, but this launch climbs vertically like a MIRV.
@@ -142,14 +142,14 @@ void main() {
       );
       vec2 bombPos = vec2(
         0.0,
-        -0.22 - 0.72 * height
+        -0.22 - 0.92 * height
       );
       float bombRadius = mix(0.095, 0.055, height);
       float bomb = bombVisible * smoothstep(bombRadius + 0.035, bombRadius,
           length(effectP - bombPos));
       float arcDash = step(fract((-effectP.y - 0.18) * 17.0), 0.52);
       tankArcGuide = selfDestruct * (1.0 - smoothstep(0.014, 0.032,
-          abs(effectP.x))) * step(-0.96, effectP.y)
+          abs(effectP.x))) * step(-1.18, effectP.y)
           * step(effectP.y, -0.18) * arcDash * 0.8;
       tankFireball = bomb;
 
