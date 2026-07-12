@@ -43,6 +43,7 @@ void main() {
   float isTank = step(abs(atlasCol - float(TANK_COL)), 0.5);
   float tankSelfDestruct = isTank * step(19.5, vFlags);
   float fuelTrain = step(abs(vFlags - 8.0), 0.1);
+  float tankFireball = step(abs(vFlags - 9.0), 0.1);
   vGlow = isHBomb;
   float scale = mix(1.0, uHBombGlowScale, isHBomb);
   // Aircraft need a readable silhouette at normal map zoom.
@@ -60,6 +61,7 @@ void main() {
   // Fuel trains use an enlarged effect quad for smoke/sparks, but vCellUV
   // maps their actual model back to normal city/factory-train dimensions.
   scale = mix(scale, 1.7, fuelTrain);
+  scale = mix(scale, 2.45, tankFireball);
 
   // UNIT_SIZE is in world-space tiles — no zoom division needed.
   // Units scale with the map like territory tiles do.

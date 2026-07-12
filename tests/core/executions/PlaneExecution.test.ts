@@ -67,6 +67,17 @@ describe("PlaneExecution", () => {
     expect(plane.tile()).toBe(game.ref(5, 5));
   });
 
+  test("uses the legacy structure snap distance for runway and aircraft placement", () => {
+    const nearby = game.ref(17, 5);
+    attacker.conquer(nearby);
+    expect(attacker.buildableUnits(nearby, [UnitType.Runway])[0].canBuild).toBe(
+      game.ref(5, 5),
+    );
+    expect(attacker.buildableUnits(nearby, [UnitType.Plane])[0].canBuild).toBe(
+      game.ref(5, 5),
+    );
+  });
+
   test("refuses to launch beyond the runway's flight radius", () => {
     const troopsBefore = attacker.troops();
     const plane = loadPlane(1_234);

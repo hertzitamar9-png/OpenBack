@@ -1014,7 +1014,7 @@ export class Config {
   }
 
   openBackSnapRadius(): number {
-    return 8;
+    return this.structureMinDist();
   }
 
   openBackVehicleSnapRadius(): number {

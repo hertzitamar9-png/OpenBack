@@ -72,4 +72,12 @@ describe("TankExecution", () => {
     expect(game.manhattanDist(start, tank.tile())).toBe(3);
     expect(Number.isFinite(tank.trajectoryAngle())).toBe(true);
   });
+
+  test("snaps tank placement using the legacy structure distance", () => {
+    const nearby = game.ref(17, 5);
+    attacker.conquer(nearby);
+    expect(attacker.buildableUnits(nearby, [UnitType.Tank])[0].canBuild).toBe(
+      game.ref(5, 5),
+    );
+  });
 });

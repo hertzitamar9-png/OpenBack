@@ -61,7 +61,29 @@ void main() {
   bool inSprite = vCellUV.x >= 0.0 && vCellUV.x <= 1.0 &&
                   vCellUV.y >= 0.0 && vCellUV.y <= 1.0;
   if (inSprite) {
-    if (abs(vFlags - 8.0) < 0.1 && vAtlasCol > 8.5 && vAtlasCol < 11.5) {
+    if (abs(vFlags - 9.0) < 0.1) {
+      vec2 p = vCellUV - 0.5;
+      float d = length(p);
+      float turbulence = 0.5 + 0.5 * sin(
+          atan(p.y, p.x) * 9.0 - uTick * 2.8 + d * 31.0);
+      float outer = 1.0 - smoothstep(0.50, 0.64, d);
+      float shell = 1.0 - smoothstep(0.33 + turbulence * 0.035,
+          0.50 + turbulence * 0.035, d);
+      float core = 1.0 - smoothstep(0.12, 0.27, d);
+      float hotCore = 1.0 - smoothstep(0.045, 0.14, d);
+      float emberRing = (1.0 - smoothstep(0.012, 0.035,
+          abs(d - (0.55 + 0.035 * sin(uTick * 1.9)))))
+          * step(0.64, fract(atan(p.y, p.x) * 4.2 + uTick * 0.7));
+      float alpha = max(outer, emberRing * 0.9);
+      if (alpha < 0.01) discard;
+      vec3 color = vec3(0.28, 0.015, 0.005);
+      color = mix(color, vec3(1.0, 0.10, 0.005), shell);
+      color = mix(color, vec3(1.0, 0.52, 0.015), core);
+      color = mix(color, vec3(1.0, 0.98, 0.72), hotCore);
+      color = mix(color, vec3(1.0, 0.30, 0.01), emberRing);
+      fragColor = vec4(color, alpha);
+      return;
+    } else if (abs(vFlags - 8.0) < 0.1 && vAtlasCol > 8.5 && vAtlasCol < 11.5) {
       vec2 p = vCellUV - 0.5;
       float engine = 1.0 - step(9.5, vAtlasCol);
       float carriage = 1.0 - engine;
@@ -223,16 +245,18 @@ void main() {
   if (abs(vFlags - 8.0) < 0.1 && vAtlasCol < 9.5 && texel.a < 0.01) {
     vec2 p = vCellUV - 0.5;
     float smoke = 0.0;
-    float t = uTick * 0.06;
-    for (int i = 0; i < 5; i++) {
+    float t = uTick * 0.085;
+    for (int i = 0; i < 7; i++) {
       float fi = float(i);
-      float phase = fract(t + fi * 0.21);
-      vec2 center = vec2(sin(uTick * 0.5 + fi * 2.3) * 0.06 * phase,
-                         0.40 + phase * 0.95);
-      float radius = 0.07 + phase * 0.17;
+      float phase = fract(t + fi * 0.143);
+      vec2 center = vec2(
+        sin(uTick * 0.42 + fi * 2.3) * (0.035 + 0.075 * phase),
+        0.37 + phase * 1.05
+      );
+      float radius = 0.065 + phase * 0.19;
       smoke = max(smoke,
         (1.0 - smoothstep(radius * 0.45, radius, length(p - center)))
-          * (1.0 - phase * 0.5));
+          * (1.0 - phase * 0.58));
     }
     if (smoke > 0.01) {
       vec3 smokeColor = mix(vec3(0.40, 0.40, 0.42), vec3(0.64, 0.64, 0.62), smoke);

@@ -117,6 +117,7 @@ const FLAG_FLICKER_UNTARGETABLE = 5;
 const FLAG_LAUNCH_SMOKE = 6;
 const FLAG_LAUNCH_FIRE = 7;
 const FLAG_FUEL_TRAIN = 8;
+const FLAG_TANK_FIREBALL = 9;
 
 /** Atlas column indices for train sub-types (resolved from trainType + loaded) */
 const TRAIN_ENGINE_COL = UNIT_ORDER.indexOf("TrainEngine");
@@ -566,7 +567,7 @@ export class UnitPass {
           );
           if (sequence >= 0.1 && sequence < 0.995) {
             const flight = Math.max(0, Math.min(1, (sequence - 0.1) / 0.88));
-            const height = Math.sin(flight * Math.PI) * 27;
+            const height = Math.sin(flight * Math.PI) * 40;
             // Follow the tank's forward axis so the descending projectile
             // never appears to travel backwards relative to the turret.
             // Keep the shell moving forward throughout its flight. The short
@@ -579,7 +580,7 @@ export class UnitPass {
               projectileY,
               unit.ownerID,
               MIRV_WARHEAD_COL,
-              FLAG_FLICKER,
+              FLAG_TANK_FIREBALL,
               angle,
             );
           }
@@ -644,10 +645,8 @@ export class UnitPass {
     gl.uniformMatrix3fv(this.uCamera, false, cameraMatrix);
     // Smooth procedural flames/smoke between simulation updates instead of
     // visibly jumping at the 10 Hz game-tick rate.
-    const subTick = Math.min(
-      1,
-      (performance.now() - this.lastUnitsUpdateMs) / this.tickIntervalMs,
-    );
+    const subTick =
+      (performance.now() - this.lastUnitsUpdateMs) / this.tickIntervalMs;
     gl.uniform1f(this.uTick, this.frameTick + subTick);
     gl.uniform1f(this.uUnitSize, us.unitSize);
     gl.uniform1f(this.uFlickerSpeed, us.flickerSpeed);
