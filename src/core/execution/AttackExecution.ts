@@ -14,7 +14,10 @@ import {
 import { GameMap, TileRef } from "../game/GameMap";
 import { PseudoRandom } from "../PseudoRandom";
 import { assertNever } from "../Util";
-import { hasPlaneBeachhead } from "./AnnexationExemptions";
+import {
+  hasPlaneBeachhead,
+  isPlaneLandingAnimationTile,
+} from "./AnnexationExemptions";
 import { FlatBinaryHeap } from "./utils/FlatBinaryHeap"; // adjust path if needed
 
 const malusForRetreat = 25;
@@ -298,6 +301,10 @@ export class AttackExecution implements Execution {
 
       const tileToConquer = this.toConquer.dequeue();
       this.attack.removeBorderTile(tileToConquer);
+
+      if (isPlaneLandingAnimationTile(this.mg, tileToConquer)) {
+        continue;
+      }
 
       let onBorder = false;
       const numNeighbors = this.map.neighbors4(tileToConquer, this.nbuf);

@@ -13,7 +13,9 @@ import {
   UT_ATOM_BOMB,
   UT_HYDROGEN_BOMB,
   UT_MIRV_WARHEAD,
+  UT_PLANE,
   UT_SHELL,
+  UT_TANK,
   UT_TRAIN,
   UT_WARSHIP,
 } from "../../../types";
@@ -142,6 +144,7 @@ export const NUKE_EXPLOSION_RADII: Readonly<Record<string, number>> = {
   [UT_ATOM_BOMB]: 70,
   [UT_HYDROGEN_BOMB]: 160,
   [UT_MIRV_WARHEAD]: 70,
+  [UT_PLANE]: 35,
 };
 
 // ---------------------------------------------------------------------------
@@ -380,6 +383,12 @@ export class FxSpritePass {
 
     if (typeName === UT_TRAIN && !unit.reachedTarget) {
       this.pushFx(x, y, FX_MINI_EXPLOSION, now);
+      return;
+    }
+
+    if (typeName === UT_TANK) {
+      this.pushFx(x, y, FX_UNIT_EXPLOSION, now);
+      this.pushFx(x, y, FX_MINI_SMOKE_FIRE, now);
       return;
     }
 

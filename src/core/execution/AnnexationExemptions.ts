@@ -13,6 +13,37 @@ import { TileRef } from "../game/GameMap";
  * expires on its own 15-second timer.
  */
 const planeBeachheads = new WeakMap<Game, Map<number, Map<TileRef, number>>>();
+const planeLandingAnimations = new WeakMap<Game, Map<TileRef, number>>();
+
+/** Reserve the green crash footprint until its visual landing phase finishes. */
+export function registerPlaneLandingAnimation(
+  game: Game,
+  tiles: Iterable<TileRef>,
+  durationTicks: number,
+): void {
+  let protectedTiles = planeLandingAnimations.get(game);
+  if (protectedTiles === undefined) {
+    protectedTiles = new Map();
+    planeLandingAnimations.set(game, protectedTiles);
+  }
+  const expiresAt = game.ticks() + durationTicks;
+  for (const tile of tiles) protectedTiles.set(tile, expiresAt);
+}
+
+/** Prevent land attacks from stealing the temporary green crash animation. */
+export function isPlaneLandingAnimationTile(
+  game: Game,
+  tile: TileRef,
+): boolean {
+  const protectedTiles = planeLandingAnimations.get(game);
+  const expiresAt = protectedTiles?.get(tile);
+  if (expiresAt === undefined) return false;
+  if (game.ticks() >= expiresAt) {
+    protectedTiles!.delete(tile);
+    return false;
+  }
+  return true;
+}
 
 export function registerPlaneBeachhead(
   game: Game,

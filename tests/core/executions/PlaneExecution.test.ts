@@ -124,6 +124,10 @@ describe("PlaneExecution", () => {
 
     expect(game.manhattanDist(start, firstMovedTile)).toBeGreaterThanOrEqual(4);
     expect(plane.isActive()).toBe(false);
+    expect(game.hasFallout(target)).toBe(true);
+    expect(game.owner(target)).not.toBe(attacker);
+
+    for (let i = 0; i < 11; i++) game.executeNextTick();
     expect(game.owner(target)).toBe(attacker);
     expect(game.owner(nearbyNeutral)).toBe(attacker);
     expect(attacker.hasLandAnnexationProtection()).toBe(true);
@@ -146,6 +150,7 @@ describe("PlaneExecution", () => {
     for (let i = 0; i < 200 && plane.isActive(); i++) {
       game.executeNextTick();
     }
+    for (let i = 0; i < 11; i++) game.executeNextTick();
     expect(game.owner(target)).toBe(attacker);
 
     // More than two annexation scans: the beachhead must remain until it is

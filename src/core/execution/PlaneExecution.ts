@@ -12,12 +12,16 @@ import { TileRef } from "../game/GameMap";
 import { UniversalPathFinding } from "../pathfinding/PathFinder";
 import type { SteppingPathFinder } from "../pathfinding/types";
 import { PathStatus } from "../pathfinding/types";
-import { registerPlaneBeachhead } from "./AnnexationExemptions";
+import {
+  registerPlaneBeachhead,
+  registerPlaneLandingAnimation,
+} from "./AnnexationExemptions";
 import { SAMMissileExecution } from "./SAMMissileExecution";
 
 const LOADING_TICKS = 5 * 10;
 const DEPLOYMENT_WARNING_TICKS = 10 * 10;
 const LANDING_PROTECTION_TICKS = 15 * 10;
+const CRASH_ANIMATION_TICKS = 10;
 
 /** Two-stage aircraft lifecycle: build/load on a runway, then launch later. */
 export class PlaneExecution implements Execution {
@@ -33,6 +37,8 @@ export class PlaneExecution implements Execution {
   private mode: "loading" | "launching" | null = null;
   private launched = false;
   private interceptionStarted = false;
+  private pendingCapture: TileRef[] | null = null;
+  private crashAnimationTicks = 0;
 
   constructor(
     private player: Player,
@@ -114,7 +120,16 @@ export class PlaneExecution implements Execution {
   }
 
   tick(ticks: number): void {
-    if (!this.active || this.plane === null) {
+    if (!this.active) {
+      this.active = false;
+      return;
+    }
+    if (this.pendingCapture !== null) {
+      if (this.crashAnimationTicks-- > 0) return;
+      this.finishLandingCapture();
+      return;
+    }
+    if (this.plane === null) {
       this.active = false;
       return;
     }
@@ -301,16 +316,31 @@ export class PlaneExecution implements Execution {
       plane.setReachedTarget();
       if (plane.isActive()) plane.delete(false);
     }
-    this.active = false;
-    if (!deployTroops || !this.game.isLand(tile)) return;
-    // Capture the cleared footprint exactly once. Starting a second
-    // AttackExecution here caused the freshly captured crater to be processed
-    // again on following ticks, producing a visible ownership snap/flicker.
+    if (!deployTroops || !this.game.isLand(tile)) {
+      this.active = false;
+      return;
+    }
+    // Leave the cleared footprint glowing green briefly so every client sees
+    // the crash before ownership appears. These tiles are reserved during the
+    // visual phase, preventing another player from stealing the animation.
+    this.pendingCapture = capturableLand;
+    this.crashAnimationTicks = CRASH_ANIMATION_TICKS;
+    registerPlaneLandingAnimation(
+      this.game,
+      capturableLand,
+      CRASH_ANIMATION_TICKS + 1,
+    );
+  }
+
+  private finishLandingCapture(): void {
+    const capturableLand = this.pendingCapture ?? [];
     for (const impactedTile of capturableLand) {
-      this.player.conquer(impactedTile);
+      if (!this.game.hasOwner(impactedTile)) this.player.conquer(impactedTile);
     }
     this.player.grantLandAnnexationProtection(LANDING_PROTECTION_TICKS);
     registerPlaneBeachhead(this.game, this.player, capturableLand);
+    this.pendingCapture = null;
+    this.active = false;
   }
 
   private angleTo(from: TileRef, to: TileRef): number {
