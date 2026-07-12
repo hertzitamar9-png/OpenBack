@@ -80,4 +80,24 @@ describe("TankExecution", () => {
       game.ref(5, 5),
     );
   });
+
+  test("a ready tank does not bypass affordability when buying another tank", () => {
+    const secondBaseTile = game.ref(12, 5);
+    attacker.conquer(secondBaseTile);
+    attacker.buildUnit(UnitType.MilitaryBase, secondBaseTile, {});
+
+    game.addExecution(new TankExecution(attacker, game.ref(5, 5)));
+    game.executeNextTick();
+    attacker.removeGold(attacker.gold());
+
+    const purchase = attacker.buildableUnits(secondBaseTile, [
+      UnitType.Tank,
+    ])[0];
+    expect(purchase.cost).toBe(750_000n);
+    expect(purchase.canBuild).toBe(false);
+
+    const launch = attacker.buildableUnits(game.ref(18, 5), [UnitType.Tank])[0];
+    expect(launch.cost).toBe(0n);
+    expect(launch.canBuild).toBe(game.ref(5, 5));
+  });
 });

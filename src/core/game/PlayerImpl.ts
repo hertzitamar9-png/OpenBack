@@ -1327,13 +1327,7 @@ export class PlayerImpl implements Player {
       let canBuild: TileRef | false = false;
 
       const launchingReadyVehicle =
-        (u === UnitType.Plane || u === UnitType.Tank) &&
-        this.units(u).some(
-          (vehicle) =>
-            vehicle.isActive() &&
-            !vehicle.isUnderConstruction() &&
-            vehicle.isLoaded() === true,
-        );
+        tile !== null && this.canLaunchReadyVehicle(u, tile);
       if (
         tile !== null &&
         (launchingReadyVehicle || this.canBuildUnitType(u, cost)) &&
@@ -1352,12 +1346,13 @@ export class PlayerImpl implements Player {
       }
 
       const buildNew = canBuild !== false && canUpgrade === false;
+      const effectiveCost = launchingReadyVehicle ? 0n : cost;
 
       result[i] = {
         type: u,
         canBuild,
         canUpgrade,
-        cost,
+        cost: effectiveCost,
         overlappingRailroads: buildNew
           ? rail.overlappingRailroads(u, canBuild as TileRef)
           : [],
@@ -1375,19 +1370,29 @@ export class PlayerImpl implements Player {
     targetTile: TileRef,
     validTiles: TileRef[] | null = null,
   ): TileRef | false {
-    const hasReadyVehicle =
-      (unitType === UnitType.Plane || unitType === UnitType.Tank) &&
-      this.units(unitType).some(
-        (vehicle) =>
-          vehicle.isActive() &&
-          !vehicle.isUnderConstruction() &&
-          vehicle.isLoaded() === true,
-      );
+    const hasReadyVehicle = this.canLaunchReadyVehicle(unitType, targetTile);
     if (!hasReadyVehicle && !this.canBuildUnitType(unitType)) {
       return false;
     }
 
     return this.canSpawnUnitType(unitType, targetTile, validTiles);
+  }
+
+  private canLaunchReadyVehicle(
+    unitType: UnitType,
+    targetTile: TileRef,
+  ): boolean {
+    if (unitType !== UnitType.Plane && unitType !== UnitType.Tank) return false;
+    if (!this.mg.hasOwner(targetTile)) return false;
+    // Owned territory means buying another vehicle, so affordability applies.
+    // Only targeting another player launches a previously purchased vehicle.
+    if (this.mg.owner(targetTile) === this) return false;
+    return this.units(unitType).some(
+      (vehicle) =>
+        vehicle.isActive() &&
+        !vehicle.isUnderConstruction() &&
+        vehicle.isLoaded() === true,
+    );
   }
 
   private canSpawnUnitType(
