@@ -469,7 +469,7 @@ export class Config {
         info = {
           cost: this.costWrapper(
             (numUnits: number) =>
-              numUnits === 0 ? 350_000 : numUnits === 1 ? 700_000 : 1_000_000,
+              numUnits === 0 ? 250_000 : numUnits === 1 ? 500_000 : 750_000,
             UnitType.Runway,
           ),
           constructionDuration: this.instantBuild() ? 0 : 15 * 10,
@@ -502,7 +502,7 @@ export class Config {
         info = {
           cost: this.costWrapper(
             (numUnits: number) =>
-              numUnits === 0 ? 275_000 : numUnits === 1 ? 550_000 : 1_000_000,
+              numUnits === 0 ? 200_000 : numUnits === 1 ? 400_000 : 750_000,
             UnitType.MilitaryBase,
           ),
           constructionDuration: this.instantBuild() ? 0 : 15 * 10,
@@ -521,7 +521,7 @@ export class Config {
         info = {
           cost: this.costWrapper(
             (numUnits: number) =>
-              numUnits === 0 ? 200_000 : numUnits === 1 ? 400_000 : 800_000,
+              numUnits === 0 ? 100_000 : numUnits === 1 ? 200_000 : 400_000,
             UnitType.TankMine,
           ),
           constructionDuration: this.instantBuild() ? 0 : 5 * 10,

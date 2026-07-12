@@ -3,12 +3,12 @@ import { setup } from "../util/Setup";
 
 describe("OpenBack added-unit pricing", () => {
   test.each([
-    [UnitType.Runway, [350_000n, 700_000n, 1_000_000n]],
+    [UnitType.Runway, [250_000n, 500_000n, 750_000n]],
     [UnitType.Plane, [1_000_000n, 1_500_000n, 2_000_000n]],
     [UnitType.MANPAD, [300_000n, 600_000n, 1_000_000n]],
-    [UnitType.MilitaryBase, [275_000n, 550_000n, 1_000_000n]],
+    [UnitType.MilitaryBase, [200_000n, 400_000n, 750_000n]],
     [UnitType.Tank, [500_000n, 750_000n, 1_000_000n]],
-    [UnitType.TankMine, [200_000n, 400_000n, 800_000n]],
+    [UnitType.TankMine, [100_000n, 200_000n, 400_000n]],
   ] as const)(
     "%s reaches its maximum price after two cheaper purchases",
     async (type, prices) => {

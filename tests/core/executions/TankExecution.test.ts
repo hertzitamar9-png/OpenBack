@@ -100,4 +100,22 @@ describe("TankExecution", () => {
     expect(launch.cost).toBe(0n);
     expect(launch.canBuild).toBe(game.ref(5, 5));
   });
+
+  test("driving into an enemy tank mine consumes the mine and destroys the tank", () => {
+    game.addExecution(new TankExecution(attacker, game.ref(5, 5)));
+    game.executeNextTick();
+    const tank = attacker.units(UnitType.Tank)[0];
+    const mine = defender.buildUnit(UnitType.TankMine, game.ref(10, 5), {});
+
+    game.addExecution(new TankExecution(attacker, game.ref(18, 5)));
+    for (let i = 0; i < 10 && mine.isActive(); i++) game.executeNextTick();
+
+    expect(mine.isActive()).toBe(false);
+    expect(tank.isActive()).toBe(true);
+    expect(tank.launchPhase()).toBe(20);
+
+    for (let i = 0; i < 32 && tank.isActive(); i++) game.executeNextTick();
+    expect(tank.isActive()).toBe(false);
+    expect(tank.tile()).not.toBe(game.ref(18, 5));
+  });
 });
