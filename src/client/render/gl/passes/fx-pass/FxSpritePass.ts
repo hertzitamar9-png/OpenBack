@@ -365,7 +365,7 @@ export class FxSpritePass {
       if (unit.reachedTarget) {
         this.spawnNukeSprites(x, y, nukeRadius, now, unit.pos);
         if (typeName === UT_PLANE) {
-          this.spawnPlaneCrashFire(x, y, now, unit.pos);
+          this.spawnPlaneCrashFire(x, y, now, unit.unitId ?? unit.pos);
         }
       } else {
         this.pushFx(x, y, FX_SAM_EXPLOSION, now);
@@ -406,13 +406,19 @@ export class FxSpritePass {
     now: number,
     seed: number,
   ): void {
-    for (let i = 0; i < 7; i++) {
+    // Exactly three compact, deterministic-random burn sites per crash. Their
+    // offsets change with the plane's impact tile, so repeated crashes never
+    // leave the same pattern or cover the whole landing area in smoke.
+    for (let i = 0; i < 3; i++) {
       const angle = seededRandom(seed * 31 + i) * Math.PI * 2;
-      const distance = seededRandom(seed * 67 + i) * 8;
+      const distance = 2 + seededRandom(seed * 67 + i) * 5;
+      const fireX = x + Math.cos(angle) * distance;
+      const fireY = y + Math.sin(angle) * distance;
+      this.pushFx(fireX, fireY, FX_MINI_EXPLOSION, now);
       this.activeFx.push({
-        x: x + Math.cos(angle) * distance,
-        y: y + Math.sin(angle) * distance,
-        fxType: i % 3 === 0 ? FX_MINI_BIG_SMOKE : FX_MINI_SMOKE_FIRE,
+        x: fireX,
+        y: fireY,
+        fxType: FX_MINI_SMOKE_FIRE,
         startMs: now,
         lifetimeMs: 5_000,
         fadeIn: 0,

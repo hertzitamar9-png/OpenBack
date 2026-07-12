@@ -627,6 +627,7 @@ export class GameView implements GameMap {
     for (const u of gu.updates[GameUpdateType.Unit] ?? []) {
       if (u.isActive) continue;
       ev.deadUnits.push({
+        unitId: u.id,
         unitType: u.unitType,
         pos: u.pos,
         reachedTarget: u.reachedTarget,

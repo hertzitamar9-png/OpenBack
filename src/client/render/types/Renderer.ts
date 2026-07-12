@@ -108,6 +108,7 @@ export interface UnitState {
 
 /** Minimal dead-unit data needed by the FX pass. */
 export interface DeadUnitFx {
+  unitId?: number;
   unitType: string;
   pos: number;
   reachedTarget: boolean;

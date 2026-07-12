@@ -701,21 +701,9 @@ export class BuildPreviewController implements Controller {
     this.mousePos.y = e.y;
     const currentTile = this.currentCursorTileRef();
     if (this.ghostUnit !== null && currentTile !== this.validatedTileRef) {
-      // Invalidate immediately on movement so a white valid cursor can never
-      // linger over invalid land while the worker checks the new position.
-      this.ghostUnit.buildableUnit.canBuild = false;
-      this.ghostUnit.buildableUnit.canUpgrade = false;
-      if (this.lastGhostData !== null) {
-        this.lastGhostData = {
-          ...this.lastGhostData,
-          canBuild: false,
-          canUpgrade: false,
-          snapTargetTile: null,
-          tileX: currentTile === undefined ? 0 : this.game.x(currentTile),
-          tileY: currentTile === undefined ? 0 : this.game.y(currentTile),
-        };
-        this.view.updateGhostPreview(this.lastGhostData);
-      }
+      // Keep the last confirmed white/grey state while the worker validates
+      // the new tile. The single-flight query below guarantees an old reply
+      // cannot win, so there is no reason to flash grey between valid tiles.
       this.lastGhostQueryAt = 0;
     }
     this.updateHoveredSourceRange();

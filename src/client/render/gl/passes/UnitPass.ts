@@ -556,7 +556,7 @@ export class UnitPass {
           );
           if (sequence >= 0.1 && sequence < 0.995) {
             const flight = Math.max(0, Math.min(1, (sequence - 0.1) / 0.88));
-            const height = Math.sin(flight * Math.PI) * 22;
+            const height = Math.sin(flight * Math.PI) * 32;
             const projectileY = y - height;
             this.emitMissile(
               x,
