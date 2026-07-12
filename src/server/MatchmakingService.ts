@@ -23,11 +23,6 @@ interface QueueEntry {
   joinedAt: number;
 }
 
-// Elo tolerance for a fresh queue entry, widening with wait time so nobody
-// waits forever when the pool is thin.
-const BASE_ELO_TOLERANCE = 100;
-const ELO_TOLERANCE_GROWTH_PER_SEC = 40;
-
 export class MatchmakingService {
   private readonly wss = new WebSocketServer({ noServer: true });
   private readonly queue: QueueEntry[] = [];
@@ -120,27 +115,24 @@ export class MatchmakingService {
     return this.queue.splice(i, 1)[0];
   }
 
-  // Oldest-waiting player is matched first with their closest eligible
-  // opponent; tolerance widens with that player's wait time.
+  // Match the oldest waiting player immediately with the closest-rated live
+  // opponent. Elo still chooses the fairest available opponent, but it never
+  // prevents the only two online players from playing each other.
   private findMatch(): [QueueEntry, QueueEntry] | null {
-    const byAge = [...this.queue].sort((a, b) => a.joinedAt - b.joinedAt);
-    for (const a of byAge) {
-      const waitSec = (Date.now() - a.joinedAt) / 1000;
-      const tolerance =
-        BASE_ELO_TOLERANCE + ELO_TOLERANCE_GROWTH_PER_SEC * waitSec;
-      let best: QueueEntry | null = null;
-      let bestDiff = Infinity;
-      for (const b of this.queue) {
-        if (b === a) continue;
-        const diff = Math.abs(a.elo - b.elo);
-        if (diff <= tolerance && diff < bestDiff) {
-          best = b;
-          bestDiff = diff;
-        }
-      }
-      if (best) return [a, best];
-    }
-    return null;
+    const live = this.queue
+      .filter((entry) => entry.ws.readyState === WebSocket.OPEN)
+      .sort((a, b) => a.joinedAt - b.joinedAt);
+    if (live.length < 2) return null;
+
+    const oldest = live[0];
+    const closest = live
+      .slice(1)
+      .sort(
+        (a, b) =>
+          Math.abs(oldest.elo - a.elo) - Math.abs(oldest.elo - b.elo) ||
+          a.joinedAt - b.joinedAt,
+      )[0];
+    return [oldest, closest];
   }
 
   // Worker checkin. A worker offers a gameId it owns; if two compatible players

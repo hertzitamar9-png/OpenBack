@@ -111,4 +111,43 @@ describe("MatchmakingService", () => {
     ).toHaveLength(2);
     expect(sockets.every((ws) => ws.close.mock.calls.length === 1)).toBe(true);
   });
+
+  it("immediately pairs the only two players regardless of Elo difference", () => {
+    const socket = () => ({
+      readyState: WebSocket.OPEN,
+      send: vi.fn(),
+      close: vi.fn(),
+    });
+    const low = socket();
+    const high = socket();
+    const service = new MatchmakingService({ info: vi.fn() } as never);
+    const queue = (
+      service as unknown as {
+        queue: Array<{
+          publicId: string;
+          elo: number;
+          ws: typeof low;
+          joinedAt: number;
+        }>;
+      }
+    ).queue;
+    queue.push(
+      { publicId: "low", elo: 100, ws: low, joinedAt: Date.now() },
+      { publicId: "high", elo: 3000, ws: high, joinedAt: Date.now() + 1 },
+    );
+
+    const json = vi.fn();
+    service.handleCheckin(
+      {
+        header: () => "matchmaking-test-key",
+        body: { gameId: "instant-game" },
+      } as never,
+      { json, status: vi.fn() } as never,
+    );
+
+    expect(json).toHaveBeenCalledWith({ assignment: true });
+    expect(low.send).toHaveBeenCalledOnce();
+    expect(high.send).toHaveBeenCalledOnce();
+    expect(queue).toHaveLength(0);
+  });
 });

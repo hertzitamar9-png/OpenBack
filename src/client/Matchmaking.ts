@@ -14,7 +14,7 @@ import { translateText } from "./Utils";
 @customElement("matchmaking-modal")
 export class MatchmakingModal extends BaseModal {
   private gameCheckInterval: ReturnType<typeof setInterval> | null = null;
-  private connectTimeout: ReturnType<typeof setTimeout> | null = null;
+  private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   @state() private connected = false;
   @state() private socket: WebSocket | null = null;
   @state() private gameID: string | null = null;
@@ -35,6 +35,12 @@ export class MatchmakingModal extends BaseModal {
       onBack: () => this.close(),
       ariaLabel: translateText("common.back"),
     });
+  }
+
+  // Backdrop clicks and Escape must not silently remove a player from the
+  // ranked queue. The visible back arrow remains the intentional cancel path.
+  public confirmBeforeClose(): boolean {
+    return false;
   }
 
   protected renderBody() {
@@ -71,45 +77,45 @@ export class MatchmakingModal extends BaseModal {
   }
 
   private async connect() {
-    this.socket = new WebSocket(
-      `${ClientEnv.jwtIssuer()}/matchmaking/join?instance_id=${encodeURIComponent(ClientEnv.instanceId())}`,
-    );
-    this.socket.onopen = async () => {
+    if (
+      this.socket?.readyState === WebSocket.OPEN ||
+      this.socket?.readyState === WebSocket.CONNECTING
+    ) {
+      return;
+    }
+    const endpoint = new URL("/matchmaking/join", ClientEnv.jwtIssuer());
+    endpoint.protocol = endpoint.protocol === "https:" ? "wss:" : "ws:";
+    endpoint.searchParams.set("instance_id", ClientEnv.instanceId());
+    const socket = new WebSocket(endpoint);
+    this.socket = socket;
+    socket.onopen = async () => {
       console.log("Connected to matchmaking server");
-      this.connectTimeout = setTimeout(async () => {
-        if (this.socket?.readyState !== WebSocket.OPEN) {
-          console.warn("[Matchmaking] socket not ready");
-          return;
-        }
-        // Set a delay so the user can see the "connecting" message,
-        // otherwise the "searching" message will be shown immediately.
-        // Also wait so people who back out immediately aren't added
-        // to the matchmaking queue.
-        this.socket.send(
-          JSON.stringify({
-            type: "join",
-            jwt: await getPlayToken(),
-          }),
-        );
-        this.connected = true;
-        this.requestUpdate();
-      }, 2000);
+      const jwt = await getPlayToken();
+      if (!this.isModalOpen || socket.readyState !== WebSocket.OPEN) return;
+      socket.send(JSON.stringify({ type: "join", jwt }));
+      this.connected = true;
+      this.requestUpdate();
     };
-    this.socket.onmessage = (event) => {
+    socket.onmessage = (event) => {
       console.log(event.data);
       const data = JSON.parse(event.data);
       if (data.type === "match-assignment") {
-        this.socket?.close();
+        socket.close();
         console.log(`matchmaking: got game ID: ${data.gameId}`);
         this.gameID = data.gameId;
         this.gameCheckInterval = setInterval(() => this.checkGame(), 1000);
       }
     };
-    this.socket.onerror = (event: Event) => {
+    socket.onerror = (event: Event) => {
       console.error("WebSocket error occurred:", event);
     };
-    this.socket.onclose = () => {
+    socket.onclose = () => {
       console.log("Matchmaking server closed connection");
+      if (this.socket === socket) this.socket = null;
+      if (this.isModalOpen && this.gameID === null) {
+        this.connected = false;
+        this.reconnectTimeout = setTimeout(() => this.connect(), 1000);
+      }
     };
   }
 
@@ -160,9 +166,9 @@ export class MatchmakingModal extends BaseModal {
   protected onClose(): void {
     this.connected = false;
     this.socket?.close();
-    if (this.connectTimeout) {
-      clearTimeout(this.connectTimeout);
-      this.connectTimeout = null;
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
     }
     if (this.gameCheckInterval) {
       clearInterval(this.gameCheckInterval);
