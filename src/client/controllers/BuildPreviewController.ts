@@ -705,6 +705,10 @@ export class BuildPreviewController implements Controller {
       // the new tile. The single-flight query below guarantees an old reply
       // cannot win, so there is no reason to flash grey between valid tiles.
       this.lastGhostQueryAt = 0;
+      // Mouse movement is much more frequent than the simulation tick. Start
+      // validation now so re-entering a vehicle radius updates immediately.
+      // The in-flight guard and stale-tile check keep the colour stable.
+      this.renderGhost();
     }
     this.updateHoveredSourceRange();
   }

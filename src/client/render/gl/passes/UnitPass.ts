@@ -90,7 +90,6 @@ const TANK_COL = ATLAS_COLS + 1;
 
 /** Atlas column of the hydrogen bomb — drives the GPU glow halo. */
 const HYDROGEN_BOMB_COL = UNIT_ORDER.indexOf(UT_HYDROGEN_BOMB);
-const MIRV_COL = UNIT_ORDER.indexOf(UT_MIRV);
 
 // ---------------------------------------------------------------------------
 // Instance data layout
@@ -123,6 +122,7 @@ const FLAG_FUEL_TRAIN = 8;
 const TRAIN_ENGINE_COL = UNIT_ORDER.indexOf("TrainEngine");
 const TRAIN_CARRIAGE_COL = UNIT_ORDER.indexOf("TrainCarriage");
 const TRAIN_CARRIAGE_LOADED_COL = UNIT_ORDER.indexOf("TrainCarriageLoaded");
+const MIRV_WARHEAD_COL = UNIT_ORDER.indexOf(UT_MIRV_WARHEAD);
 
 /** Nuke + warhead types — rendered with flickering hot colors */
 const FLICKER_TYPES: ReadonlySet<string> = new Set([
@@ -566,24 +566,21 @@ export class UnitPass {
           );
           if (sequence >= 0.1 && sequence < 0.995) {
             const flight = Math.max(0, Math.min(1, (sequence - 0.1) / 0.88));
-            const height = Math.sin(flight * Math.PI) * 32;
-            const projectileY = y - height;
+            const height = Math.sin(flight * Math.PI) * 27;
+            // Follow the tank's forward axis so the descending projectile
+            // never appears to travel backwards relative to the turret.
+            // Keep the shell moving forward throughout its flight. The short
+            // travel leaves the impact inside the tank's explosion footprint.
+            const forwardDistance = flight * 1.75;
+            const projectileX = x + Math.sin(angle) * forwardDistance;
+            const projectileY = y - Math.cos(angle) * forwardDistance - height;
             this.emitMissile(
-              x,
+              projectileX,
               projectileY,
               unit.ownerID,
-              MIRV_COL,
+              MIRV_WARHEAD_COL,
               FLAG_FLICKER,
-              0,
-            );
-            // Short fiery exhaust underneath the rising/falling projectile.
-            this.emitMissile(
-              x,
-              projectileY + 1.2,
-              unit.ownerID,
-              MIRV_COL,
-              FLAG_FLICKER,
-              0,
+              angle,
             );
           }
         }

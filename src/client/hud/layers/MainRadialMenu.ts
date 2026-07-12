@@ -33,6 +33,10 @@ export class MainRadialMenu extends LitElement implements Controller {
   private chatIntegration: ChatIntegration;
 
   private clickedTile: TileRef | null = null;
+  private actionQueryInFlight = false;
+  private refreshRequested = false;
+  private pendingScreenPosition: { x: number; y: number } | null = null;
+  private queryGeneration = 0;
 
   getTickIntervalMs() {
     return 500;
@@ -91,18 +95,8 @@ export class MainRadialMenu extends LitElement implements Controller {
         return;
       }
       this.clickedTile = this.game.ref(worldCoords.x, worldCoords.y);
-      this.game
-        .myPlayer()!
-        .actions(this.clickedTile)
-        .then((actions) => {
-          this.updatePlayerActions(
-            this.game.myPlayer()!,
-            actions,
-            this.clickedTile!,
-            event.x,
-            event.y,
-          );
-        });
+      this.queryGeneration++;
+      this.requestActions(this.clickedTile, event.x, event.y);
     });
   }
 
@@ -161,19 +155,59 @@ export class MainRadialMenu extends LitElement implements Controller {
 
   async tick() {
     if (!this.radialMenu.isMenuVisible() || this.clickedTile === null) return;
-    this.game
-      .myPlayer()!
-      .actions(this.clickedTile)
+    this.requestActions(this.clickedTile);
+  }
+
+  private requestActions(
+    tile: TileRef,
+    screenX: number | null = null,
+    screenY: number | null = null,
+  ): void {
+    if (this.actionQueryInFlight) {
+      this.refreshRequested = true;
+      if (screenX !== null && screenY !== null) {
+        this.pendingScreenPosition = { x: screenX, y: screenY };
+      }
+      return;
+    }
+    const player = this.game.myPlayer();
+    if (!player) return;
+    const generation = this.queryGeneration;
+    this.actionQueryInFlight = true;
+    player
+      .actions(tile)
       .then((actions) => {
-        this.updatePlayerActions(
-          this.game.myPlayer()!,
+        if (generation !== this.queryGeneration || this.clickedTile !== tile) {
+          return;
+        }
+        return this.updatePlayerActions(
+          player,
           actions,
-          this.clickedTile!,
+          tile,
+          screenX,
+          screenY,
         );
+      })
+      .catch((error) => console.error("Failed to open action menu", error))
+      .finally(() => {
+        this.actionQueryInFlight = false;
+        if (this.refreshRequested && this.clickedTile !== null) {
+          this.refreshRequested = false;
+          const position = this.pendingScreenPosition;
+          this.pendingScreenPosition = null;
+          this.requestActions(
+            this.clickedTile,
+            position?.x ?? null,
+            position?.y ?? null,
+          );
+        }
       });
   }
 
   closeMenu() {
+    this.queryGeneration++;
+    this.refreshRequested = false;
+    this.pendingScreenPosition = null;
     if (this.radialMenu.isMenuVisible()) {
       this.radialMenu.hideRadialMenu();
     }

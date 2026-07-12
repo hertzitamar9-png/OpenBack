@@ -14,7 +14,6 @@ import { MapRenderer } from "../render/gl";
 import { TransformHandler } from "../TransformHandler";
 import { UIState } from "../UIState";
 import { GameView } from "../view";
-import { FrameProfiler } from "./FrameProfiler";
 import { ActionableEvents } from "./layers/ActionableEvents";
 import { AlertFrame } from "./layers/AlertFrame";
 import { AttacksDisplay } from "./layers/AttacksDisplay";
@@ -33,7 +32,6 @@ import { InGamePromo } from "./layers/InGamePromo";
 import { Leaderboard } from "./layers/Leaderboard";
 import { MainRadialMenu } from "./layers/MainRadialMenu";
 import { MultiTabModal } from "./layers/MultiTabModal";
-import { PerformanceOverlay } from "./layers/PerformanceOverlay";
 import { PlayerInfoOverlay } from "./layers/PlayerInfoOverlay";
 import { PlayerPanel } from "./layers/PlayerPanel";
 import { ReplayPanel } from "./layers/ReplayPanel";
@@ -245,15 +243,6 @@ export function createRenderer(
   }
   headsUpMessage.game = game;
 
-  const performanceOverlay = document.querySelector(
-    "performance-overlay",
-  ) as PerformanceOverlay;
-  if (!(performanceOverlay instanceof PerformanceOverlay)) {
-    console.error("performance overlay not found");
-  }
-  performanceOverlay.eventBus = eventBus;
-  performanceOverlay.userSettings = userSettings;
-
   const alertFrame = document.querySelector("alert-frame") as AlertFrame;
   if (!(alertFrame instanceof AlertFrame)) {
     console.error("alert frame not found");
@@ -331,15 +320,9 @@ export function createRenderer(
     multiTabModal,
     inGamePromo,
     alertFrame,
-    performanceOverlay,
   ];
 
-  return new GameRenderer(
-    transformHandler,
-    uiState,
-    layers,
-    performanceOverlay,
-  );
+  return new GameRenderer(transformHandler, uiState, layers);
 }
 
 export class GameRenderer {
@@ -349,7 +332,6 @@ export class GameRenderer {
     public transformHandler: TransformHandler,
     public uiState: UIState,
     private layers: Controller[],
-    private performanceOverlay: PerformanceOverlay,
   ) {}
 
   initialize() {
@@ -369,10 +351,6 @@ export class GameRenderer {
 
   tick() {
     const nowMs = performance.now();
-    const shouldProfileTick = FrameProfiler.isEnabled();
-
-    const tickLayerDurations: Record<string, number> = {};
-
     for (const layer of this.layers) {
       if (!layer.tick) {
         continue;
@@ -391,17 +369,7 @@ export class GameRenderer {
       state.lastTickAtMs = nowMs;
       this.layerTickState.set(layer, state);
 
-      const tickStart = shouldProfileTick ? performance.now() : 0;
       layer.tick();
-      if (shouldProfileTick && tickStart !== 0) {
-        const duration = performance.now() - tickStart;
-        const label = layer.constructor?.name ?? "UnknownLayer";
-        tickLayerDurations[label] = (tickLayerDurations[label] ?? 0) + duration;
-      }
-    }
-
-    if (shouldProfileTick) {
-      this.performanceOverlay.updateTickLayerMetrics(tickLayerDurations);
     }
   }
 }

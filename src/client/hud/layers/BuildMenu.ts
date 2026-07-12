@@ -180,6 +180,13 @@ export class BuildMenu extends LitElement implements Controller {
   public playerBuildables: BuildableUnit[] | null = null;
   private filteredBuildTable: BuildItemDisplay[][] = buildTable;
   public transformHandler: TransformHandler;
+  private refreshInFlight = false;
+  private refreshRequested = false;
+  private refreshGeneration = 0;
+
+  getTickIntervalMs() {
+    return 500;
+  }
 
   init() {
     this.eventBus.on(ShowBuildMenuEvent, (e) => {
@@ -486,9 +493,11 @@ export class BuildMenu extends LitElement implements Controller {
                     @click=${() =>
                       this.sendBuildOrUpgrade(buildableUnit, this.clickedTile)}
                     ?disabled=${!enabled}
-                    title=${!enabled
-                      ? translateText("build_menu.not_enough_money")
-                      : ""}
+                    title=${
+                      !enabled
+                        ? translateText("build_menu.not_enough_money")
+                        : ""
+                    }
                   >
                     <img
                       src=${item.icon}
@@ -500,8 +509,9 @@ export class BuildMenu extends LitElement implements Controller {
                       >${item.key && translateText(item.key)}</span
                     >
                     <span class="build-description"
-                      >${item.description &&
-                      translateText(item.description)}</span
+                      >${
+                        item.description && translateText(item.description)
+                      }</span
                     >
                     <span class="build-cost" translate="no">
                       ${renderNumber(
@@ -515,11 +525,13 @@ export class BuildMenu extends LitElement implements Controller {
                         class="align-middle"
                       />
                     </span>
-                    ${item.countable
-                      ? html`<div class="build-count-chip">
-                          <span class="build-count">${this.count(item)}</span>
-                        </div>`
-                      : ""}
+                    ${
+                      item.countable
+                        ? html`<div class="build-count-chip">
+                            <span class="build-count">${this.count(item)}</span>
+                          </div>`
+                        : ""
+                    }
                   </button>
                 `;
               })}
@@ -532,6 +544,7 @@ export class BuildMenu extends LitElement implements Controller {
 
   hideMenu() {
     this._hidden = true;
+    this.refreshGeneration++;
     this.requestUpdate();
   }
 
@@ -542,16 +555,33 @@ export class BuildMenu extends LitElement implements Controller {
   }
 
   private refresh() {
-    this.game
-      .myPlayer()
-      ?.buildables(this.clickedTile, BuildMenus.types)
-      .then((buildables) => {
-        this.playerBuildables = buildables;
-        this.requestUpdate();
-      });
-
     // remove disabled buildings from the buildtable
     this.filteredBuildTable = this.getBuildableUnits();
+    if (this.refreshInFlight) {
+      this.refreshRequested = true;
+      return;
+    }
+    const player = this.game.myPlayer();
+    if (!player) return;
+    const tile = this.clickedTile;
+    const generation = this.refreshGeneration;
+    this.refreshInFlight = true;
+    player
+      .buildables(tile, BuildMenus.types)
+      .then((buildables) => {
+        if (!this._hidden && generation === this.refreshGeneration) {
+          this.playerBuildables = buildables;
+          this.requestUpdate();
+        }
+      })
+      .catch((error) => console.error("Failed to refresh build menu", error))
+      .finally(() => {
+        this.refreshInFlight = false;
+        if (this.refreshRequested && !this._hidden) {
+          this.refreshRequested = false;
+          this.refresh();
+        }
+      });
   }
 
   private getBuildableUnits(): BuildItemDisplay[][] {
