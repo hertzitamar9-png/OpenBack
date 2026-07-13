@@ -23,6 +23,7 @@ export interface StationManager {
 
 export class StationManagerImpl implements StationManager {
   private stations: Set<TrainStation> = new Set();
+  private stationsByUnit = new Map<Unit, TrainStation>();
   private stationsById: (TrainStation | undefined)[] = [];
   private nextId = 1; // Start from 1; 0 is reserved as invalid/sentinel
 
@@ -30,18 +31,17 @@ export class StationManagerImpl implements StationManager {
     station.id = this.nextId++;
     this.stationsById[station.id] = station;
     this.stations.add(station);
+    this.stationsByUnit.set(station.unit, station);
   }
 
   removeStation(station: TrainStation) {
     this.stationsById[station.id] = undefined;
     this.stations.delete(station);
+    this.stationsByUnit.delete(station.unit);
   }
 
   findStation(unit: Unit): TrainStation | null {
-    for (const station of this.stations) {
-      if (station.unit === unit) return station;
-    }
-    return null;
+    return this.stationsByUnit.get(unit) ?? null;
   }
 
   getAll(): Set<TrainStation> {

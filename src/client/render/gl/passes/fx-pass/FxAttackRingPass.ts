@@ -56,6 +56,8 @@ export class FxAttackRingPass {
   private ringCount = 0;
 
   private active: ActiveAttackRing[] = [];
+  private readonly activeByUnitId = new Map<number, ActiveAttackRing>();
+  private readonly incomingUnitIds = new Set<number>();
 
   constructor(gl: WebGL2RenderingContext, settings: RenderSettings) {
     this.gl = gl;
@@ -103,7 +105,8 @@ export class FxAttackRingPass {
 
   update(rings: AttackRingInput[]): void {
     const now = performance.now();
-    const incoming = new Set<number>();
+    const incoming = this.incomingUnitIds;
+    incoming.clear();
     for (const r of rings) incoming.add(r.unitId);
 
     // Mark removed rings as fading out
@@ -116,7 +119,7 @@ export class FxAttackRingPass {
 
     // Add or refresh rings
     for (const r of rings) {
-      const existing = this.active.find((a) => a.unitId === r.unitId);
+      const existing = this.activeByUnitId.get(r.unitId);
       if (existing) {
         existing.x = r.x;
         existing.y = r.y;
@@ -125,13 +128,15 @@ export class FxAttackRingPass {
           existing.transitionMs = now;
         }
       } else {
-        this.active.push({
+        const added = {
           unitId: r.unitId,
           x: r.x,
           y: r.y,
           transitionMs: now,
           fadingOut: false,
-        });
+        };
+        this.active.push(added);
+        this.activeByUnitId.set(r.unitId, added);
       }
     }
   }
@@ -148,6 +153,7 @@ export class FxAttackRingPass {
     for (let i = this.active.length - 1; i >= 0; i--) {
       const ar = this.active[i];
       if (ar.fadingOut && now - ar.transitionMs >= FADE_OUT_MS) {
+        this.activeByUnitId.delete(ar.unitId);
         this.active[i] = this.active[this.active.length - 1];
         this.active.pop();
       }
@@ -203,6 +209,8 @@ export class FxAttackRingPass {
 
   clear(): void {
     this.active.length = 0;
+    this.activeByUnitId.clear();
+    this.incomingUnitIds.clear();
     this.ringCount = 0;
   }
 

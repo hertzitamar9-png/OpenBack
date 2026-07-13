@@ -9,6 +9,8 @@ import {
 import { TileRef } from "../game/GameMap";
 import { findLandPath } from "../pathfinding/PathFinder.Land";
 
+const ALL_UNIT_TYPES = Object.values(UnitType) as UnitType[];
+
 /** Builds a tank at a military base, then drives that parked tank over land. */
 export class TankExecution implements Execution {
   private active = true;
@@ -98,6 +100,9 @@ export class TankExecution implements Execution {
     // Transport ships advance one tile per tick. Three half-tile credits per
     // tick makes tanks average exactly 1.5 tiles/tick using integer arithmetic.
     this.movementCredit += 3;
+    // Reuse one mine snapshot for every movement step in this tick. A tank
+    // stops immediately after triggering a mine, so this preserves behavior.
+    const mines = this.game.units(UnitType.TankMine);
     while (this.movementCredit >= 2 && this.active) {
       this.movementCredit -= 2;
       const current = this.tank.tile();
@@ -114,16 +119,14 @@ export class TankExecution implements Execution {
       // Face the immediate path segment, never the final destination.
       const following = this.path[this.pathIndex + 1] ?? next;
       this.tank.setTrajectoryAngle(this.angleTo(next, following));
-      const mine = this.game
-        .units(UnitType.TankMine)
-        .find(
-          (u) =>
-            u.isActive() &&
-            !u.isUnderConstruction() &&
-            !this.player.isFriendly(u.owner()) &&
-            this.game.euclideanDistSquared(next, u.tile()) <=
-              this.game.config().tankMineRange(u.level()) ** 2,
-        );
+      const mine = mines.find(
+        (u) =>
+          u.isActive() &&
+          !u.isUnderConstruction() &&
+          !this.player.isFriendly(u.owner()) &&
+          this.game.euclideanDistSquared(next, u.tile()) <=
+            this.game.config().tankMineRange(u.level()) ** 2,
+      );
       if (mine) {
         mine.decreaseLevel(this.player);
         this.beginSelfDestruct(next);
@@ -204,17 +207,25 @@ export class TankExecution implements Execution {
   ): void {
     const radiusSquared = radius * radius;
 
-    for (const unit of this.game.units()) {
+    // Tank brushes are tiny. Query the unit spatial grid around those brushes
+    // instead of scanning every unit in a large match on every movement step.
+    const nearbyUnits = new Set<Unit>();
+    for (const center of centers) {
+      for (const { unit } of this.game.nearbyUnits(
+        center,
+        radius,
+        ALL_UNIT_TYPES,
+        undefined,
+        true,
+      )) {
+        nearbyUnits.add(unit);
+      }
+    }
+    for (const unit of nearbyUnits) {
       if (
-        unit.isActive() &&
         unit !== this.tank &&
         unit.owner() !== this.player &&
-        !this.player.isFriendly(unit.owner()) &&
-        centers.some(
-          (center) =>
-            this.game.euclideanDistSquared(center, unit.tile()) <=
-            radiusSquared,
-        )
+        !this.player.isFriendly(unit.owner())
       ) {
         unit.delete(false, this.player);
       }

@@ -123,19 +123,35 @@ export class MatchmakingService {
   // opponent. Elo still chooses the fairest available opponent, but it never
   // prevents the only two online players from playing each other.
   private findMatch(): [QueueEntry, QueueEntry] | null {
-    const live = this.queue
-      .filter((entry) => entry.ws.readyState === WebSocket.OPEN)
-      .sort((a, b) => a.joinedAt - b.joinedAt);
-    if (live.length < 2) return null;
+    // Compact stale sockets in place and find both players in linear time.
+    // This avoids allocating and sorting the whole queue on every worker
+    // check-in when many people are searching simultaneously.
+    let write = 0;
+    let oldest: QueueEntry | null = null;
+    for (let i = 0; i < this.queue.length; i++) {
+      const entry = this.queue[i];
+      if (entry.ws.readyState !== WebSocket.OPEN) continue;
+      this.queue[write++] = entry;
+      if (oldest === null || entry.joinedAt < oldest.joinedAt) oldest = entry;
+    }
+    this.queue.length = write;
+    if (oldest === null || write < 2) return null;
 
-    const oldest = live[0];
-    const closest = live
-      .slice(1)
-      .sort(
-        (a, b) =>
-          Math.abs(oldest.elo - a.elo) - Math.abs(oldest.elo - b.elo) ||
-          a.joinedAt - b.joinedAt,
-      )[0];
+    let closest: QueueEntry | null = null;
+    let closestGap = Infinity;
+    for (const entry of this.queue) {
+      if (entry === oldest) continue;
+      const gap = Math.abs(oldest.elo - entry.elo);
+      if (
+        closest === null ||
+        gap < closestGap ||
+        (gap === closestGap && entry.joinedAt < closest.joinedAt)
+      ) {
+        closest = entry;
+        closestGap = gap;
+      }
+    }
+    if (closest === null) return null;
     return [oldest, closest];
   }
 

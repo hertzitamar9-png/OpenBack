@@ -31,6 +31,13 @@ export class MilitaryBaseExecution implements Execution {
       this.game.config().tankMaxDriveRadius(this.base.level()),
       [UnitType.Runway],
     );
+    const activeTrainTargets = new Set(
+      this.base
+        .owner()
+        .units(UnitType.Train)
+        .filter((train) => train.isActive())
+        .map((train) => train.targetUnit()),
+    );
     for (const { unit: runway } of links) {
       if (!runway.isActive() || runway.isUnderConstruction()) continue;
       const range = this.game
@@ -51,12 +58,7 @@ export class MilitaryBaseExecution implements Execution {
         .stationManager()
         .findStation(runway);
       if (!source || !destination) continue;
-      if (
-        this.base
-          .owner()
-          .units(UnitType.Train)
-          .some((train) => train.isActive() && train.targetUnit() === runway)
-      ) {
+      if (activeTrainTargets.has(runway)) {
         continue;
       }
       this.game.addExecution(

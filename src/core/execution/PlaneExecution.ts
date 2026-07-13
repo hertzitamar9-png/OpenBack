@@ -42,6 +42,7 @@ export class PlaneExecution implements Execution {
   private crashAnimationTicks = 0;
   private captureIndex = 0;
   private captureStarted = false;
+  private flightPath: TileRef[] = [];
 
   constructor(
     private player: Player,
@@ -109,6 +110,7 @@ export class PlaneExecution implements Execution {
     this.plane.setTargetTile(this.dst);
     this.plane.setLaunchPhase(1);
     this.pathFinder = UniversalPathFinding.Air(game);
+    this.flightPath = this.pathFinder.findPath(this.src, this.dst) ?? [];
     // Point the nose at the target from the get-go.
     this.plane.setTrajectoryAngle(this.angleTo(this.src, this.dst));
     this.plane.setTrajectory(this.trajectory());
@@ -161,6 +163,12 @@ export class PlaneExecution implements Execution {
       return;
     }
     const steps = Math.max(1, Math.floor(this.game.config().planeSpeed()));
+    // game.units() aggregates every player's units into a fresh array. The
+    // aircraft may cross several tiles per tick, so build the MANPAD candidate
+    // list once for this tick rather than once for every movement step.
+    const interceptors = this.interceptionStarted
+      ? []
+      : this.game.units(UnitType.MANPAD);
     const tickStart = this.plane.tile();
     let current = tickStart;
     let interceptor: Unit | null = null;
@@ -174,7 +182,7 @@ export class PlaneExecution implements Execution {
 
       const previous = current;
       current = result.node;
-      interceptor = this.findInterceptor(previous, current);
+      interceptor = this.findInterceptor(previous, current, interceptors);
       if (interceptor !== null) {
         break;
       }
@@ -207,6 +215,13 @@ export class PlaneExecution implements Execution {
   private closestReadyPlaneInRange(runways: Unit[]): Unit | null {
     let best: Unit | null = null;
     let bestDistance = Infinity;
+    const runwayLevels = new Map<TileRef, number>();
+    for (const runway of runways) {
+      runwayLevels.set(
+        runway.tile(),
+        (runwayLevels.get(runway.tile()) ?? 0) + runway.level(),
+      );
+    }
     for (const plane of this.player.units(UnitType.Plane)) {
       if (
         !plane.isActive() ||
@@ -215,9 +230,7 @@ export class PlaneExecution implements Execution {
       ) {
         continue;
       }
-      const stack = runways
-        .filter((r) => r.tile() === plane.tile())
-        .reduce((sum, runway) => sum + runway.level(), 0);
+      const stack = runwayLevels.get(plane.tile()) ?? 0;
       const range = this.game.config().planeMaxFlightRadius(stack);
       const distance = this.game.euclideanDistSquared(plane.tile(), this.dst);
       if (stack > 0 && distance <= range * range && distance < bestDistance) {
@@ -228,19 +241,21 @@ export class PlaneExecution implements Execution {
     return best;
   }
 
-  private findInterceptor(from: TileRef, to: TileRef): Unit | null {
+  private findInterceptor(
+    from: TileRef,
+    to: TileRef,
+    interceptors: readonly Unit[],
+  ): Unit | null {
     if (this.interceptionStarted) return null;
     return (
-      this.game
-        .units(UnitType.MANPAD)
-        .find(
-          (unit) =>
-            unit.isActive() &&
-            !unit.isUnderConstruction() &&
-            !this.player.isFriendly(unit.owner()) &&
-            this.distanceToFlightSegmentSquared(unit.tile(), from, to) <=
-              this.game.config().manpadRange(unit.level()) ** 2,
-        ) ?? null
+      interceptors.find(
+        (unit) =>
+          unit.isActive() &&
+          !unit.isUnderConstruction() &&
+          !this.player.isFriendly(unit.owner()) &&
+          this.distanceToFlightSegmentSquared(unit.tile(), from, to) <=
+            this.game.config().manpadRange(unit.level()) ** 2,
+      ) ?? null
     );
   }
 
@@ -376,14 +391,14 @@ export class PlaneExecution implements Execution {
   }
 
   private trajectory(): TrajectoryTile[] {
-    return (this.pathFinder.findPath(this.src, this.dst) ?? []).map((tile) => ({
+    return this.flightPath.map((tile) => ({
       tile,
       targetable: false,
     }));
   }
 
   private recordMotionPlan(ticks: number): void {
-    const fullPath = this.pathFinder.findPath(this.src, this.dst) ?? [this.src];
+    const fullPath = this.flightPath.length > 0 ? this.flightPath : [this.src];
     const stride = Math.max(1, Math.floor(this.game.config().planeSpeed()));
     const path = fullPath.filter(
       (_, index) => index === 0 || index % stride === 0,

@@ -69,7 +69,8 @@ export class AttackingTroopsController implements Controller {
   private inFlightRequest = false;
   private alternateView = false;
   /** Reused buffer pushed to the view each frame. */
-  private labelBuf: AttackTroopLabel[] = [];
+  private readonly labelBuf: AttackTroopLabel[] = [];
+  private readonly activeIDs = new Set<string>();
 
   constructor(
     private readonly game: GameView,
@@ -106,7 +107,8 @@ export class AttackingTroopsController implements Controller {
       return;
     }
 
-    const activeIDs = new Set<string>();
+    const activeIDs = this.activeIDs;
+    activeIDs.clear();
 
     // Outgoing: only label attacks targeting another player.
     for (const attack of myPlayer.outgoingAttacks()) {
@@ -227,14 +229,15 @@ export class AttackingTroopsController implements Controller {
   private pushLabels(): void {
     if (this.alternateView || this.attacks.size === 0) {
       if (this.labelBuf.length > 0) {
-        this.labelBuf = [];
+        this.labelBuf.length = 0;
         this.view.setAttackTroopLabels(this.labelBuf);
       }
       return;
     }
 
     const now = performance.now();
-    const out: AttackTroopLabel[] = [];
+    const out = this.labelBuf;
+    out.length = 0;
 
     for (const entry of this.attacks.values()) {
       const r = entry.isIncoming ? INCOMING_R : OUTGOING_R;
@@ -255,7 +258,6 @@ export class AttackingTroopsController implements Controller {
       }
     }
 
-    this.labelBuf = out;
     this.view.setAttackTroopLabels(out);
   }
 }

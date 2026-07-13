@@ -41,6 +41,13 @@ export function shouldPreserveGhostAfterBuild(unitType: UnitType): boolean {
   return unitType === UnitType.AtomBomb || unitType === UnitType.HydrogenBomb;
 }
 
+const STACKABLE_OPENBACK_TYPES: ReadonlySet<UnitType> = new Set([
+  UnitType.Runway,
+  UnitType.MANPAD,
+  UnitType.MilitaryBase,
+  UnitType.TankMine,
+]);
+
 /**
  * Whether a SAM belongs in the nuke trajectory preview's threat set.
  * Mirrors SAMLauncherExecution: a SAM ignores a nuke whose owner it's
@@ -448,14 +455,8 @@ export class BuildPreviewController implements Controller {
 
     const u = this.ghostUnit.buildableUnit;
 
-    const stackableTypes: ReadonlySet<UnitType> = new Set([
-      UnitType.Runway,
-      UnitType.MANPAD,
-      UnitType.MilitaryBase,
-      UnitType.TankMine,
-    ]);
     const snapTargetTile =
-      stackableTypes.has(u.type) &&
+      STACKABLE_OPENBACK_TYPES.has(u.type) &&
       u.canBuild !== false &&
       myPlayer
         .units(u.type as UnitType.Runway)

@@ -224,9 +224,8 @@ export class NationExecution implements Execution {
       this.mg.ticks() % (this.attackRate * 5) !== this.attackTick
     )
       return;
-    const tank = player
-      .units(UnitType.Tank)
-      .find((u) => u.isActive() && u.isLoaded() === true);
+    const tanks = player.units(UnitType.Tank);
+    const tank = tanks.find((u) => u.isActive() && u.isLoaded() === true);
     if (!tank) {
       const base = player
         .units(UnitType.MilitaryBase)
@@ -234,9 +233,7 @@ export class NationExecution implements Execution {
           (u) =>
             u.isActive() &&
             !u.isUnderConstruction() &&
-            !player
-              .units(UnitType.Tank)
-              .some((t) => t.isActive() && t.tile() === u.tile()),
+            !tanks.some((t) => t.isActive() && t.tile() === u.tile()),
         );
       if (base)
         this.mg.addExecution(
@@ -271,32 +268,28 @@ export class NationExecution implements Execution {
     if (
       player === null ||
       this.mg.config().isUnitDisabled(UnitType.Plane) ||
-      player.units(UnitType.Runway).every((u) => u.isUnderConstruction()) ||
       this.mg.ticks() % (this.attackRate * 4) !== this.attackTick
     ) {
       return;
     }
-    const readyPlane = player
-      .units(UnitType.Plane)
-      .find(
-        (plane) =>
-          plane.isActive() &&
-          !plane.isUnderConstruction() &&
-          plane.isLoaded() === true,
-      );
+    const runways = player.units(UnitType.Runway);
+    if (runways.every((u) => u.isUnderConstruction())) return;
+    const planes = player.units(UnitType.Plane);
+    const readyPlane = planes.find(
+      (plane) =>
+        plane.isActive() &&
+        !plane.isUnderConstruction() &&
+        plane.isLoaded() === true,
+    );
     if (!readyPlane) {
-      const runway = player
-        .units(UnitType.Runway)
-        .find(
-          (unit) =>
-            unit.isActive() &&
-            !unit.isUnderConstruction() &&
-            !player
-              .units(UnitType.Plane)
-              .some(
-                (plane) => plane.isActive() && plane.tile() === unit.tile(),
-              ),
-        );
+      const runway = runways.find(
+        (unit) =>
+          unit.isActive() &&
+          !unit.isUnderConstruction() &&
+          !planes.some(
+            (plane) => plane.isActive() && plane.tile() === unit.tile(),
+          ),
+      );
       const troops = Math.floor(player.troops() * 0.15);
       if (runway && troops > 0) {
         this.mg.addExecution(

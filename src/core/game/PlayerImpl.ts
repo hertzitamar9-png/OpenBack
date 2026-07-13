@@ -1414,9 +1414,6 @@ export class PlayerImpl implements Player {
       case UnitType.Plane: {
         if (!this.mg.hasOwner(targetTile)) return false;
         const owner = this.mg.owner(targetTile);
-        const completedRunways = this.units(UnitType.Runway).filter(
-          (unit) => unit.isActive() && !unit.isUnderConstruction(),
-        );
         if (owner === this) {
           // Snap to the nearest completed runway (that has no plane parked on
           // it yet) so clicking on or near a runway builds/parks a plane there.
@@ -1424,6 +1421,14 @@ export class PlayerImpl implements Player {
           return runwayTile ?? false;
         }
         if (owner.isPlayer() && this.isFriendly(owner)) return false;
+        const runwayLevels = new Map<TileRef, number>();
+        for (const runway of this.units(UnitType.Runway)) {
+          if (!runway.isActive() || runway.isUnderConstruction()) continue;
+          runwayLevels.set(
+            runway.tile(),
+            (runwayLevels.get(runway.tile()) ?? 0) + runway.level(),
+          );
+        }
         const readyPlane = findClosestBy(
           this.units(UnitType.Plane),
           (unit) => this.mg.manhattanDist(unit.tile(), targetTile),
@@ -1435,9 +1440,7 @@ export class PlayerImpl implements Player {
             ) {
               return false;
             }
-            const stack = completedRunways
-              .filter((runway) => runway.tile() === unit.tile())
-              .reduce((sum, runway) => sum + runway.level(), 0);
+            const stack = runwayLevels.get(unit.tile()) ?? 0;
             const range = this.mg.config().planeMaxFlightRadius(stack);
             return (
               this.mg.euclideanDistSquared(unit.tile(), targetTile) <=
@@ -1451,15 +1454,17 @@ export class PlayerImpl implements Player {
         if (!this.mg.hasOwner(targetTile)) return false;
         const owner = this.mg.owner(targetTile);
         if (owner === this) {
+          const occupiedBaseTiles = new Set<TileRef>();
+          for (const tank of this.units(UnitType.Tank)) {
+            if (tank.isActive()) occupiedBaseTiles.add(tank.tile());
+          }
           const base = findClosestBy(
             this.units(UnitType.MilitaryBase),
             (unit) => this.mg.manhattanDist(unit.tile(), targetTile),
             (unit) =>
               unit.isActive() &&
               !unit.isUnderConstruction() &&
-              !this.units(UnitType.Tank).some(
-                (tank) => tank.isActive() && tank.tile() === unit.tile(),
-              ),
+              !occupiedBaseTiles.has(unit.tile()),
           );
           return base &&
             this.mg.euclideanDistSquared(base.tile(), targetTile) <=
@@ -1468,19 +1473,20 @@ export class PlayerImpl implements Player {
             : false;
         }
         if (owner.isPlayer() && this.isFriendly(owner)) return false;
+        const baseLevels = new Map<TileRef, number>();
+        for (const base of this.units(UnitType.MilitaryBase)) {
+          if (!base.isActive() || base.isUnderConstruction()) continue;
+          baseLevels.set(
+            base.tile(),
+            (baseLevels.get(base.tile()) ?? 0) + base.level(),
+          );
+        }
         const readyTank = findClosestBy(
           this.units(UnitType.Tank),
           (unit) => this.mg.manhattanDist(unit.tile(), targetTile),
           (unit) => {
             if (!unit.isActive() || unit.isLoaded() !== true) return false;
-            const baseLevel = this.units(UnitType.MilitaryBase)
-              .filter(
-                (base) =>
-                  base.isActive() &&
-                  !base.isUnderConstruction() &&
-                  base.tile() === unit.tile(),
-              )
-              .reduce((sum, base) => sum + base.level(), 0);
+            const baseLevel = baseLevels.get(unit.tile()) ?? 0;
             const range = this.mg.config().tankMaxDriveRadius(baseLevel);
             return (
               baseLevel > 0 &&

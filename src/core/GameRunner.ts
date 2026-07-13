@@ -85,6 +85,7 @@ export async function createGameRunner(
 }
 
 export class GameRunner {
+  private static readonly TURN_COMPACTION_THRESHOLD = 1024;
   private turns: Turn[] = [];
   private currTurn = 0;
   private isExecuting = false;
@@ -140,6 +141,14 @@ export class GameRunner {
       ...this.execManager.createExecs(this.turns[this.currTurn]),
     );
     this.currTurn++;
+
+    // Executed turns are never read again by the simulation. Compact the
+    // consumed prefix periodically so an indefinitely-running multiplayer
+    // match does not retain hours of empty turn objects in every browser.
+    if (this.currTurn >= GameRunner.TURN_COMPACTION_THRESHOLD) {
+      this.turns.splice(0, this.currTurn);
+      this.currTurn = 0;
+    }
 
     const wasInSpawnPhase = this.game.inSpawnPhase();
     let updates: GameUpdates;

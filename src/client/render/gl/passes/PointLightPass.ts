@@ -241,14 +241,38 @@ export class PointLightPass {
       (performance.now() - this.lastUnitsUpdateMs) / this.tickIntervalMs,
     );
     const data = this.lightData;
-    const gl = this.gl;
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.lightBuf);
     for (let i = 0; i < segs.length; i += SMOOTH_SEG_STRIDE) {
       const idx = segs[i];
       const off = idx * FLOATS_PER_LIGHT;
       data[off + 0] = segs[i + 1] + (segs[i + 3] - segs[i + 1]) * alpha;
       data[off + 1] = segs[i + 2] + (segs[i + 4] - segs[i + 2]) * alpha;
-      gl.bufferSubData(gl.ARRAY_BUFFER, idx * BYTES_PER_LIGHT, data, off, 2);
+    }
+    const gl = this.gl;
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.lightBuf);
+    const smoothCount = segs.length / SMOOTH_SEG_STRIDE;
+    if (smoothCount >= 8 && this.lightCount <= smoothCount * 16) {
+      // One driver call scales better when moving lights are a meaningful
+      // share of the buffer.
+      gl.bufferSubData(
+        gl.ARRAY_BUFFER,
+        0,
+        data,
+        0,
+        this.lightCount * FLOATS_PER_LIGHT,
+      );
+    } else {
+      // Avoid re-uploading thousands of static structure lights for only one
+      // or two moving missiles.
+      for (let i = 0; i < segs.length; i += SMOOTH_SEG_STRIDE) {
+        const idx = segs[i];
+        gl.bufferSubData(
+          gl.ARRAY_BUFFER,
+          idx * BYTES_PER_LIGHT,
+          data,
+          idx * FLOATS_PER_LIGHT,
+          2,
+        );
+      }
     }
   }
 

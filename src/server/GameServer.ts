@@ -63,6 +63,9 @@ const KICK_REASON_ADMIN = "kick_reason.admin";
 const KICK_REASON_HOST_LEFT = "kick_reason.host_left";
 const KICK_REASON_TOO_MUCH_DATA = "kick_reason.too_much_data";
 const KICK_REASON_INVALID_MESSAGE = "kick_reason.invalid_message";
+// Most 10 Hz turns contain no player intent. Share one immutable-by-convention
+// empty list rather than retaining a separate empty Array for every turn.
+const EMPTY_TURN_INTENTS: StampedIntent[] = [];
 
 export class GameServer {
   private sentDesyncMessageClients = new Set<ClientID>();
@@ -74,7 +77,7 @@ export class GameServer {
   private disconnectedTimeout = 1 * 30 * 1000; // 30 seconds
 
   private turns: Turn[] = [];
-  private intents: StampedIntent[] = [];
+  private intents: StampedIntent[] | null = null;
   public activeClients: Client[] = [];
   private allClients: Map<ClientID, Client> = new Map();
   // Map persistentID to clientID for reconnection lookup
@@ -875,7 +878,7 @@ export class GameServer {
   }
 
   private addIntent(intent: StampedIntent) {
-    this.intents.push(intent);
+    (this.intents ??= []).push(intent);
   }
 
   // Per-viewer start info. The real gameStartInfo is untouched, so the
@@ -949,10 +952,10 @@ export class GameServer {
 
     const pastTurn: Turn = {
       turnNumber: this.turns.length,
-      intents: this.intents,
+      intents: this.intents ?? EMPTY_TURN_INTENTS,
     };
     this.turns.push(pastTurn);
-    this.intents = [];
+    this.intents = null;
 
     this.handleSynchronization();
     this.checkDisconnectedStatus();
@@ -1277,21 +1280,23 @@ export class GameServer {
   }
 
   private handleSynchronization() {
-    if (this.activeClients.length <= 1) {
-      return;
-    }
     if (this.turns.length % 10 !== 0 || this.turns.length < 10) {
       // Check hashes every 10 turns
       return;
     }
 
     const lastHashTurn = this.turns.length - 10;
+    if (this.activeClients.length <= 1) {
+      this.pruneClientHashesThrough(lastHashTurn);
+      return;
+    }
 
     const { mostCommonHash, outOfSyncClients } =
       this.findOutOfSyncClients(lastHashTurn);
 
     if (outOfSyncClients.length === 0) {
       this.turns[lastHashTurn].hash = mostCommonHash;
+      this.pruneClientHashesThrough(lastHashTurn);
       return;
     }
 
@@ -1308,6 +1313,7 @@ export class GameServer {
         gameID: this.id,
         error: serverDesync.error,
       });
+      this.pruneClientHashesThrough(lastHashTurn);
       return;
     }
 
@@ -1325,6 +1331,15 @@ export class GameServer {
       });
       if (c.ws.readyState === WebSocket.OPEN) {
         c.ws.send(desyncMsg);
+      }
+    }
+    this.pruneClientHashesThrough(lastHashTurn);
+  }
+
+  private pruneClientHashesThrough(turnNumber: number): void {
+    for (const client of this.allClients.values()) {
+      for (const turn of client.hashes.keys()) {
+        if (turn <= turnNumber) client.hashes.delete(turn);
       }
     }
   }

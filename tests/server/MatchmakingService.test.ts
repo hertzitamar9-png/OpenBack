@@ -152,6 +152,50 @@ describe("MatchmakingService", () => {
     expect(queue).toHaveLength(0);
   });
 
+  it("pairs the oldest player with the closest Elo among a larger queue", () => {
+    const socket = () => ({
+      readyState: WebSocket.OPEN,
+      send: vi.fn(),
+      close: vi.fn(),
+    });
+    const oldest = socket();
+    const far = socket();
+    const closest = socket();
+    const other = socket();
+    const service = new MatchmakingService({ info: vi.fn() } as never);
+    const queue = (
+      service as unknown as {
+        queue: Array<{
+          publicId: string;
+          elo: number;
+          ws: ReturnType<typeof socket>;
+          joinedAt: number;
+        }>;
+      }
+    ).queue;
+    queue.push(
+      { publicId: "oldest", elo: 1000, ws: oldest, joinedAt: 1 },
+      { publicId: "far", elo: 2000, ws: far, joinedAt: 2 },
+      { publicId: "closest", elo: 1030, ws: closest, joinedAt: 3 },
+      { publicId: "other", elo: 1100, ws: other, joinedAt: 4 },
+    );
+
+    const json = vi.fn();
+    service.handleCheckin(
+      {
+        header: () => "matchmaking-test-key",
+        body: { gameId: "closest-game" },
+      } as never,
+      { json, status: vi.fn() } as never,
+    );
+
+    expect(oldest.send).toHaveBeenCalledOnce();
+    expect(closest.send).toHaveBeenCalledOnce();
+    expect(far.send).not.toHaveBeenCalled();
+    expect(other.send).not.toHaveBeenCalled();
+    expect(queue.map((entry) => entry.publicId)).toEqual(["far", "other"]);
+  });
+
   it("returns centrally generated randomized rules to the assigned worker", () => {
     const socket = () => ({
       readyState: WebSocket.OPEN,
