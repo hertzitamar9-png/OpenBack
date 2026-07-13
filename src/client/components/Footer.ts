@@ -90,6 +90,10 @@ export class Footer extends LitElement {
         <div
           class="text-xs mt-1 lg:mt-2 flex items-center justify-center gap-4 px-4"
         >
+          <a href="/guides" class="hover:text-white transition-colors">
+            Tutorials
+          </a>
+          <a href="/blog" class="hover:text-white transition-colors"> Blog </a>
           <a
             href="/terms-of-service.html"
             data-i18n="main.terms_of_service"

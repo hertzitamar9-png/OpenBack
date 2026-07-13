@@ -11,6 +11,10 @@ import { MapPlaylist } from "./MapPlaylist";
 import { MasterLobbyService } from "./MasterLobbyService";
 import { MatchmakingService } from "./MatchmakingService";
 import { setNoStoreHeaders } from "./NoStoreHeaders";
+import {
+  handleOpenBackContent,
+  OPENBACK_CONTENT_PATHS,
+} from "./OpenBackContent";
 import { renderAppShell } from "./RenderHtml";
 import { ServerEnv } from "./ServerEnv";
 import { applyStaticAssetCacheControl } from "./StaticAssetCache";
@@ -53,20 +57,30 @@ app.get("/robots.txt", (_req, res) => {
 app.get("/sitemap.xml", (_req, res) => {
   const origin = ServerEnv.authOrigin().replace(/\/+$/, "");
   const lastmod = new Date().toISOString().slice(0, 10);
+  const urls = ["/", ...OPENBACK_CONTENT_PATHS]
+    .map(
+      (contentPath, index) =>
+        `  <url>\n` +
+        `    <loc>${origin}${contentPath}</loc>\n` +
+        `    <lastmod>${lastmod}</lastmod>\n` +
+        `    <changefreq>${index === 0 ? "daily" : "weekly"}</changefreq>\n` +
+        `    <priority>${index === 0 ? "1.0" : contentPath === "/guides" || contentPath === "/blog" ? "0.9" : "0.8"}</priority>\n` +
+        `  </url>`,
+    )
+    .join("\n");
   res
     .type("application/xml")
     .send(
       `<?xml version="1.0" encoding="UTF-8"?>\n` +
         `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
-        `  <url>\n` +
-        `    <loc>${origin}/</loc>\n` +
-        `    <lastmod>${lastmod}</lastmod>\n` +
-        `    <changefreq>daily</changefreq>\n` +
-        `    <priority>1.0</priority>\n` +
-        `  </url>\n` +
+        `${urls}\n` +
         `</urlset>\n`,
     );
 });
+
+// Server-rendered learning content gives players useful documentation and
+// gives search engines normal, linked HTML pages instead of an app-only shell.
+app.get(OPENBACK_CONTENT_PATHS, handleOpenBackContent);
 
 // Serve the shared app shell for the root document.
 app.use(async (req, res, next) => {
