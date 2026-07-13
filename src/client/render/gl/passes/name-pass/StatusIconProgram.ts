@@ -25,7 +25,6 @@ export class StatusIconProgram {
   private gl: WebGL2RenderingContext;
   private program: WebGLProgram;
   private playerDataTex: WebGLTexture;
-  private maxPlayers: number;
 
   private statusAtlasTex: WebGLTexture | null = null;
   private atlasReady = false;
@@ -46,12 +45,10 @@ export class StatusIconProgram {
     gl: WebGL2RenderingContext,
     atlas: ParsedAtlas,
     playerDataTex: WebGLTexture,
-    maxPlayers: number,
     allianceFlashWindowTicks: number,
   ) {
     this.gl = gl;
     this.playerDataTex = playerDataTex;
-    this.maxPlayers = maxPlayers;
 
     this.program = createProgram(gl, statusVertSrc, statusFragSrc);
     gl.useProgram(this.program);
@@ -154,6 +151,7 @@ export class StatusIconProgram {
     settings: RenderSettings,
     vao: WebGLVertexArrayObject,
     fadeOwnerID: number,
+    playerCount: number,
   ): void {
     if (!this.atlasReady) return;
 
@@ -178,12 +176,7 @@ export class StatusIconProgram {
     gl.bindTexture(gl.TEXTURE_2D, this.statusAtlasTex!);
 
     gl.bindVertexArray(vao);
-    gl.drawArraysInstanced(
-      gl.TRIANGLES,
-      0,
-      6,
-      this.maxPlayers * MAX_STATUS_ICONS,
-    );
+    gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, playerCount * MAX_STATUS_ICONS);
   }
 
   dispose(): void {

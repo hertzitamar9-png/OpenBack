@@ -189,21 +189,14 @@ export class NamePass {
       atlas,
       this.playerDataTex,
       this.flagAtlas,
-      this.maxPlayers,
     );
     this.statusIconProgram = new StatusIconProgram(
       gl,
       atlas,
       this.playerDataTex,
-      this.maxPlayers,
       config.allianceExtensionPromptOffset(),
     );
-    this.debugProgram = new DebugProgram(
-      gl,
-      atlas,
-      this.playerDataTex,
-      this.maxPlayers,
-    );
+    this.debugProgram = new DebugProgram(gl, atlas, this.playerDataTex);
   }
 
   // -------------------------------------------------------------------------
@@ -685,6 +678,8 @@ export class NamePass {
     if (this.slots.size === 0) return;
 
     const gl = this.gl;
+    const playerCount = this.slots.size;
+    const textRowCount = playerCount * LINES_PER_PLAYER;
     if (this.stringDataDirty) {
       gl.bindTexture(gl.TEXTURE_2D, this.stringTex);
       gl.texSubImage2D(
@@ -693,10 +688,10 @@ export class NamePass {
         0,
         0,
         MAX_CHARS,
-        this.maxPlayers * LINES_PER_PLAYER,
+        textRowCount,
         gl.RED_INTEGER,
         gl.UNSIGNED_BYTE,
-        this.cpuStringData,
+        this.cpuStringData.subarray(0, MAX_CHARS * textRowCount),
       );
       this.stringDataDirty = false;
     }
@@ -708,10 +703,10 @@ export class NamePass {
         0,
         0,
         MAX_CHARS,
-        this.maxPlayers * LINES_PER_PLAYER,
+        textRowCount,
         gl.RED,
         gl.FLOAT,
-        this.cpuCursorData,
+        this.cpuCursorData.subarray(0, MAX_CHARS * textRowCount),
       );
       this.cursorDataDirty = false;
     }
@@ -723,10 +718,10 @@ export class NamePass {
         0,
         0,
         8,
-        this.maxPlayers,
+        playerCount,
         gl.RGBA,
         gl.FLOAT,
-        this.cpuPlayerData,
+        this.cpuPlayerData.subarray(0, 32 * playerCount),
       );
       this.playerDataDirty = false;
     }
@@ -737,7 +732,7 @@ export class NamePass {
       cameraMatrix,
       this.settings,
       this.vao,
-      this.maxPlayers,
+      playerCount,
       ambient,
       this.highlightOwnerID,
       fadeOwnerID,
@@ -747,11 +742,23 @@ export class NamePass {
       this.settings,
       this.vao,
       fadeOwnerID,
+      playerCount,
     );
-    this.iconProgram.draw(cameraMatrix, this.settings, this.vao, fadeOwnerID);
+    this.iconProgram.draw(
+      cameraMatrix,
+      this.settings,
+      this.vao,
+      fadeOwnerID,
+      playerCount,
+    );
 
     if (this.settings.passEnabled.nameDebug) {
-      this.debugProgram.draw(cameraMatrix, this.settings, this.vao);
+      this.debugProgram.draw(
+        cameraMatrix,
+        this.settings,
+        this.vao,
+        playerCount,
+      );
     }
   }
 

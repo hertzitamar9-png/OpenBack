@@ -168,7 +168,7 @@ export class TextProgram {
     cameraMatrix: Float32Array,
     settings: RenderSettings,
     vao: WebGLVertexArrayObject,
-    maxPlayers: number,
+    playerCount: number,
     ambient: number,
     highlightOwnerID: number,
     fadeOwnerID: number,
@@ -217,7 +217,7 @@ export class TextProgram {
       gl.TRIANGLES,
       0,
       6,
-      maxPlayers * LINES_PER_PLAYER * MAX_CHARS,
+      playerCount * LINES_PER_PLAYER * MAX_CHARS,
     );
   }
 
