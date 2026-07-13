@@ -751,6 +751,32 @@ describe("GameView.frameData() — renderer contract", () => {
     expect(game.frameData().structuresDirty).toBe(false);
   });
 
+  it("uploads units only when their render state changes", () => {
+    const game = makeGameView();
+    game.update(makeEmptyGu(1));
+    expect(game.frameData().unitsDirty).toBe(true);
+
+    game.update(makeEmptyGu(2));
+    expect(game.frameData().unitsDirty).toBe(false);
+
+    const gu = makeEmptyGu(3);
+    gu.updates[GameUpdateType.Unit] = [makeUnitUpdate({ id: 7, pos: 3 })];
+    game.update(gu);
+    expect(game.frameData().unitsDirty).toBe(true);
+  });
+
+  it("throttles unchanged player labels while refreshing them periodically", () => {
+    const game = makeGameView();
+    game.update(makeEmptyGu(1));
+    expect(game.frameData().namesDirty).toBe(true);
+
+    game.update(makeEmptyGu(2));
+    expect(game.frameData().namesDirty).toBe(false);
+
+    game.update(makeEmptyGu(5));
+    expect(game.frameData().namesDirty).toBe(true);
+  });
+
   it("frame.relationMatrix marks same-team players as friendly (team games)", () => {
     const RELATION_FRIENDLY = 1;
     const RELATION_NEUTRAL = 0;

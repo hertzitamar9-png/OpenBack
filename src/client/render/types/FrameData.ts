@@ -44,6 +44,10 @@ export interface FrameData {
   readonly changedTiles: TilePair[] | null;
   readonly railroadDirty: boolean;
   readonly revealedRailTiles: number[];
+  /** True when unit state or a client-side motion plan changed this tick. */
+  readonly unitsDirty: boolean;
+  /** True when name placement/status data should be refreshed on the GPU. */
+  readonly namesDirty: boolean;
 
   /**
    * Trail dirty row range for partial GPU upload.

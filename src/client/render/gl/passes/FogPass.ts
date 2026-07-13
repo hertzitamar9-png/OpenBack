@@ -11,22 +11,40 @@ uniform vec2 uMapSize;
 uniform uint uLocalOwner;
 uniform int uRadarCount;
 uniform vec3 uRadar[8];
+uniform float uTime;
 out vec4 outColor;
-bool mine(vec2 p) {
+float mine(vec2 p) {
   ivec2 q = ivec2(clamp(p, vec2(0.0), uMapSize - vec2(1.0)));
-  return (texelFetch(uTileTex, q, 0).r & uint(OWNER_MASK)) == uLocalOwner;
+  return (texelFetch(uTileTex, q, 0).r & uint(OWNER_MASK)) == uLocalOwner ? 1.0 : 0.0;
 }
 void main() {
-  float r = 14.0;
-  bool visible = mine(vWorldPos) || mine(vWorldPos + vec2(r,0.0)) ||
-    mine(vWorldPos + vec2(-r,0.0)) || mine(vWorldPos + vec2(0.0,r)) ||
-    mine(vWorldPos + vec2(0.0,-r)) || mine(vWorldPos + vec2(r,r)) ||
-    mine(vWorldPos + vec2(-r,r)) || mine(vWorldPos + vec2(r,-r)) ||
-    mine(vWorldPos + vec2(-r,-r));
-  for(int i=0;i<8;i++){ if(i<uRadarCount && distance(vWorldPos,uRadar[i].xy)<=uRadar[i].z) visible=true; }
-  if (visible || uLocalOwner == 0u) discard;
-  float grain = fract(sin(dot(floor(vWorldPos * 0.45), vec2(12.9898,78.233))) * 43758.5453);
-  outColor = vec4(vec3(0.015 + grain * 0.018), 0.82);
+  if (uLocalOwner == 0u) discard;
+  float r = 18.0;
+  float reveal = mine(vWorldPos);
+  reveal = max(reveal, 0.25 * (
+    mine(vWorldPos + vec2(r,0.0)) + mine(vWorldPos - vec2(r,0.0)) +
+    mine(vWorldPos + vec2(0.0,r)) + mine(vWorldPos - vec2(0.0,r))));
+  for(int i=0;i<8;i++) {
+    if(i<uRadarCount) {
+      float d = distance(vWorldPos,uRadar[i].xy);
+      reveal = max(reveal, 1.0-smoothstep(uRadar[i].z-5.0,uRadar[i].z+7.0,d));
+    }
+  }
+  if (reveal > 0.92) discard;
+
+  // Two inexpensive moving wave fields make the unexplored area read as
+  // rolling cloud banks rather than a flat grey screen.
+  vec2 p = vWorldPos;
+  float cloud = 0.50;
+  cloud += 0.27*sin(p.x*0.050 + sin(p.y*0.031+uTime*0.18)*2.2 + uTime*0.23);
+  cloud += 0.18*sin(p.y*0.071 - p.x*0.019 - uTime*0.31);
+  cloud += 0.09*sin((p.x+p.y)*0.115 + uTime*0.41);
+  cloud = smoothstep(0.12,0.88,cloud);
+  float edge = 1.0-smoothstep(0.08,0.82,reveal);
+  float alpha = mix(0.48,0.78,cloud)*edge;
+  vec3 shadow = vec3(0.055,0.085,0.12);
+  vec3 mist = vec3(0.38,0.47,0.55);
+  outColor = vec4(mix(shadow,mist,cloud),alpha);
 }`;
 
 export class FogPass {
@@ -38,6 +56,7 @@ export class FogPass {
   private uTileTex: WebGLUniformLocation;
   private uRadarCount: WebGLUniformLocation;
   private uRadar: WebGLUniformLocation;
+  private uTime: WebGLUniformLocation;
   private localOwner = 0;
   private radarData = new Float32Array(24);
   private radarCount = 0;
@@ -61,6 +80,7 @@ export class FogPass {
     this.uTileTex = gl.getUniformLocation(this.program, "uTileTex")!;
     this.uRadarCount = gl.getUniformLocation(this.program, "uRadarCount")!;
     this.uRadar = gl.getUniformLocation(this.program, "uRadar[0]")!;
+    this.uTime = gl.getUniformLocation(this.program, "uTime")!;
   }
 
   setLocalOwner(owner: number): void {
@@ -88,6 +108,7 @@ export class FogPass {
     gl.uniform1ui(this.uLocalOwner, this.localOwner);
     gl.uniform1i(this.uRadarCount, this.radarCount);
     gl.uniform3fv(this.uRadar, this.radarData);
+    gl.uniform1f(this.uTime, performance.now() / 1000);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.tileTex);
     gl.uniform1i(this.uTileTex, 0);

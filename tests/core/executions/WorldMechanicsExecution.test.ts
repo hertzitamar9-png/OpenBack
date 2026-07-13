@@ -36,7 +36,7 @@ describe("WorldMechanicsExecution", () => {
     ).toBe(true);
   });
 
-  test("natural disasters emit one of six real event types", async () => {
+  test("natural disasters start quickly and cycle through all six types", async () => {
     const game = await setup("big_plains", {
       worldMechanics: { naturalDisasters: true },
     });
@@ -49,13 +49,18 @@ describe("WorldMechanicsExecution", () => {
       "meteor",
       "drought",
     ]);
-    let emitted = false;
-    for (let i = 0; i <= 1_200; i++) {
+    const emitted = new Set<WorldEventKind>();
+    let firstDisasterTick: number | null = null;
+    for (let i = 0; i <= 2_000; i++) {
       const updates = game.executeNextTick();
-      emitted ||= updates[GameUpdateType.WorldEvent].some((event) =>
-        disasters.has(event.kind),
-      );
+      for (const event of updates[GameUpdateType.WorldEvent]) {
+        if (!disasters.has(event.kind)) continue;
+        firstDisasterTick ??= i;
+        emitted.add(event.kind);
+      }
     }
-    expect(emitted).toBe(true);
+    expect(firstDisasterTick).not.toBeNull();
+    expect(firstDisasterTick!).toBeLessThanOrEqual(125);
+    expect(emitted).toEqual(disasters);
   });
 });

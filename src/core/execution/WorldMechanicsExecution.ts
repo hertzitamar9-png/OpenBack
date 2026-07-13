@@ -26,6 +26,8 @@ export class WorldMechanicsExecution implements Execution {
   private random: PseudoRandom;
   private victoryPoints = new Map<string, number>();
   private active = true;
+  private nextDisasterTick: number | null = null;
+  private disasterBag: WorldEventKind[] = [];
 
   constructor(seed: number) {
     this.random = new PseudoRandom(seed ^ 0x4f50454e);
@@ -42,8 +44,17 @@ export class WorldMechanicsExecution implements Execution {
       if (this.objectives.length === 0) this.createObjectives();
       if (ticks % 100 === 0) this.updateObjectives();
     }
-    if (mechanics.naturalDisasters && ticks >= 600 && ticks % 1200 === 0) {
-      this.triggerDisaster();
+    if (mechanics.naturalDisasters) {
+      // The former absolute 1200-tick schedule could make the first event take
+      // nearly two minutes after spawning. Schedule relative to the real start
+      // of play, then keep a deterministic but varied 22-35 second cadence.
+      this.nextDisasterTick ??= ticks + 120;
+      if (ticks >= this.nextDisasterTick) {
+        this.triggerDisaster();
+        this.nextDisasterTick = ticks + this.random.nextInt(220, 351);
+      }
+    } else {
+      this.nextDisasterTick = null;
     }
   }
 
@@ -148,54 +159,159 @@ export class WorldMechanicsExecution implements Execution {
   }
 
   private triggerDisaster(): void {
-    const kinds: WorldEventKind[] = [
-      "earthquake",
-      "tsunami",
-      "tornado",
-      "wildfire",
-      "meteor",
-      "drought",
-    ];
-    const kind = kinds[this.random.nextInt(0, kinds.length)];
+    const kind = this.nextDisasterKind();
     const tile = this.pickDisasterTile(kind === "tsunami");
     if (tile === null) return;
-    const radius = kind === "meteor" ? 18 : kind === "drought" ? 45 : 30;
+    const radius =
+      kind === "meteor"
+        ? 20
+        : kind === "drought"
+          ? 48
+          : kind === "tornado"
+            ? 22
+            : kind === "tsunami"
+              ? 36
+              : 30;
+    const durationTicks =
+      kind === "tornado"
+        ? 180
+        : kind === "wildfire" || kind === "drought"
+          ? 160
+          : kind === "tsunami"
+            ? 120
+            : kind === "earthquake"
+              ? 100
+              : 90;
     let pathEnd: TileRef | undefined;
-    if (kind === "tornado") {
+    if (kind === "tornado" || kind === "wildfire") {
       const x = Math.max(
         0,
         Math.min(
           this.game.width() - 1,
-          this.game.x(tile) + this.random.nextInt(-80, 81),
+          this.game.x(tile) + this.random.nextInt(-110, 111),
         ),
       );
       const y = Math.max(
         0,
         Math.min(
           this.game.height() - 1,
-          this.game.y(tile) + this.random.nextInt(-80, 81),
+          this.game.y(tile) + this.random.nextInt(-110, 111),
         ),
       );
       pathEnd = this.game.ref(x, y);
+    } else if (kind === "tsunami") {
+      // Drive the wave inland toward the map center so it reads as a moving
+      // wall of water instead of a generic circular pulse.
+      const sx = this.game.x(tile);
+      const sy = this.game.y(tile);
+      const dx = this.game.width() / 2 - sx;
+      const dy = this.game.height() / 2 - sy;
+      const len = Math.max(1, Math.hypot(dx, dy));
+      const x = Math.round(
+        Math.max(0, Math.min(this.game.width() - 1, sx + (dx / len) * 75)),
+      );
+      const y = Math.round(
+        Math.max(0, Math.min(this.game.height() - 1, sy + (dy / len) * 75)),
+      );
+      pathEnd = this.game.ref(x, y);
     }
-    this.game.addUpdate({
-      type: GameUpdateType.WorldEvent,
-      kind,
-      tile,
-      radius,
-      durationTicks: kind === "tornado" ? 100 : 50,
-      pathEnd,
-    });
+
+    const impactCenters: Array<{ tile: TileRef; radius: number }> = [
+      { tile, radius },
+    ];
+    if (pathEnd !== undefined) {
+      const steps = kind === "tornado" ? 6 : kind === "tsunami" ? 4 : 3;
+      for (let i = 1; i <= steps; i++) {
+        impactCenters.push({
+          tile: this.interpolateTile(tile, pathEnd, i / steps),
+          radius,
+        });
+      }
+    } else if (kind === "earthquake" || kind === "wildfire") {
+      const patches = kind === "wildfire" ? 5 : 3;
+      for (let i = 1; i < patches; i++) {
+        const patch = this.offsetLandTile(tile, Math.round(radius * 1.25));
+        if (patch !== null) {
+          impactCenters.push({
+            tile: patch,
+            radius: Math.round(radius * 0.65),
+          });
+        }
+      }
+    }
+
+    // Earthquakes and wildfires have several simultaneous visible epicenters.
+    // Moving disasters use one animated path but damage each sampled segment.
+    const visualCenters =
+      kind === "earthquake" || kind === "wildfire"
+        ? impactCenters
+        : impactCenters.slice(0, 1);
+    for (const center of visualCenters) {
+      this.game.addUpdate({
+        type: GameUpdateType.WorldEvent,
+        kind,
+        tile: center.tile,
+        radius: center.radius,
+        durationTicks,
+        pathEnd:
+          center.tile === tile &&
+          (kind === "tornado" || kind === "tsunami" || kind === "wildfire")
+            ? pathEnd
+            : undefined,
+      });
+    }
     this.game.displayMessage(
       DISASTER_MESSAGES[kind as keyof typeof DISASTER_MESSAGES],
       MessageType.WORLD_EVENT,
       null,
     );
-    this.applyDisasterDamage(tile, radius, kind);
+    this.applyDisasterDamage(impactCenters, kind);
+  }
+
+  private nextDisasterKind(): WorldEventKind {
+    if (this.disasterBag.length === 0) {
+      this.disasterBag = [
+        "earthquake",
+        "tsunami",
+        "tornado",
+        "wildfire",
+        "meteor",
+        "drought",
+      ];
+      for (let i = this.disasterBag.length - 1; i > 0; i--) {
+        const j = this.random.nextInt(0, i + 1);
+        [this.disasterBag[i], this.disasterBag[j]] = [
+          this.disasterBag[j],
+          this.disasterBag[i],
+        ];
+      }
+    }
+    return this.disasterBag.pop()!;
   }
 
   private pickDisasterTile(shore: boolean): TileRef | null {
-    for (let i = 0; i < 2_000; i++) {
+    const alive = this.game
+      .players()
+      .filter((player) => player.isAlive() && player.numTilesOwned() > 0);
+    const humans = alive.filter((player) => player.clientID() !== null);
+    const pool =
+      humans.length > 0 && this.random.nextInt(0, 100) < 45 ? humans : alive;
+    if (pool.length > 0) {
+      const start = this.random.nextInt(0, pool.length);
+      for (let offset = 0; offset < pool.length; offset++) {
+        const player = pool[(start + offset) % pool.length];
+        let selected: TileRef | null = null;
+        let seen = 0;
+        for (const owned of player.tiles()) {
+          if (shore && !this.game.isOceanShore(owned)) continue;
+          seen++;
+          if (this.random.nextInt(0, seen) === 0) selected = owned;
+        }
+        if (selected !== null) return selected;
+      }
+    }
+
+    for (let i = 0; i < 4_000; i++) {
       const tile = this.random.nextInt(
         0,
         this.game.width() * this.game.height(),
@@ -204,29 +320,101 @@ export class WorldMechanicsExecution implements Execution {
       if (shore && !this.game.isOceanShore(tile)) continue;
       return tile;
     }
+    // Landlocked maps still get the full event rotation. Here a tsunami is
+    // presented as an inland flash-flood surge instead of being discarded.
+    if (shore) return this.pickDisasterTile(false);
+    return null;
+  }
+
+  private interpolateTile(from: TileRef, to: TileRef, t: number): TileRef {
+    const x = Math.round(
+      this.game.x(from) + (this.game.x(to) - this.game.x(from)) * t,
+    );
+    const y = Math.round(
+      this.game.y(from) + (this.game.y(to) - this.game.y(from)) * t,
+    );
+    return this.game.ref(
+      Math.max(0, Math.min(this.game.width() - 1, x)),
+      Math.max(0, Math.min(this.game.height() - 1, y)),
+    );
+  }
+
+  private offsetLandTile(origin: TileRef, distance: number): TileRef | null {
+    for (let i = 0; i < 24; i++) {
+      const x = Math.max(
+        0,
+        Math.min(
+          this.game.width() - 1,
+          this.game.x(origin) + this.random.nextInt(-distance, distance + 1),
+        ),
+      );
+      const y = Math.max(
+        0,
+        Math.min(
+          this.game.height() - 1,
+          this.game.y(origin) + this.random.nextInt(-distance, distance + 1),
+        ),
+      );
+      const tile = this.game.ref(x, y);
+      if (this.game.isLand(tile)) return tile;
+    }
     return null;
   }
 
   private applyDisasterDamage(
-    tile: TileRef,
-    radius: number,
+    centers: Array<{ tile: TileRef; radius: number }>,
     kind: WorldEventKind,
   ): void {
     const affected = new Map<Player, number>();
     for (const unit of this.game.units()) {
-      if (!unit.isActive() || this.tileDistance(unit.tile(), tile) > radius)
+      if (
+        !unit.isActive() ||
+        !centers.some(
+          (center) =>
+            this.tileDistance(unit.tile(), center.tile) <= center.radius,
+        )
+      )
         continue;
       if (Structures.has(unit.type()) && kind !== "drought") unit.delete();
       affected.set(unit.owner(), (affected.get(unit.owner()) ?? 0) + 1);
     }
-    const severity =
-      kind === "meteor" ? 0.12 : kind === "drought" ? 0.04 : 0.07;
-    for (const player of this.game.players()) {
-      let tiles = 0;
-      for (const owned of player.tiles()) {
-        if (this.tileDistance(owned, tile) <= radius) tiles++;
+
+    // Scan only the affected circles. The old implementation walked every
+    // tile owned by every player, causing a large one-frame hitch on World.
+    const affectedTiles = new Set<TileRef>();
+    for (const center of centers) {
+      const cx = this.game.x(center.tile);
+      const cy = this.game.y(center.tile);
+      const r = center.radius;
+      for (
+        let y = Math.max(0, cy - r);
+        y <= Math.min(this.game.height() - 1, cy + r);
+        y++
+      ) {
+        for (
+          let x = Math.max(0, cx - r);
+          x <= Math.min(this.game.width() - 1, cx + r);
+          x++
+        ) {
+          if ((x - cx) ** 2 + (y - cy) ** 2 > r * r) continue;
+          const tile = this.game.ref(x, y);
+          if (!affectedTiles.add(tile) || !this.game.hasOwner(tile)) continue;
+          const owner = this.game.owner(tile);
+          if (!owner.isPlayer()) continue;
+          const player = this.game.player(owner.id());
+          affected.set(player, (affected.get(player) ?? 0) + 1);
+        }
       }
-      if (tiles === 0 && !affected.has(player)) continue;
+    }
+    const severity =
+      kind === "meteor"
+        ? 0.16
+        : kind === "drought"
+          ? 0.05
+          : kind === "tornado"
+            ? 0.1
+            : 0.08;
+    for (const [player, tiles] of affected) {
       const share = Math.min(1, tiles / Math.max(1, player.numTilesOwned()));
       player.removeTroops(
         Math.floor(player.troops() * Math.max(0.01, share * severity)),

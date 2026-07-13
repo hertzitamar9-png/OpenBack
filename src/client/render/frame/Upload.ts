@@ -86,7 +86,9 @@ export function uploadFrameData(
   }
 
   // --- Units + structures ---
-  view.updateUnits(frame.units, frame.tick);
+  if (frame.unitsDirty) {
+    view.updateUnits(frame.units, frame.tick);
+  }
   if (frame.structuresDirty) {
     view.updateStructures(frame.units);
   }
@@ -111,7 +113,9 @@ export function uploadFrameData(
   view.updateFogReveals(frame.fogReveals);
 
   // --- Names + player status ---
-  view.updateNames(frame.names, frame.players, false, frame.playerStatus);
+  if (frame.namesDirty) {
+    view.updateNames(frame.names, frame.players, false, frame.playerStatus);
+  }
 
   // --- Relations ---
   // Gated: updateRelations triggers a full-map border recompute downstream,

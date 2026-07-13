@@ -125,6 +125,8 @@ export class GameView implements GameMap {
    */
   private _frame: FrameData;
   private _structuresDirty = false;
+  private _unitsDirty = true;
+  private _statusDirty = true;
   /** True until first populateFrame() — controls full-vs-delta tile upload. */
   private _firstPopulate = true;
 
@@ -218,6 +220,8 @@ export class GameView implements GameMap {
       changedTiles: this._changedTilesScratch,
       railroadDirty: false,
       revealedRailTiles: this.railroadCache.revealedRailTiles,
+      unitsDirty: true,
+      namesDirty: true,
       trailDirtyRowMin: 0,
       trailDirtyRowMax: -1,
       // Derived data — populated each tick by populateFrame(). Empty defaults
@@ -292,7 +296,9 @@ export class GameView implements GameMap {
   }
 
   public update(gu: GameUpdateViewData) {
+    if (this.toDelete.size > 0) this._unitsDirty = true;
     this.toDelete.forEach((id) => {
+      if (this._statusNukeUnitIds.has(id)) this._statusDirty = true;
       this._units.delete(id);
       this._unitStates.delete(id);
       this._trailUnitIds.delete(id);
@@ -478,7 +484,10 @@ export class GameView implements GameMap {
         unit.lastPos.length = 1;
       }
     }
-    gu.updates[GameUpdateType.Unit].forEach((update) => {
+    const unitUpdates = gu.updates[GameUpdateType.Unit];
+    if (unitUpdates.length > 0) this._unitsDirty = true;
+    unitUpdates.forEach((update) => {
+      if (STATUS_NUKE_TYPES.has(update.unitType)) this._statusDirty = true;
       let unit = this._units.get(update.id);
       const isStructure = STRUCTURE_TYPES.has(update.unitType);
       if (unit !== undefined) {
@@ -519,6 +528,9 @@ export class GameView implements GameMap {
       this.updateUnitIndexes(unit);
     });
 
+    if (this.unitMotionPlans.size > 0 || this.trainMotionPlans.size > 0) {
+      this._unitsDirty = true;
+    }
     this.advanceMotionPlannedUnits(gu.tick);
     this.rebuildMotionPlannedUnitIdsCacheIfDirty();
 
@@ -587,7 +599,8 @@ export class GameView implements GameMap {
     // Names map — rebuilt only when a placement record arrived or a player
     // was added (nameData values cannot change between those ticks). Entry
     // order is irrelevant for the renderer.
-    if (this._namesDirty) {
+    const namesChanged = this._namesDirty;
+    if (namesChanged) {
       this._namesDirty = false;
       this._names.clear();
       for (const p of this._players.values()) {
@@ -615,6 +628,10 @@ export class GameView implements GameMap {
     f.railroadDirty = this.railroadCache.railroadDirty;
     f.trailDirtyRowMin = this.trailManager.dirtyRowMin;
     f.trailDirtyRowMax = this.trailManager.dirtyRowMax;
+    f.unitsDirty = this._unitsDirty;
+    // Troop labels intentionally refresh at 2 Hz. Status icons still update
+    // immediately, without forcing every moving unit to rebuild every label.
+    f.namesDirty = namesChanged || this._statusDirty || gu.tick % 5 === 0;
 
     f.playerStatus = computePlayerStatus(
       this._playerStates,
@@ -700,6 +717,8 @@ export class GameView implements GameMap {
     if (this._firstPopulate) {
       f.changedTiles = null;
       f.structuresDirty = true; // force initial structure upload
+      f.unitsDirty = true;
+      f.namesDirty = true;
       this._firstPopulate = false;
     } else {
       f.changedTiles = this._changedTilesScratch;
@@ -708,6 +727,8 @@ export class GameView implements GameMap {
     // Reset transient flags for next tick.
     this.railroadCache.clearDirty();
     this._structuresDirty = false;
+    this._unitsDirty = false;
+    this._statusDirty = false;
   }
 
   /** Clear and repopulate _frame.events arrays from this tick's gu.updates. */

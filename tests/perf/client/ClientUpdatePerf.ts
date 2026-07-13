@@ -191,6 +191,8 @@ function createGlStub() {
     applyDeadUnits: noop("applyDeadUnits"),
     applyConquestEvents: noop("applyConquestEvents"),
     applyBonusEvents: noop("applyBonusEvents"),
+    applyWorldEvents: noop("applyWorldEvents"),
+    updateFogReveals: noop("updateFogReveals"),
     updateAttackRings: noop("updateAttackRings"),
     updateNukeTelegraphs: noop("updateNukeTelegraphs"),
     updateNames: (names: ReadonlyMap<string, unknown>) => {
