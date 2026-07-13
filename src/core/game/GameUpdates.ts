@@ -97,6 +97,7 @@ export enum GameUpdateType {
   SpawnPhaseEnd,
   GamePaused,
   DonateEvent,
+  WorldEvent,
 }
 
 export type GameUpdate =
@@ -122,7 +123,32 @@ export type GameUpdate =
   | EmbargoUpdate
   | SpawnPhaseEndUpdate
   | GamePausedUpdate
-  | DonateEventUpdate;
+  | DonateEventUpdate
+  | WorldEventUpdate;
+
+export type WorldEventKind =
+  | "objective_spawn"
+  | "objective_control"
+  | "objective_reward"
+  | "earthquake"
+  | "tsunami"
+  | "tornado"
+  | "wildfire"
+  | "meteor"
+  | "drought";
+
+export interface WorldEventUpdate {
+  type: GameUpdateType.WorldEvent;
+  kind: WorldEventKind;
+  tile: TileRef;
+  radius: number;
+  durationTicks: number;
+  objectiveId?: number;
+  objectiveReward?: "gold" | "troops" | "radar" | "victory";
+  ownerID?: PlayerID;
+  amount?: number;
+  pathEnd?: TileRef;
+}
 
 export interface BonusEventUpdate {
   type: GameUpdateType.BonusEvent;
@@ -221,6 +247,7 @@ export interface PlayerUpdate {
   id: PlayerID;
   nameViewData?: NameViewData;
   clientID?: ClientID | null;
+  controllerClientIDs?: ClientID[];
   name?: string;
   displayName?: string;
   team?: Team;

@@ -106,7 +106,11 @@ export class TrainExecution implements Execution {
       throw new Error("Not initialized");
     }
 
-    if (!this.train.isActive() || !this.activeSourceOrDestination()) {
+    if (
+      !this.train.isActive() ||
+      !this.activeSourceOrDestination() ||
+      !this.currentRouteStillConnected()
+    ) {
       this.deleteTrain();
       return;
     }
@@ -118,6 +122,13 @@ export class TrainExecution implements Execution {
       this.targetReached();
       this.deleteTrain();
     }
+  }
+
+  private currentRouteStillConnected(): boolean {
+    return (
+      this.stations.length > 1 &&
+      this.stations[0].getRailroadTo(this.stations[1]) !== null
+    );
   }
 
   loadCargo() {

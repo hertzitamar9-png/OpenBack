@@ -443,6 +443,9 @@ export class PlayerInfo {
     public readonly isLobbyCreator: boolean = false,
     public readonly clanTag: string | null = null,
     public readonly friends: ClientID[] = [],
+    public readonly controllerClientIDs: ClientID[] = clientID === null
+      ? []
+      : [clientID],
   ) {
     this.displayName = formatPlayerDisplayName(this.name, this.clanTag);
   }
@@ -566,6 +569,7 @@ export interface Player {
   name(): string;
   displayName(): string;
   clientID(): ClientID | null;
+  controllerClientIDs(): readonly ClientID[];
   id(): PlayerID;
   type(): PlayerType;
   isPlayer(): this is Player;
@@ -934,6 +938,9 @@ export enum MessageType {
   DONATION_RECEIVED,
   CHAT,
   RENEW_ALLIANCE,
+  ENCIRCLEMENT_STARTED,
+  WAR_EXHAUSTION,
+  WORLD_EVENT,
 }
 
 // Message categories used for filtering events in the EventsDisplay
@@ -966,6 +973,9 @@ export const MESSAGE_TYPE_CATEGORIES: Record<MessageType, MessageCategory> = {
   [MessageType.ALLIANCE_BROKEN]: MessageCategory.ALLIANCE,
   [MessageType.ALLIANCE_EXPIRED]: MessageCategory.ALLIANCE,
   [MessageType.RENEW_ALLIANCE]: MessageCategory.ALLIANCE,
+  [MessageType.ENCIRCLEMENT_STARTED]: MessageCategory.ATTACK,
+  [MessageType.WAR_EXHAUSTION]: MessageCategory.ATTACK,
+  [MessageType.WORLD_EVENT]: MessageCategory.ATTACK,
   [MessageType.DONATION_SENT]: MessageCategory.TRADE,
   [MessageType.DONATION_RECEIVED]: MessageCategory.TRADE,
   [MessageType.CHAT]: MessageCategory.CHAT,

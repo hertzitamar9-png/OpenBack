@@ -3,6 +3,7 @@ import {
   Cell,
   Execution,
   Game,
+  MessageType,
   Player,
   Structures,
   UnitType,
@@ -30,6 +31,12 @@ export class PlayerExecution implements Execution {
   private active = true;
   // Reusable neighbor buffer to avoid closures/allocation in cluster checks.
   private nbuf: TileRef[] = [0, 0, 0, 0];
+  private encirclements = new Map<
+    number,
+    { since: number; lastSeen: number }
+  >();
+  private warExhaustionTicks = 0;
+  private lastExhaustionBand = 0;
 
   constructor(private player: Player) {}
 
@@ -76,9 +83,14 @@ export class PlayerExecution implements Execution {
       return;
     }
 
-    const troopInc = this.config.troopIncreaseRate(this.player);
+    const exhaustion = this.updateWarExhaustion();
+    const troopInc = this.config.troopIncreaseRate(this.player) * exhaustion;
     this.player.addTroops(troopInc);
-    const goldFromWorkers = this.config.goldAdditionRate(this.player);
+    const goldFromWorkers = BigInt(
+      Math.floor(
+        Number(this.config.goldAdditionRate(this.player)) * exhaustion,
+      ),
+    );
     this.player.addGold(goldFromWorkers);
 
     // Record stats
@@ -104,7 +116,10 @@ export class PlayerExecution implements Execution {
       ticks - this.lastCalc > this.ticksPerClusterCalc ||
       this.player.numTilesOwned() < 100
     ) {
-      if (this.player.lastTileChange() >= this.lastCalc) {
+      if (
+        this.player.lastTileChange() >= this.lastCalc ||
+        this.encirclements.size > 0
+      ) {
         this.lastCalc = ticks;
         const start = performance.now();
         this.removeClusters();
@@ -117,10 +132,12 @@ export class PlayerExecution implements Execution {
   }
 
   private removeClusters() {
+    const calcTick = this.mg.ticks();
     const clusters = this.calculateClusters();
 
     if (clusters.length === 0) {
       this.player.largestClusterBoundingBox = null;
+      this.encirclements.clear();
       return;
     }
 
@@ -155,6 +172,10 @@ export class PlayerExecution implements Execution {
       if (this.isSurrounded(cluster)) {
         this.removeCluster(cluster);
       }
+    }
+
+    for (const [anchor, state] of this.encirclements) {
+      if (state.lastSeen !== calcTick) this.encirclements.delete(anchor);
     }
   }
 
@@ -272,6 +293,41 @@ export class PlayerExecution implements Execution {
     // surrounded-cluster annexation against the much larger defender either.
     if (hasPlaneBeachhead(this.mg, capturing)) return;
 
+    if (this.config.worldMechanics().encirclement) {
+      let anchor = Number.MAX_SAFE_INTEGER;
+      for (const tile of cluster) anchor = Math.min(anchor, tile);
+      const now = this.mg.ticks();
+      let state = this.encirclements.get(anchor);
+      if (!state) {
+        state = { since: now, lastSeen: now };
+        this.encirclements.set(anchor, state);
+        this.mg.displayMessage(
+          "events_display.encirclement_started",
+          MessageType.ENCIRCLEMENT_STARTED,
+          this.player.id(),
+          undefined,
+          { enemy: capturing.name() },
+        );
+      }
+      state.lastSeen = now;
+
+      // A pocket loses readiness every two-second evaluation. Larger pockets
+      // drain proportionally, but the loss is capped so an encirclement never
+      // deletes an army in a single update.
+      const share = Math.min(
+        1,
+        cluster.size / Math.max(1, this.player.numTilesOwned()),
+      );
+      this.player.removeTroops(
+        Math.max(1, Math.floor(this.player.troops() * share * 0.0125)),
+      );
+
+      // Fifteen seconds gives the defender time to reopen a corridor. Only a
+      // continuously closed pocket is annexed.
+      if (now - state.since < 150) return;
+      this.encirclements.delete(anchor);
+    }
+
     const firstTile = cluster.values().next().value;
     if (!firstTile) {
       return;
@@ -292,6 +348,36 @@ export class PlayerExecution implements Execution {
     for (const tile of tiles) {
       capturing.conquer(tile);
     }
+  }
+
+  private updateWarExhaustion(): number {
+    if (!this.config.worldMechanics().warExhaustion) return 1;
+    const fighting =
+      this.player.outgoingAttacks().length > 0 ||
+      this.player.incomingAttacks().length > 0;
+    if (fighting) {
+      this.warExhaustionTicks = Math.min(6_000, this.warExhaustionTicks + 1);
+    } else {
+      // Recovery is deliberately slower than accumulation: repeated short
+      // wars still cost something, while sustained peace fully restores the
+      // economy.
+      this.warExhaustionTicks = Math.max(0, this.warExhaustionTicks - 0.25);
+    }
+    const factor = Math.max(0.45, 1 - this.warExhaustionTicks / 10_000);
+    const band = Math.floor((1 - factor) / 0.1);
+    if (band > this.lastExhaustionBand && band > 0) {
+      this.lastExhaustionBand = band;
+      this.mg.displayMessage(
+        "events_display.war_exhaustion",
+        MessageType.WAR_EXHAUSTION,
+        this.player.id(),
+        undefined,
+        { penalty: Math.round((1 - factor) * 100) },
+      );
+    } else if (band < this.lastExhaustionBand) {
+      this.lastExhaustionBand = band;
+    }
+    return factor;
   }
 
   private getCapturingPlayer(cluster: Set<TileRef>): Player | null {

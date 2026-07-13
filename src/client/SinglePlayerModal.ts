@@ -64,6 +64,9 @@ const DEFAULT_OPTIONS = {
   waterNukes: false,
   doomsdayClock: false,
   doomsdayClockSpeed: "normal" as DoomsdayClockSpeed,
+  strategicObjectives: false,
+  naturalDisasters: false,
+  fogOfWar: false,
 } as const;
 
 @customElement("single-player-modal")
@@ -107,6 +110,10 @@ export class SinglePlayerModal extends BaseModal {
   @state() private doomsdayClock: boolean = DEFAULT_OPTIONS.doomsdayClock;
   @state() private doomsdayClockSpeed: DoomsdayClockSpeed =
     DEFAULT_OPTIONS.doomsdayClockSpeed;
+  @state() private strategicObjectives: boolean =
+    DEFAULT_OPTIONS.strategicObjectives;
+  @state() private naturalDisasters: boolean = DEFAULT_OPTIONS.naturalDisasters;
+  @state() private fogOfWar: boolean = DEFAULT_OPTIONS.fogOfWar;
 
   private mapLoader = terrainMapFileLoader;
 
@@ -352,6 +359,18 @@ export class SinglePlayerModal extends BaseModal {
                     checked: this.doomsdayClock,
                     doomsdayClockSpeed: this.doomsdayClockSpeed,
                   },
+                  {
+                    labelKey: "single_modal.strategic_objectives",
+                    checked: this.strategicObjectives,
+                  },
+                  {
+                    labelKey: "single_modal.natural_disasters",
+                    checked: this.naturalDisasters,
+                  },
+                  {
+                    labelKey: "single_modal.fog_of_war",
+                    checked: this.fogOfWar,
+                  },
                 ],
                 inputCards,
               },
@@ -416,6 +435,9 @@ export class SinglePlayerModal extends BaseModal {
       // Pace only matters when the mode is on (startGame drops it when off).
       (this.doomsdayClock &&
         this.doomsdayClockSpeed !== DEFAULT_OPTIONS.doomsdayClockSpeed) ||
+      this.strategicObjectives !== DEFAULT_OPTIONS.strategicObjectives ||
+      this.naturalDisasters !== DEFAULT_OPTIONS.naturalDisasters ||
+      this.fogOfWar !== DEFAULT_OPTIONS.fogOfWar ||
       this.disabledUnits.length > 0
     );
   }
@@ -447,6 +469,9 @@ export class SinglePlayerModal extends BaseModal {
     this.waterNukes = DEFAULT_OPTIONS.waterNukes;
     this.doomsdayClock = DEFAULT_OPTIONS.doomsdayClock;
     this.doomsdayClockSpeed = DEFAULT_OPTIONS.doomsdayClockSpeed;
+    this.strategicObjectives = DEFAULT_OPTIONS.strategicObjectives;
+    this.naturalDisasters = DEFAULT_OPTIONS.naturalDisasters;
+    this.fogOfWar = DEFAULT_OPTIONS.fogOfWar;
   }
 
   protected onOpen(): void {
@@ -536,6 +561,15 @@ export class SinglePlayerModal extends BaseModal {
         break;
       case "single_modal.doomsday_clock":
         this.doomsdayClock = checked;
+        break;
+      case "single_modal.strategic_objectives":
+        this.strategicObjectives = checked;
+        break;
+      case "single_modal.natural_disasters":
+        this.naturalDisasters = checked;
+        break;
+      case "single_modal.fog_of_war":
+        this.fogOfWar = checked;
         break;
       default:
         break;
@@ -776,6 +810,15 @@ export class SinglePlayerModal extends BaseModal {
                     },
                   }
                 : {}),
+              worldMechanics: {
+                encirclement: true,
+                warExhaustion: true,
+                logisticsCargo: true,
+                strategicObjectives: this.strategicObjectives,
+                naturalDisasters: this.naturalDisasters,
+                fogOfWar: this.fogOfWar,
+                sharedControlSize: 1,
+              },
             },
             lobbyCreatedAt: Date.now(), // ms; server should be authoritative in MP
           },

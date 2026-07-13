@@ -839,14 +839,7 @@ export class GameServer {
       lobbyCreatedAt: this.createdAt,
       visibleAt: this.visibleAt,
       config: this.gameConfig,
-      players: this.activeClients.map((c) => ({
-        username: c.username,
-        clanTag: c.clanTag ?? null,
-        clientID: c.clientID,
-        cosmetics: c.cosmetics,
-        isLobbyCreator: this.lobbyCreatorID === c.clientID,
-        friends: friendsFor(c),
-      })),
+      players: this.sharedControlPlayers(friendsFor),
     });
     if (!result.success) {
       const error = z.prettifyError(result.error);
@@ -1105,6 +1098,50 @@ export class GameServer {
   // clientIDs, dropping friends not present in this game. Returns undefined
   // when no friends are present so the field can be omitted from the wire
   // payload.
+  private sharedControlPlayers(
+    friendsFor: (client: Client) => ClientID[] | undefined,
+  ) {
+    const size = this.gameConfig.worldMechanics?.sharedControlSize ?? 1;
+    if (size <= 1) {
+      return this.activeClients.map((c) => ({
+        username: c.username,
+        clanTag: c.clanTag ?? null,
+        clientID: c.clientID,
+        controllerClientIDs: [c.clientID],
+        cosmetics: c.cosmetics,
+        isLobbyCreator: this.lobbyCreatorID === c.clientID,
+        friends: friendsFor(c),
+      }));
+    }
+
+    const countries = [];
+    for (let i = 0; i < this.activeClients.length; i += size) {
+      const group = this.activeClients.slice(i, i + size);
+      const primary = group[0];
+      const controllerClientIDs = group.map((c) => c.clientID);
+      const friendIDs = new Set<ClientID>();
+      for (const controller of group) {
+        for (const friend of friendsFor(controller) ?? [])
+          friendIDs.add(friend);
+      }
+      countries.push({
+        username:
+          group.length === 1
+            ? primary.username
+            : `${primary.username} +${group.length - 1}`,
+        clanTag: primary.clanTag ?? null,
+        clientID: primary.clientID,
+        controllerClientIDs,
+        cosmetics: primary.cosmetics,
+        isLobbyCreator: group.some(
+          (controller) => this.lobbyCreatorID === controller.clientID,
+        ),
+        friends: friendIDs.size > 0 ? [...friendIDs] : undefined,
+      });
+    }
+    return countries;
+  }
+
   private buildFriendsLookup(): (client: Client) => ClientID[] | undefined {
     const publicIdToClientID = new Map<string, ClientID>();
     for (const c of this.activeClients) {

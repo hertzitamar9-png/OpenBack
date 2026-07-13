@@ -85,6 +85,11 @@ export class HostLobbyModal extends BaseModal {
   @state() private customAllianceMinutes: number | undefined = undefined;
   @state() private doomsdayClock: boolean = false;
   @state() private doomsdayClockSpeed: DoomsdayClockSpeed = "normal";
+  @state() private strategicObjectives = false;
+  @state() private naturalDisasters = false;
+  @state() private fogOfWar = false;
+  @state() private sharedControl = false;
+  @state() private sharedControlSize = 2;
   @state() private anonymizeNames: boolean = false;
   @state() private nameReveals: string[] = [];
   @state() private whitelistEnabled: boolean = false;
@@ -224,6 +229,21 @@ export class HostLobbyModal extends BaseModal {
           });
 
     const inputCards = [
+      html`<toggle-input-card
+        .labelKey=${"host_modal.shared_control"}
+        .checked=${this.sharedControl}
+        .inputId=${"shared-control-size"}
+        .inputMin=${2}
+        .inputMax=${20}
+        .inputStep=${1}
+        .inputValue=${this.sharedControlSize}
+        .inputAriaLabel=${translateText("host_modal.shared_control")}
+        .inputPlaceholder=${"2"}
+        .defaultInputValue=${2}
+        .minValidOnEnable=${2}
+        .onToggle=${this.handleSharedControlToggle}
+        .onInput=${this.handleSharedControlSizeInput}
+      ></toggle-input-card>`,
       html`<toggle-input-card
         .labelKey=${"host_modal.max_timer"}
         .checked=${this.maxTimer}
@@ -452,6 +472,18 @@ export class HostLobbyModal extends BaseModal {
                     doomsdayClockSpeed: this.doomsdayClockSpeed,
                   },
                   {
+                    labelKey: "host_modal.strategic_objectives",
+                    checked: this.strategicObjectives,
+                  },
+                  {
+                    labelKey: "host_modal.natural_disasters",
+                    checked: this.naturalDisasters,
+                  },
+                  {
+                    labelKey: "host_modal.fog_of_war",
+                    checked: this.fogOfWar,
+                  },
+                  {
                     labelKey: "host_modal.host_cheats",
                     checked: this.hostCheatsEnabled,
                   },
@@ -652,6 +684,11 @@ export class HostLobbyModal extends BaseModal {
     this.customAllianceMinutes = undefined;
     this.doomsdayClock = false;
     this.doomsdayClockSpeed = "normal";
+    this.strategicObjectives = false;
+    this.naturalDisasters = false;
+    this.fogOfWar = false;
+    this.sharedControl = false;
+    this.sharedControlSize = 2;
     this.anonymizeNames = false;
     this.nameReveals = [];
     this.whitelistEnabled = false;
@@ -758,6 +795,18 @@ export class HostLobbyModal extends BaseModal {
         this.doomsdayClock = checked;
         this.putGameConfig();
         break;
+      case "host_modal.strategic_objectives":
+        this.strategicObjectives = checked;
+        this.putGameConfig();
+        break;
+      case "host_modal.natural_disasters":
+        this.naturalDisasters = checked;
+        this.putGameConfig();
+        break;
+      case "host_modal.fog_of_war":
+        this.fogOfWar = checked;
+        this.putGameConfig();
+        break;
       case "host_modal.host_cheats":
         this.hostCheatsEnabled = checked;
         this.putGameConfig();
@@ -833,6 +882,29 @@ export class HostLobbyModal extends BaseModal {
   ) => {
     this.maxTimer = checked;
     this.maxTimerValue = toOptionalNumber(value);
+    this.putGameConfig();
+  };
+
+  private handleSharedControlToggle = (
+    checked: boolean,
+    value: number | string | undefined,
+  ) => {
+    this.sharedControl = checked;
+    this.sharedControlSize = Math.max(
+      2,
+      Math.min(20, Math.floor(Number(value) || 2)),
+    );
+    this.putGameConfig();
+  };
+
+  private handleSharedControlSizeInput = (e: Event) => {
+    this.sharedControlSize = Math.max(
+      2,
+      Math.min(
+        20,
+        Math.floor(Number((e.target as HTMLInputElement).value) || 2),
+      ),
+    );
     this.putGameConfig();
   };
 
@@ -1172,6 +1244,17 @@ export class HostLobbyModal extends BaseModal {
             doomsdayClock: this.doomsdayClock
               ? { enabled: true, speed: this.doomsdayClockSpeed }
               : { enabled: false },
+            worldMechanics: {
+              encirclement: true,
+              warExhaustion: true,
+              logisticsCargo: true,
+              strategicObjectives: this.strategicObjectives,
+              naturalDisasters: this.naturalDisasters,
+              fogOfWar: this.fogOfWar,
+              sharedControlSize: this.sharedControl
+                ? this.sharedControlSize
+                : 1,
+            },
             anonymizeNames: this.anonymizeNames,
             nameReveals: this.nameReveals,
             allowedPublicIds: this.whitelistEnabled

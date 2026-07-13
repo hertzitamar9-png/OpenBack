@@ -57,8 +57,15 @@ describe("PlayerExecution Annexation Bug", () => {
     largePlayer.conquer(game.ref(49, 49));
     smallPlayer.conquer(game.ref(50, 50));
 
-    // Annexation happens here
+    // Encirclement now weakens the pocket first instead of instantly deleting
+    // it. The defender gets a real 15-second corridor-reopening window.
     executeTicks(game, 50);
+    expect(smallPlayer.numTilesOwned()).toBeGreaterThan(0);
+    expect(smallPlayer.troops()).toBeLessThan(
+      game.config().maxTroops(smallPlayer),
+    );
+
+    executeTicks(game, 130);
     expect(largePlayer.numTilesOwned()).toBeGreaterThan(initialLargeTiles);
     expect(smallPlayer.numTilesOwned()).toBe(0);
   });

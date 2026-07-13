@@ -20,6 +20,24 @@ describe("ranked 1v1 playlist", () => {
     expect(config.startingGold).toBe(0);
     expect(config.goldMultiplier).toBe(1);
     expect(config.randomSpawn).toBe(true);
+    expect(config.worldMechanics?.strategicObjectives).toBe(true);
+    expect(config.worldMechanics?.warExhaustion).toBe(true);
+  });
+
+  it("rolls at most one optional world modifier in ranked", () => {
+    for (const roll of [0.1, 0.25, 0.38, 0.8]) {
+      let call = 0;
+      const config = new MapPlaylist().get1v1Config(() => {
+        call++;
+        return call === 8 ? roll : 0.5;
+      });
+      const modifiers = [
+        config.worldMechanics?.strategicObjectives,
+        config.worldMechanics?.naturalDisasters,
+        config.worldMechanics?.fogOfWar,
+      ].filter(Boolean);
+      expect(modifiers.length).toBeLessThanOrEqual(1);
+    }
   });
 
   it("can create a normal high-bot match with hard nations and boosted gold", () => {

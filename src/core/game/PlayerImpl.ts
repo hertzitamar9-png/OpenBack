@@ -303,6 +303,7 @@ export class PlayerImpl implements Player {
     return {
       type: GameUpdateType.Player,
       clientID: this.clientID(),
+      controllerClientIDs: [...this.controllerClientIDs()],
       name: this.name(),
       displayName: this.displayName(),
       id: this.id(),
@@ -347,6 +348,10 @@ export class PlayerImpl implements Player {
 
   clientID(): ClientID | null {
     return this.playerInfo.clientID;
+  }
+
+  controllerClientIDs(): readonly ClientID[] {
+    return this.playerInfo.controllerClientIDs;
   }
 
   id(): PlayerID {

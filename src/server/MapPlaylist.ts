@@ -415,6 +415,13 @@ export class MapPlaylist {
       ];
     const isHardNations = nations !== "disabled" && random() < 0.35;
     const randomSpawn = random() < 0.35;
+    // Ranked can roll one of the new world modifiers. Keeping this mutually
+    // exclusive makes each match readable while still producing genuinely
+    // different contests.
+    const worldRoll = random();
+    const strategicObjectives = worldRoll < 0.2;
+    const naturalDisasters = worldRoll >= 0.2 && worldRoll < 0.32;
+    const fogOfWar = worldRoll >= 0.32 && worldRoll < 0.44;
 
     return {
       donateGold: false,
@@ -437,6 +444,15 @@ export class MapPlaylist {
       goldMultiplier,
       spawnImmunityDuration: 30 * 10,
       disabledUnits: [],
+      worldMechanics: {
+        encirclement: true,
+        warExhaustion: true,
+        logisticsCargo: true,
+        strategicObjectives,
+        naturalDisasters,
+        fogOfWar,
+        sharedControlSize: 1,
+      },
       publicGameModifiers: {
         isCompact,
         isRandomSpawn: randomSpawn,

@@ -27,6 +27,7 @@ import type {
   RendererConfig,
   TilePair,
   UnitState,
+  WorldEventFx,
 } from "../types";
 import type { SpawnCenter } from "./passes/SpawnOverlayPass";
 import type { AttackTroopLabel } from "./passes/WorldTextPass";
@@ -183,6 +184,14 @@ export class MapRenderer {
   }
   applyBonusEvents(events: BonusEvent[]): void {
     this.renderer?.applyBonusEvents(events);
+  }
+  applyWorldEvents(events: WorldEventFx[]): void {
+    this.renderer?.applyWorldEvents(events);
+  }
+  updateFogReveals(
+    reveals: Array<{ x: number; y: number; radius: number }>,
+  ): void {
+    this.renderer?.updateFogReveals(reveals);
   }
   applyRailroadDust(tileRefs: number[]): void {
     this.renderer?.applyRailroadDust(tileRefs);

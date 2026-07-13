@@ -82,4 +82,58 @@ describe("PlayerExecution", () => {
     expect(city.owner()).toBe(otherPlayer);
     expect(city.isActive()).toBe(true);
   });
+
+  test("war exhaustion reduces both income streams during a long war", async () => {
+    const exhaustedGame = await setup(
+      "big_plains",
+      { infiniteGold: false, instantBuild: true },
+      [
+        new PlayerInfo("war", PlayerType.Human, "war_client", "war_id"),
+        new PlayerInfo("peace", PlayerType.Human, "peace_client", "peace_id"),
+      ],
+    );
+    const war = exhaustedGame.player("war_id");
+    const peace = exhaustedGame.player("peace_id");
+    war.conquer(exhaustedGame.ref(20, 20));
+    peace.conquer(exhaustedGame.ref(80, 80));
+    war.addTroops(10_000);
+    peace.addTroops(10_000);
+    (war as unknown as { _outgoingAttacks: object[] })._outgoingAttacks.push({});
+
+    const warExec = new PlayerExecution(war);
+    const peaceExec = new PlayerExecution(peace);
+    warExec.init(exhaustedGame, 0);
+    peaceExec.init(exhaustedGame, 0);
+    const warGold = war.gold();
+    const peaceGold = peace.gold();
+    for (let tick = 1; tick <= 1_000; tick++) {
+      warExec.tick(tick);
+      peaceExec.tick(tick);
+    }
+
+    expect(war.gold() - warGold).toBeLessThan(peace.gold() - peaceGold);
+    expect(war.troops()).toBeLessThan(peace.troops());
+  });
+
+  test("all shared controllers resolve to the same country", async () => {
+    const shared = await setup(
+      "big_plains",
+      { infiniteGold: false },
+      [
+        new PlayerInfo(
+          "shared",
+          PlayerType.Human,
+          "captain",
+          "shared_id",
+          false,
+          null,
+          [],
+          ["captain", "friend1", "friend2"],
+        ),
+      ],
+    );
+    expect(shared.playerByClientID("captain")?.id()).toBe("shared_id");
+    expect(shared.playerByClientID("friend1")?.id()).toBe("shared_id");
+    expect(shared.playerByClientID("friend2")?.id()).toBe("shared_id");
+  });
 });

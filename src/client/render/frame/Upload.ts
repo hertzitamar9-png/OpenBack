@@ -10,6 +10,7 @@ import type {
   PlayerStatusData,
   TilePair,
   UnitState,
+  WorldEventFx,
 } from "../types";
 
 /**
@@ -31,6 +32,8 @@ export interface FrameUploadTarget {
   applyDeadUnits(deadUnits: DeadUnitFx[]): void;
   applyConquestEvents(events: ConquestFx[]): void;
   applyBonusEvents(events: BonusEvent[]): void;
+  applyWorldEvents(events: WorldEventFx[]): void;
+  updateFogReveals(reveals: Array<{ x: number; y: number; radius: number }>): void;
   updateAttackRings(rings: AttackRingInput[]): void;
   updateNukeTelegraphs(data: NukeTelegraphData[]): void;
   updateNames(
@@ -96,10 +99,14 @@ export function uploadFrameData(
   if (frame.events.bonusEvents.length > 0) {
     view.applyBonusEvents(frame.events.bonusEvents);
   }
+  if (frame.events.worldEvents.length > 0) {
+    view.applyWorldEvents(frame.events.worldEvents);
+  }
 
   // --- Attack rings + nuke telegraphs ---
   view.updateAttackRings(frame.attackRings);
   view.updateNukeTelegraphs(frame.nukeTelegraphs);
+  view.updateFogReveals(frame.fogReveals);
 
   // --- Names + player status ---
   view.updateNames(frame.names, frame.players, false, frame.playerStatus);

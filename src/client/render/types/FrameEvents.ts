@@ -1,3 +1,4 @@
+import type { WorldEventKind } from "../../../core/game/GameUpdates";
 import type { ConquestFx, DeadUnitFx } from "./Renderer";
 
 // ── Supporting event types ──────────────────────────────────────────────
@@ -8,6 +9,14 @@ export interface BonusEvent {
   tile: number;
   gold: number;
   troops: number;
+}
+
+export interface WorldEventFx {
+  kind: WorldEventKind;
+  tile: number;
+  radius: number;
+  durationTicks: number;
+  pathEnd?: number;
 }
 
 // ── FrameEvents ─────────────────────────────────────────────────────────
@@ -23,4 +32,5 @@ export interface FrameEvents {
   readonly deadUnits: DeadUnitFx[];
   readonly conquestEvents: ConquestFx[];
   readonly bonusEvents: BonusEvent[];
+  readonly worldEvents: WorldEventFx[];
 }

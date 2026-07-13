@@ -5,6 +5,7 @@ import { Executor } from "./execution/ExecutionManager";
 import { RecomputeRailClusterExecution } from "./execution/RecomputeRailClusterExecution";
 import { SpawnTimerExecution } from "./execution/SpawnTimerExecution";
 import { WinCheckExecution } from "./execution/WinCheckExecution";
+import { WorldMechanicsExecution } from "./execution/WorldMechanicsExecution";
 import {
   AllPlayers,
   BuildableUnit,
@@ -55,6 +56,7 @@ export async function createGameRunner(
       p.isLobbyCreator ?? false,
       p.clanTag,
       p.friends ?? [],
+      p.controllerClientIDs ?? [p.clientID],
     );
   });
 
@@ -79,6 +81,7 @@ export async function createGameRunner(
     game,
     new Executor(game, gameStart.gameID, clientID),
     callBack,
+    simpleHash(gameStart.gameID),
   );
   gr.init();
   return gr;
@@ -96,6 +99,7 @@ export class GameRunner {
     public game: Game,
     private execManager: Executor,
     private callBack: (gu: GameUpdateViewData | ErrorUpdate) => void,
+    private worldSeed = 0,
   ) {}
 
   init() {
@@ -114,6 +118,14 @@ export class GameRunner {
       );
     }
     this.game.addExecution(new WinCheckExecution());
+    const wm = this.game.config().worldMechanics();
+    if (wm.strategicObjectives || wm.naturalDisasters) {
+      this.game.addExecution(
+        new WorldMechanicsExecution(
+          this.worldSeed || simpleHash(this.game.config().gameConfig().gameMap),
+        ),
+      );
+    }
     if (this.game.config().doomsdayClockConfig().enabled) {
       this.game.addExecution(new DoomsdayClockExecution());
     }

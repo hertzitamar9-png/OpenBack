@@ -644,7 +644,7 @@ export class GameImpl implements Game {
 
   playerByClientID(id: ClientID): Player | null {
     for (const [, player] of this._players) {
-      if (player.clientID() === id) {
+      if (player.controllerClientIDs().includes(id)) {
         return player;
       }
     }

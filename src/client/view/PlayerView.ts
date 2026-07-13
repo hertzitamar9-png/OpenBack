@@ -62,6 +62,8 @@ function staticFromUpdate(pu: PlayerUpdate): PlayerStatic {
     name: pu.name!,
     displayName: pu.displayName!,
     clientID: pu.clientID ?? null,
+    controllerClientIDs:
+      pu.controllerClientIDs ?? (pu.clientID ? [pu.clientID] : []),
     playerType: gamePlayerTypeToEnum(pu.playerType!),
     team: pu.team ?? null,
     isLobbyCreator: pu.isLobbyCreator!,
@@ -471,11 +473,19 @@ export class PlayerView {
   gold(): Gold {
     // Engine Gold is bigint; renderer state stores number. Convert back at the
     // accessor for game-code that still expects bigint semantics.
-    return BigInt(this.state.gold);
+    return BigInt(
+      Math.floor(
+        this.state.gold /
+          Math.max(1, this.static.controllerClientIDs?.length ?? 1),
+      ),
+    );
   }
 
   troops(): number {
-    return this.state.troops;
+    return Math.floor(
+      this.state.troops /
+        Math.max(1, this.static.controllerClientIDs?.length ?? 1),
+    );
   }
 
   totalUnitLevels(type: UnitType): number {

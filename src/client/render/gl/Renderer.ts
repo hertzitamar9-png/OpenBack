@@ -25,6 +25,7 @@ import type {
   RendererConfig,
   TilePair,
   UnitState,
+  WorldEventFx,
 } from "../types";
 import { Camera } from "./Camera";
 import { BarPass } from "./passes/BarPass";
@@ -35,6 +36,7 @@ import { CrosshairPass } from "./passes/CrosshairPass";
 import { DefenseCoveragePass } from "./passes/DefenseCoveragePass";
 import { FalloutBloomPass } from "./passes/FalloutBloomPass";
 import { FalloutLightPass } from "./passes/FalloutLightPass";
+import { FogPass } from "./passes/FogPass";
 import { FxPass } from "./passes/fx-pass";
 import { LightmapPass } from "./passes/LightmapPass";
 import { MoveIndicatorPass } from "./passes/MoveIndicatorPass";
@@ -57,6 +59,7 @@ import { TerrainPass } from "./passes/TerrainPass";
 import { TerritoryPass } from "./passes/TerritoryPass";
 import { TrailPass } from "./passes/TrailPass";
 import { UnitPass } from "./passes/UnitPass";
+import { WorldEventPass } from "./passes/WorldEventPass";
 import { WorldTextPass } from "./passes/WorldTextPass";
 import type { RenderSettings } from "./RenderSettings";
 import { AffiliationPalette } from "./utils/Affiliation";
@@ -108,6 +111,7 @@ export class GPURenderer {
   private bloomPass: FalloutBloomPass;
   private pointLightPass: PointLightPass;
   private falloutLightPass: FalloutLightPass;
+  private fogPass: FogPass;
   private lightmapPass: LightmapPass;
   private nightCompositePass: NightCompositePass;
   private structurePass: StructurePass;
@@ -121,6 +125,7 @@ export class GPURenderer {
   private railroadPass: RailroadPass;
   private barPass: BarPass;
   private worldTextPass: WorldTextPass;
+  private worldEventPass: WorldEventPass;
   private selectionBoxPass: SelectionBoxPass;
   private moveIndicatorPass: MoveIndicatorPass;
   private nukeTrajectoryPass: NukeTrajectoryPass;
@@ -305,6 +310,14 @@ export class GPURenderer {
 
     // Create shared textures except borderTex
     this.res = createGPUResources(gl, mapW, mapH, this.paletteTex, null!);
+    this.fogPass = new FogPass(
+      gl,
+      this.res.tileTex,
+      mapW,
+      mapH,
+      config.worldMechanics().fogOfWar,
+    );
+    this.worldEventPass = new WorldEventPass(gl, mapW, config.msPerTick());
 
     // --- Border compute (needs tileTex) ---
     this.borderPass = new BorderComputePass(
@@ -894,6 +907,16 @@ export class GPURenderer {
     if (filtered.length > 0) this.worldTextPass.applyBonusEvents(filtered);
   }
 
+  applyWorldEvents(events: WorldEventFx[]): void {
+    this.worldEventPass.add(events);
+  }
+
+  updateFogReveals(
+    reveals: Array<{ x: number; y: number; radius: number }>,
+  ): void {
+    this.fogPass.setRadarReveals(reveals);
+  }
+
   updateAttackRings(rings: AttackRingInput[]): void {
     this.fxPass.updateAttackRings(rings);
   }
@@ -970,6 +993,7 @@ export class GPURenderer {
   setLocalPlayerID(id: number): void {
     if (id === this.localPlayerID) return;
     this.localPlayerID = id;
+    this.fogPass.setLocalOwner(id);
     this.friendlyOwnersInitialized = false;
     this.samRadiusPass.setLocalPlayer(id);
     this.structurePass.setLocalPlayer(id);
@@ -1227,6 +1251,11 @@ export class GPURenderer {
     this.worldTextPass.tick(zoom);
     this.worldTextPass.draw(cam, zoom);
 
+    this.worldEventPass.draw(cam);
+
+    // Last so fog also conceals distant units, structures, routes and labels.
+    this.fogPass.draw(cam);
+
     gl.disable(gl.BLEND);
   }
 
@@ -1245,6 +1274,7 @@ export class GPURenderer {
     this.bloomPass.dispose();
     this.pointLightPass.dispose();
     this.falloutLightPass.dispose();
+    this.fogPass.dispose();
     this.lightmapPass.dispose();
     this.nightCompositePass.dispose();
     this.heatManager.dispose();
@@ -1262,6 +1292,7 @@ export class GPURenderer {
     this.namePass.dispose();
     this.fxPass.dispose();
     this.worldTextPass.dispose();
+    this.worldEventPass.dispose();
     this.selectionBoxPass.dispose();
     this.moveIndicatorPass.dispose();
     this.nukeTrajectoryPass.dispose();

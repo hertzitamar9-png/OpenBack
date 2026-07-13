@@ -21,6 +21,7 @@ export interface PlayerStatic {
   name: string;
   displayName: string;
   clientID: string | null;
+  controllerClientIDs?: string[];
   playerType: PlayerTypeEnum;
   team: string | null;
   isLobbyCreator: boolean;

@@ -67,6 +67,7 @@ export interface FrameData {
   readonly allianceClusters: ReadonlyMap<number, number>;
   readonly nukeTelegraphs: NukeTelegraphData[];
   readonly attackRings: AttackRingInput[];
+  readonly fogReveals: Array<{ x: number; y: number; radius: number }>;
   /** True when structures changed this tick (added/removed/level change). */
   readonly structuresDirty: boolean;
 }

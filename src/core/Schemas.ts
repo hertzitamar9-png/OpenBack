@@ -257,6 +257,21 @@ export const DoomsdayClockConfigSchema = z.object({
   speed: z.enum(["slow", "normal", "fast", "veryfast"]).optional(),
 });
 
+export const WorldMechanicsConfigSchema = z.object({
+  // Core rules are enabled unless explicitly disabled, preserving the new
+  // rules in old lobby payloads and replays.
+  encirclement: z.boolean().optional(),
+  warExhaustion: z.boolean().optional(),
+  strategicObjectives: z.boolean().optional(),
+  logisticsCargo: z.boolean().optional(),
+  naturalDisasters: z.boolean().optional(),
+  fogOfWar: z.boolean().optional(),
+  // Controllers per country. A value above one enables co-command; resource
+  // ownership remains with the shared country and UI shows each controller's
+  // equal share.
+  sharedControlSize: z.number().int().min(1).max(20).optional(),
+});
+
 export const GameConfigSchema = z.object({
   gameMap: z.enum(GameMapType),
   difficulty: z.enum(Difficulty),
@@ -267,6 +282,7 @@ export const GameConfigSchema = z.object({
   rankedType: z.enum(RankedType).optional(), // Only set for ranked games.
   gameMapSize: z.enum(GameMapSize),
   doomsdayClock: DoomsdayClockConfigSchema.optional(),
+  worldMechanics: WorldMechanicsConfigSchema.optional(),
   publicGameModifiers: z
     .object({
       isCompact: z.boolean().optional(),
@@ -628,6 +644,7 @@ export const PlayerSchema = z.object({
   cosmetics: PlayerCosmeticsSchema.optional(),
   isLobbyCreator: z.boolean().optional(),
   friends: z.array(ID).optional(),
+  controllerClientIDs: z.array(ID).min(1).max(20).optional(),
 });
 
 export const GameStartInfoSchema = z.object({

@@ -15,6 +15,7 @@ import {
   GameUpdateType,
   GameUpdateViewData,
   SpawnPhaseEndUpdate,
+  WorldEventUpdate,
 } from "../../core/game/GameUpdates";
 import { ATTACK_DELTA_OUTGOING } from "../../core/game/GameUpdateUtils";
 import {
@@ -110,6 +111,14 @@ export class GameView implements GameMap {
   private readonly _statusNukeUnitIds = new Set<number>();
   private readonly _telegraphUnitIds = new Set<number>();
   private readonly _transportUnitIds = new Set<number>();
+  private readonly _strategicObjectives = new Map<
+    number,
+    {
+      tile: TileRef;
+      reward?: "gold" | "troops" | "radar" | "victory";
+      ownerID?: PlayerID;
+    }
+  >();
   /**
    * The single long-lived FrameData object. Fields are mutated in place each
    * tick by update(). Renderer reads this each frame via frameData().
@@ -204,6 +213,7 @@ export class GameView implements GameMap {
         deadUnits: [],
         conquestEvents: [],
         bonusEvents: [],
+        worldEvents: [],
       },
       changedTiles: this._changedTilesScratch,
       railroadDirty: false,
@@ -219,6 +229,7 @@ export class GameView implements GameMap {
       allianceClusters: new Map(),
       nukeTelegraphs: [],
       attackRings: [],
+      fogReveals: [],
       structuresDirty: false,
     };
   }
@@ -662,6 +673,25 @@ export class GameView implements GameMap {
           f.attackRings,
         )
       : ((f.attackRings.length = 0), f.attackRings);
+    f.fogReveals.length = 0;
+    for (const [id, objective] of this._strategicObjectives) {
+      const tile = objective.tile;
+      f.attackRings.push({
+        x: this._map.x(tile),
+        y: this._map.y(tile),
+        unitId: -10_000 - id,
+      });
+      if (
+        objective.reward === "radar" &&
+        objective.ownerID === this._myPlayer?.id()
+      ) {
+        f.fogReveals.push({
+          x: this._map.x(tile),
+          y: this._map.y(tile),
+          radius: 45,
+        });
+      }
+    }
     f.structuresDirty = this._structuresDirty;
 
     // First populate: signal "full upload required" by nulling changedTiles.
@@ -686,6 +716,7 @@ export class GameView implements GameMap {
     ev.deadUnits.length = 0;
     ev.conquestEvents.length = 0;
     ev.bonusEvents.length = 0;
+    ev.worldEvents.length = 0;
 
     for (const u of gu.updates[GameUpdateType.Unit] ?? []) {
       if (u.isActive) continue;
@@ -719,6 +750,60 @@ export class GameView implements GameMap {
         gold: Number(b.gold),
         troops: b.troops,
       });
+    }
+    for (const raw of gu.updates[GameUpdateType.WorldEvent] ?? []) {
+      const event = raw as WorldEventUpdate;
+      if (
+        (event.kind === "objective_spawn" ||
+          event.kind === "objective_control") &&
+        event.objectiveId !== undefined
+      ) {
+        this._strategicObjectives.set(event.objectiveId, {
+          tile: event.tile,
+          reward: event.objectiveReward,
+          ownerID: event.ownerID,
+        });
+        continue;
+      }
+      if (event.kind.startsWith("objective_")) continue;
+      ev.worldEvents.push({
+        kind: event.kind,
+        tile: event.tile,
+        radius: event.radius,
+        durationTicks: event.durationTicks,
+        pathEnd: event.pathEnd,
+      });
+
+      // Feed disaster impacts into the established animated explosion atlas.
+      // Several deterministic points make large disasters read across their
+      // affected area without adding a permanent per-frame particle cost.
+      const bursts =
+        event.kind === "meteor" ? 8 : event.kind === "drought" ? 2 : 5;
+      for (let i = 0; i < bursts; i++) {
+        const angle =
+          ((event.tile * 0.37 + i) % bursts) * ((Math.PI * 2) / bursts);
+        const distance = i === 0 ? 0 : event.radius * (0.25 + (i % 3) * 0.18);
+        const x = Math.max(
+          0,
+          Math.min(
+            this._map.width() - 1,
+            Math.round(this._map.x(event.tile) + Math.cos(angle) * distance),
+          ),
+        );
+        const y = Math.max(
+          0,
+          Math.min(
+            this._map.height() - 1,
+            Math.round(this._map.y(event.tile) + Math.sin(angle) * distance),
+          ),
+        );
+        ev.deadUnits.push({
+          unitId: -event.tile - i - 1,
+          unitType: UnitType.Shell,
+          pos: this._map.ref(x, y),
+          reachedTarget: true,
+        });
+      }
     }
   }
 
@@ -1062,7 +1147,8 @@ export class GameView implements GameMap {
   playerByClientID(id: ClientID): PlayerView | null {
     const player =
       Array.from(this._players.values()).filter(
-        (p) => p.clientID() === id,
+        (p) =>
+          p.clientID() === id || p.static.controllerClientIDs?.includes(id),
       )[0] ?? null;
     if (player === null) {
       return null;

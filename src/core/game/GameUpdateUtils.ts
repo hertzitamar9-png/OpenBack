@@ -45,6 +45,10 @@ export function diffPlayerUpdate(
   };
 
   setIfDifferent("clientID", prev.clientID === next.clientID);
+  setIfDifferent(
+    "controllerClientIDs",
+    stringArrayEqual(prev.controllerClientIDs, next.controllerClientIDs),
+  );
   setIfDifferent("name", prev.name === next.name);
   setIfDifferent("displayName", prev.displayName === next.displayName);
   setIfDifferent("team", prev.team === next.team);

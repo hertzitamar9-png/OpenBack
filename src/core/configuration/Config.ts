@@ -146,6 +146,18 @@ export class Config {
       warshipDrainCurveExponent: d.warshipDrainCurveExponent,
     };
   }
+  worldMechanics() {
+    const c = this._gameConfig.worldMechanics;
+    return {
+      encirclement: c?.encirclement ?? true,
+      warExhaustion: c?.warExhaustion ?? true,
+      strategicObjectives: c?.strategicObjectives ?? false,
+      logisticsCargo: c?.logisticsCargo ?? true,
+      naturalDisasters: c?.naturalDisasters ?? false,
+      fogOfWar: c?.fogOfWar ?? false,
+      sharedControlSize: c?.sharedControlSize ?? 1,
+    } as const;
+  }
   spawnImmunityDuration(): Tick {
     return (
       this._gameConfig.spawnImmunityDuration ?? DEFAULT_SPAWN_IMMUNITY_TICKS
