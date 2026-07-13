@@ -151,7 +151,7 @@ const tutorials: Page[] = [
       },
       {
         title: "Stop tanks with mines",
-        text: "Tank mines cost 100,000 gold first, 200,000 second, and 400,000 afterward. When an enemy tank enters an active mine's small radius, one mine level is consumed and the tank begins destruction before reaching the destination.",
+        text: "Tank mines cost 250,000 gold first, 350,000 second, and 500,000 afterward. Their first level covers the same radius as a defense post, and every stacked level adds 25% more range. When an enemy tank enters that radius, one mine level is consumed and the tank begins destruction before reaching the destination.",
         tips: [
           "Cover likely approaches instead of scattering mines randomly.",
           "Stacked mines can answer more than one vehicle.",

@@ -521,7 +521,7 @@ export class Config {
         info = {
           cost: this.costWrapper(
             (numUnits: number) =>
-              numUnits === 0 ? 100_000 : numUnits === 1 ? 200_000 : 400_000,
+              numUnits === 0 ? 250_000 : numUnits === 1 ? 350_000 : 500_000,
             UnitType.TankMine,
           ),
           constructionDuration: this.instantBuild() ? 0 : 5 * 10,
@@ -1007,7 +1007,8 @@ export class Config {
   }
 
   tankMineRange(level: number = 1): number {
-    return 6 * Math.max(1, level);
+    const safeLevel = Math.max(1, level);
+    return this.defensePostRange() * (1 + 0.25 * (safeLevel - 1));
   }
 
   tankMaxDriveRadius(baseLevel: number = 1): number {

@@ -127,6 +127,7 @@ export class MapPlaylist {
     special: [],
     team: [],
   };
+  private lastRankedMap: GameMapType | null = null;
 
   public async gameConfig(type: PublicGameType): Promise<GameConfig> {
     if (type === "special") {
@@ -379,34 +380,70 @@ export class MapPlaylist {
     } satisfies GameConfig;
   }
 
-  public get1v1Config(): GameConfig {
+  public get1v1Config(random: () => number = Math.random): GameConfig {
     const maps = [
-      GameMapType.Australia, // 40%
       GameMapType.Australia,
-      GameMapType.Iceland, // 20%
-      GameMapType.Asia, // 20%
-      GameMapType.EuropeClassic, // 20%
+      GameMapType.Iceland,
+      GameMapType.Asia,
+      GameMapType.EuropeClassic,
+      GameMapType.Africa,
+      GameMapType.Balkans,
+      GameMapType.Japan,
+      GameMapType.NorthAmerica,
+      GameMapType.SouthAmerica,
+      GameMapType.MiddleEast,
+      GameMapType.SoutheastAsia,
+      GameMapType.Pangaea,
     ];
-    const isCompact = Math.random() < 0.5;
+    // Never give a worker the same ranked map twice in a row. This also avoids
+    // a streak of identical matches when the queue only has a few players.
+    const eligibleMaps = maps.filter((map) => map !== this.lastRankedMap);
+    const gameMap = eligibleMaps[Math.floor(random() * eligibleMaps.length)];
+    this.lastRankedMap = gameMap;
+
+    const isCompact = random() < 0.5;
+    const nations = random() < 0.5 ? "disabled" : "default";
+    const botOptions = isCompact ? [25, 50, 100] : [50, 100, 200, 400];
+    const bots = botOptions[Math.floor(random() * botOptions.length)];
+    const startingGoldOptions = [0, 1_000_000, 5_000_000, 25_000_000];
+    const startingGold =
+      startingGoldOptions[Math.floor(random() * startingGoldOptions.length)];
+    const goldMultiplierOptions = [1, 1, 2, 3];
+    const goldMultiplier =
+      goldMultiplierOptions[
+        Math.floor(random() * goldMultiplierOptions.length)
+      ];
+    const isHardNations = nations !== "disabled" && random() < 0.35;
+    const randomSpawn = random() < 0.35;
+
     return {
       donateGold: false,
       donateTroops: false,
-      gameMap: maps[Math.floor(Math.random() * maps.length)],
+      gameMap,
       maxPlayers: 2,
       gameType: GameType.Public,
       gameMapSize: isCompact ? GameMapSize.Compact : GameMapSize.Normal,
-      difficulty: Difficulty.Medium, // Doesn't matter, nations are disabled
+      difficulty: isHardNations ? Difficulty.Hard : Difficulty.Medium,
       rankedType: RankedType.OneVOne,
       infiniteGold: false,
       infiniteTroops: false,
       maxTimerValue: isCompact ? 10 : 15,
       instantBuild: false,
-      randomSpawn: false,
-      nations: "disabled",
+      randomSpawn,
+      nations,
       gameMode: GameMode.FFA,
-      bots: isCompact ? 100 : 400,
+      bots,
+      startingGold,
+      goldMultiplier,
       spawnImmunityDuration: 30 * 10,
       disabledUnits: [],
+      publicGameModifiers: {
+        isCompact,
+        isRandomSpawn: randomSpawn,
+        isHardNations,
+        startingGold,
+        goldMultiplier,
+      },
     } satisfies GameConfig;
   }
 

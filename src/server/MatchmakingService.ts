@@ -2,6 +2,7 @@ import type express from "express";
 import type http from "http";
 import type { Logger } from "winston";
 import { WebSocket, WebSocketServer } from "ws";
+import type { GameConfig } from "../core/Schemas";
 import { recordRankedResult, resolveRankedPlayer } from "./auth/AuthServer";
 import { ServerEnv } from "./ServerEnv";
 
@@ -27,7 +28,10 @@ export class MatchmakingService {
   private readonly wss = new WebSocketServer({ noServer: true });
   private readonly queue: QueueEntry[] = [];
 
-  constructor(private readonly log: Logger) {}
+  constructor(
+    private readonly log: Logger,
+    private readonly createRankedConfig?: () => GameConfig,
+  ) {}
 
   // Attach the WS upgrade handler to the master's HTTP server. Only
   // /matchmaking/join is handled here; other upgrades are left untouched.
@@ -183,7 +187,12 @@ export class MatchmakingService {
     this.log.info(
       `matchmaking: paired ${a.publicId} (${a.elo}) vs ${b.publicId} (${b.elo}) -> ${gameId}`,
     );
-    res.json({ assignment: true });
+    const gameConfig = this.createRankedConfig?.();
+    res.json(
+      gameConfig === undefined
+        ? { assignment: true }
+        : { assignment: true, gameConfig },
+    );
   };
 
   // A worker reports a finished ranked 1v1 so Elo can be updated.

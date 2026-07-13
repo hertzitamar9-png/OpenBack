@@ -8,7 +8,7 @@ describe("OpenBack added-unit pricing", () => {
     [UnitType.MANPAD, [300_000n, 600_000n, 1_000_000n]],
     [UnitType.MilitaryBase, [200_000n, 400_000n, 750_000n]],
     [UnitType.Tank, [500_000n, 750_000n, 1_000_000n]],
-    [UnitType.TankMine, [100_000n, 200_000n, 400_000n]],
+    [UnitType.TankMine, [250_000n, 350_000n, 500_000n]],
   ] as const)(
     "%s reaches its maximum price after two cheaper purchases",
     async (type, prices) => {

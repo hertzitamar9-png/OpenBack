@@ -30,7 +30,10 @@ const log = logger.child({ comp: "m" });
 
 // Ranked matchmaking lives in the master so it shares the auth user store
 // (and thus Elo) directly.
-const matchmaking = new MatchmakingService(log);
+// Generate ranked rules in the single master process. With multiple game
+// workers this keeps the no-repeat map history global instead of giving each
+// worker an independent random sequence.
+const matchmaking = new MatchmakingService(log, () => playlist.get1v1Config());
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

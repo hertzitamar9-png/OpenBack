@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WebSocket } from "ws";
+import { MapPlaylist } from "../../src/server/MapPlaylist";
 import { MatchmakingService } from "../../src/server/MatchmakingService";
 
 describe("MatchmakingService", () => {
@@ -149,5 +150,43 @@ describe("MatchmakingService", () => {
     expect(low.send).toHaveBeenCalledOnce();
     expect(high.send).toHaveBeenCalledOnce();
     expect(queue).toHaveLength(0);
+  });
+
+  it("returns centrally generated randomized rules to the assigned worker", () => {
+    const socket = () => ({
+      readyState: WebSocket.OPEN,
+      send: vi.fn(),
+      close: vi.fn(),
+    });
+    const config = new MapPlaylist().get1v1Config(() => 0);
+    const service = new MatchmakingService(
+      { info: vi.fn() } as never,
+      () => config,
+    );
+    const queue = (
+      service as unknown as {
+        queue: Array<{
+          publicId: string;
+          elo: number;
+          ws: ReturnType<typeof socket>;
+          joinedAt: number;
+        }>;
+      }
+    ).queue;
+    queue.push(
+      { publicId: "a", elo: 1000, ws: socket(), joinedAt: 1 },
+      { publicId: "b", elo: 1000, ws: socket(), joinedAt: 2 },
+    );
+    const json = vi.fn();
+
+    service.handleCheckin(
+      {
+        header: () => "matchmaking-test-key",
+        body: { gameId: "random-rules-game" },
+      } as never,
+      { json, status: vi.fn() } as never,
+    );
+
+    expect(json).toHaveBeenCalledWith({ assignment: true, gameConfig: config });
   });
 });

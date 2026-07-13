@@ -600,13 +600,16 @@ async function startMatchmakingPolling(gm: GameManager) {
           return;
         }
 
-        const data = await response.json();
+        const data = (await response.json()) as {
+          assignment?: boolean;
+          gameConfig?: import("../core/Schemas").GameConfig;
+        };
         log.info(`Lobby poll successful:`, data);
 
         if (data.assignment) {
           const game = gm.createGame(
             gameId,
-            playlist.get1v1Config(),
+            data.gameConfig ?? playlist.get1v1Config(),
             undefined,
             Date.now() + 7000,
           );

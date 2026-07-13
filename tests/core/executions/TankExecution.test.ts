@@ -118,4 +118,25 @@ describe("TankExecution", () => {
     expect(tank.isActive()).toBe(false);
     expect(tank.tile()).not.toBe(game.ref(18, 5));
   });
+
+  test("tank mine intercepts within its defense-post-sized radius", () => {
+    game.addExecution(new TankExecution(attacker, game.ref(5, 5)));
+    game.executeNextTick();
+    const tank = attacker.units(UnitType.Tank)[0];
+    // The tank drives along y=5. This mine is deliberately off the path, but
+    // inside the level-one 30-tile defense-post radius.
+    const mine = defender.buildUnit(UnitType.TankMine, game.ref(10, 20), {});
+
+    game.addExecution(new TankExecution(attacker, game.ref(18, 5)));
+    for (let i = 0; i < 10 && mine.isActive(); i++) game.executeNextTick();
+
+    expect(game.config().tankMineRange(1)).toBe(
+      game.config().defensePostRange(),
+    );
+    expect(game.config().tankMineRange(2)).toBe(
+      game.config().defensePostRange() * 1.25,
+    );
+    expect(mine.isActive()).toBe(false);
+    expect(tank.launchPhase()).toBe(20);
+  });
 });
