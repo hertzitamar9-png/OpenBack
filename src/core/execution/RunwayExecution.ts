@@ -22,7 +22,12 @@ export class RunwayExecution implements Execution {
       this.game.config().planeMaxFlightRadius(this.runway.level()),
       [UnitType.MilitaryBase],
     );
-    if (bases.length === 0) return;
+    if (bases.length === 0) {
+      // A base constructed later performs the reciprocal link discovery.
+      // This runway never needs to rescan its large flight radius every tick.
+      this.active = false;
+      return;
+    }
     let hasEligibleBase = false;
     for (const { unit } of bases) {
       const range = this.game
@@ -43,6 +48,7 @@ export class RunwayExecution implements Execution {
     if (hasEligibleBase && !this.runway.hasTrainStation()) {
       this.game.addExecution(new TrainStationExecution(this.runway));
     }
+    this.active = false;
   }
 
   isActive(): boolean {

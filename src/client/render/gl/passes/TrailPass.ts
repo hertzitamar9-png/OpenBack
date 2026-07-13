@@ -42,6 +42,8 @@ export class TrailPass {
   /** Dirty row range for partial trail upload. Infinity/-1 = full upload. */
   private dirtyRowMin = Infinity;
   private dirtyRowMax = -1;
+  private nonEmptyRows = 0;
+  private rowHasTrail: Uint8Array;
 
   constructor(
     gl: WebGL2RenderingContext,
@@ -58,6 +60,7 @@ export class TrailPass {
     this.trailTex = trailTex;
     this.paletteTex = paletteTex;
     this.cpuTrailState = new Uint8Array(mapW * mapH);
+    this.rowHasTrail = new Uint8Array(mapH);
 
     this.program = createProgram(
       gl,
@@ -94,6 +97,7 @@ export class TrailPass {
   /** Live-game path: reference the game's own trail array directly. */
   setLiveRef(trailState: Uint8Array): void {
     this.liveTrailRef = trailState;
+    this.refreshActiveRows(0, this.mapH - 1);
     this.trailsDirty = true;
   }
 
@@ -105,6 +109,7 @@ export class TrailPass {
   ): void {
     this.liveTrailRef = trailState;
     if (dirtyRowMax >= 0) {
+      this.refreshActiveRows(dirtyRowMin, dirtyRowMax);
       const isFullUploadPending = this.trailsDirty && this.dirtyRowMax < 0;
       // If a full upload is already pending, don't narrow the bounds to the delta
       if (!isFullUploadPending) {
@@ -162,6 +167,8 @@ export class TrailPass {
   /** Draw trail overlay. Blending must be enabled by caller. */
   draw(cameraMatrix: Float32Array): void {
     this.flushTexture();
+    if (this.nonEmptyRows === 0) return;
+
     const gl = this.gl;
 
     gl.useProgram(this.program);
@@ -181,6 +188,27 @@ export class TrailPass {
 
     gl.bindVertexArray(this.vao);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
+  }
+
+  private refreshActiveRows(minRow: number, maxRow: number): void {
+    const src = this.liveTrailRef ?? this.cpuTrailState;
+    const first = Math.max(0, minRow);
+    const last = Math.min(this.mapH - 1, maxRow);
+    for (let y = first; y <= last; y++) {
+      const start = y * this.mapW;
+      const end = start + this.mapW;
+      let active = 0;
+      for (let i = start; i < end; i++) {
+        if (src[i] !== 0) {
+          active = 1;
+          break;
+        }
+      }
+      if (active !== this.rowHasTrail[y]) {
+        this.nonEmptyRows += active ? 1 : -1;
+        this.rowHasTrail[y] = active;
+      }
+    }
   }
 
   dispose(): void {

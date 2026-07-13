@@ -139,7 +139,7 @@ export class TankExecution implements Execution {
 
   /** Two side brushes sweep fallout beyond the tank's own footprint. */
   private damageSweptArea(from: TileRef, center: TileRef): void {
-    this.damageArea(center);
+    const centers = [center];
     const dx = Math.sign(this.game.x(center) - this.game.x(from));
     const dy = Math.sign(this.game.y(center) - this.game.y(from));
     const cx = this.game.x(center);
@@ -149,9 +149,10 @@ export class TankExecution implements Execution {
       const y = cy + dx * side * 2;
       if (x >= 0 && y >= 0 && x < this.game.width() && y < this.game.height()) {
         const brush = this.game.ref(x, y);
-        if (this.game.isLand(brush)) this.damageArea(brush);
+        if (this.game.isLand(brush)) centers.push(brush);
       }
     }
+    this.damageAreas(centers);
   }
 
   private angleTo(from: TileRef, to: TileRef): number {
@@ -194,6 +195,13 @@ export class TankExecution implements Execution {
     center: TileRef,
     radius = this.game.config().tankDamageRadius(),
   ): void {
+    this.damageAreas([center], radius);
+  }
+
+  private damageAreas(
+    centers: readonly TileRef[],
+    radius = this.game.config().tankDamageRadius(),
+  ): void {
     const radiusSquared = radius * radius;
 
     for (const unit of this.game.units()) {
@@ -202,17 +210,28 @@ export class TankExecution implements Execution {
         unit !== this.tank &&
         unit.owner() !== this.player &&
         !this.player.isFriendly(unit.owner()) &&
-        this.game.euclideanDistSquared(center, unit.tile()) <= radiusSquared
+        centers.some(
+          (center) =>
+            this.game.euclideanDistSquared(center, unit.tile()) <=
+            radiusSquared,
+        )
       ) {
         unit.delete(false, this.player);
       }
     }
 
-    for (const tile of this.game.bfs(
-      center,
-      (_, next) =>
-        this.game.euclideanDistSquared(center, next) <= radiusSquared,
-    )) {
+    const impacted = new Set<TileRef>();
+    for (const center of centers) {
+      for (const tile of this.game.bfs(
+        center,
+        (_, next) =>
+          this.game.euclideanDistSquared(center, next) <= radiusSquared,
+      )) {
+        impacted.add(tile);
+      }
+    }
+
+    for (const tile of impacted) {
       if (!this.game.isLand(tile)) continue;
       const owner = this.game.owner(tile);
       if (

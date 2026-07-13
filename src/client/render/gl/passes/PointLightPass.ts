@@ -226,6 +226,11 @@ export class PointLightPass {
     }
   }
 
+  /** Whether the current frame contains any point-light instances. */
+  hasLights(): boolean {
+    return this.lightCount > 0;
+  }
+
   /** Lerp smoothed-nuke light positions lastPos→pos by wall-clock progress
    *  through the current tick and re-upload only the affected instances. */
   private applySmoothing(): void {

@@ -195,6 +195,10 @@ export class FalloutLightPass {
     return tex;
   }
 
+  hasActiveLight(): boolean {
+    return this.heatManager.hasActiveHeat();
+  }
+
   /**
    * Extract fallout light in tile space, then composite into the target FBO.
    * Caller must bind the target FBO and set additive blending before calling.
@@ -206,6 +210,8 @@ export class FalloutLightPass {
     targetH: number,
     tick: number,
   ): void {
+    if (!this.hasActiveLight()) return;
+
     const gl = this.gl;
     const dn = this.settings.lighting;
     const fb = this.settings.falloutBloom;

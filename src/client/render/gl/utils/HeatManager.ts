@@ -147,6 +147,11 @@ export class HeatManager {
     return this.heatReadTex;
   }
 
+  /** Whether fallout heat can currently contribute visible pixels. */
+  hasActiveHeat(): boolean {
+    return this.heatActive;
+  }
+
   /**
    * Run GPU heat update: detect fallout-bit transitions, apply decay,
    * then snapshot tileTex → prevTileTex.

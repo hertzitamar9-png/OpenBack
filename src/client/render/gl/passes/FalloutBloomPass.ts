@@ -274,6 +274,8 @@ export class FalloutBloomPass {
 
   /** Run the full extract → blur → composite pipeline. */
   draw(cameraMatrix: Float32Array, tick: number): void {
+    if (!this.heatManager.hasActiveHeat()) return;
+
     const gl = this.gl;
     const canvas = gl.canvas as HTMLCanvasElement;
     const cw = canvas.width;

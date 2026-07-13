@@ -110,10 +110,12 @@ export class RailroadPass {
 
   private cpuRailroadState: Uint8Array;
   private railroadDirty = false;
+  private hasRailroads = false;
 
   private cpuGhostRailState: Uint8Array;
   private ghostRailDirty = false;
   private ghostOwnerID = 0;
+  private hasGhostRailroads = false;
 
   private localPlayerID = 0;
   private localRailColor: [number, number, number] = [0.75, 0.75, 0.75];
@@ -214,6 +216,13 @@ export class RailroadPass {
 
   uploadRailroadState(railroadState: Uint8Array): void {
     this.cpuRailroadState.set(railroadState);
+    this.hasRailroads = false;
+    for (let i = 0; i < railroadState.length; i++) {
+      if (railroadState[i] !== 0) {
+        this.hasRailroads = true;
+        break;
+      }
+    }
     this.railroadDirty = true;
   }
 
@@ -258,6 +267,7 @@ export class RailroadPass {
 
   updateGhostPreview(data: GhostPreviewData | null): void {
     this.cpuGhostRailState.fill(0);
+    this.hasGhostRailroads = false;
 
     if (data) {
       const maxRef = this.mapW * this.mapH;
@@ -269,6 +279,7 @@ export class RailroadPass {
         for (const t of tiles) {
           if (t.ref >= 0 && t.ref < maxRef) {
             this.cpuGhostRailState[t.ref] = t.type + 1;
+            this.hasGhostRailroads = true;
           }
         }
       }
@@ -278,6 +289,7 @@ export class RailroadPass {
       for (const ref of data.overlappingRailroads) {
         if (ref >= 0 && ref < maxRef) {
           this.cpuGhostRailState[ref] = 7;
+          this.hasGhostRailroads = true;
         }
       }
 
@@ -293,6 +305,8 @@ export class RailroadPass {
   draw(cameraMatrix: Float32Array, zoom: number): void {
     const gl = this.gl;
     const rs = this.settings.railroad;
+
+    if (!this.hasRailroads && !this.hasGhostRailroads) return;
 
     // Fade out as zoom drops below railMinZoom; fully invisible at railMinZoom - railFadeRange
     const fadeRange = Math.max(rs.railFadeRange, 0);

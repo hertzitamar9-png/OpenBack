@@ -33,6 +33,7 @@ export class LightmapPass {
   private lightTexB: WebGLTexture;
   private lightW = 0;
   private lightH = 0;
+  private lightmapEmpty = false;
 
   // Geometry
   private quadVao: WebGLVertexArrayObject;
@@ -135,6 +136,7 @@ export class LightmapPass {
       gl.UNSIGNED_BYTE,
       null,
     );
+    this.lightmapEmpty = false;
   }
 
   /** Generate the lightmap and return the final blurred texture. */
@@ -149,18 +151,27 @@ export class LightmapPass {
     const lh = Math.max(1, sceneH >> 1);
     this.ensureLightSize(lw, lh);
 
+    const hasFalloutLight =
+      this.settings.passEnabled.falloutLight &&
+      this.falloutLightPass.hasActiveLight();
+    const hasAnyLight = this.pointLightPass.hasLights() || hasFalloutLight;
+    if (!hasAnyLight && this.lightmapEmpty) return this.lightTexA;
+
     // --- 1. Point lights → FBO A (additive) ---
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.lightFboA);
     gl.viewport(0, 0, lw, lh);
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
+    this.lightmapEmpty = !hasAnyLight;
+    if (!hasAnyLight) return this.lightTexA;
+
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE); // additive
 
     this.pointLightPass.draw(cameraMatrix);
 
     // --- 2. Fallout light → extract at tile res, composite into FBO A (additive) ---
-    if (this.settings.passEnabled.falloutLight) {
+    if (hasFalloutLight) {
       this.falloutLightPass.draw(cameraMatrix, this.lightFboA, lw, lh, tick);
     }
 
