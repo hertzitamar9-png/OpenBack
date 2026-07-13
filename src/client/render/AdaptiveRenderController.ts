@@ -1,4 +1,3 @@
-const FULL_RATE_FRAME_MS = 1000 / 60;
 const LOAD_SHEDDING_FRAME_MS = 1000 / 30;
 
 /**
@@ -34,13 +33,6 @@ export class AdaptiveRenderController {
     return true;
   }
 
-  recordRenderDuration(durationMs: number): void {
-    if (!Number.isFinite(durationMs) || durationMs < 0) return;
-    // At 60 FPS, rendering above roughly half the 16.7 ms frame budget leaves
-    // too little time for input, UI, networking, and the game worker.
-    this.adjustPressure(durationMs >= 8 ? 3 : -1);
-  }
-
   isLoadShedding(): boolean {
     return this.loadShedding;
   }
@@ -54,8 +46,3 @@ export class AdaptiveRenderController {
     }
   }
 }
-
-export const adaptiveRenderRates = {
-  full: FULL_RATE_FRAME_MS,
-  loadShedding: LOAD_SHEDDING_FRAME_MS,
-} as const;

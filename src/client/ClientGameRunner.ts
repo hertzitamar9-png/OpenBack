@@ -399,9 +399,7 @@ function mountWebGLFrameLoop(
     // expensive WebGL draw is throttled when sustained load would otherwise
     // starve input, worker messages, and multiplayer updates.
     if (adaptiveRender.shouldRender(nowMs)) {
-      const renderStartedMs = performance.now();
       syncCamera();
-      adaptiveRender.recordRenderDuration(performance.now() - renderStartedMs);
     }
     rafId = requestAnimationFrame(driveFrame);
   };
