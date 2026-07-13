@@ -10,6 +10,7 @@
 import { describe, expect, it } from "vitest";
 import {
   extractNukeTelegraphs,
+  extractNukeTelegraphsFromIds,
   TELEGRAPH_ENEMY,
   TELEGRAPH_FRIENDLY,
   TELEGRAPH_SELF,
@@ -216,5 +217,26 @@ describe("extractNukeTelegraphs", () => {
         enemyRel.size,
       ),
     ).toHaveLength(0);
+  });
+
+  it("indexed live extraction matches full extraction and reuses its buffer", () => {
+    const allUnits = units(
+      nuke({ id: 1, unitType: UT_PLANE, ownerID: 1 }),
+      nuke({ id: 2, unitType: UT_TANK, ownerID: 1 }),
+      nuke({ id: 3, unitType: UT_WARSHIP, ownerID: 1 }),
+    );
+    const expected = extractNukeTelegraphs(allUnits, MAP_W, 1);
+    const output = [{ ...expected[0] }];
+    const actual = extractNukeTelegraphsFromIds(
+      new Set([1, 2]),
+      allUnits,
+      MAP_W,
+      1,
+      undefined,
+      0,
+      output,
+    );
+    expect(actual).toBe(output);
+    expect(actual).toEqual(expected);
   });
 });

@@ -361,4 +361,21 @@ describe("computePlayerStatus — live mode (localPlayerSmallID set)", () => {
     expect(status.get(2)?.allianceFraction).toBe(0.5);
     expect(status.get(2)?.allianceRemainingTicks).toBe(300);
   });
+
+  it("uses an indexed nuke set and reuses the provided status map", () => {
+    const players = playersMap(ps({ smallID: 1 }), ps({ smallID: 2 }));
+    const allUnits = unitsMap(
+      unit({ id: 10, ownerID: 2, unitType: UT_ATOM_BOMB, isActive: true }),
+      unit({ id: 11, ownerID: 1, unitType: UT_WARSHIP, isActive: true }),
+    );
+    const output = new Map();
+    const status = computePlayerStatus(
+      players,
+      allUnits,
+      { nukeIds: new Set([10]) },
+      output,
+    );
+    expect(status).toBe(output);
+    expect(status.get(2)?.nukeActive).toBe(true);
+  });
 });

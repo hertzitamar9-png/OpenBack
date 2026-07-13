@@ -168,6 +168,7 @@ function createGlStub() {
     setLocalPlayerID: noop("setLocalPlayerID"),
     setLocalRailColor: noop("setLocalRailColor"),
     updateSpawnOverlay: noop("updateSpawnOverlay"),
+    updateSmallPlayerGlow: noop("updateSmallPlayerGlow"),
     initSkinAtlas: noop("initSkinAtlas"),
     applyTerrainDelta: (refs: number[]) =>
       bump("applyTerrainDelta", refs.length),

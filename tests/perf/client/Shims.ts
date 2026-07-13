@@ -6,7 +6,10 @@
  * UserSettings reads localStorage lazily; an in-memory store means every
  * setting resolves to its default, which is also the deterministic choice.
  */
-if (typeof globalThis.localStorage === "undefined") {
+if (
+  typeof globalThis.localStorage === "undefined" ||
+  typeof globalThis.localStorage.getItem !== "function"
+) {
   const store = new Map<string, string>();
   Object.defineProperty(globalThis, "localStorage", {
     configurable: true,

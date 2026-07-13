@@ -60,7 +60,7 @@ export class TrailManager {
    * pos (bresenham) for each tracked unit, and clears tiles for units that
    * have disappeared (overlapping tiles get repainted from survivors).
    */
-  update(units: Map<number, UnitState>, trackedIds: number[]): void {
+  update(units: Map<number, UnitState>, trackedIds: Iterable<number>): void {
     this.clearDeadUnits(units);
     for (const id of trackedIds) {
       const unit = units.get(id);

@@ -10,6 +10,8 @@ const NUKE_ACTIVE_TYPES: ReadonlySet<string> = new Set([
 const OWNER_MASK = 0xfff;
 
 export interface ComputePlayerStatusOptions {
+  /** Optional live index of active nuke-like unit IDs. */
+  nukeIds?: Iterable<number>;
   /**
    * Local player smallID for computing relative flags. Omit (or set to 0)
    * for replay mode — relative flags will all be false.
@@ -61,8 +63,9 @@ export function computePlayerStatus(
   players: ReadonlyMap<number, PlayerState>,
   units: ReadonlyMap<number, UnitState>,
   opts: ComputePlayerStatusOptions = {},
+  result: Map<number, PlayerStatusData> = new Map(),
 ): Map<number, PlayerStatusData> {
-  const result = new Map<number, PlayerStatusData>();
+  result.clear();
   const localPlayerSmallID = opts.localPlayerSmallID ?? 0;
   const localPlayerID = opts.localPlayerID ?? "";
   const localPlayer =
@@ -85,16 +88,32 @@ export function computePlayerStatus(
   // Shown during replay too, except the nukeTargetsMe flag.
   const nukeActiveOwners = new Set<number>();
   const nukeTargetsMeOwners = new Set<number>();
-  for (const u of units.values()) {
-    if (!u.isActive || !NUKE_ACTIVE_TYPES.has(u.unitType)) continue;
-    nukeActiveOwners.add(u.ownerID);
-    if (
-      localPlayerSmallID > 0 &&
-      tileState !== undefined &&
-      u.targetTile !== null &&
-      (tileState[u.targetTile] & OWNER_MASK) === localPlayerSmallID
-    ) {
-      nukeTargetsMeOwners.add(u.ownerID);
+  if (opts.nukeIds) {
+    for (const id of opts.nukeIds) {
+      const u = units.get(id);
+      if (!u || !u.isActive || !NUKE_ACTIVE_TYPES.has(u.unitType)) continue;
+      nukeActiveOwners.add(u.ownerID);
+      if (
+        localPlayerSmallID > 0 &&
+        tileState !== undefined &&
+        u.targetTile !== null &&
+        (tileState[u.targetTile] & OWNER_MASK) === localPlayerSmallID
+      ) {
+        nukeTargetsMeOwners.add(u.ownerID);
+      }
+    }
+  } else {
+    for (const u of units.values()) {
+      if (!u.isActive || !NUKE_ACTIVE_TYPES.has(u.unitType)) continue;
+      nukeActiveOwners.add(u.ownerID);
+      if (
+        localPlayerSmallID > 0 &&
+        tileState !== undefined &&
+        u.targetTile !== null &&
+        (tileState[u.targetTile] & OWNER_MASK) === localPlayerSmallID
+      ) {
+        nukeTargetsMeOwners.add(u.ownerID);
+      }
     }
   }
 

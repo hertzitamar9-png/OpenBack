@@ -116,9 +116,15 @@ export class RailroadPass {
   private ghostRailDirty = false;
   private ghostOwnerID = 0;
   private hasGhostRailroads = false;
+  private ghostPreviewActive = false;
+  private lastGhostPaths: GhostPreviewData["ghostRailPaths"] | null = null;
+  private lastGhostOverlaps: GhostPreviewData["overlappingRailroads"] | null =
+    null;
 
   private localPlayerID = 0;
   private localRailColor: [number, number, number] = [0.75, 0.75, 0.75];
+  private cpuTerrainState: Uint8Array;
+  private readonly terrainPixelScratch = new Uint8Array(1);
 
   constructor(
     private gl: WebGL2RenderingContext,
@@ -134,6 +140,7 @@ export class RailroadPass {
     this.tileTex = tileTex;
     this.paletteTex = paletteTex;
     this.settings = settings;
+    this.cpuTerrainState = new Uint8Array(terrainBytes);
     this.cpuRailroadState = new Uint8Array(mapW * mapH);
     this.cpuGhostRailState = new Uint8Array(mapW * mapH);
 
@@ -185,7 +192,7 @@ export class RailroadPass {
       internalFormat: gl.R8UI,
       format: gl.RED_INTEGER,
       type: gl.UNSIGNED_BYTE,
-      data: terrainBytes,
+      data: this.cpuTerrainState,
       filter: gl.NEAREST,
     });
 
@@ -245,12 +252,42 @@ export class RailroadPass {
     const gl = this.gl;
     gl.bindTexture(gl.TEXTURE_2D, this.terrainTex);
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-    const scratch = new Uint8Array(1);
+    let minY = this.mapH;
+    let maxY = -1;
     for (let i = 0; i < refs.length; i++) {
       const ref = refs[i];
       const x = ref % this.mapW;
       const y = (ref - x) / this.mapW;
-      scratch[0] = bytes[i];
+      this.cpuTerrainState[ref] = bytes[i];
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
+
+    const dirtyRowTexels = (maxY - minY + 1) * this.mapW;
+    // Keep sparse, widely scattered changes as precise 1x1 uploads instead
+    // of accidentally uploading most of a large map.
+    if (refs.length >= 64 && dirtyRowTexels <= refs.length * 64) {
+      const start = minY * this.mapW;
+      const end = (maxY + 1) * this.mapW;
+      gl.texSubImage2D(
+        gl.TEXTURE_2D,
+        0,
+        0,
+        minY,
+        this.mapW,
+        maxY - minY + 1,
+        gl.RED_INTEGER,
+        gl.UNSIGNED_BYTE,
+        this.cpuTerrainState.subarray(start, end),
+      );
+      return;
+    }
+
+    for (let i = 0; i < refs.length; i++) {
+      const ref = refs[i];
+      const x = ref % this.mapW;
+      const y = (ref - x) / this.mapW;
+      this.terrainPixelScratch[0] = this.cpuTerrainState[ref];
       gl.texSubImage2D(
         gl.TEXTURE_2D,
         0,
@@ -260,12 +297,26 @@ export class RailroadPass {
         1,
         gl.RED_INTEGER,
         gl.UNSIGNED_BYTE,
-        scratch,
+        this.terrainPixelScratch,
       );
     }
   }
 
   updateGhostPreview(data: GhostPreviewData | null): void {
+    if (data === null) {
+      if (!this.ghostPreviewActive) return;
+    } else if (
+      this.ghostPreviewActive &&
+      data.ghostRailPaths === this.lastGhostPaths &&
+      data.overlappingRailroads === this.lastGhostOverlaps &&
+      data.ownerID === this.ghostOwnerID
+    ) {
+      return;
+    }
+
+    this.ghostPreviewActive = data !== null;
+    this.lastGhostPaths = data?.ghostRailPaths ?? null;
+    this.lastGhostOverlaps = data?.overlappingRailroads ?? null;
     this.cpuGhostRailState.fill(0);
     this.hasGhostRailroads = false;
 

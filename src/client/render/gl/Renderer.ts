@@ -161,6 +161,9 @@ export class GPURenderer {
   // Local player relationship data (for SAM radius coloring)
   private localPlayerID = 0;
   private playerTeams = new Map<number, string>(); // smallID → team
+  private friendlyOwners = new Set<number>();
+  private readonly friendlyScratch = new Set<number>();
+  private friendlyOwnersInitialized = false;
 
   // Alt-view: affiliation recoloring (space hold)
   private altView = false;
@@ -774,18 +777,36 @@ export class GPURenderer {
   ): void {
     this.namePass.updateNames(names, players, snap, statusData);
 
-    // Extract local player's allies + teammates for SAM radius coloring
+    // Allies change rarely. Avoid rebuilding every SAM instance on every
+    // name/status tick when the effective friendly set is unchanged.
+    const scratch = this.friendlyScratch;
+    scratch.clear();
     if (this.localPlayerID > 0) {
       const localPS = players.get(this.localPlayerID);
-      const friendly = new Set(localPS?.allies ?? []);
+      for (const sid of localPS?.allies ?? []) scratch.add(sid);
       const myTeam = this.playerTeams.get(this.localPlayerID);
       if (myTeam !== undefined) {
         for (const [sid, team] of this.playerTeams) {
-          if (team === myTeam && sid !== this.localPlayerID) friendly.add(sid);
+          if (team === myTeam && sid !== this.localPlayerID) scratch.add(sid);
         }
       }
-      this.samRadiusPass.setAllies(friendly);
-      this.unitPass.setAllies(friendly);
+    }
+    let friendlyChanged =
+      !this.friendlyOwnersInitialized ||
+      scratch.size !== this.friendlyOwners.size;
+    if (!friendlyChanged) {
+      for (const sid of scratch) {
+        if (!this.friendlyOwners.has(sid)) {
+          friendlyChanged = true;
+          break;
+        }
+      }
+    }
+    if (friendlyChanged) {
+      this.friendlyOwnersInitialized = true;
+      this.friendlyOwners = new Set(scratch);
+      this.samRadiusPass.setAllies(this.friendlyOwners);
+      this.unitPass.setAllies(this.friendlyOwners);
     }
   }
 
@@ -949,6 +970,7 @@ export class GPURenderer {
   setLocalPlayerID(id: number): void {
     if (id === this.localPlayerID) return;
     this.localPlayerID = id;
+    this.friendlyOwnersInitialized = false;
     this.samRadiusPass.setLocalPlayer(id);
     this.structurePass.setLocalPlayer(id);
     this.affiliationPalette.setLocalPlayer(id);

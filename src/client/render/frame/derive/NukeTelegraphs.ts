@@ -84,33 +84,39 @@ export function extractNukeTelegraphs(
  * Used by the live path where UnitClassifier maintains the nuke ID set.
  */
 export function extractNukeTelegraphsFromIds(
-  nukeIds: readonly number[],
+  nukeIds: Iterable<number>,
   units: ReadonlyMap<number, UnitState>,
   mapW: number,
   localPlayerID = 0,
   relationMatrix?: Uint8Array,
   relationSize = 0,
+  telegraphs: NukeTelegraphData[] = [],
 ): NukeTelegraphData[] {
-  const telegraphs: NukeTelegraphData[] = [];
+  telegraphs.length = 0;
   for (const id of nukeIds) {
     const u = units.get(id);
     if (!u || u.targetTile === null || !u.isActive) continue;
-    const mag = NUKE_MAGNITUDES[u.unitType];
+    const relation = classifyOwner(
+      u.ownerID,
+      localPlayerID,
+      relationMatrix,
+      relationSize,
+    );
+    const isTank = u.unitType === UT_TANK;
+    if (isTank && relation === TELEGRAPH_ENEMY) continue;
+    const mag = isTank
+      ? NUKE_MAGNITUDES[UT_PLANE]
+      : NUKE_MAGNITUDES[u.unitType];
     if (!mag) continue;
     telegraphs.push({
       x: u.targetTile % mapW,
       y: (u.targetTile - (u.targetTile % mapW)) / mapW,
       innerRadius: mag.inner,
       outerRadius: mag.outer,
-      relation: classifyOwner(
-        u.ownerID,
-        localPlayerID,
-        relationMatrix,
-        relationSize,
-      ),
+      relation,
       sourceX: u.pos % mapW,
       sourceY: Math.floor(u.pos / mapW),
-      routeKind: u.unitType === UT_PLANE ? 1 : 0,
+      routeKind: u.unitType === UT_PLANE ? 1 : isTank ? 2 : 0,
     });
   }
   return telegraphs;

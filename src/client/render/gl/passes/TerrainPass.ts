@@ -33,6 +33,7 @@ export class TerrainPass {
   private oceanColor: readonly [number, number, number] | undefined;
   // Scratch buffer for 1×1 sub-uploads; reused across applyTerrainDelta calls.
   private readonly pixelScratch = new Uint8Array(4);
+  private terrainRgba: Uint8Array;
 
   constructor(
     private gl: WebGL2RenderingContext,
@@ -51,13 +52,15 @@ export class TerrainPass {
     );
     this.uCamera = gl.getUniformLocation(this.program, "uCamera")!;
 
+    this.terrainRgba = buildTerrainRGBA(terrainBytes, mapW, mapH, oceanColor);
+
     this.tex = createTexture2D(gl, {
       width: mapW,
       height: mapH,
       internalFormat: gl.RGBA8,
       format: gl.RGBA,
       type: gl.UNSIGNED_BYTE,
-      data: buildTerrainRGBA(terrainBytes, mapW, mapH, oceanColor),
+      data: this.terrainRgba,
       filter: gl.NEAREST, // pixel-crisp at all zoom levels
     });
 
@@ -73,6 +76,12 @@ export class TerrainPass {
     const gl = this.gl;
     gl.bindTexture(gl.TEXTURE_2D, this.tex);
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    this.terrainRgba = buildTerrainRGBA(
+      this.terrainBytes,
+      this.mapW,
+      this.mapH,
+      oceanColor,
+    );
     gl.texSubImage2D(
       gl.TEXTURE_2D,
       0,
@@ -82,7 +91,7 @@ export class TerrainPass {
       this.mapH,
       gl.RGBA,
       gl.UNSIGNED_BYTE,
-      buildTerrainRGBA(this.terrainBytes, this.mapW, this.mapH, oceanColor),
+      this.terrainRgba,
     );
   }
 
@@ -100,12 +109,48 @@ export class TerrainPass {
     const gl = this.gl;
     gl.bindTexture(gl.TEXTURE_2D, this.tex);
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    let minY = this.mapH;
+    let maxY = -1;
     for (let i = 0; i < refs.length; i++) {
       const ref = refs[i];
       const x = ref % this.mapW;
       const y = (ref - x) / this.mapW;
       this.terrainBytes[ref] = bytes[i];
-      encodeTerrainTile(bytes[i], this.pixelScratch, 0, this.oceanColor);
+      encodeTerrainTile(bytes[i], this.terrainRgba, ref * 4, this.oceanColor);
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
+
+    const dirtyRowTexels = (maxY - minY + 1) * this.mapW;
+    // A row-span upload avoids hundreds of driver calls for dense changes,
+    // but scattered refs can span most of a large map. Only batch while the
+    // extra unchanged pixels stay cheaper than the calls being removed.
+    if (refs.length >= 64 && dirtyRowTexels <= refs.length * 64) {
+      const start = minY * this.mapW * 4;
+      const end = (maxY + 1) * this.mapW * 4;
+      gl.texSubImage2D(
+        gl.TEXTURE_2D,
+        0,
+        0,
+        minY,
+        this.mapW,
+        maxY - minY + 1,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        this.terrainRgba.subarray(start, end),
+      );
+      return;
+    }
+
+    for (let i = 0; i < refs.length; i++) {
+      const ref = refs[i];
+      const x = ref % this.mapW;
+      const y = (ref - x) / this.mapW;
+      const off = ref * 4;
+      this.pixelScratch[0] = this.terrainRgba[off];
+      this.pixelScratch[1] = this.terrainRgba[off + 1];
+      this.pixelScratch[2] = this.terrainRgba[off + 2];
+      this.pixelScratch[3] = this.terrainRgba[off + 3];
       gl.texSubImage2D(
         gl.TEXTURE_2D,
         0,
