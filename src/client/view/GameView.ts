@@ -1379,6 +1379,9 @@ export class GameView implements GameMap {
   isBorder(ref: TileRef): boolean {
     return this._map.isBorder(ref);
   }
+  isBorderForOwner(ref: TileRef, ownerID: number): boolean {
+    return this._map.isBorderForOwner(ref, ownerID);
+  }
   neighbors(ref: TileRef): TileRef[] {
     return this._map.neighbors(ref);
   }
@@ -1387,6 +1390,9 @@ export class GameView implements GameMap {
   }
   neighbors4(ref: TileRef, out: TileRef[]): number {
     return this._map.neighbors4(ref, out);
+  }
+  neighbors8(ref: TileRef, out: TileRef[]): number {
+    return this._map.neighbors8(ref, out);
   }
   forEachNeighborWithDiag(
     ref: TileRef,

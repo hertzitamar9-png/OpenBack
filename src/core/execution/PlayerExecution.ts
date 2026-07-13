@@ -31,12 +31,15 @@ export class PlayerExecution implements Execution {
   private active = true;
   // Reusable neighbor buffer to avoid closures/allocation in cluster checks.
   private nbuf: TileRef[] = [0, 0, 0, 0];
+  private diagNbuf: TileRef[] = [0, 0, 0, 0, 0, 0, 0, 0];
   private encirclements = new Map<
     number,
     { since: number; lastSeen: number }
   >();
   private warExhaustionTicks = 0;
   private lastExhaustionBand = 0;
+  private lastStructureOwnershipCheck = -1;
+  private lastStructureCount = -1;
 
   constructor(private player: Player) {}
 
@@ -54,26 +57,34 @@ export class PlayerExecution implements Execution {
 
   tick(ticks: number) {
     this.player.decayRelations();
-    for (const u of this.player.units()) {
-      if (!Structures.has(u.type())) {
-        continue;
-      }
+    const units = this.player.units();
+    if (
+      this.lastStructureOwnershipCheck !== this.player.lastTileChange() ||
+      this.lastStructureCount !== units.length
+    ) {
+      for (const u of units) {
+        if (!Structures.has(u.type())) {
+          continue;
+        }
 
-      const owner = this.mg!.owner(u.tile());
-      if (!owner?.isPlayer()) {
-        u.delete();
-        continue;
-      }
-      if (owner === this.player) {
-        continue;
-      }
+        const owner = this.mg.owner(u.tile());
+        if (!owner.isPlayer()) {
+          u.delete();
+          continue;
+        }
+        if (owner === this.player) {
+          continue;
+        }
 
-      const captor = this.mg!.player(owner.id());
-      if (u.type() === UnitType.DefensePost) {
-        u.delete(true, captor);
-      } else {
-        captor.captureUnit(u);
+        const captor = this.mg.player(owner.id());
+        if (u.type() === UnitType.DefensePost) {
+          u.delete(true, captor);
+        } else {
+          captor.captureUnit(u);
+        }
       }
+      this.lastStructureOwnershipCheck = this.player.lastTileChange();
+      this.lastStructureCount = this.player.units().length;
     }
 
     if (!this.player.isAlive()) {
@@ -438,13 +449,23 @@ export class PlayerExecution implements Execution {
     for (const startTile of borderTiles) {
       if (visited[startTile] === currentGen) continue;
 
-      const cluster = this.floodFillWithGen(
-        currentGen,
-        visited,
-        [startTile],
-        (tile, cb) => this.mg.forEachNeighborWithDiag(tile, cb),
-        (tile) => borderTiles.has(tile),
-      );
+      const cluster = new Set<TileRef>();
+      const stack: TileRef[] = [startTile];
+      visited[startTile] = currentGen;
+      cluster.add(startTile);
+      while (stack.length > 0) {
+        const tile = stack.pop()!;
+        const count = this.map.neighbors8(tile, this.diagNbuf);
+        for (let i = 0; i < count; i++) {
+          const neighbor = this.diagNbuf[i];
+          if (visited[neighbor] === currentGen || !borderTiles.has(neighbor)) {
+            continue;
+          }
+          visited[neighbor] = currentGen;
+          cluster.add(neighbor);
+          stack.push(neighbor);
+        }
+      }
       clusters.push(cluster);
     }
     return clusters;

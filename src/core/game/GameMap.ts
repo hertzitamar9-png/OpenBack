@@ -35,6 +35,8 @@ export interface GameMap {
   setFallout(ref: TileRef, value: boolean): void;
   isOnEdgeOfMap(ref: TileRef): boolean;
   isBorder(ref: TileRef): boolean;
+  /** Border check when the caller already loaded the tile owner. */
+  isBorderForOwner(ref: TileRef, ownerID: number): boolean;
   neighbors(ref: TileRef): TileRef[];
   // Zero-allocation neighbor iteration (cardinal only), in W, E, N, S order.
   forEachNeighbor(ref: TileRef, callback: (neighbor: TileRef) => void): void;
@@ -42,6 +44,9 @@ export interface GameMap {
   // returns the count. out must have length >= 4; reuse it across calls to
   // avoid allocation in hot loops.
   neighbors4(ref: TileRef, out: TileRef[]): number;
+  // Writes all eight neighbors in the same order as
+  // forEachNeighborWithDiag, without allocating a callback closure.
+  neighbors8(ref: TileRef, out: TileRef[]): number;
   // Zero-allocation neighbor iteration including diagonals, in dx-major
   // order: (-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1).
   forEachNeighborWithDiag(
@@ -307,13 +312,18 @@ export class GameMapImpl implements GameMap {
   }
 
   isBorder(ref: TileRef): boolean {
+    return this.isBorderForOwner(ref, this.ownerID(ref));
+  }
+
+  isBorderForOwner(ref: TileRef, ownerID: number): boolean {
     const w = this.width_;
     const x = this.refToX[ref];
-    const owner = this.ownerID(ref);
-    if (x !== 0 && this.ownerID(ref - 1) !== owner) return true;
-    if (x !== w - 1 && this.ownerID(ref + 1) !== owner) return true;
-    if (ref >= w && this.ownerID(ref - w) !== owner) return true;
-    if (ref < (this.height_ - 1) * w && this.ownerID(ref + w) !== owner) {
+    const state = this.state;
+    const mask = GameMapImpl.PLAYER_ID_MASK;
+    if (x !== 0 && (state[ref - 1] & mask) !== ownerID) return true;
+    if (x !== w - 1 && (state[ref + 1] & mask) !== ownerID) return true;
+    if (ref >= w && (state[ref - w] & mask) !== ownerID) return true;
+    if (ref < (this.height_ - 1) * w && (state[ref + w] & mask) !== ownerID) {
       return true;
     }
     return false;
@@ -388,6 +398,28 @@ export class GameMapImpl implements GameMap {
     if (x !== w - 1) out[n++] = ref + 1;
     if (ref >= w) out[n++] = ref - w;
     if (ref < (this.height_ - 1) * w) out[n++] = ref + w;
+    return n;
+  }
+
+  neighbors8(ref: TileRef, out: TileRef[]): number {
+    const w = this.width_;
+    const x = this.refToX[ref];
+    const hasN = ref >= w;
+    const hasS = ref < (this.height_ - 1) * w;
+    let n = 0;
+
+    if (x !== 0) {
+      if (hasN) out[n++] = ref - 1 - w;
+      out[n++] = ref - 1;
+      if (hasS) out[n++] = ref - 1 + w;
+    }
+    if (hasN) out[n++] = ref - w;
+    if (hasS) out[n++] = ref + w;
+    if (x !== w - 1) {
+      if (hasN) out[n++] = ref + 1 - w;
+      out[n++] = ref + 1;
+      if (hasS) out[n++] = ref + 1 + w;
+    }
     return n;
   }
 

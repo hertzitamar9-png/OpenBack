@@ -140,6 +140,7 @@ export class PlayerImpl implements Player {
    * first emission (full snapshot sent).
    */
   public lastSentUpdate: PlayerUpdate | undefined;
+  private readonly serializedControllerClientIDs: ClientID[];
 
   constructor(
     private mg: GameImpl,
@@ -151,6 +152,7 @@ export class PlayerImpl implements Player {
     this._troops = toInt(startTroops);
     this._gold = mg.config().startingGold(playerInfo);
     this._pseudo_random = new PseudoRandom(simpleHash(this.playerInfo.id));
+    this.serializedControllerClientIDs = [...playerInfo.controllerClientIDs];
   }
 
   largestClusterBoundingBox: { min: Cell; max: Cell } | null;
@@ -303,7 +305,7 @@ export class PlayerImpl implements Player {
     return {
       type: GameUpdateType.Player,
       clientID: this.clientID(),
-      controllerClientIDs: [...this.controllerClientIDs()],
+      controllerClientIDs: this.serializedControllerClientIDs,
       name: this.name(),
       displayName: this.displayName(),
       id: this.id(),

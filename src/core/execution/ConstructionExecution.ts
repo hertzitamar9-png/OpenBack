@@ -83,8 +83,11 @@ export class ConstructionExecution implements Execution {
               unit.tile() === spawnTile,
           );
         if (stackedStructure) {
-          this.player.removeGold(info.cost(this.mg, this.player));
-          stackedStructure.increaseLevel();
+          // Use the common upgrade path so the amount shown before the click,
+          // the amount deducted, and the lifetime purchase counter advance
+          // together. The previous bespoke path forgot the purchase counter,
+          // leaving every later stack at the second-purchase price.
+          this.player.upgradeUnit(stackedStructure);
           this.active = false;
           return;
         }

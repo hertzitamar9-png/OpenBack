@@ -694,8 +694,11 @@ export class GameImpl implements Game {
     if (!this.isLand(tile)) {
       throw Error(`cannot conquer water`);
     }
-    const previousOwner = this.owner(tile) as TerraNullius | PlayerImpl;
-    if (previousOwner.isPlayer()) {
+    const previousOwnerID = this._map.ownerID(tile);
+    if (previousOwnerID !== 0) {
+      const previousOwner = this._playersBySmallID[
+        previousOwnerID - 1
+      ] as PlayerImpl;
       previousOwner._lastTileChange = this._ticks;
       previousOwner._tiles.delete(tile);
       previousOwner._borderTiles.delete(tile);
@@ -703,7 +706,7 @@ export class GameImpl implements Game {
     this._map.setOwnerID(tile, owner.smallID());
     owner._tiles.add(tile);
     owner._lastTileChange = this._ticks;
-    this.updateBorders(tile);
+    this.updateBordersAfterOwnerChange(tile, owner.smallID());
     this._map.setFallout(tile, false);
     this.recordTileUpdate(tile);
   }
@@ -716,33 +719,51 @@ export class GameImpl implements Game {
       throw new Error("Cannot relinquish water");
     }
 
-    const previousOwner = this.owner(tile) as PlayerImpl;
+    const previousOwnerID = this._map.ownerID(tile);
+    const previousOwner = this._playersBySmallID[
+      previousOwnerID - 1
+    ] as PlayerImpl;
     previousOwner._lastTileChange = this._ticks;
     previousOwner._tiles.delete(tile);
     previousOwner._borderTiles.delete(tile);
 
     this._map.setOwnerID(tile, 0);
-    this.updateBorders(tile);
+    this.updateBordersAfterOwnerChange(tile, 0);
     this.recordTileUpdate(tile);
   }
 
   // Reusable neighbor buffer to avoid closures/allocation in updateBorders.
   private borderNbuf: TileRef[] = [0, 0, 0, 0];
 
-  private updateBorders(tile: TileRef) {
+  private updateBordersAfterOwnerChange(tile: TileRef, newOwnerID: number) {
     this.updateBorderStatus(tile);
     const numNeighbors = this._map.neighbors4(tile, this.borderNbuf);
     for (let i = 0; i < numNeighbors; i++) {
-      this.updateBorderStatus(this.borderNbuf[i]);
+      const neighbor = this.borderNbuf[i];
+      const neighborOwnerID = this._map.ownerID(neighbor);
+      if (neighborOwnerID === 0) continue;
+
+      const neighborOwner = this._playersBySmallID[
+        neighborOwnerID - 1
+      ] as PlayerImpl;
+      if (neighborOwnerID !== newOwnerID) {
+        // The changed tile now belongs to somebody else (or nobody), so this
+        // neighbor is definitely a border tile without scanning its other
+        // sides. Only same-owner neighbors can have stopped being borders.
+        neighborOwner._borderTiles.add(neighbor);
+      } else if (this._map.isBorderForOwner(neighbor, neighborOwnerID)) {
+        neighborOwner._borderTiles.add(neighbor);
+      } else {
+        neighborOwner._borderTiles.delete(neighbor);
+      }
     }
   }
 
   private updateBorderStatus(t: TileRef): void {
-    if (!this._map.hasOwner(t)) {
-      return;
-    }
-    const owner = this.owner(t) as PlayerImpl;
-    if (this._map.isBorder(t)) {
+    const ownerID = this._map.ownerID(t);
+    if (ownerID === 0) return;
+    const owner = this._playersBySmallID[ownerID - 1] as PlayerImpl;
+    if (this._map.isBorderForOwner(t, ownerID)) {
       owner._borderTiles.add(t);
     } else {
       owner._borderTiles.delete(t);
@@ -1121,6 +1142,9 @@ export class GameImpl implements Game {
   isBorder(ref: TileRef): boolean {
     return this._map.isBorder(ref);
   }
+  isBorderForOwner(ref: TileRef, ownerID: number): boolean {
+    return this._map.isBorderForOwner(ref, ownerID);
+  }
   neighbors(ref: TileRef): TileRef[] {
     return this._map.neighbors(ref);
   }
@@ -1130,6 +1154,9 @@ export class GameImpl implements Game {
   }
   neighbors4(ref: TileRef, out: TileRef[]): number {
     return this._map.neighbors4(ref, out);
+  }
+  neighbors8(ref: TileRef, out: TileRef[]): number {
+    return this._map.neighbors8(ref, out);
   }
   isWater(ref: TileRef): boolean {
     return this._map.isWater(ref);
