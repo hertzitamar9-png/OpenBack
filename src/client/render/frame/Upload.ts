@@ -33,7 +33,9 @@ export interface FrameUploadTarget {
   applyConquestEvents(events: ConquestFx[]): void;
   applyBonusEvents(events: BonusEvent[]): void;
   applyWorldEvents(events: WorldEventFx[]): void;
-  updateFogReveals(reveals: Array<{ x: number; y: number; radius: number }>): void;
+  updateFogReveals(
+    reveals: Array<{ x: number; y: number; radius: number }>,
+  ): void;
   updateAttackRings(rings: AttackRingInput[]): void;
   updateNukeTelegraphs(data: NukeTelegraphData[]): void;
   updateNames(

@@ -98,7 +98,9 @@ describe("PlayerExecution", () => {
     peace.conquer(exhaustedGame.ref(80, 80));
     war.addTroops(10_000);
     peace.addTroops(10_000);
-    (war as unknown as { _outgoingAttacks: object[] })._outgoingAttacks.push({});
+    (war as unknown as { _outgoingAttacks: object[] })._outgoingAttacks.push(
+      {},
+    );
 
     const warExec = new PlayerExecution(war);
     const peaceExec = new PlayerExecution(peace);
@@ -116,22 +118,18 @@ describe("PlayerExecution", () => {
   });
 
   test("all shared controllers resolve to the same country", async () => {
-    const shared = await setup(
-      "big_plains",
-      { infiniteGold: false },
-      [
-        new PlayerInfo(
-          "shared",
-          PlayerType.Human,
-          "captain",
-          "shared_id",
-          false,
-          null,
-          [],
-          ["captain", "friend1", "friend2"],
-        ),
-      ],
-    );
+    const shared = await setup("big_plains", { infiniteGold: false }, [
+      new PlayerInfo(
+        "shared",
+        PlayerType.Human,
+        "captain",
+        "shared_id",
+        false,
+        null,
+        [],
+        ["captain", "friend1", "friend2"],
+      ),
+    ]);
     expect(shared.playerByClientID("captain")?.id()).toBe("shared_id");
     expect(shared.playerByClientID("friend1")?.id()).toBe("shared_id");
     expect(shared.playerByClientID("friend2")?.id()).toBe("shared_id");
