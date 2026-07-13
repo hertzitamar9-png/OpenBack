@@ -67,6 +67,7 @@ import {
 import { createCanvas } from "./Utils";
 import { WebGLFrameBuilder } from "./WebGLFrameBuilder";
 import { createRenderer, GameRenderer } from "./hud/GameRenderer";
+import { AdaptiveRenderController } from "./render/AdaptiveRenderController";
 import {
   applyGraphicsOverrides,
   createRenderSettings,
@@ -392,8 +393,16 @@ function mountWebGLFrameLoop(
   // renderer's captured frame callback (which draws). One RAF = one
   // synchronized camera-update + WebGL render.
   let rafId: number | null = null;
-  const driveFrame = (): void => {
-    syncCamera();
+  const adaptiveRender = new AdaptiveRenderController();
+  const driveFrame = (nowMs: number): void => {
+    // The scheduling check is cheap and runs on every browser frame. Only the
+    // expensive WebGL draw is throttled when sustained load would otherwise
+    // starve input, worker messages, and multiplayer updates.
+    if (adaptiveRender.shouldRender(nowMs)) {
+      const renderStartedMs = performance.now();
+      syncCamera();
+      adaptiveRender.recordRenderDuration(performance.now() - renderStartedMs);
+    }
     rafId = requestAnimationFrame(driveFrame);
   };
   rafId = requestAnimationFrame(driveFrame);

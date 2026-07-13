@@ -17,6 +17,57 @@ interface GameInfo {
   clients: GameClient[];
 }
 
+interface TurnCadence {
+  turns: number;
+  meanMs: number;
+  p95Ms: number;
+  maxMs: number;
+  gapsOver200Ms: number;
+}
+
+function percentile(values: number[], fraction: number): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted[
+    Math.min(sorted.length - 1, Math.floor(sorted.length * fraction))
+  ];
+}
+
+async function measureTurnCadence(
+  socket: WebSocket,
+  turns: number,
+): Promise<TurnCadence> {
+  const receivedAt: number[] = [];
+  await new Promise<void>((resolve, reject) => {
+    const timeout = setTimeout(
+      () =>
+        reject(
+          new Error(`Timed out after receiving ${receivedAt.length} turns`),
+        ),
+      30_000,
+    );
+    const onMessage = (data: WebSocket.RawData) => {
+      const message = JSON.parse(data.toString()) as { type?: string };
+      if (message.type !== "turn") return;
+      receivedAt.push(performance.now());
+      if (receivedAt.length < turns) return;
+      clearTimeout(timeout);
+      socket.off("message", onMessage);
+      resolve();
+    };
+    socket.on("message", onMessage);
+  });
+  const intervals = receivedAt
+    .slice(1)
+    .map((time, index) => time - receivedAt[index]);
+  return {
+    turns: receivedAt.length,
+    meanMs: intervals.reduce((sum, value) => sum + value, 0) / intervals.length,
+    p95Ms: percentile(intervals, 0.95),
+    maxMs: Math.max(...intervals),
+    gapsOver200Ms: intervals.filter((value) => value > 200).length,
+  };
+}
+
 async function main() {
   const playerTokens = await Promise.all(
     [1, 2].map(async () => {
@@ -80,6 +131,15 @@ async function main() {
       throw new Error(`Expected 2 connected players, found ${players.length}`);
     }
 
+    const cadencePromise = measureTurnCadence(sockets[0], 100);
+    sockets[0].send(
+      JSON.stringify({
+        type: "intent",
+        intent: { type: "toggle_game_start_timer" },
+      }),
+    );
+    const cadence = await cadencePromise;
+
     console.log(
       JSON.stringify(
         {
@@ -87,6 +147,7 @@ async function main() {
           workerPath: game.workerPath,
           connectedPlayers: players,
           clientCount: players.length,
+          turnCadence: cadence,
         },
         null,
         2,
