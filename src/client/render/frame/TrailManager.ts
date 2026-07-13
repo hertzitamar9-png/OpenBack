@@ -61,8 +61,10 @@ export class TrailManager {
    * have disappeared (overlapping tiles get repainted from survivors).
    */
   update(units: Map<number, UnitState>, trackedIds: Iterable<number>): void {
-    this.clearDeadUnits(units);
-    for (const id of trackedIds) {
+    const tracked =
+      trackedIds instanceof Set ? trackedIds : new Set<number>(trackedIds);
+    this.clearHiddenOrDeadUnits(units, tracked);
+    for (const id of tracked) {
       const unit = units.get(id);
       if (!unit) continue;
       let trail = this.unitTrails.get(id);
@@ -88,9 +90,12 @@ export class TrailManager {
     }
   }
 
-  private clearDeadUnits(units: Map<number, UnitState>): void {
+  private clearHiddenOrDeadUnits(
+    units: Map<number, UnitState>,
+    tracked: ReadonlySet<number>,
+  ): void {
     for (const [id, trail] of this.unitTrails) {
-      if (units.has(id)) continue;
+      if (units.has(id) && tracked.has(id)) continue;
       const deadTiles = trail.tiles;
       for (const ref of deadTiles) this.stamp(ref, 0);
       this.unitTrails.delete(id);

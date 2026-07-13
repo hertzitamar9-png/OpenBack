@@ -103,4 +103,16 @@ describe("TrailManager", () => {
     expect(trail[ref(5, 5)]).toBe(0);
     expect(trail[ref(6, 5)]).toBe(0);
   });
+
+  it("clears a trail immediately when a still-active unit becomes private", () => {
+    const tm = new TrailManager(MAP_W, MAP_H);
+    const trail = tm.getTrailState();
+    const active = unit({ pos: ref(7, 5), lastPos: ref(6, 5) });
+
+    tm.update(units(active), new Set([1]));
+    expect(trail[ref(6, 5)]).toBe(7);
+
+    tm.update(units(active), new Set());
+    expect(trail[ref(6, 5)]).toBe(0);
+  });
 });

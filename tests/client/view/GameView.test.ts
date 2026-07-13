@@ -10,7 +10,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { UnitType } from "../../../src/core/game/Game";
+import { MessageType, UnitType } from "../../../src/core/game/Game";
 import { GameUpdateType } from "../../../src/core/game/GameUpdates";
 import {
   makeEmptyGu,
@@ -775,6 +775,61 @@ describe("GameView.frameData() — renderer contract", () => {
 
     game.update(makeEmptyGu(5));
     expect(game.frameData().namesDirty).toBe(true);
+  });
+
+  it("shows only my transports and transports sent to me", () => {
+    const game = makeGameView({ myClientID: "client-a" });
+    const gu = withPlayers(1, [
+      makePlayerUpdate({
+        id: "me",
+        smallID: 1,
+        clientID: "client-a",
+      }),
+      makePlayerUpdate({ id: "enemy", smallID: 2, clientID: "client-b" }),
+    ]);
+    gu.packedTileUpdates = new Uint32Array([5, 1, 6, 2]);
+    gu.updates[GameUpdateType.Unit] = [
+      makeUnitUpdate({
+        id: 10,
+        unitType: UnitType.TransportShip,
+        ownerID: 1,
+        targetTile: 6,
+      }),
+      makeUnitUpdate({
+        id: 11,
+        unitType: UnitType.TransportShip,
+        ownerID: 2,
+        targetTile: 5,
+      }),
+      makeUnitUpdate({
+        id: 12,
+        unitType: UnitType.TransportShip,
+        ownerID: 2,
+        targetTile: 6,
+      }),
+      makeUnitUpdate({
+        id: 13,
+        unitType: UnitType.TransportShip,
+        ownerID: 2,
+        targetTile: 6,
+      }),
+    ];
+    gu.updates[GameUpdateType.UnitIncoming] = [
+      {
+        type: GameUpdateType.UnitIncoming,
+        unitID: 13,
+        playerID: 1,
+        message: "incoming",
+        messageType: MessageType.NAVAL_INVASION_INBOUND,
+      },
+    ];
+
+    game.update(gu);
+
+    expect(game.unit(10)?.state.visibleToLocal).toBe(true);
+    expect(game.unit(11)?.state.visibleToLocal).toBe(true);
+    expect(game.unit(12)?.state.visibleToLocal).toBe(false);
+    expect(game.unit(13)?.state.visibleToLocal).toBe(true);
   });
 
   it("frame.relationMatrix marks same-team players as friendly (team games)", () => {

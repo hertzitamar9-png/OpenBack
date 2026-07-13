@@ -2,6 +2,7 @@ import { Config } from "../../core/configuration/Config";
 import {
   Cell,
   GameUpdates,
+  MessageType,
   PlayerID,
   TerrainType,
   TerraNullius,
@@ -15,6 +16,7 @@ import {
   GameUpdateType,
   GameUpdateViewData,
   SpawnPhaseEndUpdate,
+  UnitIncomingUpdate,
   WorldEventUpdate,
 } from "../../core/game/GameUpdates";
 import { ATTACK_DELTA_OUTGOING } from "../../core/game/GameUpdateUtils";
@@ -108,6 +110,8 @@ export class GameView implements GameMap {
   /** Reusable scratch buffers for per-tick deltas. */
   private readonly _changedTilesScratch: TilePair[] = [];
   private readonly _trailUnitIds = new Set<number>();
+  private readonly _visibleTrailUnitIds = new Set<number>();
+  private readonly _incomingTransportUnitIds = new Set<number>();
   private readonly _statusNukeUnitIds = new Set<number>();
   private readonly _telegraphUnitIds = new Set<number>();
   private readonly _transportUnitIds = new Set<number>();
@@ -305,6 +309,7 @@ export class GameView implements GameMap {
       this._statusNukeUnitIds.delete(id);
       this._telegraphUnitIds.delete(id);
       this._transportUnitIds.delete(id);
+      this._incomingTransportUnitIds.delete(id);
     });
     this.toDelete.clear();
 
@@ -476,6 +481,20 @@ export class GameView implements GameMap {
       this._myPlayer ??= this.playerByClientID(this._myClientID);
     }
 
+    const localSmallID = this._myPlayer?.smallID();
+    if (localSmallID !== undefined) {
+      for (const incoming of gu.updates[
+        GameUpdateType.UnitIncoming
+      ] as UnitIncomingUpdate[]) {
+        if (
+          incoming.playerID === localSmallID &&
+          incoming.messageType === MessageType.NAVAL_INVASION_INBOUND
+        ) {
+          this._incomingTransportUnitIds.add(incoming.unitID);
+        }
+      }
+    }
+
     for (const unit of this._units.values()) {
       unit._wasUpdated = false;
       const lastIndex = unit.lastPos.length - 1;
@@ -580,10 +599,36 @@ export class GameView implements GameMap {
     // at the start of apply().
     this.railroadCache.apply(gu);
 
-    // Trail update: walk active trail-type units and stamp/decay.
+    // Transport movements are private: render/stamp only ships we launched or
+    // ships for which this client received an incoming-invasion notification.
+    // Re-evaluate every tick so an old enemy trail is erased immediately.
+    this._visibleTrailUnitIds.clear();
+    const localSmallID = this._myPlayer?.smallID();
+    for (const id of this._trailUnitIds) {
+      const state = this._unitStates.get(id);
+      if (!state) continue;
+      if (state.unitType !== UnitType.TransportShip) {
+        this._visibleTrailUnitIds.add(id);
+        continue;
+      }
+      const targetOwnedByMe =
+        localSmallID !== undefined &&
+        state.targetTile !== null &&
+        this.ownerID(state.targetTile) === localSmallID;
+      const visible =
+        localSmallID === undefined ||
+        state.ownerID === localSmallID ||
+        this._incomingTransportUnitIds.has(id) ||
+        targetOwnedByMe;
+      if (state.visibleToLocal !== visible) this._unitsDirty = true;
+      state.visibleToLocal = visible;
+      if (visible) this._visibleTrailUnitIds.add(id);
+    }
+
+    // Trail update: walk only locally visible trail units and stamp/decay.
     this.trailManager.update(
       this._unitStates as Map<number, import("../render/types").UnitState>,
-      this._trailUnitIds,
+      this._visibleTrailUnitIds,
     );
 
     // Changed-tile delta refs (zero-copy: state field unused in live mode).

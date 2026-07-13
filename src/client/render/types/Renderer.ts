@@ -105,6 +105,8 @@ export interface UnitState {
   trajectoryAngle?: number; // Sprite heading (radians, math convention, y-up)
   launchPhase?: number;
   constructionStartTick: number | null;
+  /** Local-only visibility gate for private transport movements. */
+  visibleToLocal?: boolean;
 }
 
 /** Minimal dead-unit data needed by the FX pass. */

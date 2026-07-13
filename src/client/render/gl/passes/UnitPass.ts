@@ -456,6 +456,9 @@ export class UnitPass {
 
     for (const unit of units.values()) {
       if (!unit.isActive) continue;
+      if (unit.unitType === UT_TRANSPORT && unit.visibleToLocal === false) {
+        continue;
+      }
 
       let atlasIdx = this.typeToAtlasCol.get(unit.unitType);
 
