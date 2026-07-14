@@ -5,7 +5,10 @@ import {
   OPENBACK_CONTENT_PATHS,
 } from "../../src/server/OpenBackContent";
 
-function renderPath(path: string): {
+function renderPath(
+  path: string,
+  options: { protocol?: string; forwardedProto?: string } = {},
+): {
   body: string;
   status: number;
   type: string;
@@ -13,7 +16,10 @@ function renderPath(path: string): {
   const result = { body: "", status: 200, type: "" };
   const request = {
     path,
-    protocol: "https",
+    protocol: options.protocol ?? "https",
+    headers: options.forwardedProto
+      ? { "x-forwarded-proto": options.forwardedProto }
+      : {},
     get: (name: string) =>
       name.toLowerCase() === "host" ? "openback.example" : undefined,
   } as Request;
@@ -60,5 +66,20 @@ describe("OpenBack learning content", () => {
     expect(result.body).toContain('href="/guides"');
     expect(result.body).toContain('href="/blog"');
     expect(result.body).not.toContain("OpenFront");
+  });
+
+  it("uses the public HTTPS protocol supplied by a reverse proxy", () => {
+    const result = renderPath("/guides", {
+      protocol: "http",
+      forwardedProto: "https",
+    });
+
+    expect(result.body).toContain(
+      'rel="canonical" href="https://openback.example/guides"',
+    );
+    expect(result.body).toContain(
+      'property="og:url" content="https://openback.example/guides"',
+    );
+    expect(result.body).not.toContain("http://openback.example");
   });
 });

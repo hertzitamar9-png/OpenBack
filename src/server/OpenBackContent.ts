@@ -401,7 +401,20 @@ function article(origin: string, page: Page): string {
 }
 
 export function handleOpenBackContent(req: Request, res: Response): void {
-  const origin = `${req.protocol}://${req.get("host")}`.replace(/\/+$/, "");
+  // Render terminates TLS before forwarding the request to Express, so
+  // req.protocol can be "http" even when the public page is HTTPS. Prefer the
+  // proxy's original protocol to keep canonical and Open Graph URLs aligned
+  // with the public URLs in sitemap.xml.
+  const forwardedProto = req.headers["x-forwarded-proto"];
+  const protocol = (
+    Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto
+  )
+    ?.split(",")[0]
+    ?.trim();
+  const origin = `${protocol ?? req.protocol ?? "https"}://${req.get("host")}`.replace(
+    /\/+$/,
+    "",
+  );
   if (req.path === "/guides")
     return void res.type("html").send(hub(origin, "guides"));
   if (req.path === "/blog")
