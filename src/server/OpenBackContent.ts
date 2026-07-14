@@ -411,10 +411,11 @@ export function handleOpenBackContent(req: Request, res: Response): void {
   )
     ?.split(",")[0]
     ?.trim();
-  const origin = `${protocol ?? req.protocol ?? "https"}://${req.get("host")}`.replace(
-    /\/+$/,
-    "",
-  );
+  const origin =
+    `${protocol ?? req.protocol ?? "https"}://${req.get("host")}`.replace(
+      /\/+$/,
+      "",
+    );
   if (req.path === "/guides")
     return void res.type("html").send(hub(origin, "guides"));
   if (req.path === "/blog")
