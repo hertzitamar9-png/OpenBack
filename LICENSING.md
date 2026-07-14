@@ -1,4 +1,4 @@
-# License for OpenFront.io Project
+# OpenBack Licensing and Upstream Notices
 
 ## Overview
 
@@ -108,12 +108,6 @@ These external assets are:
 Accessing, downloading, extracting, or using proprietary assets from our servers/database without explicit written permission is prohibited and may violate copyright law.
 
 The open source license (AGPL) applies ONLY to code. The CC BY-SA license applies ONLY to assets included in this repository. All other assets remain proprietary.
-
-## Contributing
-
-See CONTRIBUTING.md for current licensing requirements. All code contributions are licensed under AGPL v3 and assets under CC BY-SA 4.0.
-
-For questions, contact OpenFront Inc.
 
 ## Historical MIT License
 
