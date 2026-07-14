@@ -25,7 +25,21 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 24
-      - run: npm ci
+      - name: Install dependencies
+        run: |
+          for attempt in 1 2 3; do
+            if npm ci; then
+              exit 0
+            fi
+
+            if [ "$attempt" -lt 3 ]; then
+              echo "npm ci failed on attempt $attempt; retrying with a clean node_modules directory"
+              rm -rf node_modules
+              sleep $((attempt * 5))
+            fi
+          done
+
+          exit 1
       - run: npm run build-prod
       - uses: actions/upload-artifact@v7
         with:
