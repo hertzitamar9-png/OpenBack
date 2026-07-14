@@ -1,13 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
   <title id="title">OpenBack</title>
-  <desc id="desc">OpenBack OB monogram</desc>
+  <desc id="desc">OpenBack territorial hexagon emblem</desc>
   <defs>
-    <linearGradient id="mark-blue" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#22c4ff"/>
-      <stop offset="1" stop-color="#086fc7"/>
+    <linearGradient id="shield" x1="18" y1="15" x2="110" y2="113" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#102d4d"/>
+      <stop offset="1" stop-color="#061321"/>
+    </linearGradient>
+    <linearGradient id="cyan" x1="25" y1="32" x2="75" y2="91" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#62e6ff"/>
+      <stop offset="1" stop-color="#0aa8f0"/>
+    </linearGradient>
+    <linearGradient id="green" x1="69" y1="38" x2="101" y2="94" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#65f28f"/>
+      <stop offset="1" stop-color="#18bd63"/>
     </linearGradient>
   </defs>
-  <rect width="128" height="128" rx="24" fill="#111318"/>
-  <path d="M9 64 28 45v11h17v16H28v11zm110 0-19-19v11H83v16h17v11z" fill="#56ccff"/>
-  <text x="64" y="82" text-anchor="middle" fill="url(#mark-blue)" font-family="Arial Black, Impact, sans-serif" font-size="55" font-style="italic" font-weight="900" letter-spacing="-6">OB</text>
+  <path d="M64 5 113 33v62l-49 28L15 95V33Z" fill="#020812" opacity=".5"/>
+  <path d="M64 8 110 35v58l-46 27-46-27V35Z" fill="url(#shield)" stroke="#47dfff" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M64 15 103 38v11L64 27 25 49V38Z" fill="#b8f4ff" opacity=".2"/>
+  <path fill-rule="evenodd" d="M39 32C24 32 17 44 17 64s7 32 22 32 22-12 22-32-7-32-22-32Zm0 14c-6 0-9 6-9 18s3 18 9 18 9-6 9-18-3-18-9-18Z" fill="url(#cyan)"/>
+  <path d="M58 32h20c16 0 25 6 25 17 0 7-4 12-10 15 7 3 11 8 11 15 0 11-8 17-25 17H58Zm14 13v13h7c7 0 10-2 10-7 0-4-3-6-10-6Zm0 25v13h8c7 0 10-2 10-7 0-4-3-6-10-6Z" fill="url(#green)"/>
+  <path d="M45 64H31m0 0 6-6m-6 6 6 6" fill="none" stroke="#f2fcff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="64" cy="108" r="3" fill="#64f092"/>
 </svg>

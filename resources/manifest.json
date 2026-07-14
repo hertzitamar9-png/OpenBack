@@ -2,6 +2,12 @@
   "icons": [
     {
       "purpose": "any maskable",
+      "sizes": "512x512",
+      "src": "/images/OpenBackMark512.png",
+      "type": "image/png"
+    },
+    {
+      "purpose": "any",
       "sizes": "any",
       "src": "/images/OpenBackMark.svg",
       "type": "image/svg+xml"

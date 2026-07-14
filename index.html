@@ -10,6 +10,7 @@
     <link rel="canonical" href="<%- siteOrigin %>/" />
     <link rel="manifest" href="<%- manifestHref %>" />
     <link rel="icon" type="image/svg+xml" href="<%- faviconHref %>" />
+    <link rel="apple-touch-icon" sizes="512x512" href="<%- markPngHref %>" />
 
     <!-- Preload styles -->
     <style>
@@ -69,7 +70,14 @@
       property="og:description"
       content="Expand your nation, build an economy, form alliances, and dominate the map in OpenBack."
     />
-    <meta property="og:image" content="<%- gameplayScreenshotUrl %>" />
+    <meta property="og:image" content="<%- socialPreviewUrl %>" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="OpenBack territorial strategy game map"
+    />
     <meta property="og:type" content="game" />
     <meta property="og:url" content="<%- siteOrigin %>/" />
     <meta property="og:site_name" content="OpenBack" />
@@ -79,7 +87,11 @@
       name="twitter:description"
       content="Expand your nation, build an economy, form alliances, and dominate the map in OpenBack."
     />
-    <meta name="twitter:image" content="<%- gameplayScreenshotUrl %>" />
+    <meta name="twitter:image" content="<%- socialPreviewUrl %>" />
+    <meta
+      name="twitter:image:alt"
+      content="OpenBack territorial strategy game map"
+    />
 
     <script type="application/ld+json">
       {
@@ -87,7 +99,8 @@
         "@type": "VideoGame",
         "name": "OpenBack",
         "url": "<%- siteOrigin %>/",
-        "image": "<%- gameplayScreenshotUrl %>",
+        "logo": "<%- markPngHref %>",
+        "image": "<%- socialPreviewUrl %>",
         "description": "OpenBack is a free browser-based territorial real-time strategy game. Expand your nation, build an economy and military, form alliances, and compete against players online.",
         "genre": ["Real-time strategy", "Territorial strategy", "Multiplayer"],
         "gamePlatform": "Web browser",

@@ -41,8 +41,13 @@ export async function renderHtmlContent(htmlPath: string): Promise<string> {
       assetManifest,
       cdnBase,
     ),
-    gameplayScreenshotUrl: buildAssetUrl(
-      "images/GameplayScreenshot.png",
+    markPngHref: buildAssetUrl(
+      "images/OpenBackMark512.png",
+      assetManifest,
+      cdnBase,
+    ),
+    socialPreviewUrl: buildAssetUrl(
+      "images/OpenBackSocialPreview.png",
       assetManifest,
       cdnBase,
     ),

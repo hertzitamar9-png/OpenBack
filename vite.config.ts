@@ -133,8 +133,13 @@ export default defineConfig(({ mode }) => {
       assetManifest,
       cdnBase,
     ),
-    gameplayScreenshotUrl: buildAssetUrl(
-      "images/GameplayScreenshot.png",
+    markPngHref: buildAssetUrl(
+      "images/OpenBackMark512.png",
+      assetManifest,
+      cdnBase,
+    ),
+    socialPreviewUrl: buildAssetUrl(
+      "images/OpenBackSocialPreview.png",
       assetManifest,
       cdnBase,
     ),
