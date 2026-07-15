@@ -22,16 +22,11 @@ export async function fetchPlayerById(
   playerId: string,
 ): Promise<PlayerProfile | false> {
   try {
-    const userAuthResult = await userAuth();
-    if (!userAuthResult) return false;
-    const { jwt } = userAuthResult;
-
     const url = `${getApiBase()}/player/${encodeURIComponent(playerId)}`;
 
     const res = await fetch(url, {
       headers: {
         Accept: "application/json",
-        Authorization: `Bearer ${jwt}`,
       },
     });
 
@@ -164,6 +159,32 @@ export async function updateMyProfile(profile: {
     if (!parsed.success) return false;
     invalidateUserMe();
     return parsed.data;
+  } catch {
+    return false;
+  }
+}
+
+export async function updateMyIdentityPreferences(preferences: {
+  selectedFlag?: string | null;
+  selectedCosmetic?: string | null;
+}): Promise<boolean> {
+  try {
+    const auth = await userAuth();
+    if (!auth) return false;
+    const response = await fetch(getApiBase() + "/users/@me", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        authorization: `Bearer ${auth.jwt}`,
+      },
+      body: JSON.stringify(preferences),
+    });
+    if (!response.ok) return false;
+    const parsed = UserMeResponseSchema.safeParse(await response.json());
+    if (!parsed.success) return false;
+    setLastUserMe(parsed.data);
+    invalidateUserMe();
+    return true;
   } catch {
     return false;
   }

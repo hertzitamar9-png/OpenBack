@@ -5,7 +5,7 @@ import { UserMeResponse } from "src/core/ApiSchemas";
 import { assetUrl } from "src/core/AssetUrls";
 import { Cosmetics, Flag } from "src/core/CosmeticSchemas";
 import { UserSettings } from "src/core/game/UserSettings";
-import { getUserMe } from "./Api";
+import { getUserMe, updateMyIdentityPreferences } from "./Api";
 import {
   fetchCosmetics,
   flagRelationship,
@@ -183,6 +183,7 @@ export class FlagInputModal extends BaseModal {
 
   private setFlag(flag: string) {
     new UserSettings().setFlag(flag);
+    void updateMyIdentityPreferences({ selectedFlag: flag });
   }
 
   protected async onOpen(): Promise<void> {

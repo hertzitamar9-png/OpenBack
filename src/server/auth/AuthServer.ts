@@ -28,7 +28,9 @@ import { ensureKeys, getPrivateKey, getPublicJwk } from "./keys";
 // ---------------------------------------------------------------------------
 
 const SESSION_COOKIE = "openback_session";
-const SESSION_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 365; // "forever"
+// Browsers cap persistent cookies, so renew the maximum practical lifetime on
+// every authenticated refresh. Active players remain signed in until logout.
+const SESSION_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 400;
 const JWT_EXPIRES_S = 60 * 60 * 24 * 30; // 30 days, refreshed while session valid
 const CODE_TTL_MS = 1000 * 60 * 10; // 10 minute magic code
 
@@ -41,6 +43,8 @@ interface StoredUser {
   displayName?: string;
   bio?: string;
   bannerColor?: string;
+  selectedFlag?: string;
+  selectedCosmetic?: string;
   // Ranked 1v1 progression.
   elo?: number;
   peakElo?: number;
@@ -59,7 +63,10 @@ interface PendingCode {
   code: string;
   expiresAt: number;
   attempts: number;
+  mode: EmailAuthMode;
 }
+
+type EmailAuthMode = "signup" | "login";
 
 type ClanRole = "leader" | "officer" | "member";
 interface StoredClanMember {
@@ -157,31 +164,52 @@ async function loadPersisted() {
   }
 }
 let saveTimer: NodeJS.Timeout | null = null;
+let persistenceQueue: Promise<void> = Promise.resolve();
+function persistenceSnapshot(): PersistShape {
+  return {
+    users: [...usersByPid.values()],
+    sessions: Object.fromEntries(sessions),
+    clans: [...clansByTag.values()],
+  };
+}
+
+async function writePersisted(data: PersistShape): Promise<void> {
+  if (database) {
+    await database.query(
+      `INSERT INTO openback_state (id, data, updated_at)
+       VALUES (1, $1::jsonb, NOW())
+       ON CONFLICT (id) DO UPDATE
+       SET data = EXCLUDED.data, updated_at = NOW()`,
+      [JSON.stringify(data)],
+    );
+  } else {
+    fs.writeFileSync(DATA_FILE, JSON.stringify(data));
+  }
+}
+
+function queuePersistedSnapshot(): Promise<void> {
+  const data = persistenceSnapshot();
+  const queued = persistenceQueue.then(() => writePersisted(data));
+  persistenceQueue = queued.catch(() => undefined);
+  return queued;
+}
+
 function persist() {
   if (saveTimer) return;
-  saveTimer = setTimeout(async () => {
+  saveTimer = setTimeout(() => {
     saveTimer = null;
-    try {
-      const data: PersistShape = {
-        users: [...usersByPid.values()],
-        sessions: Object.fromEntries(sessions),
-        clans: [...clansByTag.values()],
-      };
-      if (database) {
-        await database.query(
-          `INSERT INTO openback_state (id, data, updated_at)
-           VALUES (1, $1::jsonb, NOW())
-           ON CONFLICT (id) DO UPDATE
-           SET data = EXCLUDED.data, updated_at = NOW()`,
-          [JSON.stringify(data)],
-        );
-      } else {
-        fs.writeFileSync(DATA_FILE, JSON.stringify(data));
-      }
-    } catch (error) {
-      console.error("[auth] failed to save persistent state", error);
-    }
+    void queuePersistedSnapshot().catch((error) =>
+      console.error("[auth] failed to save persistent state", error),
+    );
   }, 500);
+}
+
+async function persistImmediately(): Promise<void> {
+  if (saveTimer) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
+  await queuePersistedSnapshot();
 }
 const persistenceReady = loadPersisted();
 
@@ -241,6 +269,8 @@ function userMeFor(user: StoredUser): UserMeResponse {
       displayName: user.displayName,
       bio: user.bio,
       bannerColor: user.bannerColor,
+      selectedFlag: user.selectedFlag,
+      selectedCosmetic: user.selectedCosmetic,
     },
     player: {
       publicId: user.publicId,
@@ -306,6 +336,43 @@ function findOrCreateUser(opts: {
   usersByPid.set(user.persistentId, user);
   persist();
   return user;
+}
+
+function createEmailUser(email: string): StoredUser {
+  const normalized = email.toLowerCase();
+  if (usersByEmail.has(normalized)) {
+    throw new Error("account_exists");
+  }
+  return findOrCreateUser({ email: normalized });
+}
+
+function deleteUser(user: StoredUser): void {
+  usersByPid.delete(user.persistentId);
+  if (user.email) usersByEmail.delete(user.email.toLowerCase());
+  else usersByEmail.delete(user.persistentId);
+
+  for (const [sessionId, session] of sessions) {
+    if (session.persistentId === user.persistentId) sessions.delete(sessionId);
+  }
+
+  for (const [tag, clan] of clansByTag) {
+    clan.requests = clan.requests.filter(
+      (request) => request.publicId !== user.publicId,
+    );
+    clan.bans = clan.bans.filter((ban) => ban.publicId !== user.publicId);
+    const member = clan.members.find(
+      (candidate) => candidate.publicId === user.publicId,
+    );
+    if (!member) continue;
+    clan.members = clan.members.filter(
+      (candidate) => candidate.publicId !== user.publicId,
+    );
+    if (clan.members.length === 0) {
+      clansByTag.delete(tag);
+    } else if (member.role === "leader") {
+      clan.members[0].role = "leader";
+    }
+  }
 }
 
 async function signToken(user: StoredUser): Promise<{
@@ -474,12 +541,23 @@ function canManageClan(clan: StoredClan, user: StoredUser): boolean {
 }
 
 // ---- Email ----------------------------------------------------------------
-const RequestCodeSchema = z.object({ email: z.string().email() });
+const RequestCodeSchema = z.object({
+  email: z.string().email(),
+  mode: z.enum(["signup", "login"]),
+});
+const VerifyCodeSchema = RequestCodeSchema.extend({
+  code: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/),
+});
 
 export async function sendCodeEmail(
   email: string,
   code: string,
+  mode: EmailAuthMode = "login",
 ): Promise<string | null> {
+  const action = mode === "signup" ? "sign-up" : "login";
   const brevoApiKey = process.env.BREVO_API_KEY;
   const brevoSenderEmail = process.env.BREVO_SENDER_EMAIL;
   if (brevoApiKey && brevoSenderEmail) {
@@ -496,10 +574,10 @@ export async function sendCodeEmail(
           name: process.env.BREVO_SENDER_NAME ?? "OpenBack",
         },
         to: [{ email }],
-        subject: "Your OpenBack login code",
-        textContent: `Your OpenBack login code is: ${code}\n\nIt expires in 10 minutes.`,
+        subject: `Your OpenBack ${action} code`,
+        textContent: `Your OpenBack ${action} code is: ${code}\n\nIt expires in 10 minutes.`,
         htmlContent:
-          `<p>Your OpenBack login code is:</p>` +
+          `<p>Your OpenBack ${action} code is:</p>` +
           `<p style="font-size:28px;font-weight:bold;letter-spacing:6px">${code}</p>` +
           `<p>It expires in 10 minutes.</p>`,
       }),
@@ -533,8 +611,8 @@ export async function sendCodeEmail(
         process.env.SMTP_USER ??
         "no-reply@openback.app",
       to: email,
-      subject: "Your OpenBack login code",
-      text: `Your OpenBack login code is: ${code}\n\nIt expires in 10 minutes.`,
+      subject: `Your OpenBack ${action} code`,
+      text: `Your OpenBack ${action} code is: ${code}\n\nIt expires in 10 minutes.`,
     });
     return null;
   } catch (e) {
@@ -569,14 +647,30 @@ export function authRouter(): express.Router {
       return;
     }
     const email = parsed.data.email.toLowerCase();
+    const accountExists = usersByEmail.has(email);
+    if (parsed.data.mode === "signup" && accountExists) {
+      res.status(409).json({
+        error: "account_exists",
+        nextAction: "login",
+      });
+      return;
+    }
+    if (parsed.data.mode === "login" && !accountExists) {
+      res.status(404).json({
+        error: "not_registered",
+        nextAction: "signup",
+      });
+      return;
+    }
     const code = String(crypto.randomInt(100000, 1000000));
     codes.set(email, {
       code,
       expiresAt: Date.now() + CODE_TTL_MS,
       attempts: 0,
+      mode: parsed.data.mode,
     });
     try {
-      const devCode = await sendCodeEmail(email, code);
+      const devCode = await sendCodeEmail(email, code, parsed.data.mode);
       res.json({ ok: true, devCode: devCode ?? undefined });
     } catch (error) {
       codes.delete(email);
@@ -589,19 +683,25 @@ export function authRouter(): express.Router {
   });
 
   router.post("/auth/verify-code", async (req, res) => {
-    const { email, code } = req.body as { email?: string; code?: string };
-    if (!email || !code) {
-      res.status(400).json({ error: "missing_fields" });
+    const parsed = VerifyCodeSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "invalid_fields" });
       return;
     }
-    const pending = codes.get(email.toLowerCase());
+    const { code, mode } = parsed.data;
+    const email = parsed.data.email.toLowerCase();
+    const pending = codes.get(email);
     if (!pending || pending.expiresAt < Date.now()) {
-      codes.delete(email.toLowerCase());
+      codes.delete(email);
       res.status(400).json({ error: "code_expired" });
       return;
     }
+    if (pending.mode !== mode) {
+      res.status(400).json({ error: "wrong_auth_flow" });
+      return;
+    }
     if (pending.attempts >= 5) {
-      codes.delete(email.toLowerCase());
+      codes.delete(email);
       res.status(429).json({ error: "too_many_attempts" });
       return;
     }
@@ -610,8 +710,44 @@ export function authRouter(): express.Router {
       res.status(401).json({ error: "invalid_code" });
       return;
     }
-    codes.delete(email.toLowerCase());
-    const user = findOrCreateUser({ email: email.toLowerCase() });
+    const existing = usersByEmail.get(email);
+    if (mode === "signup" && existing) {
+      codes.delete(email);
+      res.status(409).json({
+        error: "account_exists",
+        nextAction: "login",
+      });
+      return;
+    }
+    if (mode === "login" && !existing) {
+      codes.delete(email);
+      res.status(404).json({
+        error: "not_registered",
+        nextAction: "signup",
+      });
+      return;
+    }
+    codes.delete(email);
+    const oldSession = getCookie(req, SESSION_COOKIE);
+    const sessionUser = oldSession
+      ? usersByPid.get(sessions.get(oldSession)?.persistentId ?? "")
+      : undefined;
+    let user: StoredUser;
+    if (existing) {
+      user = existing;
+      if (sessionUser && !sessionUser.email && sessionUser !== existing) {
+        deleteUser(sessionUser);
+      }
+    } else if (sessionUser && !sessionUser.email) {
+      usersByEmail.delete(sessionUser.persistentId);
+      sessionUser.email = email;
+      usersByEmail.set(email, sessionUser);
+      user = sessionUser;
+      persist();
+    } else {
+      user = createEmailUser(email);
+    }
+    if (oldSession) sessions.delete(oldSession);
     const sessionId = newSession(user);
     setSessionCookie(res, sessionId);
     const { jwt, expiresIn } = await signToken(user);
@@ -627,6 +763,9 @@ export function authRouter(): express.Router {
       user = findOrCreateUser({});
       const sessionId = newSession(user);
       setSessionCookie(res, sessionId);
+    } else {
+      const sessionId = getCookie(req, SESSION_COOKIE);
+      if (sessionId) setSessionCookie(res, sessionId);
     }
     const { jwt, expiresIn } = await signToken(user);
     res.json({ jwt, expiresIn });
@@ -634,14 +773,49 @@ export function authRouter(): express.Router {
 
   router.post("/auth/logout", (req, res) => {
     const cookie = getCookie(req, SESSION_COOKIE);
-    if (cookie) sessions.delete(cookie);
+    if (cookie) {
+      sessions.delete(cookie);
+      persist();
+    }
     res.clearCookie(SESSION_COOKIE, { path: "/" });
     res.json({ ok: true });
   });
 
   router.post("/auth/revoke", (req, res) => {
     const cookie = getCookie(req, SESSION_COOKIE);
-    if (cookie) sessions.delete(cookie);
+    const current = cookie ? sessions.get(cookie) : undefined;
+    if (current) {
+      for (const [sessionId, session] of sessions) {
+        if (session.persistentId === current.persistentId) {
+          sessions.delete(sessionId);
+        }
+      }
+      persist();
+    }
+    res.clearCookie(SESSION_COOKIE, { path: "/" });
+    res.json({ ok: true });
+  });
+
+  router.delete("/auth/account", async (req, res) => {
+    const user = await userFromBearer(req);
+    if (!user || !user.email) {
+      res.status(401).json({ error: "unauthorized" });
+      return;
+    }
+    if (req.body?.confirmation !== "DELETE") {
+      res.status(400).json({ error: "confirmation_required" });
+      return;
+    }
+    const rollback = structuredClone(persistenceSnapshot());
+    deleteUser(user);
+    try {
+      await persistImmediately();
+    } catch (error) {
+      hydrate(rollback);
+      console.error("[auth] account deletion could not be persisted", error);
+      res.status(503).json({ error: "persistent_storage_unavailable" });
+      return;
+    }
     res.clearCookie(SESSION_COOKIE, { path: "/" });
     res.json({ ok: true });
   });
@@ -661,25 +835,30 @@ export function authRouter(): express.Router {
           .string()
           .regex(/^#[0-9a-fA-F]{6}$/)
           .optional(),
+        selectedFlag: z.string().trim().max(80).nullable().optional(),
+        selectedCosmetic: z.string().trim().max(160).nullable().optional(),
       })
       .safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: "invalid_profile" });
       return;
     }
-    Object.assign(user, parsed.data);
+    const { selectedFlag, selectedCosmetic, ...profile } = parsed.data;
+    Object.assign(user, profile);
+    if (selectedFlag !== undefined) {
+      user.selectedFlag = selectedFlag ?? undefined;
+    }
+    if (selectedCosmetic !== undefined) {
+      user.selectedCosmetic = selectedCosmetic ?? undefined;
+    }
     persist();
     res.json(userMeFor(user));
   });
 
-  // Public player profile by publicId. Stats are not yet tracked server-side,
-  // so an empty stats tree is returned alongside creation time.
+  // Public player profile by publicId. It intentionally contains only the
+  // identity fields players chose to show; private email/session data never
+  // leaves the account endpoint.
   router.get("/player/:id", async (req, res) => {
-    const requester = await userFromBearer(req);
-    if (!requester) {
-      res.status(401).json({ error: "unauthorized" });
-      return;
-    }
     const rawId = req.params.id;
     const id = Array.isArray(rawId) ? rawId[0] : rawId;
     const target = userByPublicId(id);
@@ -690,6 +869,14 @@ export function authRouter(): express.Router {
     res.json(
       PlayerProfileSchema.parse({
         createdAt: new Date(target.createdAt).toISOString(),
+        publicId: target.publicId,
+        displayName: usernameFor(target),
+        bio: target.bio,
+        bannerColor: target.bannerColor,
+        selectedFlag: target.selectedFlag,
+        selectedCosmetic: target.selectedCosmetic,
+        elo: target.elo,
+        clanTag: clanTagFor(target) ?? undefined,
         stats: {},
       }),
     );

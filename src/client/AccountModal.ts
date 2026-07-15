@@ -11,6 +11,8 @@ import {
   updateMyProfile,
 } from "./Api";
 import {
+  deleteAccount,
+  EmailAuthMode,
   googleLogin,
   logOut,
   reauthAfterCrazyGamesChange,
@@ -50,6 +52,15 @@ export class AccountModal extends BaseModal {
   @state() private profileSaving = false;
   @state() private profileMessage = "";
   @state() private profileMessageError = false;
+  @state() private authMode: EmailAuthMode | null = null;
+  @state() private authSuggestedAction: EmailAuthMode | null = null;
+  @state() private dangerAction:
+    | null
+    | "logout"
+    | "delete-first"
+    | "delete-final" = null;
+  @state() private accountActionBusy = false;
+  @state() private accountActionError = "";
   // Set on CrazyGames when a CrazyGames user is signed in. Their identity comes
   // from the SDK, not our backend user object.
   @state() private crazyGamesUser: CrazyGamesUser | null = null;
@@ -130,7 +141,7 @@ export class AccountModal extends BaseModal {
   }
 
   protected modalConfig() {
-    if (this.isLoadingUser || !this.isLinkedAccount()) {
+    if (this.isLoadingUser || !this.isLinkedAccount() || this.dangerAction) {
       return {};
     }
     return {
@@ -156,6 +167,7 @@ export class AccountModal extends BaseModal {
           : this.renderLoginOptions()}
       </div>`;
     }
+    if (this.dangerAction) return this.renderDangerConfirmation();
     return html`
       <div class="custom-scrollbar mr-1">
         <div class="p-6">${this.renderTab(tab)}</div>
@@ -211,7 +223,6 @@ export class AccountModal extends BaseModal {
     }
     return html`
       <div class="flex flex-col gap-6">
-        ${this.renderPublicPlayerId()}
         <div class="bg-white/5 rounded-xl border border-white/10 p-6">
           <div class="flex flex-col items-center gap-4">
             <div
@@ -231,9 +242,41 @@ export class AccountModal extends BaseModal {
           class="overflow-hidden rounded-xl border border-white/10 bg-white/5"
         >
           <div
-            class="h-24 bg-gradient-to-r from-black/20 to-transparent"
+            class="min-h-36 bg-gradient-to-br from-black/10 to-black/55 p-6"
             style=${`background-color:${this.profileBannerColor}`}
-          ></div>
+          >
+            <div class="flex min-h-24 items-end justify-between gap-4">
+              <div class="min-w-0">
+                <div
+                  class="truncate text-2xl font-black text-white drop-shadow"
+                >
+                  ${this.profileDisplayName ||
+                  translateText("account_modal.profile_name_preview")}
+                </div>
+                <p class="mt-1 max-w-xl text-sm text-white/80">
+                  ${this.profileBio ||
+                  translateText("account_modal.profile_bio_preview")}
+                </p>
+              </div>
+              <div class="shrink-0 text-right text-xs font-bold text-white/80">
+                ${this.userMeResponse?.user.selectedFlag
+                  ? translateText("account_modal.profile_flag_preview", {
+                      flag: this.userMeResponse.user.selectedFlag,
+                    })
+                  : ""}
+                ${this.userMeResponse?.user.selectedCosmetic
+                  ? html`<div>
+                      ${translateText(
+                        "account_modal.profile_cosmetic_preview",
+                        {
+                          cosmetic: this.userMeResponse.user.selectedCosmetic,
+                        },
+                      )}
+                    </div>`
+                  : ""}
+              </div>
+            </div>
+          </div>
           <div class="space-y-4 p-6">
             <div>
               <h3 class="text-lg font-bold text-white">
@@ -248,6 +291,9 @@ export class AccountModal extends BaseModal {
                 class="mb-1 block text-xs font-bold uppercase tracking-wider text-white/50"
               >
                 ${translateText("account_modal.display_name")}
+              </span>
+              <span class="mb-2 block text-xs text-white/40">
+                ${translateText("account_modal.display_name_desc")}
               </span>
               <input
                 .value=${this.profileDisplayName}
@@ -266,6 +312,9 @@ export class AccountModal extends BaseModal {
               >
                 ${translateText("account_modal.profile_bio")}
               </span>
+              <span class="mb-2 block text-xs text-white/40">
+                ${translateText("account_modal.profile_bio_desc")}
+              </span>
               <textarea
                 .value=${this.profileBio}
                 @input=${(e: Event) =>
@@ -280,6 +329,11 @@ export class AccountModal extends BaseModal {
                 class="text-xs font-bold uppercase tracking-wider text-white/50"
               >
                 ${translateText("account_modal.banner_color")}
+                <small
+                  class="mt-1 block max-w-md normal-case tracking-normal text-white/40"
+                >
+                  ${translateText("account_modal.banner_color_desc")}
+                </small>
               </span>
               <input
                 type="color"
@@ -314,7 +368,7 @@ export class AccountModal extends BaseModal {
             ></o-button>
           </div>
         </div>
-        ${this.renderSubscriptionPanel()}
+        ${this.renderSubscriptionPanel()} ${this.renderAccountDangerZone()}
       </div>
     `;
   }
@@ -456,7 +510,7 @@ export class AccountModal extends BaseModal {
     if (me?.discord) {
       return html`
         <div class="flex flex-col items-center gap-3 w-full">
-          ${this.renderCurrency()} ${this.renderLogoutButton()}
+          ${this.renderCurrency()}
         </div>
       `;
     } else if (me?.email) {
@@ -467,7 +521,7 @@ export class AccountModal extends BaseModal {
               account_name: me.email,
             })}
           </div>
-          ${this.renderCurrency()} ${this.renderLogoutButton()}
+          ${this.renderCurrency()}
         </div>
       `;
     }
@@ -535,89 +589,152 @@ export class AccountModal extends BaseModal {
         variant="danger"
         size="md"
         translationKey="account_modal.log_out"
-        @click=${this.handleLogout}
+        @click=${() => (this.dangerAction = "logout")}
       ></o-button>
     `;
   }
 
-  private renderLoginOptions() {
+  private renderAccountDangerZone(): TemplateResult {
+    return html`
+      <section class="rounded-xl border border-red-400/20 bg-red-500/5 p-6">
+        <h3 class="text-sm font-black uppercase tracking-wider text-red-200">
+          ${translateText("account_modal.account_controls")}
+        </h3>
+        <p class="mb-4 mt-1 text-xs text-white/45">
+          ${translateText("account_modal.account_controls_desc")}
+        </p>
+        <div class="flex flex-wrap gap-3">
+          ${this.renderLogoutButton()}
+          <o-button
+            variant="danger"
+            size="md"
+            translationKey="account_modal.delete_account"
+            @click=${() => (this.dangerAction = "delete-first")}
+          ></o-button>
+        </div>
+      </section>
+    `;
+  }
+
+  private renderDangerConfirmation(): TemplateResult {
+    const deleting = this.dangerAction?.startsWith("delete") ?? false;
+    const finalDelete = this.dangerAction === "delete-final";
+    const title = finalDelete
+      ? translateText("account_modal.delete_account_final_title")
+      : deleting
+        ? translateText("account_modal.delete_account_title")
+        : translateText("account_modal.log_out_title");
+    const description = finalDelete
+      ? translateText("account_modal.delete_account_final_desc")
+      : deleting
+        ? translateText("account_modal.delete_account_desc")
+        : translateText("account_modal.log_out_desc");
     return html`
       <div
-        class="flex items-start justify-center px-6 pb-6 pt-[16vh] min-h-full"
+        class="flex min-h-full items-start justify-center px-6 pb-8 pt-[11vh]"
       >
         <div
-          class="w-full max-w-md bg-white/5 rounded-2xl border border-white/10 p-8"
+          class="w-full max-w-xl rounded-2xl border border-red-400/25 bg-[#0b111d] p-8 text-center shadow-2xl"
         >
-          <div class="text-center mb-8">
-            <div
-              class="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/10 shadow-inner"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-8 h-8 text-blue-400"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+          <div
+            class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-red-400/30 bg-red-500/10 text-3xl text-red-300"
+          >
+            !
+          </div>
+          <h2
+            class=${`text-2xl text-white ${
+              finalDelete ? "font-black uppercase" : "font-bold"
+            }`}
+          >
+            ${title}
+          </h2>
+          <p class="mx-auto mt-3 max-w-lg text-sm leading-6 text-white/60">
+            ${description}
+          </p>
+          ${this.accountActionError
+            ? html`<div
+                role="alert"
+                class="mt-5 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200"
               >
-                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-                <polyline points="10 17 15 12 10 7"></polyline>
-                <line x1="15" y1="12" x2="3" y2="12"></line>
-              </svg>
+                ${this.accountActionError}
+              </div>`
+            : ""}
+          <div
+            class="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-center"
+          >
+            <o-button
+              variant="secondary"
+              size="md"
+              translationKey="common.cancel"
+              .disable=${this.accountActionBusy}
+              @click=${() => this.cancelDangerAction()}
+            ></o-button>
+            <o-button
+              variant="danger"
+              size="md"
+              .translationKey=${finalDelete
+                ? "account_modal.delete_account_forever"
+                : deleting
+                  ? "account_modal.continue_delete"
+                  : "account_modal.confirm_log_out"}
+              .disable=${this.accountActionBusy}
+              @click=${finalDelete
+                ? this.handleDeleteAccount
+                : deleting
+                  ? () => (this.dangerAction = "delete-final")
+                  : this.handleLogout}
+            ></o-button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private cancelDangerAction() {
+    this.dangerAction = null;
+    this.accountActionError = "";
+  }
+
+  private renderLoginOptions() {
+    if (!this.authMode) return this.renderAuthChooser();
+    const isSignup = this.authMode === "signup";
+    return html`
+      <div
+        class="flex min-h-full items-start justify-center px-6 pb-8 pt-[14vh]"
+      >
+        <div
+          class="w-full max-w-md rounded-2xl border border-white/10 bg-[#0b111d] p-8 shadow-2xl"
+        >
+          <button
+            class="mb-5 flex items-center gap-2 text-xs font-black uppercase tracking-wider text-white/45 transition-colors hover:text-white"
+            @click=${() => this.chooseAuthMode(null)}
+          >
+            <span aria-hidden="true">&larr;</span>
+            ${translateText("account_modal.back_to_account_choice")}
+          </button>
+          <div class="mb-8 text-center">
+            <div
+              class="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-malibu-blue/25 bg-malibu-blue/10 text-2xl font-black text-malibu-blue"
+            >
+              OB
             </div>
+            <h2 class="text-2xl font-black text-white">
+              ${translateText(
+                isSignup
+                  ? "account_modal.sign_up_title"
+                  : "account_modal.log_in_title",
+              )}
+            </h2>
             <p class="text-white/50 text-sm font-medium">
-              ${translateText("account_modal.sign_in_desc")}
+              ${translateText(
+                isSignup
+                  ? "account_modal.sign_up_desc"
+                  : "account_modal.log_in_desc",
+              )}
             </p>
-            ${this.renderCurrency()}
           </div>
 
           <div class="space-y-6">
-            ${ClientEnv.googleEnabled()
-              ? html`
-                  <button
-                    @click="${this.handleGoogleLogin}"
-                    class="w-full px-6 py-4 text-white bg-white hover:bg-gray-100 border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors duration-200 flex items-center justify-center gap-3 group relative overflow-hidden shadow-lg"
-                  >
-                    <svg class="w-6 h-6 relative z-10" viewBox="0 0 48 48">
-                      <path
-                        fill="#EA4335"
-                        d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
-                      />
-                      <path
-                        fill="#4285F4"
-                        d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6.01C43.98 37.55 46.98 31.38 46.98 24.55z"
-                      />
-                      <path
-                        fill="#FBBC05"
-                        d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
-                      />
-                      <path
-                        fill="#34A853"
-                        d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6.01c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
-                      />
-                    </svg>
-                    <span
-                      class="font-bold relative z-10 tracking-wide text-gray-800"
-                      >${translateText("main.login_google")}</span
-                    >
-                  </button>
-                `
-              : ""}
-
-            <!-- Divider -->
-            <div class="flex items-center gap-4 py-2">
-              <div class="h-px bg-white/10 flex-1"></div>
-              <span
-                class="text-[10px] uppercase tracking-widest text-white/30 font-bold"
-              >
-                ${translateText("account_modal.or")}
-              </span>
-              <div class="h-px bg-white/10 flex-1"></div>
-            </div>
-
-            <!-- Email code sign-in -->
             <div class="space-y-3">
               <div class="relative group">
                 <input
@@ -638,7 +755,9 @@ export class AccountModal extends BaseModal {
                     variant="primary"
                     width="block"
                     size="md"
-                    translationKey="account_modal.get_magic_link"
+                    .translationKey=${isSignup
+                      ? "account_modal.send_signup_code"
+                      : "account_modal.send_login_code"}
                     .disable=${this.isAuthBusy}
                     @click=${this.handleSubmit}
                   ></o-button>`
@@ -705,22 +824,88 @@ export class AccountModal extends BaseModal {
                     }`}
                   >
                     ${this.authMessage}
+                    ${this.authSuggestedAction
+                      ? html`<button
+                          class="mt-3 block font-black underline underline-offset-2"
+                          @click=${() =>
+                            this.chooseAuthMode(this.authSuggestedAction)}
+                        >
+                          ${translateText(
+                            this.authSuggestedAction === "signup"
+                              ? "account_modal.switch_to_signup"
+                              : "account_modal.switch_to_login",
+                          )}
+                        </button>`
+                      : ""}
                   </div>`
                 : ""}
             </div>
           </div>
-
-          <div class="mt-8 text-center border-t border-white/10 pt-6">
-            <button
-              @click="${this.handleLogout}"
-              class="text-[10px] font-bold text-white/20 hover:text-red-400 transition-colors uppercase tracking-widest pb-0.5"
-            >
-              ${translateText("account_modal.clear_session")}
-            </button>
-          </div>
         </div>
       </div>
     `;
+  }
+
+  private renderAuthChooser(): TemplateResult {
+    return html`
+      <div
+        class="flex min-h-full items-start justify-center px-6 pb-8 pt-[16vh]"
+      >
+        <div class="w-full max-w-2xl text-center">
+          <div
+            class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-malibu-blue/25 bg-malibu-blue/10 text-2xl font-black text-malibu-blue"
+          >
+            OB
+          </div>
+          <h2 class="text-3xl font-black text-white">
+            ${translateText("account_modal.auth_choice_title")}
+          </h2>
+          <p class="mx-auto mt-2 max-w-xl text-sm text-white/50">
+            ${translateText("account_modal.auth_choice_desc")}
+          </p>
+          <div class="mt-8 grid gap-4 sm:grid-cols-2">
+            <button
+              class="rounded-2xl border border-malibu-blue/30 bg-malibu-blue/10 p-6 text-left transition hover:border-malibu-blue hover:bg-malibu-blue/15"
+              @click=${() => this.chooseAuthMode("signup")}
+            >
+              <strong class="block text-xl text-white">
+                ${translateText("account_modal.sign_up")}
+              </strong>
+              <span class="mt-2 block text-sm leading-6 text-white/55">
+                ${translateText("account_modal.sign_up_choice_desc")}
+              </span>
+            </button>
+            <button
+              class="rounded-2xl border border-white/15 bg-white/5 p-6 text-left transition hover:border-white/35 hover:bg-white/10"
+              @click=${() => this.chooseAuthMode("login")}
+            >
+              <strong class="block text-xl text-white">
+                ${translateText("account_modal.log_in")}
+              </strong>
+              <span class="mt-2 block text-sm leading-6 text-white/55">
+                ${translateText("account_modal.log_in_choice_desc")}
+              </span>
+            </button>
+          </div>
+          ${ClientEnv.googleEnabled()
+            ? html`<button
+                class="mt-5 text-sm font-bold text-white/55 underline underline-offset-4 hover:text-white"
+                @click=${this.handleGoogleLogin}
+              >
+                ${translateText("main.login_google")}
+              </button>`
+            : ""}
+        </div>
+      </div>
+    `;
+  }
+
+  private chooseAuthMode(mode: EmailAuthMode | null) {
+    this.authMode = mode;
+    this.codeSent = false;
+    this.code = "";
+    this.authMessage = "";
+    this.authSuggestedAction = null;
   }
 
   private handleEmailInput(e: Event) {
@@ -772,6 +957,7 @@ export class AccountModal extends BaseModal {
   }
 
   private async handleSubmit() {
+    if (!this.authMode) return;
     if (!this.email) {
       this.authMessageType = "error";
       this.authMessage = translateText("account_modal.enter_email_address");
@@ -779,7 +965,8 @@ export class AccountModal extends BaseModal {
     }
     this.isAuthBusy = true;
     this.authMessage = "";
-    const result = await requestLoginCode(this.email.trim());
+    this.authSuggestedAction = null;
+    const result = await requestLoginCode(this.email.trim(), this.authMode);
     this.isAuthBusy = false;
     if (result.ok) {
       this.codeSent = true;
@@ -799,13 +986,18 @@ export class AccountModal extends BaseModal {
       this.focusCodeInput(0);
     } else {
       this.authMessageType = "error";
-      this.authMessage = translateText(
-        "account_modal.failed_to_send_login_code",
-      );
+      this.authSuggestedAction = result.nextAction ?? null;
+      this.authMessage =
+        result.error === "account_exists"
+          ? translateText("account_modal.account_exists")
+          : result.error === "not_registered"
+            ? translateText("account_modal.not_registered")
+            : translateText("account_modal.failed_to_send_login_code");
     }
   }
 
   private async handleVerify() {
+    if (!this.authMode) return;
     if (this.code.length !== 6) {
       this.authMessageType = "error";
       this.authMessage = translateText("account_modal.enter_code");
@@ -813,9 +1005,10 @@ export class AccountModal extends BaseModal {
     }
     this.isAuthBusy = true;
     this.authMessage = "";
-    const ok = await verifyLoginCode(this.email, this.code);
+    this.authSuggestedAction = null;
+    const result = await verifyLoginCode(this.email, this.code, this.authMode);
     this.isAuthBusy = false;
-    if (ok) {
+    if (result.ok) {
       invalidateUserMe();
       const userMe = await getUserMe();
       if (userMe) {
@@ -824,11 +1017,22 @@ export class AccountModal extends BaseModal {
       }
       this.codeSent = false;
       this.code = "";
+      this.authMode = null;
       this.authMessage = "";
       this.requestUpdate();
     } else {
       this.authMessageType = "error";
-      this.authMessage = translateText("account_modal.invalid_code");
+      this.authSuggestedAction = result.nextAction ?? null;
+      this.authMessage =
+        result.error === "account_exists"
+          ? translateText("account_modal.account_exists")
+          : result.error === "not_registered"
+            ? translateText("account_modal.not_registered")
+            : result.error === "code_expired"
+              ? translateText("account_modal.code_expired")
+              : result.error === "too_many_attempts"
+                ? translateText("account_modal.too_many_attempts")
+                : translateText("account_modal.invalid_code");
     }
   }
 
@@ -879,6 +1083,13 @@ export class AccountModal extends BaseModal {
   protected onOpen(): void {
     document.body.classList.add("account-flow-open");
     this.isLoadingUser = true;
+    this.authMode = null;
+    this.authSuggestedAction = null;
+    this.codeSent = false;
+    this.code = "";
+    this.authMessage = "";
+    this.dangerAction = null;
+    this.accountActionError = "";
 
     this.refreshCrazyGamesUser();
 
@@ -917,11 +1128,34 @@ export class AccountModal extends BaseModal {
   }
 
   private async handleLogout() {
-    await logOut();
+    if (this.accountActionBusy) return;
+    this.accountActionBusy = true;
+    this.accountActionError = "";
+    const ok = await logOut();
+    this.accountActionBusy = false;
+    if (!ok) {
+      this.accountActionError = translateText("account_modal.log_out_failed");
+      return;
+    }
     this.close();
-    // Refresh the page after logout to update the UI state
     window.location.reload();
   }
+
+  private handleDeleteAccount = async () => {
+    if (this.accountActionBusy) return;
+    this.accountActionBusy = true;
+    this.accountActionError = "";
+    const ok = await deleteAccount();
+    this.accountActionBusy = false;
+    if (!ok) {
+      this.accountActionError = translateText(
+        "account_modal.delete_account_failed",
+      );
+      return;
+    }
+    this.close();
+    window.location.reload();
+  };
 
   private async loadPlayerProfile(publicId: string): Promise<void> {
     try {

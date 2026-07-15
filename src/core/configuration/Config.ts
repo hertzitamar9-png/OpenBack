@@ -1005,8 +1005,7 @@ export class Config {
   }
 
   // The plane's maximum flight distance ("fuel range"), measured from the
-  // launch runway. Every completed runway adds another full base radius.
-  // 1 runway = 100%, 2 = 200%, 3 = 300%, ...
+  // launch runway. Every completed runway level adds 35% of the base radius.
   planeMaxFlightRadius(runwayCount: number = 1): number {
     // Each additional completed runway adds 35% of the base range.
     // 1 runway = 100%, 2 = 135%, 3 = 170%, ...

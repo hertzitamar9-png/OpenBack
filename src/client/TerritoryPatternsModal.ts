@@ -9,7 +9,7 @@ import {
   UserSettings,
 } from "../core/game/UserSettings";
 import { PlayerPattern } from "../core/Schemas";
-import { getLastUserMe } from "./Api";
+import { getLastUserMe, updateMyIdentityPreferences } from "./Api";
 import { BaseModal } from "./components/BaseModal";
 import "./components/CosmeticButton";
 import "./components/NotLoggedInWarning";
@@ -202,9 +202,9 @@ export class TerritoryPatternsModal extends BaseModal {
   }
 
   private selectSkin(skinName: string | null) {
-    this.userSettings.setSelectedPatternName(
-      skinName === null ? undefined : `skin:${skinName}`,
-    );
+    const selected = skinName === null ? undefined : `skin:${skinName}`;
+    this.userSettings.setSelectedPatternName(selected);
+    void updateMyIdentityPreferences({ selectedCosmetic: selected ?? null });
     this.selectedSkinName = skinName;
     this.selectedPattern = null;
     this.refresh();
@@ -215,12 +215,15 @@ export class TerritoryPatternsModal extends BaseModal {
     this.selectedColor = null;
     if (pattern === null) {
       this.userSettings.setSelectedPatternName(undefined);
+      void updateMyIdentityPreferences({ selectedCosmetic: null });
     } else {
       const name =
         pattern.colorPalette?.name === undefined
           ? pattern.name
           : `${pattern.name}:${pattern.colorPalette.name}`;
-      this.userSettings.setSelectedPatternName(`pattern:${name}`);
+      const selected = `pattern:${name}`;
+      this.userSettings.setSelectedPatternName(selected);
+      void updateMyIdentityPreferences({ selectedCosmetic: selected });
     }
     this.selectedPattern = pattern;
     this.selectedSkinName = null;

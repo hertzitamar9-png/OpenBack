@@ -1,8 +1,11 @@
 import { html, LitElement, nothing } from "lit";
 import { customElement, query, state } from "lit/decorators.js";
-import { PlayerLeaderboardEntry } from "../../../core/ApiSchemas";
+import {
+  PlayerLeaderboardEntry,
+  PlayerProfile,
+} from "../../../core/ApiSchemas";
 import { RankedType } from "../../../core/game/Game";
-import { fetchPlayerLeaderboard, getUserMe } from "../../Api";
+import { fetchPlayerById, fetchPlayerLeaderboard, getUserMe } from "../../Api";
 import { translateText } from "../../Utils";
 
 @customElement("leaderboard-player-list")
@@ -15,6 +18,8 @@ export class LeaderboardPlayerList extends LitElement {
   @state() private isLoadingMore = false;
   @state() private loadMoreError: string | null = null;
   @state() private playerHasMore = true;
+  @state() private selectedProfile: PlayerProfile | null = null;
+  @state() private profileLoading = false;
 
   private hasLoadedPlayers = false;
   private readonly playerPageSize = 50;
@@ -228,9 +233,10 @@ export class LeaderboardPlayerList extends LitElement {
     return html`
       <tr
         data-current-user=${isCurrentUser ? "true" : "false"}
-        class="border-b border-white/5 hover:bg-white/[0.07] transition-colors group ${isCurrentUser
+        class="cursor-pointer border-b border-white/5 hover:bg-white/[0.07] transition-colors group ${isCurrentUser
           ? "bg-blue-500/15"
           : ""}"
+        @click=${() => this.openPlayerProfile(player.playerId)}
       >
         <td class="py-3 px-4 text-center">
           <div
@@ -274,6 +280,96 @@ export class LeaderboardPlayerList extends LitElement {
           </div>
         </td>
       </tr>
+    `;
+  }
+
+  private async openPlayerProfile(publicId: string) {
+    this.profileLoading = true;
+    this.selectedProfile = null;
+    const profile = await fetchPlayerById(publicId);
+    this.profileLoading = false;
+    if (profile) this.selectedProfile = profile;
+  }
+
+  private renderProfileCard() {
+    if (!this.profileLoading && !this.selectedProfile) return nothing;
+    const profile = this.selectedProfile;
+    return html`
+      <div
+        class="absolute inset-0 z-40 flex items-center justify-center bg-[#07101d] p-5"
+      >
+        ${this.profileLoading
+          ? this.renderLoading()
+          : html`<article
+              class="w-full max-w-xl overflow-hidden rounded-2xl border border-white/15 bg-[#0b111d] shadow-2xl"
+            >
+              <div
+                class="min-h-44 bg-gradient-to-br from-black/5 to-black/60 p-7"
+                style=${`background-color:${profile?.bannerColor ?? "#1689d8"}`}
+              >
+                <div class="flex min-h-28 items-end justify-between gap-5">
+                  <div class="min-w-0">
+                    <div
+                      class="text-xs font-black uppercase tracking-widest text-white/60"
+                    >
+                      ${translateText("account_modal.public_profile")}
+                    </div>
+                    <h2
+                      class="truncate text-3xl font-black text-white drop-shadow"
+                    >
+                      ${profile?.displayName}
+                    </h2>
+                    ${profile?.clanTag
+                      ? html`<span
+                          class="mt-2 inline-block rounded border border-white/30 bg-black/20 px-2 py-1 text-xs font-black text-white"
+                        >
+                          ${profile.clanTag}
+                        </span>`
+                      : ""}
+                  </div>
+                  <div class="text-right text-sm font-black text-white">
+                    ${profile?.elo !== undefined
+                      ? html`<div>${profile.elo} ELO</div>`
+                      : ""}
+                    ${profile?.selectedFlag
+                      ? html`<div class="mt-1 text-xs text-white/70">
+                          ${profile.selectedFlag}
+                        </div>`
+                      : ""}
+                  </div>
+                </div>
+              </div>
+              <div class="p-7">
+                <p class="min-h-12 text-sm leading-6 text-white/70">
+                  ${profile?.bio ??
+                  translateText("account_modal.no_public_description")}
+                </p>
+                ${profile?.selectedCosmetic
+                  ? html`<div class="mt-4 text-xs font-bold text-white/40">
+                      ${translateText(
+                        "account_modal.profile_cosmetic_preview",
+                        {
+                          cosmetic: profile.selectedCosmetic,
+                        },
+                      )}
+                    </div>`
+                  : ""}
+                <div
+                  class="mt-6 flex items-center justify-between gap-4 border-t border-white/10 pt-5"
+                >
+                  <span class="truncate font-mono text-xs text-white/35">
+                    ${profile?.publicId}
+                  </span>
+                  <button
+                    class="rounded-lg border border-white/15 bg-white/5 px-5 py-2 text-xs font-black uppercase tracking-wider text-white transition hover:bg-white/10"
+                    @click=${() => (this.selectedProfile = null)}
+                  >
+                    ${translateText("common.close")}
+                  </button>
+                </div>
+              </div>
+            </article>`}
+      </div>
     `;
   }
 
@@ -457,6 +553,7 @@ export class LeaderboardPlayerList extends LitElement {
                 </div>
               `
             : ""}
+          ${this.renderProfileCard()}
         </div>
       </div>
     `;

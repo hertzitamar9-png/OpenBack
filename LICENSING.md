@@ -4,6 +4,11 @@
 
 This document provides comprehensive licensing information for the OpenFront.io project, including its evolution from MIT to GPL to AGPL licensing, asset licensing terms, and proprietary content notices.
 
+OpenBack-authored modifications are contributed by **frootz jhklphy** and
+contributors. Distributions and network deployments that include those
+modifications must preserve the reasonable author-attribution notice stated in
+`OPENBACK-NOTICE.md`, in addition to all upstream notices and license duties.
+
 ## Timeline
 
 ### Phase 1: MIT Only

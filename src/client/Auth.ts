@@ -20,45 +20,108 @@ export function googleLogin() {
   window.location.href = `${getApiBase()}/auth/google?state=${redirectUri}`;
 }
 
-// Email sign-in: request a 6-digit code, then verify it to obtain a session.
+export type EmailAuthMode = "signup" | "login";
+export type EmailAuthError =
+  | "account_exists"
+  | "not_registered"
+  | "email_delivery_failed"
+  | "invalid_email"
+  | "invalid_code"
+  | "code_expired"
+  | "too_many_attempts"
+  | "unknown";
+
+export interface EmailAuthResult {
+  ok: boolean;
+  error?: EmailAuthError;
+  nextAction?: EmailAuthMode;
+  devCode?: string;
+}
+
+async function readEmailAuthError(
+  response: Response,
+): Promise<EmailAuthResult> {
+  try {
+    const body = (await response.json()) as {
+      error?: EmailAuthError;
+      nextAction?: EmailAuthMode;
+    };
+    return {
+      ok: false,
+      error: body.error ?? "unknown",
+      nextAction: body.nextAction,
+    };
+  } catch {
+    return { ok: false, error: "unknown" };
+  }
+}
+
+// Request a 6-digit code for either a new account or a returning account.
 export async function requestLoginCode(
   email: string,
-): Promise<{ ok: boolean; devCode?: string }> {
+  mode: EmailAuthMode,
+): Promise<EmailAuthResult> {
   try {
     const response = await fetch(`${getApiBase()}/auth/request-code`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, mode }),
     });
-    if (!response.ok) return { ok: false };
+    if (!response.ok) return readEmailAuthError(response);
     const json = await response.json();
     return { ok: true, devCode: json.devCode };
   } catch (e) {
     console.error("requestLoginCode failed", e);
-    return { ok: false };
+    return { ok: false, error: "unknown" };
   }
 }
 
 export async function verifyLoginCode(
   email: string,
   code: string,
-): Promise<boolean> {
+  mode: EmailAuthMode,
+): Promise<EmailAuthResult> {
   try {
     const response = await fetch(`${getApiBase()}/auth/verify-code`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ email, code }),
+      body: JSON.stringify({ email, code, mode }),
     });
-    if (!response.ok) return false;
+    if (!response.ok) return readEmailAuthError(response);
     const json = await response.json();
     const { jwt, expiresIn } = json;
     __expiresAt = Date.now() + expiresIn * 1000;
     __jwt = jwt;
-    return true;
+    return { ok: true };
   } catch (e) {
     console.error("verifyLoginCode failed", e);
+    return { ok: false, error: "unknown" };
+  }
+}
+
+export async function deleteAccount(): Promise<boolean> {
+  try {
+    const auth = await userAuth();
+    if (!auth) return false;
+    const response = await fetch(`${getApiBase()}/auth/account`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${auth.jwt}`,
+      },
+      credentials: "include",
+      body: JSON.stringify({ confirmation: "DELETE" }),
+    });
+    if (!response.ok) return false;
+    __jwt = null;
+    localStorage.removeItem(PERSISTENT_ID_KEY);
+    new UserSettings().clearFlag();
+    new UserSettings().setSelectedPatternName(undefined);
+    return true;
+  } catch (error) {
+    console.error("Delete account failed", error);
     return false;
   }
 }
@@ -101,15 +164,14 @@ export async function logOut(allSessions: boolean = false): Promise<boolean> {
       return false;
     }
 
-    return true;
-  } catch (e) {
-    console.error("Logout failed", e);
-    return false;
-  } finally {
     __jwt = null;
     localStorage.removeItem(PERSISTENT_ID_KEY);
     new UserSettings().clearFlag();
     new UserSettings().setSelectedPatternName(undefined);
+    return true;
+  } catch (e) {
+    console.error("Logout failed", e);
+    return false;
   }
 }
 

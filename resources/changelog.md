@@ -1,3 +1,23 @@
+# OpenBack v0.33.17 — Saved Accounts and Public Profiles
+
+**Created by frootz jhklphy**
+
+## Accounts and identity
+
+- Split email access into a first-time Sign Up flow and a returning Log In flow, with verification codes and clear recovery actions when the wrong path is selected.
+- Added durable email-account restoration for in-game name, public description, banner color, flag, map cosmetic, ranked Elo, currency, clan membership, and other saved account data.
+- Added explicit Log Out confirmation that preserves the account and a double-confirmed Delete My Account flow that permanently removes its saved identity.
+- Reworked the profile editor around one in-game name and a live public-card preview, and made ranked leaderboard rows open real public profiles without exposing email data.
+
+## Navigation, guides, and publishing notices
+
+- Added Tutorials and Blog to the desktop and mobile navigation.
+- Added current account-security, world-mechanics, natural-disaster, logistics, fog, shared-control, and living-game guides.
+- Updated the privacy and source notices with the exact license, source, modification, asset-credit, privacy, and contributor-attribution items required for published copies.
+- Added the OpenBack attribution notice for **frootz jhklphy** while preserving all upstream AGPL, copyright, contributor, and asset-license obligations.
+
+---
+
 # OpenBack v0.33.16 — Menu Logo Fix
 
 **Created by frootz jhklphy**

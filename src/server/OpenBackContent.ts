@@ -452,9 +452,113 @@ const tutorials: Page[] = [
       },
     ],
   },
+  {
+    path: "/guides/accounts-profiles-security",
+    type: "Tutorial",
+    title: "OpenBack Accounts, Profiles, Login, and Security",
+    description:
+      "Understand sign-up, returning login, saved progress, public profile fields, logout, and permanent account deletion in OpenBack.",
+    sections: [
+      {
+        title: "Sign up once, then log in when returning",
+        text: "Sign Up creates a new saved account after email-code verification. Log In is only for an email that already has an OpenBack account. OpenBack prevents an existing email from creating a duplicate and prevents an unknown or deleted email from using the returning login path.",
+      },
+      {
+        title: "Your in-game name is one identity",
+        text: "The in-game name in your profile is the same name used on the main menu, in lobbies, matches, rankings, clans, and your public player card. It is not a second username. Saving it updates the shared account identity.",
+      },
+      {
+        title: "What other players can see",
+        text: "Your public description and banner color appear on the player card opened from ranked rankings. Your selected flag, selected map cosmetic, clan tag, public player ID, and Elo can appear there too. Your email and session information remain private and are never part of that public card.",
+      },
+      {
+        title: "Log out or delete",
+        text: "Log Out removes the session from the current browser but preserves the account, profile, Elo, clan identity, currency, and saved cosmetics for the next login. Delete My Account uses two explicit confirmations and permanently removes the saved account data; logging in cannot restore a deleted account.",
+        tips: [
+          "Use Log Out when changing devices or temporarily leaving the account.",
+          "Use Delete My Account only when the saved identity should be removed permanently.",
+          "Verification codes expire and accept only a limited number of attempts.",
+          "Never share an email verification code with another player.",
+        ],
+      },
+    ],
+  },
+  {
+    path: "/guides/world-mechanics-modifiers",
+    type: "Tutorial",
+    title: "OpenBack World Mechanics and Match Modifiers Guide",
+    description:
+      "Learn encirclement, war exhaustion, strategic objectives, logistics cargo, fog of war, shared control, and all six natural disasters.",
+    sections: [
+      {
+        title: "Encirclement and war exhaustion",
+        text: "Encirclement is active in normal OpenBack rules. A fully surrounded pocket loses troops during repeated checks and is annexed only after remaining continuously closed for 15 seconds, giving the defender time to reopen a corridor. Long fighting also builds war exhaustion, gradually reducing income and troop growth; peace recovers it more slowly than war builds it.",
+      },
+      {
+        title: "Strategic objectives",
+        text: "When enabled, three to eight neutral objectives are placed far from starting nations. Holding an objective can award gold, troops, radar range, or victory points. Control is checked repeatedly, so the rewards create contested locations rather than one-time pickups.",
+      },
+      {
+        title: "Six natural disasters",
+        text: "The Natural Disasters modifier rotates through earthquakes, tsunamis, tornadoes, wildfires, meteors, and droughts in a deterministic shuffled cycle. Earthquakes and wildfires can create several impact centers, tornadoes travel along a visible path, and tsunamis move inland from a coast or become a flash-flood surge on landlocked maps.",
+        tips: [
+          "Do not cluster every essential structure in one location.",
+          "Watch moving event paths before committing more troops.",
+          "A disaster can force both sides to rethink the same frontline.",
+          "Natural Disasters is optional in solo and private lobbies and can appear in ranked rotation.",
+        ],
+      },
+      {
+        title: "Fog, logistics, and shared control",
+        text: "Fog of War hides distant information outside friendly vision instead of placing a simple gray filter over the map. Logistics cargo makes rail benefits visible and interruptible. In private Shared Control games, two or more players can operate the same nation while the configured team size governs how players are grouped.",
+      },
+    ],
+  },
 ];
 
 const blogs: Page[] = [
+  {
+    path: "/blog/living-game-updates",
+    type: "Blog",
+    title: "OpenBack as a Production Game That Keeps Evolving",
+    description:
+      "How OpenBack keeps account, multiplayer, gameplay, tutorial, and reliability work aligned while continuing feature updates and bug fixes.",
+    sections: [
+      {
+        title: "Production-ready does not mean finished forever",
+        text: "A live strategy game needs stable account boundaries, durable identity, synchronized multiplayer, understandable controls, and accurate public information. It also needs room for balance updates, new maps, mechanics, visual improvements, and fixes without splitting the experience into unrelated versions.",
+      },
+      {
+        title: "One source of truth across the product",
+        text: "OpenBack tutorials describe the same prices, ranges, counters, match modifiers, and account behavior implemented by the game. Navigation exposes those guides directly, release notes record player-facing changes, and public profiles reuse the same name and cosmetics already used in matches.",
+      },
+      {
+        title: "Updates preserve player expectations",
+        text: "Feature work should keep the established OpenBack visual language, require explicit buttons for destructive actions, preserve saved account data across logout, and keep deterministic mechanics synchronized for players, bots, replays, and servers. Bug fixes improve reliability without replacing familiar controls with a different interface every release.",
+      },
+    ],
+  },
+  {
+    path: "/blog/dynamic-world-mechanics",
+    type: "Blog",
+    title: "Dynamic World Mechanics in OpenBack",
+    description:
+      "Why objectives, fog, encirclement, exhaustion, shared control, logistics, and natural disasters change territorial strategy.",
+    sections: [
+      {
+        title: "Modifiers create a new map problem",
+        text: "Strategic objectives pull nations toward valuable neutral territory, Fog of War changes what can be known, and Shared Control changes how a country is operated. Ranked rotation can select one of several world modifiers or no optional modifier, so the base territorial game remains important.",
+      },
+      {
+        title: "Pressure now has a cost and a shape",
+        text: "Encirclement gives surrounded pockets time to escape before annexation, while war exhaustion makes endless attacks reduce economic and troop growth. Together they reward decisive fronts, useful corridors, recovery periods, and wars that create a real strategic advantage.",
+      },
+      {
+        title: "The world can disrupt every plan",
+        text: "Earthquakes, tsunamis, tornadoes, wildfires, meteors, and droughts use different paths, impact patterns, durations, and effects. Because events are part of the deterministic simulation, every connected player, bot, and replay receives the same world state.",
+      },
+    ],
+  },
   {
     path: "/blog/openback-territorial-rts",
     type: "Blog",

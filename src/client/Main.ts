@@ -82,7 +82,8 @@ import "./styles/modal/chat.css";
 
 function updateAccountNavButton(userMeResponse: UserMeResponse | false) {
   const button = document.getElementById("nav-account-button");
-  if (!button) return;
+  const mobileButton = document.getElementById("mobile-nav-account-button");
+  if (!button && !mobileButton) return;
 
   const avatarEl = document.getElementById("nav-account-avatar") as
     | (HTMLImageElement & { _navToken?: symbol })
@@ -102,6 +103,10 @@ function updateAccountNavButton(userMeResponse: UserMeResponse | false) {
   if (avatarEl) avatarEl._navToken = navToken;
 
   const showAvatar = (src: string, alt?: string) => {
+    if (mobileButton) {
+      mobileButton.removeAttribute("data-i18n");
+      mobileButton.textContent = translateText("main.profile");
+    }
     if (avatarEl) {
       avatarEl.alt = alt ?? translateText("main.discord_avatar_alt");
       // If the avatar fails to load (bad URL / CDN issue / offline), fall back
@@ -127,6 +132,10 @@ function updateAccountNavButton(userMeResponse: UserMeResponse | false) {
   };
 
   const showSignIn = () => {
+    if (mobileButton) {
+      mobileButton.setAttribute("data-i18n", "main.sign_in");
+      mobileButton.textContent = translateText("main.sign_in");
+    }
     avatarEl?.classList.add("hidden");
     personIconEl?.classList.remove("hidden");
     emailBadgeEl?.classList.add("hidden");
@@ -148,6 +157,10 @@ function updateAccountNavButton(userMeResponse: UserMeResponse | false) {
   };
 
   const showEmailLoggedIn = (name: string) => {
+    if (mobileButton) {
+      mobileButton.removeAttribute("data-i18n");
+      mobileButton.textContent = `${translateText("main.profile")} - ${name}`;
+    }
     avatarEl?.classList.add("hidden");
     personIconEl?.classList.add("hidden");
     emailBadgeEl?.classList.add("hidden");
@@ -513,6 +526,18 @@ class Client {
       );
 
       if (userMeResponse !== false) {
+        // Account identity choices follow the player between browsers. Guests
+        // retain their local choices, while linked accounts restore the flag
+        // and skin/pattern saved with that email.
+        if (userMeResponse.user.email) {
+          const settings = new UserSettings();
+          if (userMeResponse.user.selectedFlag) {
+            settings.setFlag(userMeResponse.user.selectedFlag);
+          } else {
+            settings.clearFlag();
+          }
+          settings.setSelectedPatternName(userMeResponse.user.selectedCosmetic);
+        }
         // Authorized
         console.log(
           `Your player ID is ${userMeResponse.player.publicId}\n` +

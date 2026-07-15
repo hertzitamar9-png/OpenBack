@@ -80,6 +80,8 @@ export const UserMeResponseSchema = z.object({
       .string()
       .regex(/^#[0-9a-fA-F]{6}$/)
       .optional(),
+    selectedFlag: z.string().max(80).optional(),
+    selectedCosmetic: z.string().max(160).optional(),
   }),
   player: z.object({
     publicId: z.string(),
@@ -163,6 +165,17 @@ export type PlayerStatsTree = z.infer<typeof PlayerStatsTreeSchema>;
 export const PlayerProfileSchema = z.object({
   createdAt: z.iso.datetime(),
   user: DiscordUserSchema.optional(),
+  publicId: z.string().optional(),
+  displayName: z.string().max(27).optional(),
+  bio: z.string().max(160).optional(),
+  bannerColor: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/)
+    .optional(),
+  selectedFlag: z.string().max(80).optional(),
+  selectedCosmetic: z.string().max(160).optional(),
+  elo: z.number().optional(),
+  clanTag: RequiredClanTagSchema.optional(),
   stats: PlayerStatsTreeSchema,
 });
 export type PlayerProfile = z.infer<typeof PlayerProfileSchema>;
