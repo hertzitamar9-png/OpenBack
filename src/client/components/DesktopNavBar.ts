@@ -55,7 +55,7 @@ export class DesktopNavBar extends LitElement {
         <div class="flex items-center justify-center">
           <div class="h-8">
             <img
-              class="block h-full aspect-[1364/259]"
+              class="block h-full w-auto"
               src=${assetUrl("images/OpenBackLogo.svg")}
               alt="OpenBack"
             />

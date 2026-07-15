@@ -1,3 +1,13 @@
+# OpenBack v0.33.16 — Menu Logo Fix
+
+**Created by frootz jhklphy**
+
+## Branding
+
+- Fixed the desktop menu logo being squeezed into the old logo's aspect ratio, restoring the correct OpenBack wordmark and an undistorted B.
+
+---
+
 # OpenBack v0.33.15 — Unified Identity
 
 **Created by frootz jhklphy**
