@@ -44,7 +44,7 @@ function renderPath(
 
 describe("OpenBack learning content", () => {
   it("publishes unique tutorial and blog URLs", () => {
-    expect(OPENBACK_CONTENT_PATHS).toHaveLength(19);
+    expect(OPENBACK_CONTENT_PATHS).toHaveLength(20);
     expect(new Set(OPENBACK_CONTENT_PATHS).size).toBe(
       OPENBACK_CONTENT_PATHS.length,
     );
@@ -66,6 +66,13 @@ describe("OpenBack learning content", () => {
     expect(result.body).toContain('href="/guides"');
     expect(result.body).toContain('href="/blog"');
     expect(result.body).toContain("OpenBack");
+  });
+
+  it("publishes 120 defined territorial strategy terms", () => {
+    const result = renderPath("/guides/territorial-strategy-glossary");
+
+    expect(result.body).toContain("120 RTS Terms");
+    expect(result.body.match(/<li>/g)).toHaveLength(120);
   });
 
   it("uses the public HTTPS protocol supplied by a reverse proxy", () => {
