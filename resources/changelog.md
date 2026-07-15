@@ -1,3 +1,19 @@
+# OpenBack v0.33.21 - Integrated Learning and Clean Map Starts
+
+**Created by frootz jhklphy**
+
+## Interface
+
+- Moved Tutorials and Blog into native home-screen panels that keep players on the OpenBack game page.
+- Kept the public tutorial and blog URLs available for search engines while using the same content inside the game.
+
+## Maps
+
+- Fixed large selected maps beginning to render behind the Solo setup screen.
+- The Solo setup now closes before a selected map is handed to the game renderer.
+
+---
+
 # OpenBack v0.33.20 - Handcrafted Shattered Expanse
 
 **Created by frootz jhklphy**

@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 
-type Page = {
+export type OpenBackContentPage = {
   path: string;
   type: "Tutorial" | "Blog";
   title: string;
@@ -8,7 +8,7 @@ type Page = {
   sections: Array<{ title: string; text: string; tips?: string[] }>;
 };
 
-const tutorials: Page[] = [
+const tutorials: OpenBackContentPage[] = [
   {
     path: "/guides/getting-started",
     type: "Tutorial",
@@ -516,7 +516,7 @@ const tutorials: Page[] = [
   },
 ];
 
-const blogs: Page[] = [
+const blogs: OpenBackContentPage[] = [
   {
     path: "/blog/living-game-updates",
     type: "Blog",
@@ -724,7 +724,7 @@ function esc(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
-function cards(items: Page[]): string {
+function cards(items: OpenBackContentPage[]): string {
   return items
     .map(
       (page) =>
@@ -767,7 +767,7 @@ function hub(origin: string, type: "guides" | "blog"): string {
   );
 }
 
-function article(origin: string, page: Page): string {
+function article(origin: string, page: OpenBackContentPage): string {
   const hubPath = page.type === "Tutorial" ? "/guides" : "/blog";
   const sections = page.sections
     .map(
@@ -812,4 +812,8 @@ export function handleOpenBackContent(req: Request, res: Response): void {
   const page = pages.find((candidate) => candidate.path === req.path);
   if (!page) return void res.status(404).type("text").send("Page not found");
   res.type("html").send(article(origin, page));
+}
+
+export function handleOpenBackContentApi(_req: Request, res: Response): void {
+  res.json({ tutorials, blogs });
 }

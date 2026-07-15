@@ -13,6 +13,7 @@ import { MatchmakingService } from "./MatchmakingService";
 import { setNoStoreHeaders } from "./NoStoreHeaders";
 import {
   handleOpenBackContent,
+  handleOpenBackContentApi,
   OPENBACK_CONTENT_PATHS,
 } from "./OpenBackContent";
 import { renderAppShell } from "./RenderHtml";
@@ -43,6 +44,10 @@ app.use(express.json());
 // Local, self-contained auth (email code + optional Google). Served from the
 // same origin as the SPA so the browser can call it without CORS.
 app.use(authRouter());
+
+// The home-screen Tutorials and Blog panels consume the same content as the
+// indexable HTML pages, keeping the app UI and search pages in sync.
+app.get("/api/openback/content", handleOpenBackContentApi);
 
 // Search-engine discovery files must be real text/XML responses. Without
 // these explicit routes, the SPA fallback returned index.html for sitemap.xml.

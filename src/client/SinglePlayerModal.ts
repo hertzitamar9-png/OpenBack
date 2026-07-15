@@ -750,85 +750,86 @@ export class SinglePlayerModal extends BaseModal {
 
     await crazyGamesSDK.requestMidgameAd();
 
-    this.dispatchEvent(
-      new CustomEvent("join-lobby", {
-        detail: {
+    const joinEvent = new CustomEvent("join-lobby", {
+      detail: {
+        gameID: gameID,
+        gameStartInfo: {
           gameID: gameID,
-          gameStartInfo: {
-            gameID: gameID,
-            players: [
-              {
-                clientID,
-                username: usernameInput.getUsername(),
-                clanTag: usernameInput.getClanTag() ?? null,
-                cosmetics: await getPlayerCosmetics(),
-              },
-            ],
-            config: {
-              gameMap: this.selectedMap,
-              gameMapSize: this.compactMap
-                ? GameMapSize.Compact
-                : GameMapSize.Normal,
-              gameType: GameType.Singleplayer,
-              gameMode: this.gameMode,
-              playerTeams: this.teamCount,
-              difficulty: this.selectedDifficulty,
-              maxTimerValue: finalMaxTimerValue,
-              bots: this.bots,
-              infiniteGold: this.infiniteGold,
-              donateGold: this.gameMode === GameMode.Team,
-              donateTroops: this.gameMode === GameMode.Team,
-              infiniteTroops: this.infiniteTroops,
-              instantBuild: this.instantBuild,
-              randomSpawn: this.randomSpawn,
-              disabledUnits: this.disabledUnits
-                .map((u) => Object.values(UnitType).find((ut) => ut === u))
-                .filter((ut): ut is UnitType => ut !== undefined),
-              nations: sliderToNationsConfig(
-                this.nations,
-                this.defaultNationCount,
-              ),
-              ...(this.goldMultiplier && this.goldMultiplierValue
-                ? { goldMultiplier: this.goldMultiplierValue }
-                : {}),
-              ...(this.startingGold && this.startingGoldValue !== undefined
-                ? {
-                    startingGold: Math.round(
-                      this.startingGoldValue * 1_000_000,
-                    ),
-                  }
-                : {}),
-              ...(this.customAlliances
-                ? { customAllianceDuration: this.customAllianceMinutes ?? 0 }
-                : {}),
-              ...(this.waterNukes ? { waterNukes: true } : {}),
-              ...(this.doomsdayClock
-                ? {
-                    doomsdayClock: {
-                      enabled: true,
-                      speed: this.doomsdayClockSpeed,
-                    },
-                  }
-                : {}),
-              worldMechanics: {
-                encirclement: true,
-                warExhaustion: true,
-                logisticsCargo: true,
-                strategicObjectives: this.strategicObjectives,
-                naturalDisasters: this.naturalDisasters,
-                fogOfWar: this.fogOfWar,
-                sharedControlSize: 1,
-              },
+          players: [
+            {
+              clientID,
+              username: usernameInput.getUsername(),
+              clanTag: usernameInput.getClanTag() ?? null,
+              cosmetics: await getPlayerCosmetics(),
             },
-            lobbyCreatedAt: Date.now(), // ms; server should be authoritative in MP
+          ],
+          config: {
+            gameMap: this.selectedMap,
+            gameMapSize: this.compactMap
+              ? GameMapSize.Compact
+              : GameMapSize.Normal,
+            gameType: GameType.Singleplayer,
+            gameMode: this.gameMode,
+            playerTeams: this.teamCount,
+            difficulty: this.selectedDifficulty,
+            maxTimerValue: finalMaxTimerValue,
+            bots: this.bots,
+            infiniteGold: this.infiniteGold,
+            donateGold: this.gameMode === GameMode.Team,
+            donateTroops: this.gameMode === GameMode.Team,
+            infiniteTroops: this.infiniteTroops,
+            instantBuild: this.instantBuild,
+            randomSpawn: this.randomSpawn,
+            disabledUnits: this.disabledUnits
+              .map((u) => Object.values(UnitType).find((ut) => ut === u))
+              .filter((ut): ut is UnitType => ut !== undefined),
+            nations: sliderToNationsConfig(
+              this.nations,
+              this.defaultNationCount,
+            ),
+            ...(this.goldMultiplier && this.goldMultiplierValue
+              ? { goldMultiplier: this.goldMultiplierValue }
+              : {}),
+            ...(this.startingGold && this.startingGoldValue !== undefined
+              ? {
+                  startingGold: Math.round(this.startingGoldValue * 1_000_000),
+                }
+              : {}),
+            ...(this.customAlliances
+              ? { customAllianceDuration: this.customAllianceMinutes ?? 0 }
+              : {}),
+            ...(this.waterNukes ? { waterNukes: true } : {}),
+            ...(this.doomsdayClock
+              ? {
+                  doomsdayClock: {
+                    enabled: true,
+                    speed: this.doomsdayClockSpeed,
+                  },
+                }
+              : {}),
+            worldMechanics: {
+              encirclement: true,
+              warExhaustion: true,
+              logisticsCargo: true,
+              strategicObjectives: this.strategicObjectives,
+              naturalDisasters: this.naturalDisasters,
+              fogOfWar: this.fogOfWar,
+              sharedControlSize: 1,
+            },
           },
-          source: "singleplayer",
-        } satisfies JoinLobbyEvent,
-        bubbles: true,
-        composed: true,
-      }),
-    );
+          lobbyCreatedAt: Date.now(), // ms; server should be authoritative in MP
+        },
+        source: "singleplayer",
+      } satisfies JoinLobbyEvent,
+      bubbles: true,
+      composed: true,
+    });
+
+    // Hide the setup screen before the renderer starts. Large maps can begin
+    // drawing during the synchronous join handler, which previously left the
+    // Solo panel visibly floating over the live map until prestart completed.
     this.close();
+    this.dispatchEvent(joinEvent);
   }
 
   private async loadNationCount() {

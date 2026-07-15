@@ -38,10 +38,20 @@ export class Footer extends LitElement {
         <div
           class="text-xs mt-1 lg:mt-2 flex items-center justify-center gap-4 px-4"
         >
-          <a href="/guides" class="hover:text-white transition-colors">
+          <button
+            type="button"
+            class="nav-menu-item hover:text-white transition-colors cursor-pointer"
+            data-page="page-tutorials"
+          >
             Tutorials
-          </a>
-          <a href="/blog" class="hover:text-white transition-colors"> Blog </a>
+          </button>
+          <button
+            type="button"
+            class="nav-menu-item hover:text-white transition-colors cursor-pointer"
+            data-page="page-blog"
+          >
+            Blog
+          </button>
           <a
             href="/terms-of-service.html"
             data-i18n="main.terms_of_service"

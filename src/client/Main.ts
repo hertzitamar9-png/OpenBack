@@ -65,6 +65,7 @@ import {
 } from "./Utils";
 import { installSafariPinchZoomBlocker } from "./utilities/DisableSafariPinchZoom";
 
+import "./OpenBackContentModal";
 import "./components/DesktopNavBar";
 import "./components/Footer";
 import "./components/MainLayout";
