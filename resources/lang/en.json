@@ -893,12 +893,8 @@
     "terms_of_service": "Terms of Service",
     "title": "OpenBack",
     "troubleshooting": "Troubleshooting",
-    "upstream_discord": "OpenBack community Discord",
-    "upstream_reddit": "OpenBack strategy community",
     "upstream_source": "OpenBack source and contributor credits",
-    "upstream_wiki": "OpenBack game wiki",
-    "user_avatar_alt": "{username}'s avatar",
-    "wiki": "Wiki"
+    "user_avatar_alt": "{username}'s avatar"
   },
   "map": {
     "achiran": "Achiran",
@@ -1537,10 +1533,7 @@
   },
   "win_modal": {
     "died": "You died",
-    "discord_description": "Connect with players, discover new features, and win prizes!",
     "exit": "Exit Game",
-    "join_discord": "Join Our Discord Community!",
-    "join_server": "Join Server",
     "keep": "Keep Playing",
     "nation_won": "Nation {nation} has won!",
     "other_team": "{team} team has won!",
@@ -1549,7 +1542,6 @@
     "spectate": "Spectate",
     "support_openfront": "Support OpenBack!",
     "territory_pattern": "Purchase a territory skin to go ad-free!",
-    "wishlist": "Wishlist on Steam!",
     "you_won": "You Won!",
     "your_team": "Your team won!",
     "youtube_tutorial": "Need some help?"
