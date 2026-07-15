@@ -36,11 +36,6 @@ export async function renderHtmlContent(htmlPath: string): Promise<string> {
     shareOrigin: JSON.stringify(ServerEnv.shareOrigin()),
     siteOrigin: ServerEnv.authOrigin().replace(/\/+$/, ""),
     manifestHref: buildAssetUrl("manifest.json", assetManifest, cdnBase),
-    faviconHref: buildAssetUrl(
-      "images/OpenBackMark.svg",
-      assetManifest,
-      cdnBase,
-    ),
     markPngHref: buildAssetUrl(
       "images/OpenBackMark512.png",
       assetManifest,

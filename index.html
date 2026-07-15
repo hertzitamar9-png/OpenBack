@@ -6,10 +6,10 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
-    <title data-i18n="main.title">OpenBack (ALPHA)</title>
+    <title data-i18n="main.title">OpenBack — Territorial Strategy Game</title>
     <link rel="canonical" href="<%- siteOrigin %>/" />
     <link rel="manifest" href="<%- manifestHref %>" />
-    <link rel="icon" type="image/svg+xml" href="<%- faviconHref %>" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon.png" />
     <link rel="apple-touch-icon" sizes="512x512" href="<%- markPngHref %>" />
 
     <!-- Preload styles -->
@@ -60,7 +60,12 @@
     <!-- SEO -->
     <meta
       name="description"
-      content="Conquer the world in OpenBack. Expand your nation, build an economy, form alliances, and dominate the map in this open-source territorial RTS."
+      content="Play OpenBack, an online territorial war RTS built from the OpenFront strategy engine. Expand nations, command armies, build an economy, form alliances, and conquer a world map."
+    />
+    <meta name="application-name" content="OpenBack" />
+    <meta
+      name="keywords"
+      content="OpenBack, Open Back, OpenFront, territorial RTS, territorial strategy game, online war game, browser strategy game, multiplayer conquest game, real-time strategy, world map game, alpha strategy game"
     />
     <meta name="robots" content="index, follow" />
 
@@ -96,17 +101,43 @@
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "VideoGame",
-        "name": "OpenBack",
-        "url": "<%- siteOrigin %>/",
-        "logo": "<%- markPngHref %>",
-        "image": "<%- socialPreviewUrl %>",
-        "description": "OpenBack is a free browser-based territorial real-time strategy game. Expand your nation, build an economy and military, form alliances, and compete against players online.",
-        "genre": ["Real-time strategy", "Territorial strategy", "Multiplayer"],
-        "gamePlatform": "Web browser",
-        "applicationCategory": "Game",
-        "operatingSystem": "Any",
-        "isAccessibleForFree": true
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "<%- siteOrigin %>/#website",
+            "url": "<%- siteOrigin %>/",
+            "name": "OpenBack",
+            "alternateName": ["Open Back", "OpenBack Game"]
+          },
+          {
+            "@type": "Organization",
+            "@id": "<%- siteOrigin %>/#organization",
+            "name": "OpenBack",
+            "url": "<%- siteOrigin %>/",
+            "logo": "<%- siteOrigin %>/favicon.png"
+          },
+          {
+            "@type": "VideoGame",
+            "@id": "<%- siteOrigin %>/#game",
+            "name": "OpenBack",
+            "alternateName": "Open Back",
+            "url": "<%- siteOrigin %>/",
+            "publisher": { "@id": "<%- siteOrigin %>/#organization" },
+            "logo": "<%- siteOrigin %>/favicon.png",
+            "image": "<%- socialPreviewUrl %>",
+            "description": "OpenBack is an online territorial war and real-time strategy game built from the OpenFront strategy engine. Expand a nation, manage troops and gold, build military forces, form alliances, and conquer a world map.",
+            "genre": [
+              "Real-time strategy",
+              "Territorial strategy",
+              "Online war game",
+              "Multiplayer conquest"
+            ],
+            "gamePlatform": "Web browser",
+            "applicationCategory": "Game",
+            "operatingSystem": "Any",
+            "isAccessibleForFree": false
+          }
+        ]
       }
     </script>
 
@@ -146,11 +177,12 @@
     <!-- Server-rendered product context for accessibility and search engines.
          The interactive application supplies the visual interface. -->
     <section class="sr-only" aria-label="About OpenBack">
-      <h1>OpenBack — Free Online Territorial Strategy Game</h1>
+      <h1>OpenBack — Online Territorial War and Strategy Game</h1>
       <p>
-        OpenBack is a browser-based real-time strategy game where players expand
-        nations across a world map, manage troops and gold, build military and
-        economic structures, form alliances, and conquer rival territory.
+        OpenBack is an OpenFront-inspired browser-based territorial war and
+        real-time strategy game where players expand nations across a world map,
+        manage troops and gold, build military and economic structures, form
+        alliances, and conquer rival territory.
       </p>
       <p>
         Play solo against computer-controlled nations, host or join private
@@ -166,7 +198,7 @@
         <li>
           Nations, alliances, clans, economies, buildings, and military units
         </li>
-        <li>Free browser gameplay on desktop and mobile devices</li>
+        <li>Browser gameplay on desktop and mobile devices</li>
       </ul>
       <p>
         <a href="<%- siteOrigin %>/">Play OpenBack online</a>.

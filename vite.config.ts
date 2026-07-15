@@ -128,11 +128,6 @@ export default defineConfig(({ mode }) => {
     shareOrigin: JSON.stringify(env.VITE_SHARE_ORIGIN ?? ""),
     siteOrigin,
     manifestHref: buildAssetUrl("manifest.json", assetManifest, cdnBase),
-    faviconHref: buildAssetUrl(
-      "images/OpenBackMark.svg",
-      assetManifest,
-      cdnBase,
-    ),
     markPngHref: buildAssetUrl(
       "images/OpenBackMark512.png",
       assetManifest,
