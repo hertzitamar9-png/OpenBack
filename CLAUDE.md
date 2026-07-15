@@ -6,6 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - Every user-facing change must add or update the newest entry in `resources/changelog.md` in the same commit.
 - Use an OpenBack version, describe the player-visible result, and credit **frootz jhklphy**.
+- Base OpenBack numbering on the latest published OpenFront release: the first OpenBack release uses the next minor version at patch zero, and each OpenBack update increments the patch. When a new OpenFront release reaches that version line, shift the complete OpenBack release series to the next minor line so the latest OpenFront release remains immediately before the first OpenBack release.
 - Keep the existing in-game Release Notes styling and do not add optional OpenFront Discord, Reddit, Wiki, store, or promotional links.
 - Preserve the AGPL, corresponding-source availability, required copyright notice, asset-license notices, and contributor attribution.
 
