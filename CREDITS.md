@@ -12,6 +12,8 @@ See [Contributors](https://github.com/openfrontio/OpenFrontIO/graphs/contributor
 
 The OpenBack fictional-map terrain masks, playable conversions, nation layouts, and Shattered Expanse design were created by **frootz jhklphy**. The supplied visual references were used only to recover broad land and water silhouettes; their labels, legends, political styling, and original artwork are not distributed with the game.
 
+Shattered Expanse uses the coastline and land/water layout from [Open Map One](https://opengameart.org/content/open-map-one) by **Darklighter Designs (2017)**, licensed under [CC-BY 3.0](https://creativecommons.org/licenses/by/3.0/). OpenBack's terrain conversion, scaling, spawn layout, and gameplay data are modifications of that source.
+
 ### OpenStreetMap
 
 © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright)  

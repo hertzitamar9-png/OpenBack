@@ -1,3 +1,15 @@
+# OpenBack v0.33.20 - Handcrafted Shattered Expanse
+
+**Created by frootz jhklphy**
+
+## Maps
+
+- Replaced Shattered Expanse's generated continent shapes with the coastlines of Darklighter Designs' published Open Map One.
+- Expanded the playable conversion to 8,192 by 4,608 tiles while preserving the source map's continents, inland seas, rivers, peninsulas, and island chains.
+- Converted the CC-BY 3.0 source artwork into native OpenBack terrain and added its required attribution to the project credits.
+
+---
+
 # OpenBack v0.33.19 - Continental Shattered Expanse
 
 **Created by frootz jhklphy**

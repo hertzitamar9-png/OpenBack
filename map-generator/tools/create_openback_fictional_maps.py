@@ -300,19 +300,20 @@ def spawn_points(mask: Image.Image, count: int) -> list[tuple[int, int]]:
     return selected
 
 
-def land_component_count(mask: Image.Image) -> int:
+def land_component_areas(mask: Image.Image) -> list[int]:
     width, height = mask.size
     pixels = mask.tobytes()
     seen = bytearray(width * height)
-    count = 0
+    areas: list[int] = []
     for start in range(width * height):
         if seen[start] or pixels[start] < 128:
             continue
-        count += 1
+        area = 0
         seen[start] = 1
         queue = deque([start])
         while queue:
             index = queue.popleft()
+            area += 1
             x = index % width
             for neighbor in (index - width, index + width, index - 1, index + 1):
                 if neighbor < 0 or neighbor >= len(pixels) or seen[neighbor]:
@@ -324,7 +325,8 @@ def land_component_count(mask: Image.Image) -> int:
                 if pixels[neighbor] >= 128:
                     seen[neighbor] = 1
                     queue.append(neighbor)
-    return count
+        areas.append(area)
+    return areas
 
 
 def write_map(output_root: Path, spec: MapSpec, mask: Image.Image) -> None:
@@ -347,66 +349,27 @@ def write_map(output_root: Path, spec: MapSpec, mask: Image.Image) -> None:
 
 
 def create_shattered_expanse(output_root: Path) -> None:
-    width, height = 8192, 3584
-    mask = Image.new("L", (width, height), 0)
-    draw = ImageDraw.Draw(mask)
-    rng = random.Random(33019)
-
-    def draw_blob(cx: float, cy: float, rx: float, ry: float, points: int = 72) -> None:
-        phase_a = rng.random() * math.tau
-        phase_b = rng.random() * math.tau
-        vertices = []
-        for index in range(points):
-            angle = index * math.tau / points
-            coast = (
-                1
-                + math.sin(angle * 5 + phase_a) * 0.12
-                + math.sin(angle * 11 + phase_b) * 0.07
-                + rng.uniform(-0.055, 0.055)
-            )
-            vertices.append(
-                (cx + math.cos(angle) * rx * coast, cy + math.sin(angle) * ry * coast)
-            )
-        draw.polygon(vertices, fill=255)
-
-    continent_names = (
-        "Dawnreach", "Stormrest", "Verdant Crown", "Iron March", "Sunspire",
-        "Mistward", "Ashen Dominion", "Brightwater", "Frostwake", "Cinderlands",
-        "Tidehold", "Starfall", "Thunder Reach", "Silver Expanse", "Last Horizon",
+    width, height = 8192, 4608
+    reference_path = (
+        Path(__file__).resolve().parents[1] / "assets" / "references" / "open-map-one.png"
     )
-    continent_centers: list[tuple[int, int]] = []
+    with Image.open(reference_path) as reference:
+        source = reference.convert("RGB")
+        source.thumbnail((2048, 1152), Image.Resampling.LANCZOS)
 
-    # Fifteen genuinely large continents arranged across a long ocean world.
-    # Each receives overlapping lobes and peninsulas so it remains one large,
-    # irregular landmass rather than a collection of tiny islands.
-    for row in range(3):
-        for column in range(5):
-            cx = 820 + column * 1635 + rng.randint(-55, 55)
-            cy = 560 + row * 1230 + rng.randint(-45, 45)
-            continent_centers.append((cx, cy))
-            rx = rng.randint(610, 690)
-            ry = rng.randint(400, 465)
-            draw_blob(cx, cy, rx, ry, 96)
-            for _ in range(4):
-                angle = rng.random() * math.tau
-                distance = rng.uniform(0.42, 0.68)
-                draw_blob(
-                    cx + math.cos(angle) * rx * distance,
-                    cy + math.sin(angle) * ry * distance,
-                    rng.uniform(0.28, 0.43) * rx,
-                    rng.uniform(0.28, 0.43) * ry,
-                    42,
-                )
-
-    # Medium offshore islands add naval routes without overwhelming the fifteen
-    # continents or turning the map back into a tiny-island field.
-    for cx, cy in continent_centers:
-        for _ in range(4):
-            angle = rng.random() * math.tau
-            distance = rng.randint(720, 850)
-            island_x = max(55, min(width - 55, cx + math.cos(angle) * distance))
-            island_y = max(55, min(height - 55, cy + math.sin(angle) * distance * 0.62))
-            draw_blob(island_x, island_y, rng.randint(45, 85), rng.randint(32, 64), 30)
+    # Open Map One uses deep blue water and green/brown land. Preserve the
+    # artist's real coastlines, inland seas, rivers, and island placement while
+    # converting the artwork into OpenBack's binary terrain source format.
+    source_mask = Image.new("L", source.size)
+    source_mask.putdata(
+        [
+            0 if blue > red * 1.22 and blue > green * 1.18 else 255
+            for red, green, blue in source.getdata()
+        ]
+    )
+    mask = source_mask.resize((width, height), Image.Resampling.LANCZOS).point(
+        lambda value: 255 if value >= 128 else 0
+    )
 
     names = (
         "Dawnreach", "Tidehold", "Ashen Cay", "Glasshaven", "Stormrest", "Blue Lantern",
@@ -423,9 +386,15 @@ def create_shattered_expanse(output_root: Path) -> None:
         raise ValueError(
             f"Shattered Expanse must provide at least 10 million land tiles, found {land_tiles}"
         )
-    for name, center in zip(continent_names, continent_centers):
-        if mask.getpixel(center) < 128:
-            raise ValueError(f"Shattered Expanse continent {name} has no central land")
+    preview_mask = mask.resize((2048, 1152), Image.Resampling.NEAREST)
+    substantial_landmasses = sum(
+        area >= 3_000 for area in land_component_areas(preview_mask)
+    )
+    if substantial_landmasses < 15:
+        raise ValueError(
+            "Shattered Expanse must preserve at least 15 substantial online-source "
+            f"landmasses, found {substantial_landmasses}"
+        )
     spec = MapSpec("shatteredexpanse", "ShatteredExpanse", "Shattered Expanse", "dark_ocean", names, frequency=0)
     write_map(output_root, spec, mask)
 
