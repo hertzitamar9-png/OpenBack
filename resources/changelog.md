@@ -1,3 +1,15 @@
+# OpenBack v0.33.19 - Continental Shattered Expanse
+
+**Created by frootz jhklphy**
+
+## Maps
+
+- Rebuilt Shattered Expanse as a massive 8,192 by 3,584-tile world designed for matches approaching 1,000 players.
+- Replaced the tiny-island layout with 15 dominant, widely separated continents containing more than 10 million playable land tiles.
+- Added irregular coastlines, large peninsulas, substantial offshore islands, and broad oceans for long land, naval, and air campaigns.
+
+---
+
 # OpenBack v0.33.18 - Fictional Worlds and Shattered Expanse
 
 **Created by frootz jhklphy**

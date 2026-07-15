@@ -262,8 +262,9 @@ describe("Map consistency", () => {
     );
     expect(shattered).toBeDefined();
     expect(shattered.categories).toContain("fictional");
-    expect(shattered.map.width).toBe(6144);
-    expect(shattered.map.height).toBe(1664);
+    expect(shattered.map.width).toBe(8192);
+    expect(shattered.map.height).toBe(3584);
+    expect(shattered.map.num_land_tiles).toBeGreaterThan(10_000_000);
 
     const otherMaps = manifests.filter(
       (manifest) => manifest.id !== "ShatteredExpanse",

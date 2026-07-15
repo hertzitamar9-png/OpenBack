@@ -6,242 +6,242 @@
   "multiplayer_frequency": 0,
   "nations": [
     {
-      "coordinates": [3044, 804],
+      "coordinates": [4108, 1784],
       "name": "Dawnreach",
       "flag": ""
     },
     {
-      "coordinates": [6096, 328],
+      "coordinates": [48, 3296],
       "name": "Tidehold",
       "flag": ""
     },
     {
-      "coordinates": [20, 1168],
+      "coordinates": [8084, 3324],
       "name": "Ashen Cay",
       "flag": ""
     },
     {
-      "coordinates": [4724, 1560],
+      "coordinates": [860, 20],
       "name": "Glasshaven",
       "flag": ""
     },
     {
-      "coordinates": [1420, 48],
+      "coordinates": [7328, 76],
       "name": "Stormrest",
       "flag": ""
     },
     {
-      "coordinates": [4640, 48],
+      "coordinates": [2428, 3492],
       "name": "Blue Lantern",
       "flag": ""
     },
     {
-      "coordinates": [1672, 1504],
+      "coordinates": [5760, 3408],
       "name": "Crown Atoll",
       "flag": ""
     },
     {
-      "coordinates": [5956, 1532],
+      "coordinates": [2876, 132],
       "name": "Farwake",
       "flag": ""
     },
     {
-      "coordinates": [188, 48],
+      "coordinates": [5368, 300],
       "name": "Sunken Gate",
       "flag": ""
     },
     {
-      "coordinates": [3632, 1588],
+      "coordinates": [1392, 1868],
       "name": "Iron Shoals",
       "flag": ""
     },
     {
-      "coordinates": [2372, 132],
+      "coordinates": [6880, 1896],
       "name": "Mistward",
       "flag": ""
     },
     {
-      "coordinates": [5256, 776],
+      "coordinates": [4108, 3464],
       "name": "Ember Isle",
       "flag": ""
     },
     {
-      "coordinates": [944, 916],
+      "coordinates": [5480, 2036],
       "name": "Windscar",
       "flag": ""
     },
     {
-      "coordinates": [3660, 104],
+      "coordinates": [2736, 1532],
       "name": "Pearl Bastion",
       "flag": ""
     },
     {
-      "coordinates": [4192, 832],
+      "coordinates": [8168, 1812],
       "name": "Drift Crown",
       "flag": ""
     },
     {
-      "coordinates": [2540, 1588],
+      "coordinates": [4108, 496],
       "name": "Saltspire",
       "flag": ""
     },
     {
-      "coordinates": [2176, 888],
+      "coordinates": [132, 1812],
       "name": "Moon Anchorage",
       "flag": ""
     },
     {
-      "coordinates": [5368, 20],
+      "coordinates": [1252, 3100],
       "name": "Wavebreak",
       "flag": ""
     },
     {
-      "coordinates": [860, 1616],
+      "coordinates": [1812, 748],
       "name": "Starfall",
       "flag": ""
     },
     {
-      "coordinates": [3016, 20],
+      "coordinates": [6908, 3100],
       "name": "Riven Keys",
       "flag": ""
     },
     {
-      "coordinates": [5872, 916],
+      "coordinates": [6180, 1028],
       "name": "Coral March",
       "flag": ""
     },
     {
-      "coordinates": [384, 636],
+      "coordinates": [3520, 2652],
       "name": "Thunder Cay",
       "flag": ""
     },
     {
-      "coordinates": [804, 20],
+      "coordinates": [20, 524],
       "name": "Frostwake",
       "flag": ""
     },
     {
-      "coordinates": [5340, 1504],
+      "coordinates": [7636, 1000],
       "name": "Sable Harbor",
       "flag": ""
     },
     {
-      "coordinates": [1560, 888],
+      "coordinates": [888, 944],
       "name": "Brightwater",
       "flag": ""
     },
     {
-      "coordinates": [3072, 1392],
+      "coordinates": [4696, 2764],
       "name": "Tempest Reach",
       "flag": ""
     },
     {
-      "coordinates": [3632, 804],
+      "coordinates": [2204, 2232],
       "name": "Verdant Shard",
       "flag": ""
     },
     {
-      "coordinates": [4164, 1392],
+      "coordinates": [7524, 2512],
       "name": "Obsidian Key",
       "flag": ""
     },
     {
-      "coordinates": [1868, 384],
+      "coordinates": [6096, 2624],
       "name": "Cloudrest",
       "flag": ""
     },
     {
-      "coordinates": [4724, 888],
+      "coordinates": [8112, 356],
       "name": "Deepwatch",
       "flag": ""
     },
     {
-      "coordinates": [4164, 300],
+      "coordinates": [6908, 748],
       "name": "Golden Shoal",
       "flag": ""
     },
     {
-      "coordinates": [524, 1224],
+      "coordinates": [2764, 2792],
       "name": "Whisper Isle",
       "flag": ""
     },
     {
-      "coordinates": [2596, 580],
+      "coordinates": [5312, 1056],
       "name": "Crimson Atoll",
       "flag": ""
     },
     {
-      "coordinates": [1056, 440],
+      "coordinates": [608, 2708],
       "name": "Northstar",
       "flag": ""
     },
     {
-      "coordinates": [2624, 1084],
+      "coordinates": [2568, 804],
       "name": "Sea Lantern",
       "flag": ""
     },
     {
-      "coordinates": [1252, 1280],
+      "coordinates": [6124, 300],
       "name": "Gale Crown",
       "flag": ""
     },
     {
-      "coordinates": [160, 1616],
+      "coordinates": [2008, 1476],
       "name": "Mariners Rest",
       "flag": ""
     },
     {
-      "coordinates": [3296, 384],
+      "coordinates": [6152, 1756],
       "name": "Broken Compass",
       "flag": ""
     },
     {
-      "coordinates": [4864, 440],
+      "coordinates": [3464, 1448],
       "name": "Turtle Reach",
       "flag": ""
     },
     {
-      "coordinates": [5648, 524],
+      "coordinates": [4864, 1616],
       "name": "Last Horizon",
       "flag": ""
     },
     {
-      "coordinates": [2148, 1364],
+      "coordinates": [1980, 2932],
       "name": "Shardhaven",
       "flag": ""
     },
     {
-      "coordinates": [3772, 1196],
+      "coordinates": [5396, 2736],
       "name": "Foamspire",
       "flag": ""
     },
     {
-      "coordinates": [5060, 1140],
+      "coordinates": [3408, 3436],
       "name": "Blackwake",
       "flag": ""
     },
     {
-      "coordinates": [5480, 1112],
+      "coordinates": [2176, 160],
       "name": "Silver Current",
       "flag": ""
     },
     {
-      "coordinates": [5760, 104],
+      "coordinates": [3492, 776],
       "name": "Rains End",
       "flag": ""
     },
     {
-      "coordinates": [1476, 496],
+      "coordinates": [776, 1616],
       "name": "Azure Crown",
       "flag": ""
     },
     {
-      "coordinates": [496, 272],
+      "coordinates": [4780, 608],
       "name": "Cinder Key",
       "flag": ""
     },
     {
-      "coordinates": [5256, 384],
+      "coordinates": [7496, 1644],
       "name": "Tideglass",
       "flag": ""
     }
