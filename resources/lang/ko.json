@@ -26,7 +26,7 @@
     "enabled": "켜짐"
   },
   "main": {
-    "title": "오픈 프론트 (시험판)",
+    "title": "OpenBack",
     "login_discord": "디스코드로 로그인하기",
     "sign_in": "로그인",
     "discord_avatar_alt": "디스코드 프사",
@@ -372,7 +372,7 @@
     "join_timeout": "제시간 안에 게임에 참여하지 못했습니다."
   },
   "matchmaking_modal": {
-    "title": "1ㄷ1 승급전 매치메이킹 (시험판)",
+    "title": "1ㄷ1 승급전 매치메이킹",
     "connecting": "매치메이킹 서버에 연결 중...",
     "searching": "게임 찾는 중...",
     "waiting_for_game": "게임 시작 대기 중...",
@@ -954,7 +954,7 @@
   },
   "matchmaking_button": {
     "play_ranked": "1대1 승급전 매치메이킹",
-    "description": "(시험판)",
+    "description": "",
     "login_required": "승급전을 플레이하려면 로그인하세요!",
     "must_login": "승급전 매치메이킹을 플레이하려면 로그인해야 합니다."
   }

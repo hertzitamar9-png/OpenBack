@@ -801,7 +801,7 @@
     "solo": "Sólo",
     "store": "Obchod",
     "terms_of_service": "Podmínky používání",
-    "title": "OpenFront (ALPHA)",
+    "title": "OpenBack",
     "troubleshooting": "Řešení problémů",
     "user_avatar_alt": "Profilový obrázek uživatele {username}",
     "wiki": "Wiki"
@@ -931,7 +931,7 @@
     "unfavorite": "Odebrat z oblíbených"
   },
   "matchmaking_button": {
-    "description": "(ALPHA)",
+    "description": "",
     "login_required": "Pro hodnocené hry se přihlaste!",
     "must_login": "Pro hraní hodnocených her se musíte přihlásit.",
     "play_ranked": "1v1 hodnocená hra"
@@ -941,7 +941,7 @@
     "elo": "Vaše ELO: {elo}",
     "no_elo": "Žádné ELO",
     "searching": "Vyhledávání hry...",
-    "title": "1v1 hodnocená hra (ALPHA)",
+    "title": "1v1 hodnocená hra",
     "waiting_for_game": "Čekání na spuštění hry..."
   },
   "mode_selector": {

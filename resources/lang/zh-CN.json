@@ -801,7 +801,7 @@
     "solo": "单人模式",
     "store": "商店",
     "terms_of_service": "服务条款",
-    "title": "OpenFront (内测版)",
+    "title": "OpenBack",
     "troubleshooting": "疑难解答",
     "user_avatar_alt": "{username} 的头像",
     "wiki": "游戏百科"
@@ -931,7 +931,7 @@
     "unfavorite": "从收藏夹中移除"
   },
   "matchmaking_button": {
-    "description": "（内测版）",
+    "description": "",
     "login_required": "登录后开始排位赛！",
     "must_login": "您必须登录才能玩排位赛。",
     "play_ranked": "1v1 排位赛"
@@ -941,7 +941,7 @@
     "elo": "你的 ELO 分：{elo}",
     "no_elo": "暂无ELO",
     "searching": "正在搜索游戏……",
-    "title": "1v1 排位赛（内测版）",
+    "title": "1v1 排位赛",
     "waiting_for_game": "正在等待游戏开始……"
   },
   "mode_selector": {

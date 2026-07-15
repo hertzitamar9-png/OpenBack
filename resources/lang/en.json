@@ -891,7 +891,7 @@
     "solo": "Solo",
     "store": "Store",
     "terms_of_service": "Terms of Service",
-    "title": "OpenBack (ALPHA)",
+    "title": "OpenBack",
     "troubleshooting": "Troubleshooting",
     "upstream_discord": "OpenBack community Discord",
     "upstream_reddit": "OpenBack strategy community",
@@ -1032,7 +1032,7 @@
     "unfavorite": "Remove from favourites"
   },
   "matchmaking_button": {
-    "description": "(ALPHA)",
+    "description": "",
     "login_required": "Login to play ranked!",
     "must_login": "You must be logged in to play ranked matchmaking.",
     "play_ranked": "1v1 Ranked Matchmaking"
@@ -1042,7 +1042,7 @@
     "elo": "Your ELO: {elo}",
     "no_elo": "No ELO yet",
     "searching": "Searching for game...",
-    "title": "1v1 Ranked Matchmaking (ALPHA)",
+    "title": "1v1 Ranked Matchmaking",
     "waiting_for_game": "Waiting for game to start..."
   },
   "mode_selector": {

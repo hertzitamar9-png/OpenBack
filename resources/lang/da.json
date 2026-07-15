@@ -801,7 +801,7 @@
     "solo": "Solo",
     "store": "Butik",
     "terms_of_service": "Servicevilkår",
-    "title": "OpenFront (ALPHA)",
+    "title": "OpenBack",
     "troubleshooting": "Fejlfinding",
     "user_avatar_alt": "{username}s avatar",
     "wiki": "Wiki"
@@ -931,7 +931,7 @@
     "unfavorite": "Fjern fra favoritter"
   },
   "matchmaking_button": {
-    "description": "(ALPHA)",
+    "description": "",
     "login_required": "Log ind for at spille rangeret!",
     "must_login": "Du skal være logget ind for at spille rangeret matchmaking.",
     "play_ranked": "1v1 Rangeret Matchmaking"
@@ -941,7 +941,7 @@
     "elo": "Dit ELO: {elo}",
     "no_elo": "Intet ELO endnu",
     "searching": "Søger efter spil...",
-    "title": "1v1 Rangeret Matchmaking (ALPHA)",
+    "title": "1v1 Rangeret Matchmaking",
     "waiting_for_game": "Venter på, at spillet starter..."
   },
   "mode_selector": {

@@ -801,7 +801,7 @@
     "solo": "ソロ",
     "store": "ストア",
     "terms_of_service": "利用規約",
-    "title": "OpenFront (ALPHA)",
+    "title": "OpenBack",
     "troubleshooting": "トラブルシューティング",
     "user_avatar_alt": "{username}のアバター",
     "wiki": "Wiki"
@@ -931,7 +931,7 @@
     "unfavorite": "お気に入りから削除"
   },
   "matchmaking_button": {
-    "description": "(アルファ版)",
+    "description": "",
     "login_required": "ランクマッチをプレイするにはログインしてください！",
     "must_login": "ランクマッチをプレイするにはログインする必要があります。",
     "play_ranked": "1v1のランクマッチを作成"
@@ -941,7 +941,7 @@
     "elo": "あなたのELO :{elo}",
     "no_elo": "まだELOはありません",
     "searching": "対戦相手を検索中…",
-    "title": "1v1ランクマッチを作成。 (アルファ版) ",
+    "title": "1v1ランクマッチを作成。",
     "waiting_for_game": "ゲーム開始を待っています…"
   },
   "mode_selector": {

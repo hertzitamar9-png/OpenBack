@@ -801,7 +801,7 @@
     "solo": "انفرادی",
     "store": "فروشگاه",
     "terms_of_service": "شرایط استفاده",
-    "title": "OpenFront (نسخه آلفا)",
+    "title": "OpenBack",
     "troubleshooting": "عیب یابی",
     "user_avatar_alt": "آواتار {username}",
     "wiki": "ویکی"
@@ -931,7 +931,7 @@
     "unfavorite": "حذف از علاقمندی ها"
   },
   "matchmaking_button": {
-    "description": "(آلفا)",
+    "description": "",
     "login_required": "برای بازی رنک، وارد حساب خود شوید!",
     "must_login": "جهت بازی در رنک، ورود به حساب کاربری الزامی است.",
     "play_ranked": "بازی رنک 1 در برابر 1"
@@ -941,7 +941,7 @@
     "elo": "ایلو شما: {elo}",
     "no_elo": "هنوز بدون ایلو",
     "searching": "در حال جست‌وجوی بازی...",
-    "title": "بازی رنک 1 در برابر 1 (آزامایشی)",
+    "title": "بازی رنک 1 در برابر 1",
     "waiting_for_game": "در انتظار شروع بازی..."
   },
   "mode_selector": {

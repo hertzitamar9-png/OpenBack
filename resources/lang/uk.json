@@ -801,7 +801,7 @@
     "solo": "Соло",
     "store": "Крамниця",
     "terms_of_service": "Умови користування",
-    "title": "OpenFront (АЛЬФА)",
+    "title": "OpenBack",
     "troubleshooting": "Усунення неполадок",
     "user_avatar_alt": "Аватар {username}",
     "wiki": "Вікі"
@@ -931,7 +931,7 @@
     "unfavorite": "Вилучити з улюблених"
   },
   "matchmaking_button": {
-    "description": "(АЛЬФА)",
+    "description": "",
     "login_required": "Увійдіть, щоб грати в рейтингу!",
     "must_login": "Ви повинні увійти, щоб грати в рейтингу.",
     "play_ranked": "Рейтинговий підбір 1 на 1"
@@ -941,7 +941,7 @@
     "elo": "Ваш ELO: {elo}",
     "no_elo": "ELO відсутній",
     "searching": "Пошук гри...",
-    "title": "Рейтинговий підбір 1 на 1 (АЛЬФА)",
+    "title": "Рейтинговий підбір 1 на 1",
     "waiting_for_game": "Очікування початку гри..."
   },
   "mode_selector": {

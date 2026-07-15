@@ -26,7 +26,7 @@
     "enabled": "Activat"
   },
   "main": {
-    "title": "OpenFront (ALFA)",
+    "title": "OpenBack",
     "login_discord": "Inicia sessió amb Discord",
     "sign_in": "Iniciar sessió",
     "discord_avatar_alt": "Foto de perfil Discord",
@@ -372,7 +372,7 @@
     "join_timeout": "No has entrat a la partida a temps."
   },
   "matchmaking_modal": {
-    "title": "Enfrontament Classificat 1 contra 1 (ALFA)",
+    "title": "Enfrontament Classificat 1 contra 1",
     "connecting": "Connectant-se al servidor de matchmaking...",
     "searching": "Buscant partida...",
     "waiting_for_game": "Esperant l'inici de la partida...",
@@ -954,7 +954,7 @@
   },
   "matchmaking_button": {
     "play_ranked": "Enfrontament Classificat 1 contra 1",
-    "description": "(ALFA)",
+    "description": "",
     "login_required": "Inicia sessió per jugar classificat!",
     "must_login": "Has d'iniciar sessió per jugar a partides classificades."
   }

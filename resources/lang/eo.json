@@ -801,7 +801,7 @@
     "solo": "Unu ludanto",
     "store": "Butiko",
     "terms_of_service": "Uzokondiĉoj",
-    "title": "OpenFront (ALFA)",
+    "title": "OpenBack",
     "troubleshooting": "Problemsolvado",
     "user_avatar_alt": "Profilbildo de %{username}",
     "wiki": "Vikio"
@@ -931,7 +931,7 @@
     "unfavorite": "Forigi de ŝatataj"
   },
   "matchmaking_button": {
-    "description": "(ALFA)",
+    "description": "",
     "login_required": "Ensalutu por ludi ranginflue!",
     "must_login": "Vi devas ensaluti por ludi ranginflue.",
     "play_ranked": "1 kontraŭ 1 Ranginflua Ludkreado"
@@ -941,7 +941,7 @@
     "elo": "Via ELO: {elo}",
     "no_elo": "Ankoraŭ neniu ELO",
     "searching": "Serĉante ludon...",
-    "title": "1 kontraŭ 1 Ranginflua Ludkreado (ALFA)",
+    "title": "1 kontraŭ 1 Ranginflua Ludkreado",
     "waiting_for_game": "Atendante Ludkomencon..."
   },
   "mode_selector": {

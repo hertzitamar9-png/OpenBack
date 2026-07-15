@@ -27,7 +27,7 @@
     "map_default": "Peta Default"
   },
   "main": {
-    "title": "OpenFront (ALPHA)",
+    "title": "OpenBack",
     "login_discord": "Masuk dengan Discord",
     "sign_in": "Masuk",
     "discord_avatar_alt": "Avatar profil Discord",
@@ -381,7 +381,7 @@
     "join_timeout": "Anda tidak masuk ke dalam permainan tepat waktu."
   },
   "matchmaking_modal": {
-    "title": "Pertandingan 1v1 Ranked (ALPHA)",
+    "title": "Pertandingan 1v1 Ranked",
     "connecting": "Menghubungkan ke server pencarian lawan...",
     "searching": "Mencari permainan...",
     "waiting_for_game": "Menunggu permainan untuk dimulai...",
@@ -989,7 +989,7 @@
   },
   "matchmaking_button": {
     "play_ranked": "Pertandingan 1v1 Ranked",
-    "description": "(ALPHA)",
+    "description": "",
     "login_required": "Masuk untuk bermain peringkat!",
     "must_login": "Anda harus masuk untuk bermain di pertandingan 1v1 Ranked."
   }

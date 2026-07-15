@@ -29,7 +29,7 @@
     "map_default": "Карта по подразбиране"
   },
   "main": {
-    "title": "OpenFront (АЛФА)",
+    "title": "OpenBack",
     "login_discord": "Влез с Discord",
     "sign_in": "Вход",
     "discord_avatar_alt": "Discord профилна снимка",
@@ -413,7 +413,7 @@
     "join_timeout": "Не си влязъл в играта навреме."
   },
   "matchmaking_modal": {
-    "title": "1v1 Ранков мачмейкинг (АЛФА)",
+    "title": "1v1 Ранков мачмейкинг",
     "connecting": "Свързване със сървъра за мачмейкинг...",
     "searching": "Търси се игра...",
     "waiting_for_game": "Изчаква се да започне играта...",
@@ -1078,7 +1078,7 @@
   },
   "matchmaking_button": {
     "play_ranked": "1v1 Ранков мачмейкинг",
-    "description": "(АЛФА)",
+    "description": "",
     "login_required": "Впиши се, за да играеш ранково!",
     "must_login": "Трябва да си вписан в профила си, за да играеш ранков мачмейкинг."
   },

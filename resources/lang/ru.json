@@ -801,7 +801,7 @@
     "solo": "Соло",
     "store": "Магазин",
     "terms_of_service": "Пользовательское соглашение",
-    "title": "OpenFront (АЛЬФА)",
+    "title": "OpenBack",
     "troubleshooting": "Устранение неполадок",
     "user_avatar_alt": "Аватар {username}",
     "wiki": "Вики"
@@ -931,7 +931,7 @@
     "unfavorite": "Удалить из избранных"
   },
   "matchmaking_button": {
-    "description": "(АЛЬФА)",
+    "description": "",
     "login_required": "Войдите, чтобы играть в рейтинге!",
     "must_login": "Вы должны войти в систему, чтобы играть в рейтинге.",
     "play_ranked": "Рейтинговый подбор 1 на 1"
@@ -941,7 +941,7 @@
     "elo": "Ваш ELO: {elo}",
     "no_elo": "ELO отсутствует",
     "searching": "Поиск игры...",
-    "title": "Рейтинговый подбор 1 на 1 (АЛЬФА)",
+    "title": "Рейтинговый подбор 1 на 1",
     "waiting_for_game": "Ожидание начала игры..."
   },
   "mode_selector": {

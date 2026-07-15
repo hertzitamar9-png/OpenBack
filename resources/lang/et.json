@@ -26,7 +26,7 @@
     "enabled": "Sees"
   },
   "main": {
-    "title": "OpenFront (ALPHA)",
+    "title": "OpenBack",
     "login_discord": "Logi sisse Discordiga",
     "sign_in": "Logi sisse",
     "discord_avatar_alt": "Discordi profiili avatar",
@@ -372,7 +372,7 @@
     "join_timeout": "Sa ei liitunud mänguga õigel ajal."
   },
   "matchmaking_modal": {
-    "title": "1v1 edetabelimängu Otsing (ALFA)",
+    "title": "1v1 edetabelimängu Otsing",
     "connecting": "Ühendamine mängu otsingu serveriga...",
     "searching": "Mängu otsing...",
     "waiting_for_game": "Mängu alguse ootamine...",
@@ -953,8 +953,8 @@
     "no_stats": "Selle valiku jaoks pole andmeid salvestatud."
   },
   "matchmaking_button": {
-    "play_ranked": "1v1 edetabelimängu Otsing (ALFA",
-    "description": "(ALFA)",
+    "play_ranked": "1v1 edetabelimängu Otsing",
+    "description": "",
     "login_required": "Logi sisse, et mängida edetabelimänge!",
     "must_login": "Sa pead olema sisse logitud, et mängida edetabelimänge!"
   }

@@ -23,7 +23,7 @@
     "click_to_copy": "Kopyalamak için tıkla"
   },
   "main": {
-    "title": "OpenFront (ALFA)",
+    "title": "OpenBack",
     "join_discord": "Discord",
     "login_discord": "Discord'la giriş yap",
     "sign_in": "Oturum Aç",
@@ -327,7 +327,7 @@
     "started": "Başladı"
   },
   "matchmaking_modal": {
-    "title": "1v1 Aşamalı Eşleştirme (ALFA)",
+    "title": "1v1 Aşamalı Eşleştirme",
     "connecting": "Maç bulma sunucusuna bağlanılıyor...",
     "searching": "Oyun aranıyor...",
     "waiting_for_game": "Oyunun başlaması bekleniyor...",
@@ -946,7 +946,7 @@
   },
   "matchmaking_button": {
     "play_ranked": "1v1 Aşamalı Eşleştirme",
-    "description": "(ALFA)",
+    "description": "",
     "login_required": "Aşamalı oynamak için giriş yap!",
     "must_login": "Aşamalı eşleştirme oynamak için giriş yapmanız gerek."
   }

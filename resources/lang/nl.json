@@ -23,7 +23,7 @@
     "click_to_copy": "Klik om te kopiëren"
   },
   "main": {
-    "title": "OpenFront (ALFA)",
+    "title": "OpenBack",
     "join_discord": "Discord",
     "login_discord": "Login met Discord",
     "sign_in": "Aanmelden",
@@ -327,7 +327,7 @@
     "started": "Begonnen"
   },
   "matchmaking_modal": {
-    "title": "1v1 Competitieve Matchmaking (ALFA)",
+    "title": "1v1 Competitieve Matchmaking",
     "connecting": "Verbinden met matchmakingserver...",
     "searching": "Zoeken naar een spel...",
     "waiting_for_game": "Wachten tot het spel begint...",
@@ -946,7 +946,7 @@
   },
   "matchmaking_button": {
     "play_ranked": "1v1 Competitieve Matchmaking",
-    "description": "(ALFA)",
+    "description": "",
     "login_required": "Log in om competitief te spelen!",
     "must_login": "Je moet ingelogd zijn om competitieve matchmaking te spelen."
   }

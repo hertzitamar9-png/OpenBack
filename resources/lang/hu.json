@@ -801,7 +801,7 @@
     "solo": "Egyéni",
     "store": "Bolt",
     "terms_of_service": "Felhasználási feltételek",
-    "title": "OpenFront (ALPHA)",
+    "title": "OpenBack",
     "troubleshooting": "Hibaelhárítás",
     "user_avatar_alt": "{username} profilképe",
     "wiki": "Wiki"
@@ -931,7 +931,7 @@
     "unfavorite": "Eltávolítás a kedvencekből"
   },
   "matchmaking_button": {
-    "description": "(ALPHA)",
+    "description": "",
     "login_required": "Jelentkezz be, hogy rangsoroltan játszhass!",
     "must_login": "Be kell jelentkezned a rangsorolt ​​meccskereséshez.",
     "play_ranked": "1v1 Rangsorolt meccskeresés"
@@ -941,7 +941,7 @@
     "elo": "Az ELO-d: {elo}",
     "no_elo": "Még nincs ELO-d",
     "searching": "Játék keresése...",
-    "title": "1v1 Rangsorolt meccskeresés (ALPHA)",
+    "title": "1v1 Rangsorolt meccskeresés",
     "waiting_for_game": "Várakozás a játék indítására..."
   },
   "mode_selector": {

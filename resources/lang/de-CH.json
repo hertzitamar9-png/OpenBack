@@ -27,7 +27,7 @@
     "map_default": "Kartestandard"
   },
   "main": {
-    "title": "OpenFront (ALPHA)",
+    "title": "OpenBack",
     "login_discord": "Mäud di a mit Discord",
     "sign_in": "Amäude",
     "discord_avatar_alt": "Discord Profiubüud",
@@ -381,7 +381,7 @@
     "join_timeout": "Du bisch am Spiu nid rechtzetig biträtte."
   },
   "matchmaking_modal": {
-    "title": "1gägä1 Ranglischte-Matchmaking (ALPHA)",
+    "title": "1gägä1 Ranglischte-Matchmaking",
     "connecting": "Verbinge mit em Server...",
     "searching": "Spiel wird gsuecht...",
     "waiting_for_game": "Wart ufe Spielbeginn...",
@@ -989,7 +989,7 @@
   },
   "matchmaking_button": {
     "play_ranked": "1gägä1 Ranglischte-Matchmaking",
-    "description": "(ALPHA)",
+    "description": "",
     "login_required": "Mäud di a um Ranked z spiele!",
     "must_login": "Du muesch igloggt si, um Ranked Matchmaking z spiele."
   }

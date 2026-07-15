@@ -252,7 +252,7 @@ const tutorials: Page[] = [
           "Bot match — a game containing artificial-intelligence countries or opponents.",
           "World map game — strategy played across geographic or planetary territory.",
           ".io strategy game — fast browser gameplay built around accessible online competition.",
-          "Alpha strategy game — an evolving strategy release with active feature development.",
+          "Evolving strategy game — an actively developed game that continues adding features.",
           "Competitive matchmaking — automatically pairing available players into games.",
           "Shareable game link — a URL that connects another player directly to a lobby.",
         ],

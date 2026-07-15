@@ -801,7 +801,7 @@
     "solo": "Solo",
     "store": "Boutique",
     "terms_of_service": "Conditions d'utilisation",
-    "title": "OpenFront (ALPHA)",
+    "title": "OpenBack",
     "troubleshooting": "Dépannage",
     "user_avatar_alt": "Avatar de {username}",
     "wiki": "Wiki"
@@ -931,7 +931,7 @@
     "unfavorite": "Retirer des favoris"
   },
   "matchmaking_button": {
-    "description": "(ALPHA)",
+    "description": "",
     "login_required": "Connectez-vous pour jouer en mode classé",
     "must_login": "Vous devez être connecté pour jouer en mode classé.",
     "play_ranked": "Matchmaking 1v1 classé"
@@ -941,7 +941,7 @@
     "elo": "Votre ELO : {elo}",
     "no_elo": "Pas encore d'ELO",
     "searching": "Recherche d'une partie...",
-    "title": "Matchmaking 1v1 Classé (ALPHA)",
+    "title": "Matchmaking 1v1 Classé",
     "waiting_for_game": "En attente du début de la partie..."
   },
   "mode_selector": {
