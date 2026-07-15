@@ -1,0 +1,89 @@
+{
+  "id": "MandalaNations",
+  "name": "Mandala Nations",
+  "translation_key": "map.mandalanations",
+  "categories": ["fictional"],
+  "multiplayer_frequency": 1,
+  "nations": [
+    {
+      "coordinates": [1224, 524],
+      "name": "Mandala State",
+      "flag": ""
+    },
+    {
+      "coordinates": [1952, 1028],
+      "name": "Republic of Belapan",
+      "flag": ""
+    },
+    {
+      "coordinates": [496, 468],
+      "name": "Byalan Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [1868, 356],
+      "name": "Integral Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [832, 972],
+      "name": "Tusolan Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [916, 160],
+      "name": "Ding Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [1448, 104],
+      "name": "Northern Water Tribe",
+      "flag": ""
+    },
+    {
+      "coordinates": [1448, 944],
+      "name": "Southern Water Tribe",
+      "flag": ""
+    },
+    {
+      "coordinates": [1588, 608],
+      "name": "Zin State",
+      "flag": ""
+    },
+    {
+      "coordinates": [888, 552],
+      "name": "Cyn Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [1896, 692],
+      "name": "Guma Free State",
+      "flag": ""
+    },
+    {
+      "coordinates": [1140, 860],
+      "name": "Yin Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [636, 216],
+      "name": "Sakego Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [1196, 244],
+      "name": "Gong Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [1420, 384],
+      "name": "Kahhy Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [1364, 720],
+      "name": "Zhalo-Kansao Republic",
+      "flag": ""
+    }
+  ]
+}

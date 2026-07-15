@@ -1,0 +1,104 @@
+{
+  "categories": ["fictional"],
+  "id": "FracturedEurasia",
+  "map": {
+    "height": 1064,
+    "num_land_tiles": 933866,
+    "width": 2344
+  },
+  "map16x": {
+    "height": 266,
+    "num_land_tiles": 56707,
+    "width": 586
+  },
+  "map4x": {
+    "height": 532,
+    "num_land_tiles": 231199,
+    "width": 1172
+  },
+  "multiplayer_frequency": 1,
+  "name": "Fractured Eurasia",
+  "nations": [
+    {
+      "coordinates": [1168, 524],
+      "flag": "",
+      "name": "Krasnoyarsk Clique"
+    },
+    {
+      "coordinates": [2316, 300],
+      "flag": "",
+      "name": "Yakutsk Clique"
+    },
+    {
+      "coordinates": [20, 552],
+      "flag": "",
+      "name": "Chukotka Republic"
+    },
+    {
+      "coordinates": [608, 48],
+      "flag": "",
+      "name": "Anastasias Realm"
+    },
+    {
+      "coordinates": [692, 1000],
+      "flag": "",
+      "name": "British Raj"
+    },
+    {
+      "coordinates": [1532, 48],
+      "flag": "",
+      "name": "Great Ming"
+    },
+    {
+      "coordinates": [524, 524],
+      "flag": "",
+      "name": "Ashkenaziya"
+    },
+    {
+      "coordinates": [1056, 20],
+      "flag": "",
+      "name": "Novosibirsk Clique"
+    },
+    {
+      "coordinates": [216, 188],
+      "flag": "",
+      "name": "Tibet"
+    },
+    {
+      "coordinates": [1980, 76],
+      "flag": "",
+      "name": "Persian Mandate"
+    },
+    {
+      "coordinates": [860, 328],
+      "flag": "",
+      "name": "Empire of Japan"
+    },
+    {
+      "coordinates": [356, 832],
+      "flag": "",
+      "name": "Arabian Federation"
+    },
+    {
+      "coordinates": [972, 804],
+      "flag": "",
+      "name": "Kingdom of Hawaii"
+    },
+    {
+      "coordinates": [1280, 244],
+      "flag": "",
+      "name": "Chita Clique"
+    },
+    {
+      "coordinates": [776, 608],
+      "flag": "",
+      "name": "Russian State"
+    },
+    {
+      "coordinates": [468, 272],
+      "flag": "",
+      "name": "Mongol Republic"
+    }
+  ],
+  "translation_key": "map.fracturedeurasia"
+}

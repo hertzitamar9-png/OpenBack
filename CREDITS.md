@@ -8,6 +8,10 @@ See [Contributors](https://github.com/openfrontio/OpenFrontIO/graphs/contributor
 
 ## Map Data
 
+### OpenBack Fictional Maps
+
+The OpenBack fictional-map terrain masks, playable conversions, nation layouts, and Shattered Expanse design were created by **frootz jhklphy**. The supplied visual references were used only to recover broad land and water silhouettes; their labels, legends, political styling, and original artwork are not distributed with the game.
+
 ### OpenStreetMap
 
 © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright)  

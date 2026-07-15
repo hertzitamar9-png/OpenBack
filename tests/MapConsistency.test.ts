@@ -27,6 +27,7 @@ const FREQUENCY_EXEMPTIONS: Set<GameMapName> = new Set([
   "Tourney4",
   "EuropeClassic",
   "BritanniaClassic",
+  "ShatteredExpanse",
 ]);
 
 // Keys in the en.json "map" section that are UI strings, not map names.
@@ -245,6 +246,37 @@ describe("Map consistency", () => {
     if (errors.length > 0) {
       throw new Error("Resource map file violations:\n" + errors.join("\n"));
     }
+  });
+
+  test("Shattered Expanse is the widest and largest map in OpenBack", () => {
+    const manifests = allMapKeys.map((key) =>
+      JSON.parse(
+        fs.readFileSync(
+          path.join(RESOURCES_MAPS, toFolderName(key), "manifest.json"),
+          "utf8",
+        ),
+      ),
+    );
+    const shattered = manifests.find(
+      (manifest) => manifest.id === "ShatteredExpanse",
+    );
+    expect(shattered).toBeDefined();
+    expect(shattered.categories).toContain("fictional");
+    expect(shattered.map.width).toBe(6144);
+    expect(shattered.map.height).toBe(1664);
+
+    const otherMaps = manifests.filter(
+      (manifest) => manifest.id !== "ShatteredExpanse",
+    );
+    const shatteredArea = shattered.map.width * shattered.map.height;
+    expect(
+      otherMaps.every((manifest) => manifest.map.width < shattered.map.width),
+    ).toBe(true);
+    expect(
+      otherMaps.every(
+        (manifest) => manifest.map.width * manifest.map.height < shatteredArea,
+      ),
+    ).toBe(true);
   });
 
   test("No excess folders in resources/maps/ or map-generator/assets/maps/", () => {

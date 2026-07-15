@@ -1,3 +1,16 @@
+# OpenBack v0.33.18 - Fictional Worlds and Shattered Expanse
+
+**Created by frootz jhklphy**
+
+## Maps
+
+- Added 15 new playable maps to the Fictional category, rebuilt from the supplied world silhouettes with native OpenBack terrain, nations, spawn locations, previews, and multiplayer support.
+- Added Shattered Expanse, the widest and largest map in OpenBack at 6,144 by 1,664 tiles.
+- Designed Shattered Expanse around ten long archipelago bands, hundreds of disconnected islands, and 48 named nations instead of one giant block of land.
+- Kept the record-size map selectable without forcing it into the normal public-map rotation.
+
+---
+
 # OpenBack v0.33.17 — Saved Accounts and Public Profiles
 
 **Created by frootz jhklphy**

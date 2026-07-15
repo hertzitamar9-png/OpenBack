@@ -1,0 +1,84 @@
+{
+  "categories": ["fictional"],
+  "id": "TherynianRealms",
+  "map": {
+    "height": 1264,
+    "num_land_tiles": 910639,
+    "width": 1976
+  },
+  "map16x": {
+    "height": 316,
+    "num_land_tiles": 54544,
+    "width": 494
+  },
+  "map4x": {
+    "height": 632,
+    "num_land_tiles": 224388,
+    "width": 988
+  },
+  "multiplayer_frequency": 1,
+  "name": "Therynian Realms",
+  "nations": [
+    {
+      "coordinates": [1000, 636],
+      "flag": "",
+      "name": "Miskawatookh"
+    },
+    {
+      "coordinates": [1868, 104],
+      "flag": "",
+      "name": "Evrosula"
+    },
+    {
+      "coordinates": [48, 552],
+      "flag": "",
+      "name": "Gend'Luru"
+    },
+    {
+      "coordinates": [1784, 1112],
+      "flag": "",
+      "name": "Sulgarat"
+    },
+    {
+      "coordinates": [440, 1028],
+      "flag": "",
+      "name": "Fjordowaer"
+    },
+    {
+      "coordinates": [552, 272],
+      "flag": "",
+      "name": "Xir-Shaih-Janwa"
+    },
+    {
+      "coordinates": [1504, 496],
+      "flag": "",
+      "name": "Calocorre"
+    },
+    {
+      "coordinates": [1308, 1028],
+      "flag": "",
+      "name": "Dzi-Chom-Kmur"
+    },
+    {
+      "coordinates": [1056, 160],
+      "flag": "",
+      "name": "Ux'Apzoal"
+    },
+    {
+      "coordinates": [1840, 720],
+      "flag": "",
+      "name": "Stormwaters"
+    },
+    {
+      "coordinates": [608, 664],
+      "flag": "",
+      "name": "Northern Ice Fields"
+    },
+    {
+      "coordinates": [804, 944],
+      "flag": "",
+      "name": "Therynian Isles"
+    }
+  ],
+  "translation_key": "map.therynianrealms"
+}

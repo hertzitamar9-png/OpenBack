@@ -1,0 +1,69 @@
+{
+  "id": "TherynianRealms",
+  "name": "Therynian Realms",
+  "translation_key": "map.therynianrealms",
+  "categories": ["fictional"],
+  "multiplayer_frequency": 1,
+  "nations": [
+    {
+      "coordinates": [1000, 636],
+      "name": "Miskawatookh",
+      "flag": ""
+    },
+    {
+      "coordinates": [1868, 104],
+      "name": "Evrosula",
+      "flag": ""
+    },
+    {
+      "coordinates": [48, 552],
+      "name": "Gend'Luru",
+      "flag": ""
+    },
+    {
+      "coordinates": [1784, 1112],
+      "name": "Sulgarat",
+      "flag": ""
+    },
+    {
+      "coordinates": [440, 1028],
+      "name": "Fjordowaer",
+      "flag": ""
+    },
+    {
+      "coordinates": [552, 272],
+      "name": "Xir-Shaih-Janwa",
+      "flag": ""
+    },
+    {
+      "coordinates": [1504, 496],
+      "name": "Calocorre",
+      "flag": ""
+    },
+    {
+      "coordinates": [1308, 1028],
+      "name": "Dzi-Chom-Kmur",
+      "flag": ""
+    },
+    {
+      "coordinates": [1056, 160],
+      "name": "Ux'Apzoal",
+      "flag": ""
+    },
+    {
+      "coordinates": [1840, 720],
+      "name": "Stormwaters",
+      "flag": ""
+    },
+    {
+      "coordinates": [608, 664],
+      "name": "Northern Ice Fields",
+      "flag": ""
+    },
+    {
+      "coordinates": [804, 944],
+      "name": "Therynian Isles",
+      "flag": ""
+    }
+  ]
+}

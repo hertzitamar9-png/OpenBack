@@ -1,0 +1,104 @@
+{
+  "categories": ["fictional"],
+  "id": "MandalaNations",
+  "map": {
+    "height": 1152,
+    "num_land_tiles": 411325,
+    "width": 2160
+  },
+  "map16x": {
+    "height": 288,
+    "num_land_tiles": 23524,
+    "width": 540
+  },
+  "map4x": {
+    "height": 576,
+    "num_land_tiles": 99916,
+    "width": 1080
+  },
+  "multiplayer_frequency": 1,
+  "name": "Mandala Nations",
+  "nations": [
+    {
+      "coordinates": [1224, 524],
+      "flag": "",
+      "name": "Mandala State"
+    },
+    {
+      "coordinates": [1952, 1028],
+      "flag": "",
+      "name": "Republic of Belapan"
+    },
+    {
+      "coordinates": [496, 468],
+      "flag": "",
+      "name": "Byalan Republic"
+    },
+    {
+      "coordinates": [1868, 356],
+      "flag": "",
+      "name": "Integral Republic"
+    },
+    {
+      "coordinates": [832, 972],
+      "flag": "",
+      "name": "Tusolan Republic"
+    },
+    {
+      "coordinates": [916, 160],
+      "flag": "",
+      "name": "Ding Republic"
+    },
+    {
+      "coordinates": [1448, 104],
+      "flag": "",
+      "name": "Northern Water Tribe"
+    },
+    {
+      "coordinates": [1448, 944],
+      "flag": "",
+      "name": "Southern Water Tribe"
+    },
+    {
+      "coordinates": [1588, 608],
+      "flag": "",
+      "name": "Zin State"
+    },
+    {
+      "coordinates": [888, 552],
+      "flag": "",
+      "name": "Cyn Republic"
+    },
+    {
+      "coordinates": [1896, 692],
+      "flag": "",
+      "name": "Guma Free State"
+    },
+    {
+      "coordinates": [1140, 860],
+      "flag": "",
+      "name": "Yin Republic"
+    },
+    {
+      "coordinates": [636, 216],
+      "flag": "",
+      "name": "Sakego Republic"
+    },
+    {
+      "coordinates": [1196, 244],
+      "flag": "",
+      "name": "Gong Republic"
+    },
+    {
+      "coordinates": [1420, 384],
+      "flag": "",
+      "name": "Kahhy Republic"
+    },
+    {
+      "coordinates": [1364, 720],
+      "flag": "",
+      "name": "Zhalo-Kansao Republic"
+    }
+  ],
+  "translation_key": "map.mandalanations"
+}

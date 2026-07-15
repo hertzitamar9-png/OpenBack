@@ -1,0 +1,104 @@
+{
+  "categories": ["fictional"],
+  "id": "Mettersind",
+  "map": {
+    "height": 1328,
+    "num_land_tiles": 799797,
+    "width": 1876
+  },
+  "map16x": {
+    "height": 332,
+    "num_land_tiles": 47017,
+    "width": 469
+  },
+  "map4x": {
+    "height": 664,
+    "num_land_tiles": 195974,
+    "width": 938
+  },
+  "multiplayer_frequency": 1,
+  "name": "Mettersind",
+  "nations": [
+    {
+      "coordinates": [944, 664],
+      "flag": "",
+      "name": "Verengera"
+    },
+    {
+      "coordinates": [1644, 160],
+      "flag": "",
+      "name": "Norogea"
+    },
+    {
+      "coordinates": [1700, 1000],
+      "flag": "",
+      "name": "Ostrogea"
+    },
+    {
+      "coordinates": [132, 580],
+      "flag": "",
+      "name": "Selengea"
+    },
+    {
+      "coordinates": [412, 1196],
+      "flag": "",
+      "name": "Parangea"
+    },
+    {
+      "coordinates": [972, 1252],
+      "flag": "",
+      "name": "Mithronesia"
+    },
+    {
+      "coordinates": [580, 272],
+      "flag": "",
+      "name": "Tyronesia"
+    },
+    {
+      "coordinates": [1140, 216],
+      "flag": "",
+      "name": "Sudanessa"
+    },
+    {
+      "coordinates": [1364, 580],
+      "flag": "",
+      "name": "Targanessa"
+    },
+    {
+      "coordinates": [524, 748],
+      "flag": "",
+      "name": "Goronessa"
+    },
+    {
+      "coordinates": [1280, 972],
+      "flag": "",
+      "name": "Valdenessa"
+    },
+    {
+      "coordinates": [244, 916],
+      "flag": "",
+      "name": "Karanessa"
+    },
+    {
+      "coordinates": [1784, 692],
+      "flag": "",
+      "name": "Myronessa"
+    },
+    {
+      "coordinates": [860, 356],
+      "flag": "",
+      "name": "Pyronessa"
+    },
+    {
+      "coordinates": [804, 916],
+      "flag": "",
+      "name": "Zamonessa"
+    },
+    {
+      "coordinates": [328, 384],
+      "flag": "",
+      "name": "Solonessa"
+    }
+  ],
+  "translation_key": "map.mettersind"
+}

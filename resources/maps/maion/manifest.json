@@ -1,0 +1,104 @@
+{
+  "categories": ["fictional"],
+  "id": "Maion",
+  "map": {
+    "height": 1116,
+    "num_land_tiles": 584157,
+    "width": 2236
+  },
+  "map16x": {
+    "height": 279,
+    "num_land_tiles": 34358,
+    "width": 559
+  },
+  "map4x": {
+    "height": 558,
+    "num_land_tiles": 143199,
+    "width": 1118
+  },
+  "multiplayer_frequency": 1,
+  "name": "Maion",
+  "nations": [
+    {
+      "coordinates": [1112, 580],
+      "flag": "",
+      "name": "Maion"
+    },
+    {
+      "coordinates": [20, 160],
+      "flag": "",
+      "name": "Clann"
+    },
+    {
+      "coordinates": [2204, 160],
+      "flag": "",
+      "name": "Anthur"
+    },
+    {
+      "coordinates": [1784, 664],
+      "flag": "",
+      "name": "Frutfield"
+    },
+    {
+      "coordinates": [132, 804],
+      "flag": "",
+      "name": "Marian Coast"
+    },
+    {
+      "coordinates": [608, 244],
+      "flag": "",
+      "name": "Hirin Islands"
+    },
+    {
+      "coordinates": [1616, 132],
+      "flag": "",
+      "name": "Aldrakage Islands"
+    },
+    {
+      "coordinates": [1056, 104],
+      "flag": "",
+      "name": "Atla Katt"
+    },
+    {
+      "coordinates": [580, 720],
+      "flag": "",
+      "name": "Ochmet"
+    },
+    {
+      "coordinates": [2176, 748],
+      "flag": "",
+      "name": "Sagen"
+    },
+    {
+      "coordinates": [1896, 328],
+      "flag": "",
+      "name": "Raria"
+    },
+    {
+      "coordinates": [1336, 328],
+      "flag": "",
+      "name": "Sinai"
+    },
+    {
+      "coordinates": [1504, 692],
+      "flag": "",
+      "name": "Panhur"
+    },
+    {
+      "coordinates": [440, 468],
+      "flag": "",
+      "name": "Thalning"
+    },
+    {
+      "coordinates": [888, 748],
+      "flag": "",
+      "name": "Celesacy"
+    },
+    {
+      "coordinates": [160, 552],
+      "flag": "",
+      "name": "Reo Usti"
+    }
+  ],
+  "translation_key": "map.maion"
+}

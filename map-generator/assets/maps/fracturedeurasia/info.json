@@ -1,0 +1,89 @@
+{
+  "id": "FracturedEurasia",
+  "name": "Fractured Eurasia",
+  "translation_key": "map.fracturedeurasia",
+  "categories": ["fictional"],
+  "multiplayer_frequency": 1,
+  "nations": [
+    {
+      "coordinates": [1168, 524],
+      "name": "Krasnoyarsk Clique",
+      "flag": ""
+    },
+    {
+      "coordinates": [2316, 300],
+      "name": "Yakutsk Clique",
+      "flag": ""
+    },
+    {
+      "coordinates": [20, 552],
+      "name": "Chukotka Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [608, 48],
+      "name": "Anastasias Realm",
+      "flag": ""
+    },
+    {
+      "coordinates": [692, 1000],
+      "name": "British Raj",
+      "flag": ""
+    },
+    {
+      "coordinates": [1532, 48],
+      "name": "Great Ming",
+      "flag": ""
+    },
+    {
+      "coordinates": [524, 524],
+      "name": "Ashkenaziya",
+      "flag": ""
+    },
+    {
+      "coordinates": [1056, 20],
+      "name": "Novosibirsk Clique",
+      "flag": ""
+    },
+    {
+      "coordinates": [216, 188],
+      "name": "Tibet",
+      "flag": ""
+    },
+    {
+      "coordinates": [1980, 76],
+      "name": "Persian Mandate",
+      "flag": ""
+    },
+    {
+      "coordinates": [860, 328],
+      "name": "Empire of Japan",
+      "flag": ""
+    },
+    {
+      "coordinates": [356, 832],
+      "name": "Arabian Federation",
+      "flag": ""
+    },
+    {
+      "coordinates": [972, 804],
+      "name": "Kingdom of Hawaii",
+      "flag": ""
+    },
+    {
+      "coordinates": [1280, 244],
+      "name": "Chita Clique",
+      "flag": ""
+    },
+    {
+      "coordinates": [776, 608],
+      "name": "Russian State",
+      "flag": ""
+    },
+    {
+      "coordinates": [468, 272],
+      "name": "Mongol Republic",
+      "flag": ""
+    }
+  ]
+}

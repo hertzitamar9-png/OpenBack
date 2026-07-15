@@ -1,0 +1,104 @@
+{
+  "categories": ["fictional"],
+  "id": "Atlas2026",
+  "map": {
+    "height": 1140,
+    "num_land_tiles": 538910,
+    "width": 2188
+  },
+  "map16x": {
+    "height": 285,
+    "num_land_tiles": 32050,
+    "width": 547
+  },
+  "map4x": {
+    "height": 570,
+    "num_land_tiles": 132534,
+    "width": 1094
+  },
+  "multiplayer_frequency": 1,
+  "name": "Atlas 2026",
+  "nations": [
+    {
+      "coordinates": [1084, 580],
+      "flag": "",
+      "name": "Boreal Union"
+    },
+    {
+      "coordinates": [2008, 860],
+      "flag": "",
+      "name": "Verdant West"
+    },
+    {
+      "coordinates": [356, 132],
+      "flag": "",
+      "name": "Saharan Crown"
+    },
+    {
+      "coordinates": [1700, 188],
+      "flag": "",
+      "name": "Equatorial League"
+    },
+    {
+      "coordinates": [580, 552],
+      "flag": "",
+      "name": "Indigo Coast"
+    },
+    {
+      "coordinates": [1168, 160],
+      "flag": "",
+      "name": "Eastern Range"
+    },
+    {
+      "coordinates": [1672, 608],
+      "flag": "",
+      "name": "Southern Commonwealth"
+    },
+    {
+      "coordinates": [748, 188],
+      "flag": "",
+      "name": "Island Confederacy"
+    },
+    {
+      "coordinates": [1420, 384],
+      "flag": "",
+      "name": "Polar Republic"
+    },
+    {
+      "coordinates": [1168, 888],
+      "flag": "",
+      "name": "Golden Steppe"
+    },
+    {
+      "coordinates": [356, 412],
+      "flag": "",
+      "name": "Rainforest Pact"
+    },
+    {
+      "coordinates": [832, 636],
+      "flag": "",
+      "name": "Austral Federation"
+    },
+    {
+      "coordinates": [1000, 356],
+      "flag": "",
+      "name": "Northern Archipelago"
+    },
+    {
+      "coordinates": [552, 300],
+      "flag": "",
+      "name": "Central Plateau"
+    },
+    {
+      "coordinates": [1896, 636],
+      "flag": "",
+      "name": "Western Isles"
+    },
+    {
+      "coordinates": [1308, 720],
+      "flag": "",
+      "name": "Sunrise Dominion"
+    }
+  ],
+  "translation_key": "map.atlas2026"
+}

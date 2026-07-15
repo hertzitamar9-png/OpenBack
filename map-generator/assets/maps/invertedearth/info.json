@@ -1,0 +1,79 @@
+{
+  "id": "InvertedEarth",
+  "name": "Inverted Earth",
+  "translation_key": "map.invertedearth",
+  "categories": ["fictional"],
+  "multiplayer_frequency": 1,
+  "nations": [
+    {
+      "coordinates": [1140, 552],
+      "name": "Inverted Africa",
+      "flag": ""
+    },
+    {
+      "coordinates": [20, 1084],
+      "name": "Inner Asia",
+      "flag": ""
+    },
+    {
+      "coordinates": [2204, 1084],
+      "name": "Western Basin",
+      "flag": ""
+    },
+    {
+      "coordinates": [2008, 20],
+      "name": "Eastern Basin",
+      "flag": ""
+    },
+    {
+      "coordinates": [104, 76],
+      "name": "Polar Crown",
+      "flag": ""
+    },
+    {
+      "coordinates": [720, 1084],
+      "name": "South Rim",
+      "flag": ""
+    },
+    {
+      "coordinates": [1532, 1084],
+      "name": "Mediterranean Reach",
+      "flag": ""
+    },
+    {
+      "coordinates": [748, 20],
+      "name": "Great Inland Sea",
+      "flag": ""
+    },
+    {
+      "coordinates": [412, 580],
+      "name": "Boreal Peninsula",
+      "flag": ""
+    },
+    {
+      "coordinates": [1840, 580],
+      "name": "Austral Highlands",
+      "flag": ""
+    },
+    {
+      "coordinates": [1448, 76],
+      "name": "Equatorial Gulf",
+      "flag": ""
+    },
+    {
+      "coordinates": [20, 664],
+      "name": "Sunken Atlantic",
+      "flag": ""
+    },
+    {
+      "coordinates": [1112, 1056],
+      "name": "Mirror Pacific",
+      "flag": ""
+    },
+    {
+      "coordinates": [2204, 440],
+      "name": "Old Tethys",
+      "flag": ""
+    }
+  ]
+}

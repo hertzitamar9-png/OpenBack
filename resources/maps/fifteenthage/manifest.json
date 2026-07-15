@@ -1,0 +1,104 @@
+{
+  "categories": ["fictional"],
+  "id": "FifteenthAge",
+  "map": {
+    "height": 1548,
+    "num_land_tiles": 835652,
+    "width": 1612
+  },
+  "map16x": {
+    "height": 387,
+    "num_land_tiles": 49745,
+    "width": 403
+  },
+  "map4x": {
+    "height": 774,
+    "num_land_tiles": 205705,
+    "width": 806
+  },
+  "multiplayer_frequency": 1,
+  "name": "Fifteenth Age",
+  "nations": [
+    {
+      "coordinates": [804, 776],
+      "flag": "",
+      "name": "Gimsonia"
+    },
+    {
+      "coordinates": [1420, 104],
+      "flag": "",
+      "name": "Ebastania"
+    },
+    {
+      "coordinates": [664, 104],
+      "flag": "",
+      "name": "Holaspione"
+    },
+    {
+      "coordinates": [188, 1056],
+      "flag": "",
+      "name": "Norweyn"
+    },
+    {
+      "coordinates": [748, 1420],
+      "flag": "",
+      "name": "Soliya"
+    },
+    {
+      "coordinates": [1336, 888],
+      "flag": "",
+      "name": "Siltensia"
+    },
+    {
+      "coordinates": [356, 524],
+      "flag": "",
+      "name": "Stavongrade"
+    },
+    {
+      "coordinates": [1056, 384],
+      "flag": "",
+      "name": "Archeovia"
+    },
+    {
+      "coordinates": [1140, 1280],
+      "flag": "",
+      "name": "Lunaskia"
+    },
+    {
+      "coordinates": [1448, 496],
+      "flag": "",
+      "name": "Astanar"
+    },
+    {
+      "coordinates": [552, 1056],
+      "flag": "",
+      "name": "Carvonia"
+    },
+    {
+      "coordinates": [720, 440],
+      "flag": "",
+      "name": "Karurmbi"
+    },
+    {
+      "coordinates": [888, 1084],
+      "flag": "",
+      "name": "Tenimar"
+    },
+    {
+      "coordinates": [972, 104],
+      "flag": "",
+      "name": "Jakatas"
+    },
+    {
+      "coordinates": [328, 804],
+      "flag": "",
+      "name": "Jilhiria"
+    },
+    {
+      "coordinates": [1196, 664],
+      "flag": "",
+      "name": "Kamarcash"
+    }
+  ],
+  "translation_key": "map.fifteenthage"
+}

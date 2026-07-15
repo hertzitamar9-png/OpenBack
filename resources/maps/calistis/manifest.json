@@ -1,0 +1,84 @@
+{
+  "categories": ["fictional"],
+  "id": "Calistis",
+  "map": {
+    "height": 1272,
+    "num_land_tiles": 950476,
+    "width": 1960
+  },
+  "map16x": {
+    "height": 318,
+    "num_land_tiles": 56854,
+    "width": 490
+  },
+  "map4x": {
+    "height": 636,
+    "num_land_tiles": 234165,
+    "width": 980
+  },
+  "multiplayer_frequency": 1,
+  "name": "Calistis",
+  "nations": [
+    {
+      "coordinates": [972, 636],
+      "flag": "",
+      "name": "Calistis"
+    },
+    {
+      "coordinates": [1868, 580],
+      "flag": "",
+      "name": "Millennia"
+    },
+    {
+      "coordinates": [160, 692],
+      "flag": "",
+      "name": "Guren"
+    },
+    {
+      "coordinates": [1448, 1084],
+      "flag": "",
+      "name": "Dragon Coast"
+    },
+    {
+      "coordinates": [1392, 160],
+      "flag": "",
+      "name": "Inner Sea"
+    },
+    {
+      "coordinates": [580, 1112],
+      "flag": "",
+      "name": "Warm Deserts"
+    },
+    {
+      "coordinates": [664, 160],
+      "flag": "",
+      "name": "White Sea"
+    },
+    {
+      "coordinates": [552, 552],
+      "flag": "",
+      "name": "North Sea"
+    },
+    {
+      "coordinates": [1476, 692],
+      "flag": "",
+      "name": "Eastern Sea"
+    },
+    {
+      "coordinates": [1056, 1056],
+      "flag": "",
+      "name": "Gray Mark"
+    },
+    {
+      "coordinates": [1000, 300],
+      "flag": "",
+      "name": "Great Savanna"
+    },
+    {
+      "coordinates": [1756, 888],
+      "flag": "",
+      "name": "Ethereal Prairie"
+    }
+  ],
+  "translation_key": "map.calistis"
+}

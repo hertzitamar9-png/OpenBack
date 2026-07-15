@@ -1,0 +1,104 @@
+{
+  "categories": ["fictional"],
+  "id": "WorldOfLur",
+  "map": {
+    "height": 1120,
+    "num_land_tiles": 667515,
+    "width": 2220
+  },
+  "map16x": {
+    "height": 280,
+    "num_land_tiles": 39790,
+    "width": 555
+  },
+  "map4x": {
+    "height": 560,
+    "num_land_tiles": 164284,
+    "width": 1110
+  },
+  "multiplayer_frequency": 1,
+  "name": "World of Lur",
+  "nations": [
+    {
+      "coordinates": [1140, 552],
+      "flag": "",
+      "name": "North Aimaelur"
+    },
+    {
+      "coordinates": [1924, 1084],
+      "flag": "",
+      "name": "South Aimaelur"
+    },
+    {
+      "coordinates": [300, 748],
+      "flag": "",
+      "name": "North Shefrat"
+    },
+    {
+      "coordinates": [1868, 188],
+      "flag": "",
+      "name": "South Shefrat"
+    },
+    {
+      "coordinates": [664, 104],
+      "flag": "",
+      "name": "Dnogoztov"
+    },
+    {
+      "coordinates": [1308, 20],
+      "flag": "",
+      "name": "Kylant"
+    },
+    {
+      "coordinates": [1644, 664],
+      "flag": "",
+      "name": "RMU"
+    },
+    {
+      "coordinates": [776, 916],
+      "flag": "",
+      "name": "Aleyant"
+    },
+    {
+      "coordinates": [664, 524],
+      "flag": "",
+      "name": "Lalulu Utkan"
+    },
+    {
+      "coordinates": [328, 356],
+      "flag": "",
+      "name": "Sulhnni"
+    },
+    {
+      "coordinates": [1504, 328],
+      "flag": "",
+      "name": "Selaylant"
+    },
+    {
+      "coordinates": [1336, 832],
+      "flag": "",
+      "name": "Lura"
+    },
+    {
+      "coordinates": [1616, 20],
+      "flag": "",
+      "name": "Gaphrisia"
+    },
+    {
+      "coordinates": [1168, 272],
+      "flag": "",
+      "name": "Koxzalpo"
+    },
+    {
+      "coordinates": [1756, 440],
+      "flag": "",
+      "name": "Untium Syn Aimaelur"
+    },
+    {
+      "coordinates": [1420, 580],
+      "flag": "",
+      "name": "Chud-Vegzag"
+    }
+  ],
+  "translation_key": "map.worldoflur"
+}

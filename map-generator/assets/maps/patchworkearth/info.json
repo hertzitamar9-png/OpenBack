@@ -1,0 +1,79 @@
+{
+  "id": "PatchworkEarth",
+  "name": "Patchwork Earth",
+  "translation_key": "map.patchworkearth",
+  "categories": ["fictional"],
+  "multiplayer_frequency": 1,
+  "nations": [
+    {
+      "coordinates": [972, 664],
+      "name": "Mosaic Crown",
+      "flag": ""
+    },
+    {
+      "coordinates": [1840, 216],
+      "name": "Banner Coast",
+      "flag": ""
+    },
+    {
+      "coordinates": [76, 776],
+      "name": "Patchwork Reach",
+      "flag": ""
+    },
+    {
+      "coordinates": [1700, 1056],
+      "name": "Emblem Isles",
+      "flag": ""
+    },
+    {
+      "coordinates": [412, 244],
+      "name": "Painted North",
+      "flag": ""
+    },
+    {
+      "coordinates": [580, 1140],
+      "name": "Stitched South",
+      "flag": ""
+    },
+    {
+      "coordinates": [1140, 1168],
+      "name": "Crestfall",
+      "flag": ""
+    },
+    {
+      "coordinates": [1476, 580],
+      "name": "Ribbon Sea",
+      "flag": ""
+    },
+    {
+      "coordinates": [860, 132],
+      "name": "Heraldic Union",
+      "flag": ""
+    },
+    {
+      "coordinates": [524, 692],
+      "name": "Tapestry Bay",
+      "flag": ""
+    },
+    {
+      "coordinates": [1392, 216],
+      "name": "Sigil March",
+      "flag": ""
+    },
+    {
+      "coordinates": [1812, 720],
+      "name": "Quilted Cape",
+      "flag": ""
+    },
+    {
+      "coordinates": [1112, 384],
+      "name": "Chromatic League",
+      "flag": ""
+    },
+    {
+      "coordinates": [216, 496],
+      "name": "Pennant Islands",
+      "flag": ""
+    }
+  ]
+}

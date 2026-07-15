@@ -1,0 +1,69 @@
+{
+  "id": "Avidir",
+  "name": "Avidir",
+  "translation_key": "map.avidir",
+  "categories": ["fictional"],
+  "multiplayer_frequency": 1,
+  "nations": [
+    {
+      "coordinates": [1084, 496],
+      "name": "Driftwood",
+      "flag": ""
+    },
+    {
+      "coordinates": [104, 552],
+      "name": "Veltrune",
+      "flag": ""
+    },
+    {
+      "coordinates": [1924, 188],
+      "name": "Westsea",
+      "flag": ""
+    },
+    {
+      "coordinates": [1728, 916],
+      "name": "Shredded Ice",
+      "flag": ""
+    },
+    {
+      "coordinates": [608, 860],
+      "name": "Eyrionsea",
+      "flag": ""
+    },
+    {
+      "coordinates": [636, 160],
+      "name": "Moores End",
+      "flag": ""
+    },
+    {
+      "coordinates": [1448, 160],
+      "name": "The Lagoon",
+      "flag": ""
+    },
+    {
+      "coordinates": [1476, 580],
+      "name": "Worlds End",
+      "flag": ""
+    },
+    {
+      "coordinates": [1896, 580],
+      "name": "Azure Gap",
+      "flag": ""
+    },
+    {
+      "coordinates": [468, 496],
+      "name": "Great Ocean",
+      "flag": ""
+    },
+    {
+      "coordinates": [972, 160],
+      "name": "Blue Expanse",
+      "flag": ""
+    },
+    {
+      "coordinates": [776, 580],
+      "name": "Avidir Crown",
+      "flag": ""
+    }
+  ]
+}

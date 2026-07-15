@@ -1,0 +1,84 @@
+{
+  "categories": ["fictional"],
+  "id": "Avidir",
+  "map": {
+    "height": 1184,
+    "num_land_tiles": 743090,
+    "width": 2108
+  },
+  "map16x": {
+    "height": 296,
+    "num_land_tiles": 44268,
+    "width": 527
+  },
+  "map4x": {
+    "height": 592,
+    "num_land_tiles": 182877,
+    "width": 1054
+  },
+  "multiplayer_frequency": 1,
+  "name": "Avidir",
+  "nations": [
+    {
+      "coordinates": [1084, 496],
+      "flag": "",
+      "name": "Driftwood"
+    },
+    {
+      "coordinates": [104, 552],
+      "flag": "",
+      "name": "Veltrune"
+    },
+    {
+      "coordinates": [1924, 188],
+      "flag": "",
+      "name": "Westsea"
+    },
+    {
+      "coordinates": [1728, 916],
+      "flag": "",
+      "name": "Shredded Ice"
+    },
+    {
+      "coordinates": [608, 860],
+      "flag": "",
+      "name": "Eyrionsea"
+    },
+    {
+      "coordinates": [636, 160],
+      "flag": "",
+      "name": "Moores End"
+    },
+    {
+      "coordinates": [1448, 160],
+      "flag": "",
+      "name": "The Lagoon"
+    },
+    {
+      "coordinates": [1476, 580],
+      "flag": "",
+      "name": "Worlds End"
+    },
+    {
+      "coordinates": [1896, 580],
+      "flag": "",
+      "name": "Azure Gap"
+    },
+    {
+      "coordinates": [468, 496],
+      "flag": "",
+      "name": "Great Ocean"
+    },
+    {
+      "coordinates": [972, 160],
+      "flag": "",
+      "name": "Blue Expanse"
+    },
+    {
+      "coordinates": [776, 580],
+      "flag": "",
+      "name": "Avidir Crown"
+    }
+  ],
+  "translation_key": "map.avidir"
+}

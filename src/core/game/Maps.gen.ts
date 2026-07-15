@@ -12,7 +12,9 @@ export enum GameMapType {
   ArchipelagoSea = "ArchipelagoSea", // map-generator/assets/maps/archipelagosea/info.json
   Arctic = "Arctic", // map-generator/assets/maps/arctic/info.json
   Asia = "Asia", // map-generator/assets/maps/asia/info.json
+  Atlas2026 = "Atlas 2026", // map-generator/assets/maps/atlas2026/info.json
   Australia = "Australia", // map-generator/assets/maps/australia/info.json
+  Avidir = "Avidir", // map-generator/assets/maps/avidir/info.json
   Baikal = "Baikal", // map-generator/assets/maps/baikal/info.json
   BaikalNukeWars = "Baikal Nuke Wars", // map-generator/assets/maps/baikalnukewars/info.json
   BajaCalifornia = "Baja California", // map-generator/assets/maps/bajacalifornia/info.json
@@ -24,11 +26,14 @@ export enum GameMapType {
   BosphorusStraits = "Bosphorus Straits", // map-generator/assets/maps/bosphorusstraits/info.json
   Britannia = "Britannia", // map-generator/assets/maps/britannia/info.json
   BritanniaClassic = "Britannia Classic", // map-generator/assets/maps/britanniaclassic/info.json
+  Calistis = "Calistis", // map-generator/assets/maps/calistis/info.json
+  CanidContinents = "Canid Continents", // map-generator/assets/maps/canidcontinents/info.json
   Caribbean = "Caribbean", // map-generator/assets/maps/caribbean/info.json
   Caucasus = "Caucasus", // map-generator/assets/maps/caucasus/info.json
   ChoppingBlock = "Chopping Block", // map-generator/assets/maps/choppingblock/info.json
   Conakry = "Conakry", // map-generator/assets/maps/conakry/info.json
   DanishStraits = "Danish Straits", // map-generator/assets/maps/danishstraits/info.json
+  DasserianRealms = "Dasserian Realms", // map-generator/assets/maps/dasserianrealms/info.json
   DeglaciatedAntarctica = "Deglaciated Antarctica", // map-generator/assets/maps/deglaciatedantarctica/info.json
   Didier = "Didier", // map-generator/assets/maps/didier/info.json
   DidierFrance = "Didier France", // map-generator/assets/maps/didierfrance/info.json
@@ -38,16 +43,20 @@ export enum GameMapType {
   EuropeClassic = "Europe Classic", // map-generator/assets/maps/europeclassic/info.json
   FalklandIslands = "Falkland Islands", // map-generator/assets/maps/falklandislands/info.json
   FaroeIslands = "Faroe Islands", // map-generator/assets/maps/faroeislands/info.json
+  FifteenthAge = "Fifteenth Age", // map-generator/assets/maps/fifteenthage/info.json
   FourIslands = "Four Islands", // map-generator/assets/maps/fourislands/info.json
+  FracturedEurasia = "Fractured Eurasia", // map-generator/assets/maps/fracturedeurasia/info.json
   GatewayToTheAtlantic = "Gateway to the Atlantic", // map-generator/assets/maps/gatewaytotheatlantic/info.json
   GiantWorldMap = "Giant World Map", // map-generator/assets/maps/giantworldmap/info.json
   GreatLakes = "Great Lakes", // map-generator/assets/maps/greatlakes/info.json
   GulfOfStLawrence = "Gulf of St. Lawrence", // map-generator/assets/maps/gulfofstlawrence/info.json
   Halkidiki = "Halkidiki", // map-generator/assets/maps/halkidiki/info.json
   Hawaii = "Hawaii", // map-generator/assets/maps/hawaii/info.json
+  HeroicSeas = "Heroic Seas", // map-generator/assets/maps/heroicseas/info.json
   HongKong = "Hong Kong", // map-generator/assets/maps/hongkong/info.json
   Iceland = "Iceland", // map-generator/assets/maps/iceland/info.json
   IndianSubcontinent = "Indian Subcontinent", // map-generator/assets/maps/indiansubcontinent/info.json
+  InvertedEarth = "Inverted Earth", // map-generator/assets/maps/invertedearth/info.json
   Italia = "Italia", // map-generator/assets/maps/italia/info.json
   Japan = "Japan", // map-generator/assets/maps/japan/info.json
   JuanDeFucaStrait = "Juan De Fuca Strait", // map-generator/assets/maps/juandefucastrait/info.json
@@ -57,10 +66,13 @@ export enum GameMapType {
   Lisbon = "Lisbon", // map-generator/assets/maps/lisbon/info.json
   LosAngeles = "Los Angeles", // map-generator/assets/maps/losangeles/info.json
   Luna = "Luna", // map-generator/assets/maps/luna/info.json
+  Maion = "Maion", // map-generator/assets/maps/maion/info.json
+  MandalaNations = "Mandala Nations", // map-generator/assets/maps/mandalanations/info.json
   Manicouagan = "Manicouagan", // map-generator/assets/maps/manicouagan/info.json
   MareNostrum = "Mare Nostrum", // map-generator/assets/maps/marenostrum/info.json
   Mars = "Mars", // map-generator/assets/maps/mars/info.json
   Mena = "Mena", // map-generator/assets/maps/mena/info.json
+  Mettersind = "Mettersind", // map-generator/assets/maps/mettersind/info.json
   MiddleEast = "Middle East", // map-generator/assets/maps/middleeast/info.json
   MilkyWay = "MilkyWay", // map-generator/assets/maps/milkyway/info.json
   MississippiRiver = "Mississippi River", // map-generator/assets/maps/mississippiriver/info.json
@@ -73,8 +85,10 @@ export enum GameMapType {
   Onion = "Onion", // map-generator/assets/maps/onion/info.json
   Pangaea = "Pangaea", // map-generator/assets/maps/pangaea/info.json
   Passage = "Passage", // map-generator/assets/maps/passage/info.json
+  PatchworkEarth = "Patchwork Earth", // map-generator/assets/maps/patchworkearth/info.json
   Pluto = "Pluto", // map-generator/assets/maps/pluto/info.json
   SanFrancisco = "San Francisco", // map-generator/assets/maps/sanfrancisco/info.json
+  ShatteredExpanse = "Shattered Expanse", // map-generator/assets/maps/shatteredexpanse/info.json
   Sierpinski = "Sierpinski", // map-generator/assets/maps/sierpinski/info.json
   SouthAmerica = "South America", // map-generator/assets/maps/southamerica/info.json
   SoutheastAsia = "SoutheastAsia", // map-generator/assets/maps/southeastasia/info.json
@@ -85,6 +99,7 @@ export enum GameMapType {
   Svalmel = "Svalmel", // map-generator/assets/maps/svalmel/info.json
   TaiwanStrait = "Taiwan Strait", // map-generator/assets/maps/taiwanstrait/info.json
   TheBox = "The Box", // map-generator/assets/maps/thebox/info.json
+  TherynianRealms = "Therynian Realms", // map-generator/assets/maps/therynianrealms/info.json
   Titan = "Titan", // map-generator/assets/maps/titan/info.json
   Tourney1 = "Tourney 2 Teams", // map-generator/assets/maps/tourney1/info.json
   Tourney2 = "Tourney 3 Teams", // map-generator/assets/maps/tourney2/info.json
@@ -96,6 +111,7 @@ export enum GameMapType {
   WarshipWarship = "Warship Warship", // map-generator/assets/maps/warshipwarship/info.json
   World = "World", // map-generator/assets/maps/world/info.json
   WorldInverted = "World Inverted", // map-generator/assets/maps/worldinverted/info.json
+  WorldOfLur = "World of Lur", // map-generator/assets/maps/worldoflur/info.json
   YellowSea = "Yellow Sea", // map-generator/assets/maps/yellowsea/info.json
   Yenisei = "Yenisei", // map-generator/assets/maps/yenisei/info.json
 }
@@ -223,11 +239,25 @@ export const maps: readonly MapInfo[] = [
     featuredRank: 5,
   },
   {
+    id: "Atlas2026",
+    type: GameMapType.Atlas2026,
+    translationKey: "map.atlas2026",
+    categories: ["fictional"],
+    multiplayerFrequency: 1,
+  },
+  {
     id: "Australia",
     type: GameMapType.Australia,
     translationKey: "map.australia",
     categories: ["oceania"],
     multiplayerFrequency: 4,
+  },
+  {
+    id: "Avidir",
+    type: GameMapType.Avidir,
+    translationKey: "map.avidir",
+    categories: ["fictional"],
+    multiplayerFrequency: 1,
   },
   {
     id: "Baikal",
@@ -311,6 +341,20 @@ export const maps: readonly MapInfo[] = [
     multiplayerFrequency: 0,
   },
   {
+    id: "Calistis",
+    type: GameMapType.Calistis,
+    translationKey: "map.calistis",
+    categories: ["fictional"],
+    multiplayerFrequency: 1,
+  },
+  {
+    id: "CanidContinents",
+    type: GameMapType.CanidContinents,
+    translationKey: "map.canidcontinents",
+    categories: ["fictional"],
+    multiplayerFrequency: 1,
+  },
+  {
     id: "Caribbean",
     type: GameMapType.Caribbean,
     translationKey: "map.caribbean",
@@ -346,6 +390,13 @@ export const maps: readonly MapInfo[] = [
     translationKey: "map.danishstraits",
     categories: ["new", "europe"],
     multiplayerFrequency: 5,
+  },
+  {
+    id: "DasserianRealms",
+    type: GameMapType.DasserianRealms,
+    translationKey: "map.dasserianrealms",
+    categories: ["fictional"],
+    multiplayerFrequency: 1,
   },
   {
     id: "DeglaciatedAntarctica",
@@ -413,12 +464,26 @@ export const maps: readonly MapInfo[] = [
     multiplayerFrequency: 4,
   },
   {
+    id: "FifteenthAge",
+    type: GameMapType.FifteenthAge,
+    translationKey: "map.fifteenthage",
+    categories: ["fictional"],
+    multiplayerFrequency: 1,
+  },
+  {
     id: "FourIslands",
     type: GameMapType.FourIslands,
     translationKey: "map.fourislands",
     categories: ["fictional"],
     multiplayerFrequency: 4,
     specialTeamCount: 4,
+  },
+  {
+    id: "FracturedEurasia",
+    type: GameMapType.FracturedEurasia,
+    translationKey: "map.fracturedeurasia",
+    categories: ["fictional"],
+    multiplayerFrequency: 1,
   },
   {
     id: "GatewayToTheAtlantic",
@@ -464,6 +529,13 @@ export const maps: readonly MapInfo[] = [
     multiplayerFrequency: 4,
   },
   {
+    id: "HeroicSeas",
+    type: GameMapType.HeroicSeas,
+    translationKey: "map.heroicseas",
+    categories: ["fictional"],
+    multiplayerFrequency: 1,
+  },
+  {
     id: "HongKong",
     type: GameMapType.HongKong,
     translationKey: "map.hongkong",
@@ -483,6 +555,13 @@ export const maps: readonly MapInfo[] = [
     translationKey: "map.indiansubcontinent",
     categories: ["new", "asia"],
     multiplayerFrequency: 8,
+  },
+  {
+    id: "InvertedEarth",
+    type: GameMapType.InvertedEarth,
+    translationKey: "map.invertedearth",
+    categories: ["fictional"],
+    multiplayerFrequency: 1,
   },
   {
     id: "Italia",
@@ -551,6 +630,20 @@ export const maps: readonly MapInfo[] = [
     specialTeamCount: 2,
   },
   {
+    id: "Maion",
+    type: GameMapType.Maion,
+    translationKey: "map.maion",
+    categories: ["fictional"],
+    multiplayerFrequency: 1,
+  },
+  {
+    id: "MandalaNations",
+    type: GameMapType.MandalaNations,
+    translationKey: "map.mandalanations",
+    categories: ["fictional"],
+    multiplayerFrequency: 1,
+  },
+  {
     id: "Manicouagan",
     type: GameMapType.Manicouagan,
     translationKey: "map.manicouagan",
@@ -577,6 +670,13 @@ export const maps: readonly MapInfo[] = [
     translationKey: "map.mena",
     categories: ["asia", "africa"],
     multiplayerFrequency: 6,
+  },
+  {
+    id: "Mettersind",
+    type: GameMapType.Mettersind,
+    translationKey: "map.mettersind",
+    categories: ["fictional"],
+    multiplayerFrequency: 1,
   },
   {
     id: "MiddleEast",
@@ -664,6 +764,13 @@ export const maps: readonly MapInfo[] = [
     multiplayerFrequency: 4,
   },
   {
+    id: "PatchworkEarth",
+    type: GameMapType.PatchworkEarth,
+    translationKey: "map.patchworkearth",
+    categories: ["fictional"],
+    multiplayerFrequency: 1,
+  },
+  {
     id: "Pluto",
     type: GameMapType.Pluto,
     translationKey: "map.pluto",
@@ -677,6 +784,13 @@ export const maps: readonly MapInfo[] = [
     translationKey: "map.sanfrancisco",
     categories: ["north_america"],
     multiplayerFrequency: 3,
+  },
+  {
+    id: "ShatteredExpanse",
+    type: GameMapType.ShatteredExpanse,
+    translationKey: "map.shatteredexpanse",
+    categories: ["fictional"],
+    multiplayerFrequency: 0,
   },
   {
     id: "Sierpinski",
@@ -751,6 +865,13 @@ export const maps: readonly MapInfo[] = [
     translationKey: "map.thebox",
     categories: ["arcade"],
     multiplayerFrequency: 3,
+  },
+  {
+    id: "TherynianRealms",
+    type: GameMapType.TherynianRealms,
+    translationKey: "map.therynianrealms",
+    categories: ["fictional"],
+    multiplayerFrequency: 1,
   },
   {
     id: "Titan",
@@ -830,6 +951,13 @@ export const maps: readonly MapInfo[] = [
     translationKey: "map.worldinverted",
     categories: ["new", "world", "fictional"],
     multiplayerFrequency: 8,
+  },
+  {
+    id: "WorldOfLur",
+    type: GameMapType.WorldOfLur,
+    translationKey: "map.worldoflur",
+    categories: ["fictional"],
+    multiplayerFrequency: 1,
   },
   {
     id: "YellowSea",

@@ -1,0 +1,89 @@
+{
+  "id": "Atlas2026",
+  "name": "Atlas 2026",
+  "translation_key": "map.atlas2026",
+  "categories": ["fictional"],
+  "multiplayer_frequency": 1,
+  "nations": [
+    {
+      "coordinates": [1084, 580],
+      "name": "Boreal Union",
+      "flag": ""
+    },
+    {
+      "coordinates": [2008, 860],
+      "name": "Verdant West",
+      "flag": ""
+    },
+    {
+      "coordinates": [356, 132],
+      "name": "Saharan Crown",
+      "flag": ""
+    },
+    {
+      "coordinates": [1700, 188],
+      "name": "Equatorial League",
+      "flag": ""
+    },
+    {
+      "coordinates": [580, 552],
+      "name": "Indigo Coast",
+      "flag": ""
+    },
+    {
+      "coordinates": [1168, 160],
+      "name": "Eastern Range",
+      "flag": ""
+    },
+    {
+      "coordinates": [1672, 608],
+      "name": "Southern Commonwealth",
+      "flag": ""
+    },
+    {
+      "coordinates": [748, 188],
+      "name": "Island Confederacy",
+      "flag": ""
+    },
+    {
+      "coordinates": [1420, 384],
+      "name": "Polar Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [1168, 888],
+      "name": "Golden Steppe",
+      "flag": ""
+    },
+    {
+      "coordinates": [356, 412],
+      "name": "Rainforest Pact",
+      "flag": ""
+    },
+    {
+      "coordinates": [832, 636],
+      "name": "Austral Federation",
+      "flag": ""
+    },
+    {
+      "coordinates": [1000, 356],
+      "name": "Northern Archipelago",
+      "flag": ""
+    },
+    {
+      "coordinates": [552, 300],
+      "name": "Central Plateau",
+      "flag": ""
+    },
+    {
+      "coordinates": [1896, 636],
+      "name": "Western Isles",
+      "flag": ""
+    },
+    {
+      "coordinates": [1308, 720],
+      "name": "Sunrise Dominion",
+      "flag": ""
+    }
+  ]
+}

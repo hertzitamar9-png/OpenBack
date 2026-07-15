@@ -1,0 +1,69 @@
+{
+  "id": "HeroicSeas",
+  "name": "Heroic Seas",
+  "translation_key": "map.heroicseas",
+  "categories": ["fictional"],
+  "multiplayer_frequency": 1,
+  "nations": [
+    {
+      "coordinates": [776, 776],
+      "name": "Great Continent",
+      "flag": ""
+    },
+    {
+      "coordinates": [20, 1532],
+      "name": "Eastern Tribes",
+      "flag": ""
+    },
+    {
+      "coordinates": [1504, 1476],
+      "name": "Southern Kingdom",
+      "flag": ""
+    },
+    {
+      "coordinates": [1532, 356],
+      "name": "Stormy Straits",
+      "flag": ""
+    },
+    {
+      "coordinates": [48, 468],
+      "name": "Great Canyon",
+      "flag": ""
+    },
+    {
+      "coordinates": [748, 1504],
+      "name": "Forest Realm",
+      "flag": ""
+    },
+    {
+      "coordinates": [636, 48],
+      "name": "Snow Realm",
+      "flag": ""
+    },
+    {
+      "coordinates": [1336, 916],
+      "name": "Sand Realm",
+      "flag": ""
+    },
+    {
+      "coordinates": [244, 1000],
+      "name": "Volcanic March",
+      "flag": ""
+    },
+    {
+      "coordinates": [1028, 356],
+      "name": "Emerald Reach",
+      "flag": ""
+    },
+    {
+      "coordinates": [1112, 1280],
+      "name": "Hyron Sea",
+      "flag": ""
+    },
+    {
+      "coordinates": [468, 496],
+      "name": "Southern Continent",
+      "flag": ""
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "id": "DasserianRealms",
+  "name": "Dasserian Realms",
+  "translation_key": "map.dasserianrealms",
+  "categories": ["fictional"],
+  "multiplayer_frequency": 1,
+  "nations": [
+    {
+      "coordinates": [1056, 580],
+      "name": "Dasseria",
+      "flag": ""
+    },
+    {
+      "coordinates": [20, 20],
+      "name": "Fairen Forest",
+      "flag": ""
+    },
+    {
+      "coordinates": [2064, 20],
+      "name": "Orrakas Badlands",
+      "flag": ""
+    },
+    {
+      "coordinates": [2036, 1140],
+      "name": "Drakemaw",
+      "flag": ""
+    },
+    {
+      "coordinates": [244, 944],
+      "name": "Razalia",
+      "flag": ""
+    },
+    {
+      "coordinates": [664, 48],
+      "name": "Costula",
+      "flag": ""
+    },
+    {
+      "coordinates": [1392, 48],
+      "name": "Komohan Islands",
+      "flag": ""
+    },
+    {
+      "coordinates": [1672, 636],
+      "name": "Carangian Necrocracy",
+      "flag": ""
+    },
+    {
+      "coordinates": [1224, 1140],
+      "name": "Solaria",
+      "flag": ""
+    },
+    {
+      "coordinates": [776, 944],
+      "name": "Amalte",
+      "flag": ""
+    },
+    {
+      "coordinates": [412, 412],
+      "name": "Madrigal",
+      "flag": ""
+    },
+    {
+      "coordinates": [2036, 440],
+      "name": "Cape Crown",
+      "flag": ""
+    }
+  ]
+}

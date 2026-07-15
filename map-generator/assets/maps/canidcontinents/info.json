@@ -1,0 +1,69 @@
+{
+  "id": "CanidContinents",
+  "name": "Canid Continents",
+  "translation_key": "map.canidcontinents",
+  "categories": ["fictional"],
+  "multiplayer_frequency": 1,
+  "nations": [
+    {
+      "coordinates": [720, 860],
+      "name": "Vulpenai",
+      "flag": ""
+    },
+    {
+      "coordinates": [216, 188],
+      "name": "Cerdocyonina",
+      "flag": ""
+    },
+    {
+      "coordinates": [1224, 216],
+      "name": "Caninae",
+      "flag": ""
+    },
+    {
+      "coordinates": [692, 1532],
+      "name": "Vulpes",
+      "flag": ""
+    },
+    {
+      "coordinates": [1140, 1140],
+      "name": "Lycalopex",
+      "flag": ""
+    },
+    {
+      "coordinates": [300, 1112],
+      "name": "Urocyon",
+      "flag": ""
+    },
+    {
+      "coordinates": [300, 636],
+      "name": "Otocyon",
+      "flag": ""
+    },
+    {
+      "coordinates": [1140, 664],
+      "name": "Cuon",
+      "flag": ""
+    },
+    {
+      "coordinates": [776, 440],
+      "name": "Nyctereutes",
+      "flag": ""
+    },
+    {
+      "coordinates": [636, 1196],
+      "name": "Chrysocyon",
+      "flag": ""
+    },
+    {
+      "coordinates": [468, 384],
+      "name": "Atelocynus",
+      "flag": ""
+    },
+    {
+      "coordinates": [888, 1336],
+      "name": "Dusicyon",
+      "flag": ""
+    }
+  ]
+}

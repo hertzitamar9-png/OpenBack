@@ -1,0 +1,84 @@
+{
+  "categories": ["fictional"],
+  "id": "HeroicSeas",
+  "map": {
+    "height": 1580,
+    "num_land_tiles": 1281676,
+    "width": 1580
+  },
+  "map16x": {
+    "height": 395,
+    "num_land_tiles": 78082,
+    "width": 395
+  },
+  "map4x": {
+    "height": 790,
+    "num_land_tiles": 317733,
+    "width": 790
+  },
+  "multiplayer_frequency": 1,
+  "name": "Heroic Seas",
+  "nations": [
+    {
+      "coordinates": [776, 776],
+      "flag": "",
+      "name": "Great Continent"
+    },
+    {
+      "coordinates": [20, 1532],
+      "flag": "",
+      "name": "Eastern Tribes"
+    },
+    {
+      "coordinates": [1504, 1476],
+      "flag": "",
+      "name": "Southern Kingdom"
+    },
+    {
+      "coordinates": [1532, 356],
+      "flag": "",
+      "name": "Stormy Straits"
+    },
+    {
+      "coordinates": [48, 468],
+      "flag": "",
+      "name": "Great Canyon"
+    },
+    {
+      "coordinates": [748, 1504],
+      "flag": "",
+      "name": "Forest Realm"
+    },
+    {
+      "coordinates": [636, 48],
+      "flag": "",
+      "name": "Snow Realm"
+    },
+    {
+      "coordinates": [1336, 916],
+      "flag": "",
+      "name": "Sand Realm"
+    },
+    {
+      "coordinates": [244, 1000],
+      "flag": "",
+      "name": "Volcanic March"
+    },
+    {
+      "coordinates": [1028, 356],
+      "flag": "",
+      "name": "Emerald Reach"
+    },
+    {
+      "coordinates": [1112, 1280],
+      "flag": "",
+      "name": "Hyron Sea"
+    },
+    {
+      "coordinates": [468, 496],
+      "flag": "",
+      "name": "Southern Continent"
+    }
+  ],
+  "translation_key": "map.heroicseas"
+}
