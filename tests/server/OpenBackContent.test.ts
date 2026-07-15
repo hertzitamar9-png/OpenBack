@@ -44,7 +44,7 @@ function renderPath(
 
 describe("OpenBack learning content", () => {
   it("publishes unique tutorial and blog URLs", () => {
-    expect(OPENBACK_CONTENT_PATHS).toHaveLength(15);
+    expect(OPENBACK_CONTENT_PATHS).toHaveLength(19);
     expect(new Set(OPENBACK_CONTENT_PATHS).size).toBe(
       OPENBACK_CONTENT_PATHS.length,
     );
@@ -65,7 +65,7 @@ describe("OpenBack learning content", () => {
     );
     expect(result.body).toContain('href="/guides"');
     expect(result.body).toContain('href="/blog"');
-    expect(result.body).not.toContain("OpenFront");
+    expect(result.body).toContain("OpenBack");
   });
 
   it("uses the public HTTPS protocol supplied by a reverse proxy", () => {

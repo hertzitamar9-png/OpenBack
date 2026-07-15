@@ -68,6 +68,60 @@ const tutorials: Page[] = [
     ],
   },
   {
+    path: "/guides/territorial-war-strategy",
+    type: "Tutorial",
+    title: "Territorial War Strategy: Expansion, Borders, and Conquest",
+    description:
+      "Master territorial conquest, efficient borders, army pressure, neutral expansion, and map control in OpenBack's online war strategy gameplay.",
+    sections: [
+      {
+        title: "Treat territory as a strategic resource",
+        text: "Every tile changes your border, population potential, attack routes, and exposure. Expand through neutral land that improves your shape instead of creating long narrow fronts. Compact territory is easier to reinforce, while key coastlines and corridors can unlock naval movement or block another country's growth.",
+      },
+      {
+        title: "Win the economy before forcing the war",
+        text: "A successful country conquest needs troops for expansion and gold for infrastructure. Grow population, protect income buildings, and preserve a reserve before committing to a long attack. Territory gained without enough strength to hold it can become an opening for every nearby nation.",
+        tips: [
+          "Expand into valuable neutral space before equal-strength wars.",
+          "Shorten exposed borders whenever the map gives you a choice.",
+          "Attack when the target is distracted or economically exhausted.",
+          "Stop pushing when another rival can exploit your weakened army.",
+        ],
+      },
+      {
+        title: "Combine map control with military counters",
+        text: "Territorial RTS combat is more than sending population across a border. Defense posts harden fronts, ships control water, aircraft establish distant pressure, tanks damage hostile routes, and specialized defenses answer those threats. Use the world map to make each unit support the same conquest plan.",
+      },
+    ],
+  },
+  {
+    path: "/guides/nation-building-diplomacy",
+    type: "Tutorial",
+    title: "Nation Building, Diplomacy, and World Domination Guide",
+    description:
+      "Build a powerful nation through economy management, alliances, diplomacy, military planning, and long-term world domination strategy in OpenBack.",
+    sections: [
+      {
+        title: "Build an empire that can survive pressure",
+        text: "Nation building starts with a stable balance of population, gold, territory, and infrastructure. Cities and economic networks support growth, defenses protect important regions, and military buildings turn that economy into strategic options. Expanding faster is useful only when the new empire remains defensible.",
+      },
+      {
+        title: "Use diplomacy as part of the map",
+        text: "Alliances, clans, and short messages can change where armies are needed. A reliable ally can secure one border while both nations pressure a larger threat. Diplomacy is strongest when it creates a clear shared benefit, not when it depends on promises that ignore the current balance of power.",
+      },
+      {
+        title: "Choose a path toward world domination",
+        text: "Late-game geopolitical strategy requires priorities. Decide which rival controls the most dangerous economy, which border unlocks useful territory, and which military system can break the current defense. Conquest becomes sustainable when each victory improves your next position instead of exhausting the nation.",
+        tips: [
+          "Protect the economic center of your country.",
+          "Keep allies informed about specific threats and timings.",
+          "Avoid wars that benefit an uninvolved third empire.",
+          "Convert temporary map advantages into permanent infrastructure.",
+        ],
+      },
+    ],
+  },
+  {
     path: "/guides/multiplayer-friends",
     type: "Tutorial",
     title: "How to Play OpenBack Multiplayer with Friends",
@@ -213,6 +267,48 @@ const tutorials: Page[] = [
 
 const blogs: Page[] = [
   {
+    path: "/blog/openfront-openback-territorial-rts",
+    type: "Blog",
+    title: "OpenFront and OpenBack: Territorial RTS Foundations",
+    description:
+      "How OpenBack builds on OpenFront's deterministic territorial strategy foundation while expanding browser warfare, multiplayer, and combined-arms gameplay.",
+    sections: [
+      {
+        title: "A deterministic territorial strategy foundation",
+        text: "OpenBack builds from the OpenFront simulation and renderer, giving it organic country borders, real map expansion, nations, bots, economy, diplomacy, structures, ships, missiles, and synchronized multiplayer turns. The result is a real territorial RTS system rather than a visual imitation of a map game.",
+      },
+      {
+        title: "An expanded OpenBack identity",
+        text: "OpenBack adds its own branding and gameplay direction around aircraft and runways, tanks and military bases, MANPADs, tank mines, military fuel railways, ranked matchmaking, clans, profiles, shareable lobbies, and optional match modifiers. These systems extend the OpenFront foundation into broader air, ground, logistics, and competitive strategy.",
+      },
+      {
+        title: "Online strategy in the browser",
+        text: "Solo battles, private multiplayer, ranked games, and world-map warfare share the same browser interface. Players can practice nation building against computer countries and then apply the same economy, diplomacy, and military strategy against people online.",
+      },
+    ],
+  },
+  {
+    path: "/blog/world-map-conquest-games",
+    type: "Blog",
+    title: "Why World Map Conquest Games Create Deep Strategy",
+    description:
+      "Explore how territory control, nation building, diplomacy, armies, economies, and real-time multiplayer create deep world map conquest gameplay.",
+    sections: [
+      {
+        title: "The map records every strategic decision",
+        text: "In a world map conquest game, expansion is visible and permanent until another country takes it. Borders reveal pressure, coastlines create naval opportunities, narrow corridors become defensive positions, and neutral land becomes a race between nearby nations.",
+      },
+      {
+        title: "Real-time action meets grand-strategy planning",
+        text: "OpenBack combines fast territorial expansion with longer decisions about economy management, diplomacy, infrastructure, alliances, and military technology. Players react in real time while building the kind of long-term plan normally associated with geopolitical and grand-strategy games.",
+      },
+      {
+        title: "Multiplayer makes every empire unpredictable",
+        text: "Bots can teach the rules, but online players create changing coalitions, surprise attacks, shared threats, and competing paths toward world domination. The strongest army does not automatically win when diplomacy, timing, geography, and economic exhaustion reshape the war.",
+      },
+    ],
+  },
+  {
     path: "/blog/air-and-ground-warfare",
     type: "Blog",
     title: "Designing Air and Ground Warfare for OpenBack",
@@ -353,9 +449,9 @@ function layout(
   schemaType: string,
 ): string {
   const canonical = `${origin}${path}`;
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)} | OpenBack</title><meta name="description" content="${esc(description)}"><meta name="robots" content="index, follow"><link rel="canonical" href="${canonical}"><meta property="og:site_name" content="OpenBack"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${canonical}"><script type="application/ld+json">${JSON.stringify({ "@context": "https://schema.org", "@type": schemaType, name: title, headline: title, description, url: canonical, author: { "@type": "Organization", name: "OpenBack" }, isPartOf: { "@type": "WebSite", name: "OpenBack", url: `${origin}/` } }).replace(/</g, "\\u003c")}</script><style>
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)} | OpenBack</title><meta name="description" content="${esc(description)}"><meta name="robots" content="index, follow"><link rel="canonical" href="${canonical}"><link rel="icon" type="image/png" sizes="192x192" href="/favicon.png"><meta property="og:site_name" content="OpenBack"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${canonical}"><script type="application/ld+json">${JSON.stringify({ "@context": "https://schema.org", "@type": schemaType, name: title, headline: title, description, url: canonical, author: { "@type": "Organization", name: "OpenBack" }, isPartOf: { "@type": "WebSite", name: "OpenBack", url: `${origin}/` } }).replace(/</g, "\\u003c")}</script><style>
   :root{color-scheme:dark;--text:#f4f8ff;--muted:#b3c0d3;--line:#29405f;--panel:#10213a;--blue:#6dccff;--green:#18c964}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:var(--text);background:radial-gradient(circle at 15% 0,#183b61 0,#081523 46%,#050b13 100%);line-height:1.65}a{color:var(--blue)}header{position:sticky;top:0;background:#07111deb;border-bottom:1px solid var(--line);z-index:3}nav{max-width:1100px;margin:auto;padding:14px 20px;display:flex;align-items:center;gap:22px}.brand{margin-right:auto;color:white;font-size:1.35rem;font-weight:900;text-decoration:none}nav a:not(.brand){color:var(--muted);font-weight:700;text-decoration:none}.play{background:var(--green);color:#03150a!important;padding:8px 14px;border-radius:8px}main{width:min(1100px,calc(100% - 32px));margin:auto;padding:58px 0 80px}.hero{max-width:820px;margin-bottom:38px}small{color:#72d2ff;font-weight:900;letter-spacing:.13em;text-transform:uppercase}h1{font-size:clamp(2.3rem,6vw,4.5rem);line-height:1.05;letter-spacing:-.04em;margin:.2em 0}.lead{font-size:1.15rem;color:#ced9e9}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px}.card{padding:24px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(145deg,#132a47,#0b192b)}.card h2{font-size:1.3rem;line-height:1.22}.card h2 a{color:white;text-decoration:none}.card p,article p,article li{color:var(--muted)}.more,.back{font-weight:800;text-decoration:none}article.content{max-width:800px}article.content section{padding:24px 0;border-top:1px solid var(--line)}article.content h2{font-size:1.7rem;line-height:1.2}.related{margin-top:55px;padding-top:25px;border-top:1px solid var(--line)}footer{text-align:center;border-top:1px solid var(--line);padding:28px;color:var(--muted)}footer a{margin:0 8px}@media(max-width:600px){nav{gap:12px}nav a:not(.brand):not(.play){display:none}main{padding-top:38px}}
-  </style></head><body><header><nav><a class="brand" href="/">OpenBack</a><a href="/guides">Tutorials</a><a href="/blog">Blog</a><a class="play" href="/">Play now</a></nav></header><main>${body}</main><footer><strong>OpenBack</strong> &middot; Free browser territorial strategy game<br><a href="/">Play</a><a href="/guides">Tutorials</a><a href="/blog">Blog</a><a href="/privacy-policy.html">Privacy</a></footer></body></html>`;
+  </style></head><body><header><nav><a class="brand" href="/">OpenBack</a><a href="/guides">Tutorials</a><a href="/blog">Blog</a><a class="play" href="/">Play now</a></nav></header><main>${body}</main><footer><strong>OpenBack</strong> &middot; Online browser territorial strategy game<br><a href="/">Play</a><a href="/guides">Tutorials</a><a href="/blog">Blog</a><a href="/privacy-policy.html">Privacy</a></footer></body></html>`;
 }
 
 function hub(origin: string, type: "guides" | "blog"): string {
