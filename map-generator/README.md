@@ -5,9 +5,6 @@ This is a go-based tool to generate map files for OpenBack.
 The map generator reads PNG files and converts pixels into terrain based primarily on the **Blue** channel.
 Because only blue values are used, grayscale and other formats are fully supported. Many maps in `assets/maps/<mapname>` are grayscale.
 
-Additional Guides, Tutorials, Scripts, Resources, and Third Party Unofficial Applications can be found on
-the [Official Openfront Wiki](https://openfront.wiki/Map_Making)
-
 ## Installation
 
 1. Install go <https://go.dev/doc/install>
@@ -143,7 +140,7 @@ Example:
 ## Update CREDITS.md
 
 Add License & Attribution information to `../CREDITS.md`. If you are unsure if
-a map's license can be used, open an issue or ask in Discord before beginning work.
+a map's license can be used, verify the source license before beginning work.
 
 ## Adding Flags
 

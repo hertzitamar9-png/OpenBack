@@ -2,6 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## OpenBack release policy
+
+- Every user-facing change must add or update the newest entry in `resources/changelog.md` in the same commit.
+- Use an OpenBack version, describe the player-visible result, and credit **frootz jhklphy**.
+- Keep the existing in-game Release Notes styling and do not add optional OpenFront Discord, Reddit, Wiki, store, or promotional links.
+- Preserve the AGPL, corresponding-source availability, required copyright notice, asset-license notices, and contributor attribution.
+
 ## Commands
 
 ```bash

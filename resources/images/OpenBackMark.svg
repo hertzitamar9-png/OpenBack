@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
   <title id="title">OpenBack</title>
-  <desc id="desc">OpenBack territorial hexagon emblem</desc>
+  <desc id="desc">OpenBack circular emblem</desc>
   <defs>
-    <linearGradient id="shield" x1="18" y1="15" x2="110" y2="113" gradientUnits="userSpaceOnUse">
+    <linearGradient id="badge" x1="18" y1="15" x2="110" y2="113" gradientUnits="userSpaceOnUse">
       <stop stop-color="#102d4d"/>
       <stop offset="1" stop-color="#061321"/>
     </linearGradient>
@@ -15,11 +15,10 @@
       <stop offset="1" stop-color="#18bd63"/>
     </linearGradient>
   </defs>
-  <path d="M64 5 113 33v62l-49 28L15 95V33Z" fill="#020812" opacity=".5"/>
-  <path d="M64 8 110 35v58l-46 27-46-27V35Z" fill="url(#shield)" stroke="#47dfff" stroke-width="4" stroke-linejoin="round"/>
-  <path d="M64 15 103 38v11L64 27 25 49V38Z" fill="#b8f4ff" opacity=".2"/>
+  <circle cx="64" cy="64" r="59" fill="#020812" opacity=".5"/>
+  <circle cx="64" cy="64" r="54" fill="url(#badge)" stroke="#47dfff" stroke-width="4"/>
+  <path d="M29 27a50 50 0 0 1 70 0" fill="none" stroke="#b8f4ff" stroke-width="7" stroke-linecap="round" opacity=".16"/>
   <path fill-rule="evenodd" d="M39 32C24 32 17 44 17 64s7 32 22 32 22-12 22-32-7-32-22-32Zm0 14c-6 0-9 6-9 18s3 18 9 18 9-6 9-18-3-18-9-18Z" fill="url(#cyan)"/>
   <path d="M58 32h20c16 0 25 6 25 17 0 7-4 12-10 15 7 3 11 8 11 15 0 11-8 17-25 17H58Zm14 13v13h7c7 0 10-2 10-7 0-4-3-6-10-6Zm0 25v13h8c7 0 10-2 10-7 0-4-3-6-10-6Z" fill="url(#green)"/>
   <path d="M45 64H31m0 0 6-6m-6 6 6 6" fill="none" stroke="#f2fcff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="64" cy="108" r="3" fill="#64f092"/>
 </svg>
