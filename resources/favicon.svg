@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title">
   <title id="title">OpenBack</title>
-  <path d="M48 7 84 28v40L48 89 12 68V28Z" fill="#071a2d" stroke="#42dcff" stroke-width="5" stroke-linejoin="round"/>
-  <path fill-rule="evenodd" d="M32 27c-12 0-18 8-18 21s6 21 18 21 18-8 18-21-6-21-18-21Zm0 11c-5 0-7 3-7 10s2 10 7 10 7-3 7-10-2-10-7-10Z" fill="#32c9f5"/>
-  <path d="M48 27h15c12 0 19 4 19 12 0 5-3 8-7 10 5 2 8 5 8 10 0 8-7 11-20 11H48Zm11 9v9h5c5 0 7-1 7-5 0-3-2-4-7-4Zm0 18v8h6c5 0 7-1 7-4s-2-4-7-4Z" fill="#35dc78"/>
+  <circle cx="48" cy="48" r="46" fill="#06182a" stroke="#42dcff" stroke-width="4"/>
+  <path fill-rule="evenodd" d="M29 19C15 19 8 30 8 48s7 29 21 29 21-11 21-29-7-29-21-29Zm0 13c-6 0-9 5-9 16s3 16 9 16 9-5 9-16-3-16-9-16Z" fill="#35cef8"/>
+  <path d="M45 19h19c15 0 24 6 24 17 0 6-3 11-9 14 7 3 10 8 10 14 0 11-9 17-25 17H45Zm13 12v13h6c7 0 10-2 10-7s-3-6-10-6Zm0 25v13h7c7 0 10-2 10-7 0-4-3-6-10-6Z" fill="#36df79"/>
 </svg>

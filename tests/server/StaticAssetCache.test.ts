@@ -26,6 +26,9 @@ describe("StaticAssetCache", () => {
     expect(getStaticAssetCacheControl("/news.json")).toBe(
       "public, max-age=0, must-revalidate",
     );
+    expect(getStaticAssetCacheControl("/favicon.png")).toBe(
+      "public, max-age=0, must-revalidate",
+    );
     expect(getStaticAssetCacheControl("/cosmetics.json?v=1")).toBe(
       "public, max-age=0, must-revalidate",
     );

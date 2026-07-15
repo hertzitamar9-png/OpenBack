@@ -4,7 +4,11 @@ const IMMUTABLE_CACHE_CONTROL = "public, max-age=31536000, immutable";
 // every deploy. They MUST revalidate, otherwise express.static's default
 // `maxAge: 1y` makes browsers cache e.g. an empty-flags cosmetics.json for a
 // year and never pick up new shop content.
-const REVALIDATE_ROOT_FILES = new Set(["/cosmetics.json", "/news.json"]);
+const REVALIDATE_ROOT_FILES = new Set([
+  "/cosmetics.json",
+  "/favicon.png",
+  "/news.json",
+]);
 const REVALIDATE_CACHE_CONTROL = "public, max-age=0, must-revalidate";
 
 function stripQueryString(urlPath: string): string {
