@@ -69,12 +69,11 @@ The game server only serves `index.html` and the WebSocket. All other assets (JS
 | `tests/util/Setup.ts`       | Test helper — creates test games       |
 | `docs/Architecture.md`      | Architecture overview                  |
 | `docs/Auth.md`              | JWT/auth flow                          |
-| `docs/API.md`               | Public API endpoints                   |
 | `vite.config.ts`            | Build config, CDN handling             |
 
 ## UI Text / i18n
 
-All user-visible text must go through `translateText()` and have a corresponding entry added to `resources/lang/en.json`. Translations are managed via Crowdin. DO NOT modify any other translation files.
+All user-visible text must go through `translateText()` and have a corresponding entry added to `resources/lang/en.json`. Do not modify other translation files unless the task specifically includes translation updates.
 
 ## Testing Patterns
 

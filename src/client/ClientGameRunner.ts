@@ -1316,7 +1316,7 @@ function showErrorModal(
   gameID: GameID,
   clientID: ClientID | undefined,
   closable = false,
-  showDiscord = true,
+  includeReportInstructions = true,
   heading = "error_modal.crashed",
 ) {
   if (document.querySelector("#error-modal")) {
@@ -1330,7 +1330,9 @@ function showErrorModal(
   modal.id = "error-modal";
 
   const content = [
-    showDiscord ? translateText("error_modal.paste_discord") : null,
+    includeReportInstructions
+      ? translateText("error_modal.report_intro")
+      : null,
     translateText(heading),
     `game id: ${gameID}`,
     `client id: ${clientID}`,

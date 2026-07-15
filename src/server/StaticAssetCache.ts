@@ -7,6 +7,7 @@ const IMMUTABLE_CACHE_CONTROL = "public, max-age=31536000, immutable";
 const REVALIDATE_ROOT_FILES = new Set([
   "/cosmetics.json",
   "/favicon.png",
+  "/favicon.svg",
   "/news.json",
 ]);
 const REVALIDATE_CACHE_CONTROL = "public, max-age=0, must-revalidate";

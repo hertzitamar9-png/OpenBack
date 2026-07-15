@@ -28,6 +28,7 @@ const ROOT_PUBLIC_FILES = new Set([
   "ads.txt",
   "cosmetics.json",
   "favicon.png",
+  "favicon.svg",
   "google6e9781981b161c6b.html",
   "news.json",
   "privacy-policy.html",

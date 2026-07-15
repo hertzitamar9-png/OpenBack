@@ -1,3 +1,17 @@
+# OpenBack v0.32.9-openback.16
+
+**Created by frootz jhklphy**
+
+## Unified branding and cleanup
+
+- Replaced the final hexagonal badge in the public preview artwork with the circular OpenBack OB emblem.
+- Unified the favicon, installable-app icons, structured-data logo, navigation mark, and social preview around the same circular identity.
+- Removed obsolete Discord, Wiki, upstream API, tutorial, repository-owner, and legacy app-icon leftovers that were not required by the game or its licenses.
+- Removed product-facing upstream promotion while preserving required AGPL source access, license notices, asset credits, and contributor attribution.
+- Updated crash reports to use a neutral bug-report instruction instead of directing players to Discord.
+
+---
+
 # OpenBack v0.32.9-openback.15
 
 **Created by frootz jhklphy**

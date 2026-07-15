@@ -1,4 +1,4 @@
-export const REPO = { owner: "openfrontio", repo: "OpenFrontIO" } as const;
+export const REPO = { owner: "hertzitamar9-png", repo: "OpenBack" } as const;
 
 export const STALE_WARN_DAYS = 7;
 export const STALE_CLOSE_DAYS = 14;
@@ -39,7 +39,7 @@ If a maintainer doesn't milestone this issue (or you don't update it) within the
 
 If you believe this issue is important, consider:
 - Adding more context, repro steps, or examples
-- Discussing in our [Discord](https://discord.gg/K9zernJB5z)
+- Adding more context to the issue
 - Requesting the \`${LABELS.KEEP_OPEN}\` label if it should be exempt from auto-close
 
 — *Automated. See [CONTRIBUTING.md](https://github.com/${REPO.owner}/${REPO.repo}/blob/main/CONTRIBUTING.md).*`,
@@ -47,7 +47,7 @@ If you believe this issue is important, consider:
   AUTO_CLOSED_STALE: (author: string): string =>
     `Closing this issue as it hasn't been milestoned and has had no recent activity.
 
-This isn't a judgment of the issue's merit — just routine triage. @${author}, if you believe this should be reconsidered, please reopen with additional context or discuss in [Discord](https://discord.gg/K9zernJB5z).
+This isn't a judgment of the issue's merit — just routine triage. @${author}, if you believe this should be reconsidered, please reopen with additional context.
 
 — *Automated.*`,
 
@@ -59,7 +59,7 @@ This isn't a judgment of the issue's merit — just routine triage. @${author}, 
   UNASSIGNED_NO_MILESTONE: (assignees: string[]): string =>
     `${assignees.map((u) => "@" + u).join(", ")} — you've been unassigned from this issue automatically because it doesn't have a milestone set.
 
-In OpenFront's workflow, an issue must have a milestone (\`backlog\` or a version like \`v30\`) before anyone can be assigned. This ensures only approved work has people working on it.
+In OpenBack's workflow, an issue must have a milestone (\`backlog\` or a version like \`v30\`) before anyone can be assigned. This ensures only approved work has people working on it.
 
 If this is approved work, a maintainer needs to milestone the issue first, then re-assign you.
 

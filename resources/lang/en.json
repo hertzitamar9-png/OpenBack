@@ -431,7 +431,7 @@
     "crashed": "Game crashed!",
     "desync_notice": "You are desynced from other players. What you see might differ from other players.",
     "failed_copy": "Failed to copy",
-    "paste_discord": "Please paste the following in your bug report in Discord:",
+    "report_intro": "Include the following details in your bug report:",
     "spawn_failed": {
       "description": "Automatic spawn selection failed. You can't play this game.",
       "title": "Spawn failed"

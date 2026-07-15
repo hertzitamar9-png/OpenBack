@@ -30,7 +30,7 @@ export class GameStartingModal extends LitElement {
           © OpenBack and Contributors
         </div>
         <a
-          href="https://github.com/openfrontio/OpenFrontIO/blob/main/CREDITS.md"
+          href="https://github.com/hertzitamar9-png/OpenBack/blob/main/CREDITS.md"
           target="_blank"
           rel="noopener noreferrer"
           class="block mb-4 text-lg font-medium tracking-wider uppercase text-malibu-blue no-underline transition-colors duration-200 hover:text-aquarius"

@@ -456,19 +456,19 @@ const tutorials: Page[] = [
 
 const blogs: Page[] = [
   {
-    path: "/blog/openfront-openback-territorial-rts",
+    path: "/blog/openback-territorial-rts",
     type: "Blog",
-    title: "OpenFront and OpenBack: Territorial RTS Foundations",
+    title: "OpenBack Territorial RTS Foundations",
     description:
-      "How OpenBack builds on OpenFront's deterministic territorial strategy foundation while expanding browser warfare, multiplayer, and combined-arms gameplay.",
+      "How OpenBack combines deterministic territorial strategy, browser warfare, multiplayer, and combined-arms gameplay.",
     sections: [
       {
         title: "A deterministic territorial strategy foundation",
-        text: "OpenBack builds from the OpenFront simulation and renderer, giving it organic country borders, real map expansion, nations, bots, economy, diplomacy, structures, ships, missiles, and synchronized multiplayer turns. The result is a real territorial RTS system rather than a visual imitation of a map game.",
+        text: "OpenBack uses a deterministic simulation and renderer with organic country borders, real map expansion, nations, bots, economy, diplomacy, structures, ships, missiles, and synchronized multiplayer turns. The result is a real territorial RTS system rather than a visual imitation of a map game.",
       },
       {
         title: "An expanded OpenBack identity",
-        text: "OpenBack adds its own branding and gameplay direction around aircraft and runways, tanks and military bases, MANPADs, tank mines, military fuel railways, ranked matchmaking, clans, profiles, shareable lobbies, and optional match modifiers. These systems extend the OpenFront foundation into broader air, ground, logistics, and competitive strategy.",
+        text: "OpenBack's gameplay direction includes aircraft and runways, tanks and military bases, MANPADs, tank mines, military fuel railways, ranked matchmaking, clans, profiles, shareable lobbies, and optional match modifiers. These systems create broader air, ground, logistics, and competitive strategy.",
       },
       {
         title: "Online strategy in the browser",

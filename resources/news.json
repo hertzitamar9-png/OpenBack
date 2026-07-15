@@ -7,24 +7,10 @@
     "type": "warning"
   },
   {
-    "id": "openback-local-launch-2026",
-    "title": "OpenBack is ready locally",
-    "description": "The complete deterministic RTS, maps, bots, diplomacy, ships, structures, and missile systems now run from this source tree.",
-    "url": null,
-    "type": "announcement"
-  },
-  {
     "id": "openback-source-licenses-2026",
     "title": "Source and licenses included",
-    "description": "OpenBack preserves the OpenFront contributor notices and ships its AGPL and Creative Commons license files with the source.",
-    "url": "https://github.com/openfrontio/OpenFrontIO",
+    "description": "OpenBack preserves contributor notices and provides its AGPL source and Creative Commons license files.",
+    "url": "https://github.com/hertzitamar9-png/OpenBack",
     "type": "announcement"
-  },
-  {
-    "id": "tutorial-2026",
-    "title": "New Player Tutorial",
-    "description": "Learn the gameplay shared by OpenBack and its OpenFront upstream in this video guide",
-    "url": "https://www.youtube.com/watch?v=EN2oOog3pSs",
-    "type": "tutorial"
   }
 ]

@@ -1,4 +1,4 @@
-export const REPO = { owner: "openfrontio", repo: "OpenFrontIO" } as const;
+export const REPO = { owner: "hertzitamar9-png", repo: "OpenBack" } as const;
 
 export const TRUSTED_REPO_PERMISSIONS = ["admin", "maintain", "write"] as const;
 
@@ -30,13 +30,13 @@ This PR was automatically closed because it doesn't fit our contribution workflo
 - You aren't currently assigned to an issue labelled \`${APPROVED_ISSUE_LABEL}\`, **and**
 - The change is larger than ${SMALL_FIX_LINE_THRESHOLD} lines (our cap for unsolicited contributions).
 
-**To contribute to OpenFront:**
+**To contribute to OpenBack:**
 
 1. **For bugs or small quality-of-life improvements:** open an [issue](https://github.com/${REPO.owner}/${REPO.repo}/issues/new/choose). A maintainer will label it \`${APPROVED_ISSUE_LABEL}\` if it's something we'll work on.
-2. **For feature ideas:** discuss in the [dev Discord](https://discord.gg/K9zernJB5z) first. We don't accept unsolicited feature PRs — even if they're good ideas, every merged feature is a permanent maintenance burden.
+2. **For feature ideas:** open an issue first. We don't accept unsolicited feature PRs because every merged feature is a permanent maintenance commitment.
 3. **Once an issue is labelled \`${APPROVED_ISSUE_LABEL}\`**, comment asking to be assigned. After you're assigned, you can open a PR referencing that issue.
 
-If you believe this was closed in error, please reach out on our [Discord](https://discord.gg/K9zernJB5z) or comment below.
+If you believe this was closed in error, comment on the related issue.
 
 See [CONTRIBUTING.md](https://github.com/${REPO.owner}/${REPO.repo}/blob/main/CONTRIBUTING.md) for the full contribution process.
 
