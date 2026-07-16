@@ -87,7 +87,7 @@ export class SpatialQuery {
     targetOwner: Owner,
     attacker: Player,
     tile: TileRef,
-    maxDist: number = 50,
+    maxDist: number = Infinity,
   ): TileRef | null {
     const gm = this.game;
     const targetId = targetOwner.smallID();
@@ -101,14 +101,55 @@ export class SpatialQuery {
     }
     if (reachable.size === 0) return null;
 
-    const isValidTile = (t: TileRef) => {
+    const isValidTile = (t: TileRef): boolean => {
       if (!gm.isShore(t) || !gm.isLand(t)) return false;
       if (gm.ownerID(t) !== targetId) return false;
       const component = gm.getWaterComponent(t);
       return component !== null && reachable.has(component);
     };
 
-    return this.bfsNearest(tile, maxDist, isValidTile);
+    if (targetOwner.isPlayer()) {
+      let closest: TileRef | null = null;
+      let closestDistance = Infinity;
+      for (const candidate of (targetOwner as Player).borderTiles()) {
+        if (!isValidTile(candidate)) continue;
+        const distance = gm.manhattanDist(tile, candidate);
+        if (distance <= maxDist && distance < closestDistance) {
+          closest = candidate;
+          closestDistance = distance;
+        }
+      }
+      return closest;
+    }
+
+    // Terra nullius does not maintain a border-tile set. Search outward in
+    // exact Manhattan-distance rings instead of traversing the whole map. This
+    // keeps nearby clicks cheap while allowing a click arbitrarily far inland
+    // on the enormous OpenBack maps to resolve to an ocean-facing coast.
+    const originX = gm.x(tile);
+    const originY = gm.y(tile);
+    const mapLimit = gm.width() + gm.height();
+    const searchLimit = Math.min(maxDist, mapLimit);
+
+    const check = (x: number, y: number): TileRef | null => {
+      if (!gm.isValidCoord(x, y)) return null;
+      const candidate = gm.ref(x, y);
+      return isValidTile(candidate) ? candidate : null;
+    };
+
+    for (let distance = 0; distance <= searchLimit; distance++) {
+      for (let dx = -distance; dx <= distance; dx++) {
+        const dy = distance - Math.abs(dx);
+        const upper = check(originX + dx, originY - dy);
+        if (upper !== null) return upper;
+        if (dy !== 0) {
+          const lower = check(originX + dx, originY + dy);
+          if (lower !== null) return lower;
+        }
+      }
+    }
+
+    return null;
   }
 
   /**

@@ -2,7 +2,7 @@
   "id": "FracturedEurasia",
   "name": "Fractured Eurasia",
   "translation_key": "map.fracturedeurasia",
-  "categories": ["fictional"],
+  "categories": ["fictional", "frootz"],
   "multiplayer_frequency": 1,
   "nations": [
     {

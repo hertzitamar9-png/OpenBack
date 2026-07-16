@@ -281,6 +281,34 @@ describe("Map consistency", () => {
     ).toBe(true);
   });
 
+  test("Every OpenBack-created map is collected under Frootz", () => {
+    const frootzMaps = new Set([
+      "Atlas2026",
+      "Avidir",
+      "Calistis",
+      "CanidContinents",
+      "DasserianRealms",
+      "FifteenthAge",
+      "FracturedEurasia",
+      "GrandEarth",
+      "HeroicSeas",
+      "InvertedEarth",
+      "Maion",
+      "MandalaNations",
+      "Mettersind",
+      "PatchworkEarth",
+      "ShatteredExpanse",
+      "TherynianRealms",
+      "WorldOfLur",
+    ]);
+
+    for (const map of maps) {
+      if (frootzMaps.has(map.id)) {
+        expect(map.categories, map.id).toContain("frootz");
+      }
+    }
+  });
+
   test("No excess folders in resources/maps/ or map-generator/assets/maps/", () => {
     const expectedFolders = new Set(allMapKeys.map((k) => toFolderName(k)));
     const errors: string[] = [];

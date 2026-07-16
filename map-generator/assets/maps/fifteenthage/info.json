@@ -2,7 +2,7 @@
   "id": "FifteenthAge",
   "name": "Fifteenth Age",
   "translation_key": "map.fifteenthage",
-  "categories": ["fictional"],
+  "categories": ["fictional", "frootz"],
   "multiplayer_frequency": 1,
   "nations": [
     {

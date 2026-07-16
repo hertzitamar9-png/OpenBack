@@ -2,7 +2,7 @@
   "id": "WorldOfLur",
   "name": "World of Lur",
   "translation_key": "map.worldoflur",
-  "categories": ["fictional"],
+  "categories": ["fictional", "frootz"],
   "multiplayer_frequency": 1,
   "nations": [
     {

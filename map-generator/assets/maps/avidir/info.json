@@ -2,7 +2,7 @@
   "id": "Avidir",
   "name": "Avidir",
   "translation_key": "map.avidir",
-  "categories": ["fictional"],
+  "categories": ["fictional", "frootz"],
   "multiplayer_frequency": 1,
   "nations": [
     {

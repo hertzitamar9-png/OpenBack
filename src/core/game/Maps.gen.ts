@@ -122,6 +122,7 @@ export type GameMapName = keyof typeof GameMapType;
 export type MapCategory =
   | "featured"
   | "new"
+  | "frootz"
   | "world"
   | "continental"
   | "europe"
@@ -140,6 +141,7 @@ export type MapCategory =
 export const mapCategoryOrder: readonly MapCategory[] = [
   "featured",
   "new",
+  "frootz",
   "world",
   "continental",
   "europe",
@@ -243,7 +245,7 @@ export const maps: readonly MapInfo[] = [
     id: "Atlas2026",
     type: GameMapType.Atlas2026,
     translationKey: "map.atlas2026",
-    categories: ["fictional"],
+    categories: ["fictional", "frootz"],
     multiplayerFrequency: 1,
   },
   {
@@ -257,7 +259,7 @@ export const maps: readonly MapInfo[] = [
     id: "Avidir",
     type: GameMapType.Avidir,
     translationKey: "map.avidir",
-    categories: ["fictional"],
+    categories: ["fictional", "frootz"],
     multiplayerFrequency: 1,
   },
   {
@@ -345,14 +347,14 @@ export const maps: readonly MapInfo[] = [
     id: "Calistis",
     type: GameMapType.Calistis,
     translationKey: "map.calistis",
-    categories: ["fictional"],
+    categories: ["fictional", "frootz"],
     multiplayerFrequency: 1,
   },
   {
     id: "CanidContinents",
     type: GameMapType.CanidContinents,
     translationKey: "map.canidcontinents",
-    categories: ["fictional"],
+    categories: ["fictional", "frootz"],
     multiplayerFrequency: 1,
   },
   {
@@ -396,7 +398,7 @@ export const maps: readonly MapInfo[] = [
     id: "DasserianRealms",
     type: GameMapType.DasserianRealms,
     translationKey: "map.dasserianrealms",
-    categories: ["fictional"],
+    categories: ["fictional", "frootz"],
     multiplayerFrequency: 1,
   },
   {
@@ -468,7 +470,7 @@ export const maps: readonly MapInfo[] = [
     id: "FifteenthAge",
     type: GameMapType.FifteenthAge,
     translationKey: "map.fifteenthage",
-    categories: ["fictional"],
+    categories: ["fictional", "frootz"],
     multiplayerFrequency: 1,
   },
   {
@@ -483,7 +485,7 @@ export const maps: readonly MapInfo[] = [
     id: "FracturedEurasia",
     type: GameMapType.FracturedEurasia,
     translationKey: "map.fracturedeurasia",
-    categories: ["fictional"],
+    categories: ["fictional", "frootz"],
     multiplayerFrequency: 1,
   },
   {
@@ -504,7 +506,7 @@ export const maps: readonly MapInfo[] = [
     id: "GrandEarth",
     type: GameMapType.GrandEarth,
     translationKey: "map.grandearth",
-    categories: ["new", "world"],
+    categories: ["new", "frootz", "world"],
     multiplayerFrequency: 0,
   },
   {
@@ -540,7 +542,7 @@ export const maps: readonly MapInfo[] = [
     id: "HeroicSeas",
     type: GameMapType.HeroicSeas,
     translationKey: "map.heroicseas",
-    categories: ["fictional"],
+    categories: ["fictional", "frootz"],
     multiplayerFrequency: 1,
   },
   {
@@ -568,7 +570,7 @@ export const maps: readonly MapInfo[] = [
     id: "InvertedEarth",
     type: GameMapType.InvertedEarth,
     translationKey: "map.invertedearth",
-    categories: ["fictional"],
+    categories: ["fictional", "frootz"],
     multiplayerFrequency: 1,
   },
   {
@@ -641,14 +643,14 @@ export const maps: readonly MapInfo[] = [
     id: "Maion",
     type: GameMapType.Maion,
     translationKey: "map.maion",
-    categories: ["fictional"],
+    categories: ["fictional", "frootz"],
     multiplayerFrequency: 1,
   },
   {
     id: "MandalaNations",
     type: GameMapType.MandalaNations,
     translationKey: "map.mandalanations",
-    categories: ["fictional"],
+    categories: ["fictional", "frootz"],
     multiplayerFrequency: 1,
   },
   {
@@ -683,7 +685,7 @@ export const maps: readonly MapInfo[] = [
     id: "Mettersind",
     type: GameMapType.Mettersind,
     translationKey: "map.mettersind",
-    categories: ["fictional"],
+    categories: ["fictional", "frootz"],
     multiplayerFrequency: 1,
   },
   {
@@ -775,7 +777,7 @@ export const maps: readonly MapInfo[] = [
     id: "PatchworkEarth",
     type: GameMapType.PatchworkEarth,
     translationKey: "map.patchworkearth",
-    categories: ["fictional"],
+    categories: ["fictional", "frootz"],
     multiplayerFrequency: 1,
   },
   {
@@ -797,7 +799,7 @@ export const maps: readonly MapInfo[] = [
     id: "ShatteredExpanse",
     type: GameMapType.ShatteredExpanse,
     translationKey: "map.shatteredexpanse",
-    categories: ["fictional"],
+    categories: ["fictional", "frootz"],
     multiplayerFrequency: 0,
   },
   {
@@ -878,7 +880,7 @@ export const maps: readonly MapInfo[] = [
     id: "TherynianRealms",
     type: GameMapType.TherynianRealms,
     translationKey: "map.therynianrealms",
-    categories: ["fictional"],
+    categories: ["fictional", "frootz"],
     multiplayerFrequency: 1,
   },
   {
@@ -964,7 +966,7 @@ export const maps: readonly MapInfo[] = [
     id: "WorldOfLur",
     type: GameMapType.WorldOfLur,
     translationKey: "map.worldoflur",
-    categories: ["fictional"],
+    categories: ["fictional", "frootz"],
     multiplayerFrequency: 1,
   },
   {

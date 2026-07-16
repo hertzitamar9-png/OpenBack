@@ -2,7 +2,7 @@
   "id": "DasserianRealms",
   "name": "Dasserian Realms",
   "translation_key": "map.dasserianrealms",
-  "categories": ["fictional"],
+  "categories": ["fictional", "frootz"],
   "multiplayer_frequency": 1,
   "nations": [
     {

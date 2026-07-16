@@ -1278,16 +1278,7 @@ export class ClientGameRunner {
     if (!this.gameView.isLand(tile)) return false;
 
     const canBuild = this.canBoatAttack(buildables);
-    if (canBuild === false) return false;
-
-    // TODO: Global enable flag
-    // TODO: Global limit autoboat to nearby shore flag
-    // if (!enableAutoBoat) return false;
-    // if (!limitAutoBoatNear) return true;
-    const distanceSquared = this.gameView.euclideanDistSquared(tile, canBuild);
-    const limit = 100;
-    const limitSquared = limit * limit;
-    return distanceSquared < limitSquared;
+    return canBuild !== false;
   }
 
   private onMouseMove(event: MouseMoveEvent) {

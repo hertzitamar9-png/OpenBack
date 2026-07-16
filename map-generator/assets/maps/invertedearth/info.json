@@ -2,7 +2,7 @@
   "id": "InvertedEarth",
   "name": "Inverted Earth",
   "translation_key": "map.invertedearth",
-  "categories": ["fictional"],
+  "categories": ["fictional", "frootz"],
   "multiplayer_frequency": 1,
   "nations": [
     {

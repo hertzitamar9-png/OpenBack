@@ -2,7 +2,7 @@
   "id": "ShatteredExpanse",
   "name": "Shattered Expanse",
   "translation_key": "map.shatteredexpanse",
-  "categories": ["fictional"],
+  "categories": ["fictional", "frootz"],
   "multiplayer_frequency": 0,
   "nations": [
     {

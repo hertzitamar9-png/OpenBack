@@ -60,4 +60,27 @@ describe("canBuildTransportShip", () => {
     expect(game.isShore(src as TileRef)).toBe(true);
     expect((attacker as Player).smallID()).toBe(game.ownerID(src as TileRef));
   });
+
+  it("allows transport targeting more than 50 tiles inland", () => {
+    const width = 180;
+    const height = 20;
+    const grid: string[] = new Array(width * height).fill(W);
+    const set = (x: number, y: number, v: string) => (grid[y * width + x] = v);
+
+    for (let y = 4; y <= 15; y++) {
+      for (let x = 2; x <= 8; x++) set(x, y, L);
+      for (let x = 20; x <= 170; x++) set(x, y, L);
+    }
+
+    const game = createGame({ width, height, grid });
+    const attacker = addPlayer(game, game.ref(5, 10), "attacker");
+    const deepInlandTarget = game.ref(100, 10);
+
+    expect(
+      game.manhattanDist(deepInlandTarget, game.ref(20, 10)),
+    ).toBeGreaterThan(50);
+    expect(canBuildTransportShip(game, attacker, deepInlandTarget)).not.toBe(
+      false,
+    );
+  });
 });

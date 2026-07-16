@@ -2,7 +2,7 @@
   "id": "Mettersind",
   "name": "Mettersind",
   "translation_key": "map.mettersind",
-  "categories": ["fictional"],
+  "categories": ["fictional", "frootz"],
   "multiplayer_frequency": 1,
   "nations": [
     {

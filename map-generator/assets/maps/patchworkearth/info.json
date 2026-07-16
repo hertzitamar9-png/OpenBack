@@ -2,7 +2,7 @@
   "id": "PatchworkEarth",
   "name": "Patchwork Earth",
   "translation_key": "map.patchworkearth",
-  "categories": ["fictional"],
+  "categories": ["fictional", "frootz"],
   "multiplayer_frequency": 1,
   "nations": [
     {

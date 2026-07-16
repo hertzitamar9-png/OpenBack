@@ -2,7 +2,7 @@
   "id": "GrandEarth",
   "name": "Grand Earth",
   "translation_key": "map.grandearth",
-  "categories": ["new", "world"],
+  "categories": ["new", "frootz", "world"],
   "multiplayer_frequency": 0,
   "nations": [
     {

@@ -2,7 +2,7 @@
   "id": "MandalaNations",
   "name": "Mandala Nations",
   "translation_key": "map.mandalanations",
-  "categories": ["fictional"],
+  "categories": ["fictional", "frootz"],
   "multiplayer_frequency": 1,
   "nations": [
     {

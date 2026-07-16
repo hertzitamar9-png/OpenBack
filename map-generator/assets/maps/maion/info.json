@@ -2,7 +2,7 @@
   "id": "Maion",
   "name": "Maion",
   "translation_key": "map.maion",
-  "categories": ["fictional"],
+  "categories": ["fictional", "frootz"],
   "multiplayer_frequency": 1,
   "nations": [
     {

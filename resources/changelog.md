@@ -1,3 +1,20 @@
+# OpenBack v0.33.23 - Frootz Maps and Global Naval Reach
+
+**Created by frootz jhklphy**
+
+## Maps
+
+- Added the **Frootz** category and placed every OpenBack-created map in it, including Grand Earth, Shattered Expanse, and all 15 converted fictional worlds.
+- Kept each map in its useful geographic or fictional categories as well, so the Frootz category acts as one complete OpenBack collection without removing existing filters.
+
+## Naval Movement
+
+- Removed the short automatic-boat distance limit so transport ships can be ordered across the full connected ocean on maps of every size.
+- Removed the 50-tile inland targeting limit: selecting territory deep inside a huge continent now resolves to its nearest coast that the attacker can actually reach.
+- Preserved water-component validation, preventing boats from crossing land or launching into disconnected inland lakes.
+
+---
+
 # OpenBack v0.33.22 - Grand Earth and Reliable Starts
 
 **Created by frootz jhklphy**

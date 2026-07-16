@@ -38,7 +38,10 @@ export class AStarWater implements PathFinder<number> {
     this.width = map.width();
     this.numNodes = map.width() * map.height();
     this.heuristicWeight = config?.heuristicWeight ?? 5;
-    this.maxIterations = config?.maxIterations ?? 1_000_000;
+    // The fallback water solver must be able to inspect the complete map.
+    // A fixed one-million-iteration ceiling made extremely large OpenBack
+    // oceans appear to have a boat range limit even when a route existed.
+    this.maxIterations = config?.maxIterations ?? Number.MAX_SAFE_INTEGER;
 
     this.closedStamp = new Uint32Array(this.numNodes);
     this.gScoreStamp = new Uint32Array(this.numNodes);

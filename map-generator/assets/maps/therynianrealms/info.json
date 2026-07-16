@@ -2,7 +2,7 @@
   "id": "TherynianRealms",
   "name": "Therynian Realms",
   "translation_key": "map.therynianrealms",
-  "categories": ["fictional"],
+  "categories": ["fictional", "frootz"],
   "multiplayer_frequency": 1,
   "nations": [
     {

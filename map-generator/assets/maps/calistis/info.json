@@ -2,7 +2,7 @@
   "id": "Calistis",
   "name": "Calistis",
   "translation_key": "map.calistis",
-  "categories": ["fictional"],
+  "categories": ["fictional", "frootz"],
   "multiplayer_frequency": 1,
   "nations": [
     {

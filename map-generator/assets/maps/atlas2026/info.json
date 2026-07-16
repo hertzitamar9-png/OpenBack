@@ -2,7 +2,7 @@
   "id": "Atlas2026",
   "name": "Atlas 2026",
   "translation_key": "map.atlas2026",
-  "categories": ["fictional"],
+  "categories": ["fictional", "frootz"],
   "multiplayer_frequency": 1,
   "nations": [
     {

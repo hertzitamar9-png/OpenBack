@@ -2,7 +2,7 @@
   "id": "CanidContinents",
   "name": "Canid Continents",
   "translation_key": "map.canidcontinents",
-  "categories": ["fictional"],
+  "categories": ["fictional", "frootz"],
   "multiplayer_frequency": 1,
   "nations": [
     {
