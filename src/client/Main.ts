@@ -45,6 +45,7 @@ import { initNavigation } from "./Navigation";
 import "./NewsModal";
 import "./PatternInput";
 import "./SinglePlayerModal";
+import { socialClient } from "./SocialClient";
 import { StoreModal } from "./Store";
 import "./TerritoryPatternsModal";
 import { TerritoryPatternsModal } from "./TerritoryPatternsModal";
@@ -268,7 +269,9 @@ declare global {
     "kick-player": CustomEvent;
     toggle_game_start_timer: CustomEvent;
     "join-changed": CustomEvent;
-    "open-matchmaking": CustomEvent<{ teamSize?: 1 | 2 | 3 | 4 } | undefined>;
+    "open-matchmaking": CustomEvent<
+      { teamSize?: 1 | 2 | 3 | 4; partyCode?: string } | undefined
+    >;
     userMeResponse: CustomEvent<UserMeResponse | false>;
     "leave-lobby": CustomEvent;
     "update-game-config": CustomEvent;
@@ -310,6 +313,7 @@ class Client {
   }> | null = null;
 
   async initialize(): Promise<void> {
+    socialClient.start();
     crazyGamesSDK.maybeInit();
 
     // Register modals with the URL router. Lobby modals (join/host) and
@@ -1068,10 +1072,13 @@ class Client {
   }
 
   private handleOpenMatchmaking(
-    event: CustomEvent<{ teamSize?: 1 | 2 | 3 | 4 } | undefined>,
+    event: CustomEvent<
+      { teamSize?: 1 | 2 | 3 | 4; partyCode?: string } | undefined
+    >,
   ) {
     this.matchmakingModal?.open({
       teamSize: event.detail?.teamSize ?? 1,
+      partyCode: event.detail?.partyCode,
     });
   }
 

@@ -29,6 +29,7 @@ import {
 import { getPlayToken } from "./Auth";
 import "./components/baseComponents/Modal";
 import { BaseModal } from "./components/BaseModal";
+import "./components/FriendInvitePanel";
 import "./components/GameConfigSettings";
 import "./components/InputCard";
 import "./components/LobbyPlayerView";
@@ -540,6 +541,18 @@ export class HostLobbyModal extends BaseModal {
             .nameReveals=${this.nameReveals}
             .anonymizeNames=${this.anonymizeNames}
           ></lobby-player-view>
+          ${this.lobbyId
+            ? html`
+                <friend-invite-panel
+                  class="mt-6 block"
+                  .title=${translateText("friends.invite_to_lobby")}
+                  .invite=${{
+                    kind: "lobby",
+                    lobbyId: this.lobbyId,
+                  }}
+                ></friend-invite-panel>
+              `
+            : ""}
         </div>
 
         <!-- Player List / footer -->

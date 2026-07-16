@@ -279,6 +279,7 @@ export type RankedLeaderboardResponse = z.infer<
 
 export const FriendEntrySchema = z.object({
   publicId: z.string(),
+  displayName: z.string().optional(),
   createdAt: z.iso.datetime(),
 });
 export type FriendEntry = z.infer<typeof FriendEntrySchema>;

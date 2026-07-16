@@ -18,6 +18,7 @@ import {
 } from "./OpenBackContent";
 import { renderAppShell } from "./RenderHtml";
 import { ServerEnv } from "./ServerEnv";
+import { SocialService } from "./SocialService";
 import { applyStaticAssetCacheControl } from "./StaticAssetCache";
 import { authRouter } from "./auth/AuthServer";
 
@@ -39,6 +40,7 @@ const matchmaking = new MatchmakingService(
   (teamSize, teams, preferences) =>
     playlist.getRankedConfig(teamSize, teams, preferences),
 );
+const social = new SocialService(log);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -157,6 +159,7 @@ export async function startMaster() {
 
   // Handle ranked matchmaking WebSocket upgrades on the master HTTP server.
   matchmaking.attach(server);
+  social.attach(server);
 
   const INSTANCE_ID =
     ServerEnv.env() === GameEnv.Dev

@@ -6,6 +6,7 @@ import { getLastUserMe, getUserMe, hasLinkedAccount } from "./Api";
 import { getPlayToken } from "./Auth";
 import { BaseModal } from "./components/BaseModal";
 import "./components/Difficulties";
+import "./components/FriendInvitePanel";
 import { modalHeader } from "./components/ui/ModalHeader";
 import { crazyGamesSDK } from "./CrazyGamesSDK";
 import { JoinLobbyEvent } from "./Main";
@@ -182,6 +183,14 @@ export class MatchmakingModal extends BaseModal {
             `;
           })}
         </div>
+        <friend-invite-panel
+          .title=${translateText("friends.invite_to_ranked_party")}
+          .invite=${{
+            kind: "ranked_party",
+            partyCode: party.code,
+            teamSize: party.teamSize,
+          }}
+        ></friend-invite-panel>
         ${isLeader ? this.renderRankedSettings() : ""}
         <button
           class="w-full rounded-xl bg-green-600 px-5 py-4 font-black uppercase tracking-widest text-white hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-40"
@@ -264,6 +273,8 @@ export class MatchmakingModal extends BaseModal {
             jwt: this.playToken,
           }),
         );
+      } else if (this.joinCode.length === 6) {
+        this.sendPartyMessage("party_join");
       }
       this.connected = true;
       this.requestUpdate();
@@ -304,7 +315,10 @@ export class MatchmakingModal extends BaseModal {
         ? args.teamSize
         : 1;
     this.party = null;
-    this.joinCode = "";
+    this.joinCode =
+      typeof args?.partyCode === "string"
+        ? args.partyCode.trim().toUpperCase()
+        : "";
     const userMe = await getUserMe();
     // Early return if modal was closed during async operation
     if (!this.isModalOpen) {

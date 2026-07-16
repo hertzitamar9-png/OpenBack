@@ -1,3 +1,12 @@
+## OpenBack v0.33.27 - In-App Friend Invitations
+
+- Added persistent friend requests and friend lists to OpenBack accounts.
+- Added live in-app invitations from private multiplayer lobbies, with a clear accept or cancel confirmation for the invited friend.
+- Added friend invitations inside ranked 2v2, 3v3, and 4v4 parties; accepting opens the correct party and joins it automatically.
+- Added visible delivery feedback so party and lobby hosts know whether an online friend received the invitation.
+
+Contributed by **frootz jhklphy**.
+
 ## OpenBack v0.33.26 - Long-Match Stability
 
 - Replaced per-tile boxed territory ownership with a compact sparse tile store, preventing large and long-running matches from growing into multi-gigabyte browser heaps.

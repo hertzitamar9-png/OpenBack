@@ -106,12 +106,26 @@ interface PersistShape {
   users: StoredUser[];
   sessions: Record<string, Session>;
   clans?: StoredClan[];
+  friendships?: StoredFriendship[];
+  friendRequests?: StoredFriendRequest[];
+}
+interface StoredFriendship {
+  a: string;
+  b: string;
+  createdAt: string;
+}
+interface StoredFriendRequest {
+  from: string;
+  to: string;
+  createdAt: string;
 }
 const usersByEmail = new Map<string, StoredUser>();
 const usersByPid = new Map<string, StoredUser>();
 const sessions = new Map<string, Session>();
 const codes = new Map<string, PendingCode>();
 const clansByTag = new Map<string, StoredClan>();
+let friendships: StoredFriendship[] = [];
+let friendRequests: StoredFriendRequest[] = [];
 // Parsed once at startup. Purchases validate item names/prices against this.
 const cosmetics = CosmeticsSchema.parse(cosmeticsJson);
 const databaseUrl = process.env.DATABASE_URL;
@@ -129,6 +143,8 @@ function hydrate(raw: PersistShape) {
   usersByPid.clear();
   sessions.clear();
   clansByTag.clear();
+  friendships = raw.friendships ?? [];
+  friendRequests = raw.friendRequests ?? [];
   for (const u of raw.users ?? []) {
     usersByEmail.set(u.email?.toLowerCase() ?? u.persistentId, u);
     usersByPid.set(u.persistentId, u);
@@ -170,6 +186,8 @@ function persistenceSnapshot(): PersistShape {
     users: [...usersByPid.values()],
     sessions: Object.fromEntries(sessions),
     clans: [...clansByTag.values()],
+    friendships,
+    friendRequests,
   };
 }
 
@@ -285,7 +303,14 @@ function userMeFor(user: StoredUser): UserMeResponse {
       },
       clans,
       clanRequests,
-      friends: [],
+      friends: friendships
+        .filter(
+          (friendship) =>
+            friendship.a === user.publicId || friendship.b === user.publicId,
+        )
+        .map((friendship) =>
+          friendship.a === user.publicId ? friendship.b : friendship.a,
+        ),
       subscription: null,
     },
   });
@@ -373,6 +398,13 @@ function deleteUser(user: StoredUser): void {
       clan.members[0].role = "leader";
     }
   }
+  friendships = friendships.filter(
+    (friendship) =>
+      friendship.a !== user.publicId && friendship.b !== user.publicId,
+  );
+  friendRequests = friendRequests.filter(
+    (request) => request.from !== user.publicId && request.to !== user.publicId,
+  );
 }
 
 async function signToken(user: StoredUser): Promise<{
@@ -459,6 +491,14 @@ export async function resolveRankedPlayer(token: string): Promise<{
     displayName: usernameFor(user),
     elo: user.elo ?? DEFAULT_ELO,
   };
+}
+
+export function areFriends(a: string, b: string): boolean {
+  return friendships.some(
+    (friendship) =>
+      (friendship.a === a && friendship.b === b) ||
+      (friendship.a === b && friendship.b === a),
+  );
 }
 
 // chess.com / FIDE-style dynamic K-factor: new accounts converge fast, settled
@@ -906,6 +946,184 @@ export function authRouter(): express.Router {
     }
     persist();
     res.json(userMeFor(user));
+  });
+
+  const friendEntry = (publicId: string, createdAt: string) => ({
+    publicId,
+    displayName: userByPublicId(publicId)?.displayName,
+    createdAt,
+  });
+
+  router.get("/friends", async (req, res) => {
+    const user = await userFromBearer(req);
+    if (!user?.email) {
+      res.status(401).json({ error: "unauthorized" });
+      return;
+    }
+    const page = Math.max(1, Number.parseInt(String(req.query.page ?? 1), 10));
+    const limit = Math.min(
+      100,
+      Math.max(1, Number.parseInt(String(req.query.limit ?? 20), 10)),
+    );
+    const all = friendships
+      .filter(
+        (friendship) =>
+          friendship.a === user.publicId || friendship.b === user.publicId,
+      )
+      .map((friendship) =>
+        friendEntry(
+          friendship.a === user.publicId ? friendship.b : friendship.a,
+          friendship.createdAt,
+        ),
+      )
+      .sort((a, b) => a.publicId.localeCompare(b.publicId));
+    const start = (page - 1) * limit;
+    res.json({
+      results: all.slice(start, start + limit),
+      total: all.length,
+      page,
+      limit,
+    });
+  });
+
+  router.get("/friends/requests", async (req, res) => {
+    const user = await userFromBearer(req);
+    if (!user?.email) {
+      res.status(401).json({ error: "unauthorized" });
+      return;
+    }
+    res.json({
+      incoming: friendRequests
+        .filter((request) => request.to === user.publicId)
+        .map((request) => friendEntry(request.from, request.createdAt)),
+      outgoing: friendRequests
+        .filter((request) => request.from === user.publicId)
+        .map((request) => friendEntry(request.to, request.createdAt)),
+    });
+  });
+
+  router.post("/friends/requests/:id", async (req, res) => {
+    const user = await userFromBearer(req);
+    if (!user?.email) {
+      res.status(401).json({ error: "unauthorized" });
+      return;
+    }
+    const targetId = String(req.params.id);
+    if (targetId === user.publicId) {
+      res.status(400).json({ error: "cannot_friend_self" });
+      return;
+    }
+    const target = userByPublicId(targetId);
+    if (!target?.email) {
+      res.status(404).json({ error: "not_found" });
+      return;
+    }
+    if (areFriends(user.publicId, targetId)) {
+      res.status(409).json({ error: "already_friends" });
+      return;
+    }
+    const reverseIndex = friendRequests.findIndex(
+      (request) => request.from === targetId && request.to === user.publicId,
+    );
+    if (reverseIndex !== -1) {
+      const reverse = friendRequests[reverseIndex];
+      friendRequests.splice(reverseIndex, 1);
+      friendships.push({
+        a: user.publicId,
+        b: targetId,
+        createdAt: new Date().toISOString(),
+      });
+      persist();
+      res.json({ status: "accepted", requestedAt: reverse.createdAt });
+      return;
+    }
+    if (
+      friendRequests.some(
+        (request) => request.from === user.publicId && request.to === targetId,
+      )
+    ) {
+      res.status(409).json({ error: "request_exists" });
+      return;
+    }
+    friendRequests.push({
+      from: user.publicId,
+      to: targetId,
+      createdAt: new Date().toISOString(),
+    });
+    persist();
+    res.json({ status: "requested" });
+  });
+
+  router.post("/friends/requests/:id/accept", async (req, res) => {
+    const user = await userFromBearer(req);
+    if (!user?.email) {
+      res.status(401).json({ error: "unauthorized" });
+      return;
+    }
+    const requesterId = String(req.params.id);
+    const index = friendRequests.findIndex(
+      (request) => request.from === requesterId && request.to === user.publicId,
+    );
+    if (index === -1) {
+      res.status(404).json({ error: "not_found" });
+      return;
+    }
+    friendRequests.splice(index, 1);
+    if (!areFriends(user.publicId, requesterId)) {
+      friendships.push({
+        a: user.publicId,
+        b: requesterId,
+        createdAt: new Date().toISOString(),
+      });
+    }
+    persist();
+    res.json({ ok: true });
+  });
+
+  router.delete("/friends/requests/:id", async (req, res) => {
+    const user = await userFromBearer(req);
+    if (!user?.email) {
+      res.status(401).json({ error: "unauthorized" });
+      return;
+    }
+    const otherId = String(req.params.id);
+    const before = friendRequests.length;
+    friendRequests = friendRequests.filter(
+      (request) =>
+        !(
+          (request.from === user.publicId && request.to === otherId) ||
+          (request.from === otherId && request.to === user.publicId)
+        ),
+    );
+    if (friendRequests.length === before) {
+      res.status(404).json({ error: "not_found" });
+      return;
+    }
+    persist();
+    res.json({ ok: true });
+  });
+
+  router.delete("/friends/:id", async (req, res) => {
+    const user = await userFromBearer(req);
+    if (!user?.email) {
+      res.status(401).json({ error: "unauthorized" });
+      return;
+    }
+    const otherId = String(req.params.id);
+    const before = friendships.length;
+    friendships = friendships.filter(
+      (friendship) =>
+        !(
+          (friendship.a === user.publicId && friendship.b === otherId) ||
+          (friendship.a === otherId && friendship.b === user.publicId)
+        ),
+    );
+    if (friendships.length === before) {
+      res.status(404).json({ error: "not_found" });
+      return;
+    }
+    persist();
+    res.json({ ok: true });
   });
 
   // Public player profile by publicId. It intentionally contains only the
