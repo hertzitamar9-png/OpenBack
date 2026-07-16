@@ -6,7 +6,8 @@ import {
 } from "../../../core/ApiSchemas";
 import { RankedType } from "../../../core/game/Game";
 import { fetchPlayerById, fetchPlayerLeaderboard, getUserMe } from "../../Api";
-import { translateText } from "../../Utils";
+import { sendFriendRequest } from "../../FriendsApi";
+import { showToast, translateText } from "../../Utils";
 
 @customElement("leaderboard-player-list")
 export class LeaderboardPlayerList extends LitElement {
@@ -20,6 +21,13 @@ export class LeaderboardPlayerList extends LitElement {
   @state() private playerHasMore = true;
   @state() private selectedProfile: PlayerProfile | null = null;
   @state() private profileLoading = false;
+  @state() private contextMenu: {
+    publicId: string;
+    username: string;
+    x: number;
+    y: number;
+  } | null = null;
+  private friendRequestPending = false;
 
   private hasLoadedPlayers = false;
   private readonly playerPageSize = 50;
@@ -237,6 +245,8 @@ export class LeaderboardPlayerList extends LitElement {
           ? "bg-blue-500/15"
           : ""}"
         @click=${() => this.openPlayerProfile(player.playerId)}
+        @contextmenu=${(event: MouseEvent) =>
+          this.openFriendMenu(event, player)}
       >
         <td class="py-3 px-4 text-center">
           <div
@@ -281,6 +291,53 @@ export class LeaderboardPlayerList extends LitElement {
         </td>
       </tr>
     `;
+  }
+
+  private openFriendMenu(
+    event: MouseEvent,
+    player: PlayerLeaderboardEntry,
+  ): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (player.playerId === this.currentUserId) return;
+    this.contextMenu = {
+      publicId: player.playerId,
+      username: player.username,
+      x: Math.min(event.clientX, window.innerWidth - 228),
+      y: Math.min(event.clientY, window.innerHeight - 62),
+    };
+  }
+
+  private async sendContextFriendRequest(): Promise<void> {
+    const target = this.contextMenu;
+    this.contextMenu = null;
+    if (!target || this.friendRequestPending) return;
+    this.friendRequestPending = true;
+    try {
+      const result = await sendFriendRequest(target.publicId);
+      if (typeof result === "string") {
+        const key =
+          result === "not_found"
+            ? "friends.error_not_found"
+            : result === "conflict"
+              ? "friends.error_conflict"
+              : result === "bad_request"
+                ? "friends.error_bad_request"
+                : "friends.error_generic";
+        showToast(translateText(key), "red");
+        return;
+      }
+      showToast(
+        translateText(
+          result.status === "accepted"
+            ? "friends.request_auto_accepted"
+            : "friends.request_sent",
+        ),
+        "green",
+      );
+    } finally {
+      this.friendRequestPending = false;
+    }
   }
 
   private async openPlayerProfile(publicId: string) {
@@ -554,6 +611,30 @@ export class LeaderboardPlayerList extends LitElement {
               `
             : ""}
           ${this.renderProfileCard()}
+          ${this.contextMenu
+            ? html`
+                <div
+                  class="fixed inset-0 z-[10020]"
+                  @pointerdown=${() => (this.contextMenu = null)}
+                  @contextmenu=${(event: Event) => {
+                    event.preventDefault();
+                    this.contextMenu = null;
+                  }}
+                >
+                  <button
+                    class="fixed min-w-[220px] rounded-lg border border-cyan-500/50 bg-slate-950 px-4 py-3 text-left font-bold text-white shadow-2xl hover:bg-slate-800"
+                    style="left:${this.contextMenu.x}px; top:${this.contextMenu
+                      .y}px"
+                    @pointerdown=${(event: Event) => event.stopPropagation()}
+                    @click=${() => void this.sendContextFriendRequest()}
+                  >
+                    ${translateText("friends.send_to_player", {
+                      player: this.contextMenu.username,
+                    })}
+                  </button>
+                </div>
+              `
+            : ""}
         </div>
       </div>
     `;

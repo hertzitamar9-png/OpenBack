@@ -10,7 +10,7 @@
 
 import terrainFragSrc from "../shaders/terrain/terrain.frag.glsl?raw";
 import terrainVertSrc from "../shaders/terrain/terrain.vert.glsl?raw";
-import { buildTerrainRGBA, encodeTerrainTile } from "../utils/ColorUtils";
+import { buildTerrainPalette } from "../utils/ColorUtils";
 import {
   createMapQuad,
   createProgram,
@@ -25,6 +25,7 @@ import {
 export class TerrainPass {
   private program: WebGLProgram;
   private tex: WebGLTexture;
+  private paletteTex: WebGLTexture;
   private vao: WebGLVertexArrayObject;
   private uCamera: WebGLUniformLocation;
   private mapW: number;
@@ -32,8 +33,7 @@ export class TerrainPass {
   // Base ocean (deep water) color; reused by applyTerrainDelta and rebuilds.
   private oceanColor: readonly [number, number, number] | undefined;
   // Scratch buffer for 1×1 sub-uploads; reused across applyTerrainDelta calls.
-  private readonly pixelScratch = new Uint8Array(4);
-  private terrainRgba: Uint8Array;
+  private readonly pixelScratch = new Uint8Array(1);
 
   constructor(
     private gl: WebGL2RenderingContext,
@@ -51,17 +51,27 @@ export class TerrainPass {
       terrainFragSrc,
     );
     this.uCamera = gl.getUniformLocation(this.program, "uCamera")!;
-
-    this.terrainRgba = buildTerrainRGBA(terrainBytes, mapW, mapH, oceanColor);
+    gl.useProgram(this.program);
+    gl.uniform1i(gl.getUniformLocation(this.program, "uTerrain"), 0);
+    gl.uniform1i(gl.getUniformLocation(this.program, "uTerrainPalette"), 1);
 
     this.tex = createTexture2D(gl, {
       width: mapW,
       height: mapH,
+      internalFormat: gl.R8UI,
+      format: gl.RED_INTEGER,
+      type: gl.UNSIGNED_BYTE,
+      data: terrainBytes,
+      filter: gl.NEAREST, // pixel-crisp at all zoom levels
+    });
+    this.paletteTex = createTexture2D(gl, {
+      width: 256,
+      height: 1,
       internalFormat: gl.RGBA8,
       format: gl.RGBA,
       type: gl.UNSIGNED_BYTE,
-      data: this.terrainRgba,
-      filter: gl.NEAREST, // pixel-crisp at all zoom levels
+      data: buildTerrainPalette(oceanColor),
+      filter: gl.NEAREST,
     });
 
     this.vao = createMapQuad(gl, mapW, mapH);
@@ -74,24 +84,18 @@ export class TerrainPass {
   setOceanColor(oceanColor?: readonly [number, number, number]): void {
     this.oceanColor = oceanColor;
     const gl = this.gl;
-    gl.bindTexture(gl.TEXTURE_2D, this.tex);
+    gl.bindTexture(gl.TEXTURE_2D, this.paletteTex);
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-    this.terrainRgba = buildTerrainRGBA(
-      this.terrainBytes,
-      this.mapW,
-      this.mapH,
-      oceanColor,
-    );
     gl.texSubImage2D(
       gl.TEXTURE_2D,
       0,
       0,
       0,
-      this.mapW,
-      this.mapH,
+      256,
+      1,
       gl.RGBA,
       gl.UNSIGNED_BYTE,
-      this.terrainRgba,
+      buildTerrainPalette(oceanColor),
     );
   }
 
@@ -116,7 +120,6 @@ export class TerrainPass {
       const x = ref % this.mapW;
       const y = (ref - x) / this.mapW;
       this.terrainBytes[ref] = bytes[i];
-      encodeTerrainTile(bytes[i], this.terrainRgba, ref * 4, this.oceanColor);
       if (y < minY) minY = y;
       if (y > maxY) maxY = y;
     }
@@ -126,8 +129,8 @@ export class TerrainPass {
     // but scattered refs can span most of a large map. Only batch while the
     // extra unchanged pixels stay cheaper than the calls being removed.
     if (refs.length >= 64 && dirtyRowTexels <= refs.length * 64) {
-      const start = minY * this.mapW * 4;
-      const end = (maxY + 1) * this.mapW * 4;
+      const start = minY * this.mapW;
+      const end = (maxY + 1) * this.mapW;
       gl.texSubImage2D(
         gl.TEXTURE_2D,
         0,
@@ -135,9 +138,9 @@ export class TerrainPass {
         minY,
         this.mapW,
         maxY - minY + 1,
-        gl.RGBA,
+        gl.RED_INTEGER,
         gl.UNSIGNED_BYTE,
-        this.terrainRgba.subarray(start, end),
+        this.terrainBytes.subarray(start, end),
       );
       return;
     }
@@ -146,11 +149,7 @@ export class TerrainPass {
       const ref = refs[i];
       const x = ref % this.mapW;
       const y = (ref - x) / this.mapW;
-      const off = ref * 4;
-      this.pixelScratch[0] = this.terrainRgba[off];
-      this.pixelScratch[1] = this.terrainRgba[off + 1];
-      this.pixelScratch[2] = this.terrainRgba[off + 2];
-      this.pixelScratch[3] = this.terrainRgba[off + 3];
+      this.pixelScratch[0] = this.terrainBytes[ref];
       gl.texSubImage2D(
         gl.TEXTURE_2D,
         0,
@@ -158,11 +157,16 @@ export class TerrainPass {
         y,
         1,
         1,
-        gl.RGBA,
+        gl.RED_INTEGER,
         gl.UNSIGNED_BYTE,
         this.pixelScratch,
       );
     }
+  }
+
+  /** Shared raw terrain texture used by railroad bridge rendering. */
+  getTexture(): WebGLTexture {
+    return this.tex;
   }
 
   /** Render the terrain. Call with depth test disabled, no blending. */
@@ -173,6 +177,8 @@ export class TerrainPass {
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.tex);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, this.paletteTex);
 
     gl.bindVertexArray(this.vao);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -182,6 +188,7 @@ export class TerrainPass {
     const gl = this.gl;
     gl.deleteProgram(this.program);
     gl.deleteTexture(this.tex);
+    gl.deleteTexture(this.paletteTex);
     // VAO + buffer leak is acceptable on dispose (context is being destroyed)
   }
 }

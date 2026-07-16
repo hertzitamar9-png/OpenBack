@@ -2,7 +2,6 @@ import { html, LitElement, TemplateResult } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { translateText, TUTORIAL_VIDEO_URL } from "../../../client/Utils";
 import { EventBus } from "../../../core/EventBus";
-import { RankedType } from "../../../core/game/Game";
 import { GameUpdateType } from "../../../core/game/GameUpdates";
 import { getUserMe } from "../../Api";
 import "../../components/CosmeticButton";
@@ -174,7 +173,7 @@ export class WinModal extends LitElement implements Controller {
     await this.loadPatternContent();
     // Check if this is a ranked game
     this.isRankedGame =
-      this.game.config().gameConfig().rankedType === RankedType.OneVOne;
+      this.game.config().gameConfig().rankedType !== undefined;
     this.isVisible = true;
     this.requestUpdate();
     setTimeout(() => {

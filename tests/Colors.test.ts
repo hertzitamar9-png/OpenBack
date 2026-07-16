@@ -2,6 +2,10 @@ import { colord, Colord } from "colord";
 import defaultTheme from "../src/client/render/gl/default-theme.json";
 import { createThemeSettings } from "../src/client/render/gl/RenderSettings";
 import {
+  buildTerrainPalette,
+  encodeTerrainTile,
+} from "../src/client/render/gl/utils/ColorUtils";
+import {
   ColorAllocator,
   selectDistinctColorIndex,
 } from "../src/client/theme/ColorAllocator";
@@ -72,6 +76,20 @@ describe("ColorAllocator", () => {
 
     expect(c1.isEqual(c1Again)).toBe(true);
     expect(c2.isEqual(c2Again)).toBe(true);
+  });
+});
+
+describe("terrain palette", () => {
+  test("matches direct terrain encoding for every byte", () => {
+    const ocean = [21, 83, 117] as const;
+    const palette = buildTerrainPalette(ocean);
+    const direct = new Uint8Array(4);
+    for (let terrainByte = 0; terrainByte < 256; terrainByte++) {
+      encodeTerrainTile(terrainByte, direct, 0, ocean);
+      expect(
+        Array.from(palette.subarray(terrainByte * 4, terrainByte * 4 + 4)),
+      ).toEqual(Array.from(direct));
+    }
   });
 });
 

@@ -112,17 +112,20 @@ export class RankedModal extends BaseModal {
                 : translateText("mode_selector.ranked_title")),
             () => this.handleRanked(),
           )}
-          ${this.renderDisabledCard(
+          ${this.renderCard(
             translateText("mode_selector.ranked_2v2_title"),
-            translateText("mode_selector.coming_soon"),
+            translateText("matchmaking_modal.party_required"),
+            () => this.handleRanked(2),
           )}
-          ${this.renderDisabledCard(
-            translateText("mode_selector.coming_soon"),
-            "",
+          ${this.renderCard(
+            translateText("matchmaking_modal.ranked_3v3_title"),
+            translateText("matchmaking_modal.party_required"),
+            () => this.handleRanked(3),
           )}
-          ${this.renderDisabledCard(
-            translateText("mode_selector.coming_soon"),
-            "",
+          ${this.renderCard(
+            translateText("matchmaking_modal.ranked_4v4_title"),
+            translateText("matchmaking_modal.party_required"),
+            () => this.handleRanked(4),
           )}
         </div>
       </div>
@@ -151,34 +154,15 @@ export class RankedModal extends BaseModal {
     `;
   }
 
-  private renderDisabledCard(title: string, subtitle: string) {
-    return html`
-      <div
-        class="group relative isolate flex flex-col w-full h-28 sm:h-32 overflow-hidden rounded-2xl bg-slate-900/40 backdrop-blur-md border-0 shadow-none p-6 items-center justify-center gap-3 opacity-50 cursor-not-allowed"
-      >
-        <div class="flex flex-col items-center gap-1 text-center">
-          <h3
-            class="text-lg sm:text-xl font-bold text-white/60 uppercase tracking-widest leading-tight"
-          >
-            ${title}
-          </h3>
-          <p
-            class="text-xs text-white/40 uppercase tracking-wider whitespace-pre-line leading-tight"
-          >
-            ${subtitle}
-          </p>
-        </div>
-      </div>
-    `;
-  }
-
-  private async handleRanked() {
+  private async handleRanked(teamSize: 1 | 2 | 3 | 4 = 1) {
     if ((await userAuth()) === false) {
       this.close();
       window.showPage?.("page-account");
       return;
     }
 
-    document.dispatchEvent(new CustomEvent("open-matchmaking"));
+    document.dispatchEvent(
+      new CustomEvent("open-matchmaking", { detail: { teamSize } }),
+    );
   }
 }

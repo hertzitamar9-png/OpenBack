@@ -34,7 +34,11 @@ const log = logger.child({ comp: "m" });
 // Generate ranked rules in the single master process. With multiple game
 // workers this keeps the no-repeat map history global instead of giving each
 // worker an independent random sequence.
-const matchmaking = new MatchmakingService(log, () => playlist.get1v1Config());
+const matchmaking = new MatchmakingService(
+  log,
+  (teamSize, teams, preferences) =>
+    playlist.getRankedConfig(teamSize, teams, preferences),
+);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

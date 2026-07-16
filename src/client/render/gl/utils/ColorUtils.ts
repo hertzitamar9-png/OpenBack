@@ -117,3 +117,18 @@ export function buildTerrainRGBA(
   }
   return pixels;
 }
+
+/**
+ * Build the exact 256-entry terrain color lookup used by the GPU shader.
+ * Terrain color depends only on the encoded byte, so this 1 KiB palette can
+ * replace a four-byte-per-map-tile RGBA texture without changing any pixels.
+ */
+export function buildTerrainPalette(
+  oceanColor?: readonly [number, number, number],
+): Uint8Array {
+  const palette = new Uint8Array(256 * 4);
+  for (let terrainByte = 0; terrainByte < 256; terrainByte++) {
+    encodeTerrainTile(terrainByte, palette, terrainByte * 4, oceanColor);
+  }
+  return palette;
+}

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { Difficulty, GameMapSize } from "../../src/core/game/Game";
+import {
+  Difficulty,
+  GameMapSize,
+  GameMode,
+  RankedType,
+} from "../../src/core/game/Game";
 import { MapPlaylist } from "../../src/server/MapPlaylist";
 
 describe("ranked 1v1 playlist", () => {
@@ -53,5 +58,28 @@ describe("ranked 1v1 playlist", () => {
     expect(config.goldMultiplier).toBe(3);
     expect(config.difficulty).toBe(Difficulty.Hard);
     expect(config.randomSpawn).toBe(false);
+  });
+
+  it("creates ordered shared-control team ranked rules", () => {
+    const teams = [
+      ["a", "b", "c", "d"],
+      ["e", "f", "g", "h"],
+    ];
+    const config = new MapPlaylist().getRankedConfig(
+      4,
+      teams,
+      { bots: 200, nations: 100 },
+      () => 0,
+    );
+
+    expect(config.rankedType).toBe(RankedType.FourVFour);
+    expect(config.gameMode).toBe(GameMode.Team);
+    expect(config.playerTeams).toBe(2);
+    expect(config.maxPlayers).toBe(8);
+    expect(config.worldMechanics?.sharedControlSize).toBe(4);
+    expect(config.rankedTeams).toEqual(teams);
+    expect(config.allowedPublicIds).toEqual(teams.flat());
+    expect(config.bots).toBe(200);
+    expect(config.nations).toBe(100);
   });
 });

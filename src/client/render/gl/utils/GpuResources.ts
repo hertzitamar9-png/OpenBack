@@ -44,8 +44,8 @@ export function createGPUResources(
   });
 
   const heatTexA = createTexture2D(gl, {
-    width: mapW,
-    height: mapH,
+    width: 1,
+    height: 1,
     internalFormat: gl.R8,
     format: gl.RED,
     type: gl.UNSIGNED_BYTE,
@@ -54,8 +54,8 @@ export function createGPUResources(
   });
 
   const heatTexB = createTexture2D(gl, {
-    width: mapW,
-    height: mapH,
+    width: 1,
+    height: 1,
     internalFormat: gl.R8,
     format: gl.RED,
     type: gl.UNSIGNED_BYTE,

@@ -1,9 +1,11 @@
 import { LitElement, html } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { repeat } from "lit/directives/repeat.js";
-import { renderTroops, translateText } from "../../../client/Utils";
+import { renderTroops, showToast, translateText } from "../../../client/Utils";
 import { EventBus } from "../../../core/EventBus";
+import { PlayerType } from "../../../core/game/Game";
 import { Controller } from "../../Controller";
+import { sendFriendRequest } from "../../FriendsApi";
 import { GoToPlayerEvent } from "../../TransformHandler";
 import { formatPercentage, renderNumber } from "../../Utils";
 import { GameView, PlayerView } from "../../view";
@@ -28,6 +30,14 @@ export class Leaderboard extends LitElement implements Controller {
 
   @property({ type: Boolean }) visible = false;
   private showTopFive = true;
+  @state()
+  private contextMenu: {
+    player: PlayerView;
+    publicId: string;
+    x: number;
+    y: number;
+  } | null = null;
+  private friendRequestPending = false;
 
   @state()
   private _sortKey: "tiles" | "gold" | "maxtroops" = "tiles";
@@ -153,8 +163,67 @@ export class Leaderboard extends LitElement implements Controller {
   }
 
   private handleRowClickPlayer(player: PlayerView) {
+    this.contextMenu = null;
     if (this.eventBus === null) return;
     this.eventBus.emit(new GoToPlayerEvent(player));
+  }
+
+  private openPlayerMenu(event: MouseEvent, player: PlayerView) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (
+      this.game === null ||
+      player.type() !== PlayerType.Human ||
+      player === this.game.myPlayer()
+    ) {
+      this.contextMenu = null;
+      return;
+    }
+    const publicId = this.game.publicIdForPlayer(player);
+    if (!publicId) {
+      showToast(translateText("friends.player_account_unavailable"), "red");
+      return;
+    }
+    const width = 220;
+    const height = 54;
+    this.contextMenu = {
+      player,
+      publicId,
+      x: Math.min(event.clientX, window.innerWidth - width - 8),
+      y: Math.min(event.clientY, window.innerHeight - height - 8),
+    };
+  }
+
+  private async requestFriend(): Promise<void> {
+    const target = this.contextMenu;
+    this.contextMenu = null;
+    if (!target || this.friendRequestPending) return;
+    this.friendRequestPending = true;
+    try {
+      const result = await sendFriendRequest(target.publicId);
+      if (typeof result === "string") {
+        const key =
+          result === "not_found"
+            ? "friends.error_not_found"
+            : result === "conflict"
+              ? "friends.error_conflict"
+              : result === "bad_request"
+                ? "friends.error_bad_request"
+                : "friends.error_generic";
+        showToast(translateText(key), "red");
+        return;
+      }
+      showToast(
+        translateText(
+          result.status === "accepted"
+            ? "friends.request_auto_accepted"
+            : "friends.request_sent",
+        ),
+        "green",
+      );
+    } finally {
+      this.friendRequestPending = false;
+    }
   }
 
   render() {
@@ -226,6 +295,8 @@ export class Leaderboard extends LitElement implements Controller {
                   ? "font-bold"
                   : ""} cursor-pointer"
                 @click=${() => this.handleRowClickPlayer(player.player)}
+                @contextmenu=${(event: MouseEvent) =>
+                  this.openPlayerMenu(event, player.player)}
               >
                 <div
                   class="py-1 md:py-2 text-center ${index <
@@ -284,6 +355,30 @@ export class Leaderboard extends LitElement implements Controller {
       >
         ${this.showTopFive ? "+" : "-"}
       </button>
+      ${this.contextMenu
+        ? html`
+            <div
+              class="fixed inset-0 z-[10020]"
+              @pointerdown=${() => (this.contextMenu = null)}
+              @contextmenu=${(event: Event) => {
+                event.preventDefault();
+                this.contextMenu = null;
+              }}
+            >
+              <button
+                class="fixed min-w-[210px] rounded-lg border border-cyan-500/50 bg-slate-950 px-4 py-3 text-left font-bold text-white shadow-2xl hover:bg-slate-800"
+                style="left:${this.contextMenu.x}px; top:${this.contextMenu
+                  .y}px"
+                @pointerdown=${(event: Event) => event.stopPropagation()}
+                @click=${() => void this.requestFriend()}
+              >
+                ${translateText("friends.send_to_player", {
+                  player: this.contextMenu.player.displayName(),
+                })}
+              </button>
+            </div>
+          `
+        : ""}
     `;
   }
 }

@@ -1,3 +1,27 @@
+# OpenBack v0.33.25 - Ranked Parties and Grand Map Performance
+
+**Created by frootz jhklphy**
+
+## Ranked Parties
+
+- Added real 2v2, 3v3, and 4v4 ranked parties with shareable party codes, visible teammate slots, party leadership, and full-team matchmaking.
+- Party leaders can choose the bot and nation counts before searching, and matchmaking pairs parties using the same team size and match settings.
+- Teammates command one shared country, with gold and troops divided equally between its two, three, or four controllers.
+- Ranked team results now update every winner and loser using the opposing team's average ELO.
+
+## Friends
+
+- Right-clicking another signed-in human in either the in-game leaderboard or the global ranked leaderboard now offers a real friend request action.
+- Guest players and private anonymized identities remain protected instead of exposing an unusable account action.
+
+## Large-Map Performance
+
+- Grand Earth now stores terrain as one exact indexed texture shared by terrain and railway rendering instead of several expanded copies.
+- Border rendering uses only the two channels it actually reads, cutting its large-map allocation in half with no visual downgrade.
+- Fallout history and railway build-preview textures now allocate only when those effects are first used, substantially reducing startup RAM and GPU pressure.
+
+---
+
 # OpenBack v0.33.24 - Unlimited Naval Routes and Restored Starts
 
 **Created by frootz jhklphy**

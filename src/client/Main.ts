@@ -268,7 +268,7 @@ declare global {
     "kick-player": CustomEvent;
     toggle_game_start_timer: CustomEvent;
     "join-changed": CustomEvent;
-    "open-matchmaking": CustomEvent<undefined>;
+    "open-matchmaking": CustomEvent<{ teamSize?: 1 | 2 | 3 | 4 } | undefined>;
     userMeResponse: CustomEvent<UserMeResponse | false>;
     "leave-lobby": CustomEvent;
     "update-game-config": CustomEvent;
@@ -1067,8 +1067,12 @@ class Client {
     crazyGamesSDK.gameplayStop();
   }
 
-  private handleOpenMatchmaking(_event: CustomEvent<undefined>) {
-    this.matchmakingModal?.open();
+  private handleOpenMatchmaking(
+    event: CustomEvent<{ teamSize?: 1 | 2 | 3 | 4 } | undefined>,
+  ) {
+    this.matchmakingModal?.open({
+      teamSize: event.detail?.teamSize ?? 1,
+    });
   }
 
   private handleKickPlayer(event: CustomEvent) {

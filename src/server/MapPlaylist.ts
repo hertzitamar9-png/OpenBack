@@ -380,7 +380,12 @@ export class MapPlaylist {
     } satisfies GameConfig;
   }
 
-  public get1v1Config(random: () => number = Math.random): GameConfig {
+  public getRankedConfig(
+    teamSize: 1 | 2 | 3 | 4,
+    rankedTeams: string[][] = [],
+    preferences?: { bots?: number; nations?: number | "default" | "disabled" },
+    random: () => number = Math.random,
+  ): GameConfig {
     const maps = [
       GameMapType.Australia,
       GameMapType.Iceland,
@@ -402,9 +407,11 @@ export class MapPlaylist {
     this.lastRankedMap = gameMap;
 
     const isCompact = random() < 0.5;
-    const nations = random() < 0.5 ? "disabled" : "default";
+    const nations =
+      preferences?.nations ?? (random() < 0.5 ? "disabled" : "default");
     const botOptions = isCompact ? [25, 50, 100] : [50, 100, 200, 400];
-    const bots = botOptions[Math.floor(random() * botOptions.length)];
+    const bots =
+      preferences?.bots ?? botOptions[Math.floor(random() * botOptions.length)];
     const startingGoldOptions = [0, 1_000_000, 5_000_000, 25_000_000];
     const startingGold =
       startingGoldOptions[Math.floor(random() * startingGoldOptions.length)];
@@ -427,18 +434,29 @@ export class MapPlaylist {
       donateGold: false,
       donateTroops: false,
       gameMap,
-      maxPlayers: 2,
+      maxPlayers: teamSize * 2,
       gameType: GameType.Public,
       gameMapSize: isCompact ? GameMapSize.Compact : GameMapSize.Normal,
       difficulty: isHardNations ? Difficulty.Hard : Difficulty.Medium,
-      rankedType: RankedType.OneVOne,
+      rankedType:
+        teamSize === 1
+          ? RankedType.OneVOne
+          : teamSize === 2
+            ? RankedType.TwoVTwo
+            : teamSize === 3
+              ? RankedType.ThreeVThree
+              : RankedType.FourVFour,
+      rankedTeams: rankedTeams.length === 2 ? rankedTeams : undefined,
+      allowedPublicIds:
+        rankedTeams.length === 2 ? rankedTeams.flat() : undefined,
       infiniteGold: false,
       infiniteTroops: false,
       maxTimerValue: isCompact ? 10 : 15,
       instantBuild: false,
       randomSpawn,
       nations,
-      gameMode: GameMode.FFA,
+      gameMode: teamSize === 1 ? GameMode.FFA : GameMode.Team,
+      playerTeams: teamSize === 1 ? undefined : 2,
       bots,
       startingGold,
       goldMultiplier,
@@ -451,7 +469,7 @@ export class MapPlaylist {
         strategicObjectives,
         naturalDisasters,
         fogOfWar,
-        sharedControlSize: 1,
+        sharedControlSize: teamSize,
       },
       publicGameModifiers: {
         isCompact,
@@ -461,6 +479,10 @@ export class MapPlaylist {
         goldMultiplier,
       },
     } satisfies GameConfig;
+  }
+
+  public get1v1Config(random: () => number = Math.random): GameConfig {
+    return this.getRankedConfig(1, [], undefined, random);
   }
 
   private getNextMap(type: PublicGameType): GameMapType {

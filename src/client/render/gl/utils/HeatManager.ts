@@ -40,7 +40,7 @@ export class HeatManager {
   private prevTileFbo: WebGLFramebuffer;
   private tileTexReadFbo: WebGLFramebuffer;
   /** True on first frame — blit tileTex→prevTileTex without transitions. */
-  private needsPrevTileCopy = true;
+  private allocated = false;
 
   // Pending CPU → GPU writes
   private pendingDecay = 0;
@@ -85,8 +85,8 @@ export class HeatManager {
 
     // Previous tile state texture (R16UI, for GPU transition detection)
     this.prevTileTex = createTexture2D(gl, {
-      width: mapW,
-      height: mapH,
+      width: 1,
+      height: 1,
       internalFormat: gl.R16UI,
       format: gl.RED_INTEGER,
       type: gl.UNSIGNED_SHORT,
@@ -159,18 +159,15 @@ export class HeatManager {
    * Call once per frame after tile texture is flushed to GPU.
    */
   updateHeat(): void {
+    if (!this.allocated) {
+      this.pendingDecay = 0;
+      return;
+    }
     const gl = this.gl;
     const mw = this.mapW;
     const mh = this.mapH;
 
     // 1. First frame: copy tileTex → prevTileTex, skip transitions
-    if (this.needsPrevTileCopy) {
-      this.blitTileToPrev();
-      this.needsPrevTileCopy = false;
-      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-      return;
-    }
-
     // 2. Inactive: no heat anywhere, and no fallout bits can change without
     // activate() being called first (TerritoryPass flags every fallout-bit
     // flip before the tile flush reaches the GPU). prevTileTex can go stale
@@ -239,6 +236,7 @@ export class HeatManager {
    * Resets the drain window — fresh heat needs a full 255 of decay again.
    */
   activate(): void {
+    this.ensureAllocated();
     this.heatActive = true;
     this.decayAccumulated = 0;
   }
@@ -246,6 +244,38 @@ export class HeatManager {
   // ---------------------------------------------------------------------------
   // Internals
   // ---------------------------------------------------------------------------
+
+  private ensureAllocated(): void {
+    if (this.allocated) return;
+    const gl = this.gl;
+    for (const texture of [this.heatTexA, this.heatTexB]) {
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.R8,
+        this.mapW,
+        this.mapH,
+        0,
+        gl.RED,
+        gl.UNSIGNED_BYTE,
+        null,
+      );
+    }
+    gl.bindTexture(gl.TEXTURE_2D, this.prevTileTex);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.R16UI,
+      this.mapW,
+      this.mapH,
+      0,
+      gl.RED_INTEGER,
+      gl.UNSIGNED_SHORT,
+      null,
+    );
+    this.allocated = true;
+  }
 
   dispose(): void {
     const gl = this.gl;

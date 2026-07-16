@@ -163,6 +163,7 @@ export class GameView implements GameMap {
   private toDelete = new Set<number>();
 
   private _cosmetics: Map<string, PlayerCosmetics> = new Map();
+  private _publicIdsByClientID = new Map<ClientID, string>();
 
   private _map: GameMap;
 
@@ -182,6 +183,11 @@ export class GameView implements GameMap {
     this._cosmetics = new Map(
       humans.map((h) => [h.clientID, h.cosmetics ?? {}]),
     );
+    for (const human of humans) {
+      if (human.publicId) {
+        this._publicIdsByClientID.set(human.clientID, human.publicId);
+      }
+    }
     for (const nation of this._mapData.nations) {
       // Nations don't have client ids, so we use their name as the key instead.
       this._cosmetics.set(nation.name, {
@@ -1220,6 +1226,15 @@ export class GameView implements GameMap {
       return null;
     }
     return player;
+  }
+
+  publicIdForPlayer(player: PlayerView): string | null {
+    for (const controller of player.static.controllerClientIDs ?? []) {
+      const publicId = this._publicIdsByClientID.get(controller);
+      if (publicId) return publicId;
+    }
+    const clientID = player.clientID();
+    return clientID ? (this._publicIdsByClientID.get(clientID) ?? null) : null;
   }
   hasPlayer(id: PlayerID): boolean {
     return false;

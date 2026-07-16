@@ -82,5 +82,5 @@ void main() {
   // G channel is unused (formerly emberIntensity; ember is now computed in
   // FalloutBloomPass and FalloutLightPass). B channel is unused (defense post
   // proximity is now computed per-tile by DefenseCoveragePass).
-  fragColor = vec4(borderType, 0.0, 0.0, relation);
+  fragColor = vec4(borderType, relation, 0.0, 1.0);
 }

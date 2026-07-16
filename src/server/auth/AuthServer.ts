@@ -445,14 +445,18 @@ export const DEFAULT_ELO = 1000;
 
 // Used by the matchmaking service (same master process) to resolve a queued
 // player's identity and current rating from their play token.
-export async function resolveRankedPlayer(
-  token: string,
-): Promise<{ publicId: string; persistentId: string; elo: number } | null> {
+export async function resolveRankedPlayer(token: string): Promise<{
+  publicId: string;
+  persistentId: string;
+  displayName: string;
+  elo: number;
+} | null> {
   const user = await userFromToken(token);
   if (!user) return null;
   return {
     publicId: user.publicId,
     persistentId: user.persistentId,
+    displayName: usernameFor(user),
     elo: user.elo ?? DEFAULT_ELO,
   };
 }
@@ -499,6 +503,53 @@ export function recordRankedResult(
   loser.peakElo = Math.max(loser.peakElo ?? loser.elo, loser.elo);
   winner.rankedWins = (winner.rankedWins ?? 0) + 1;
   loser.rankedLosses = (loser.rankedLosses ?? 0) + 1;
+  persist();
+  return true;
+}
+
+// Team ranked uses the average opponent rating for the expected score, then
+// updates every participant with their own K-factor. This keeps 2v2â€“4v4
+// results fair without multiplying the points simply because a team is larger.
+export function recordRankedTeamResult(
+  winnerPersistentIds: string[],
+  loserPersistentIds: string[],
+): boolean {
+  const winners = winnerPersistentIds.map((id) => usersByPid.get(id));
+  const losers = loserPersistentIds.map((id) => usersByPid.get(id));
+  if (
+    winners.some((user) => user === undefined) ||
+    losers.some((user) => user === undefined)
+  ) {
+    return false;
+  }
+  const winnerUsers = winners as StoredUser[];
+  const loserUsers = losers as StoredUser[];
+  const winnerAverage =
+    winnerUsers.reduce((sum, user) => sum + (user.elo ?? DEFAULT_ELO), 0) /
+    winnerUsers.length;
+  const loserAverage =
+    loserUsers.reduce((sum, user) => sum + (user.elo ?? DEFAULT_ELO), 0) /
+    loserUsers.length;
+  const expectedWinner = 1 / (1 + 10 ** ((loserAverage - winnerAverage) / 400));
+  const expectedLoser = 1 - expectedWinner;
+
+  for (const winner of winnerUsers) {
+    const rating = winner.elo ?? DEFAULT_ELO;
+    winner.elo =
+      rating +
+      Math.max(1, Math.round(eloKFactor(winner) * (1 - expectedWinner)));
+    winner.peakElo = Math.max(winner.peakElo ?? winner.elo, winner.elo);
+    winner.rankedWins = (winner.rankedWins ?? 0) + 1;
+  }
+  for (const loser of loserUsers) {
+    const rating = loser.elo ?? DEFAULT_ELO;
+    loser.elo = Math.max(
+      0,
+      rating - Math.max(1, Math.round(eloKFactor(loser) * expectedLoser)),
+    );
+    loser.peakElo = Math.max(loser.peakElo ?? loser.elo, loser.elo);
+    loser.rankedLosses = (loser.rankedLosses ?? 0) + 1;
+  }
   persist();
   return true;
 }

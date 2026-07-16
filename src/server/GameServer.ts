@@ -894,6 +894,7 @@ export class GameServer {
         return {
           ...p,
           username: real ? p.username : this.anonName(viewer, p.clientID),
+          publicId: real ? p.publicId : undefined,
           clanTag: null,
           friends: undefined,
           cosmetics: real ? p.cosmetics : undefined,
@@ -1111,6 +1112,7 @@ export class GameServer {
         username: c.username,
         clanTag: c.clanTag ?? null,
         clientID: c.clientID,
+        publicId: c.publicId,
         controllerClientIDs: [c.clientID],
         cosmetics: c.cosmetics,
         isLobbyCreator: this.lobbyCreatorID === c.clientID,
@@ -1118,9 +1120,7 @@ export class GameServer {
       }));
     }
 
-    const countries = [];
-    for (let i = 0; i < this.activeClients.length; i += size) {
-      const group = this.activeClients.slice(i, i + size);
+    const countryFor = (group: Client[]) => {
       const primary = group[0];
       const controllerClientIDs = group.map((c) => c.clientID);
       const friendIDs = new Set<ClientID>();
@@ -1128,20 +1128,55 @@ export class GameServer {
         for (const friend of friendsFor(controller) ?? [])
           friendIDs.add(friend);
       }
-      countries.push({
+      return {
         username:
           group.length === 1
             ? primary.username
             : `${primary.username} +${group.length - 1}`,
         clanTag: primary.clanTag ?? null,
         clientID: primary.clientID,
+        publicId: primary.publicId,
         controllerClientIDs,
         cosmetics: primary.cosmetics,
         isLobbyCreator: group.some(
           (controller) => this.lobbyCreatorID === controller.clientID,
         ),
         friends: friendIDs.size > 0 ? [...friendIDs] : undefined,
-      });
+      };
+    };
+
+    // Ranked parties must remain intact regardless of which browser reaches
+    // the game worker first. Resolve the matchmaking team's stable public IDs
+    // to the live clients, in the exact team order supplied by the master.
+    const rankedTeams = this.gameConfig.rankedTeams;
+    if (rankedTeams?.length === 2) {
+      const byPublicId = new Map(
+        this.activeClients
+          .filter((client) => client.publicId !== undefined)
+          .map((client) => [client.publicId!, client]),
+      );
+      const assigned = new Set<ClientID>();
+      const countries = rankedTeams
+        .map((team) =>
+          team
+            .map((publicId) => byPublicId.get(publicId))
+            .filter((client): client is Client => client !== undefined),
+        )
+        .filter((group) => group.length > 0)
+        .map((group) => {
+          group.forEach((client) => assigned.add(client.clientID));
+          return countryFor(group);
+        });
+      for (const client of this.activeClients) {
+        if (!assigned.has(client.clientID))
+          countries.push(countryFor([client]));
+      }
+      return countries;
+    }
+
+    const countries = [];
+    for (let i = 0; i < this.activeClients.length; i += size) {
+      countries.push(countryFor(this.activeClients.slice(i, i + size)));
     }
     return countries;
   }
@@ -1288,25 +1323,35 @@ export class GameServer {
     this.reportRankedResult();
   }
 
-  // For ranked 1v1s, report the human winner/loser to the matchmaking service
-  // (in the master process) so it can update Elo. No-op unless the winner is
-  // one of the two human players (e.g. a bot winning leaves ratings unchanged).
+  // Report ranked results to the master. Shared-control countries expand back
+  // to every party member so 2v2â€“4v4 updates all participants exactly once.
   private reportRankedResult(): void {
     const config = this.gameStartInfo.config;
-    if (config.rankedType !== RankedType.OneVOne) return;
+    if (config.rankedType === undefined) return;
     const winner = this.winner?.winner;
-    if (!winner || winner[0] !== "player") return;
-
-    const winnerClientId = winner[1];
     const players = this.gameStartInfo.players;
-    const winnerPlayer = players.find((p) => p.clientID === winnerClientId);
-    if (!winnerPlayer) return;
-    const loserPlayer = players.find((p) => p.clientID !== winnerClientId);
-    if (!loserPlayer) return;
-
-    const winnerPid = this.allClients.get(winnerPlayer.clientID)?.persistentID;
-    const loserPid = this.allClients.get(loserPlayer.clientID)?.persistentID;
-    if (!winnerPid || !loserPid) return;
+    if (!winner) return;
+    const winningPrimaryIDs =
+      winner[0] === "player"
+        ? new Set([winner[1]])
+        : winner[0] === "team"
+          ? new Set(winner.slice(2))
+          : null;
+    if (!winningPrimaryIDs) return;
+    const winningCountries = players.filter((player) =>
+      winningPrimaryIDs.has(player.clientID),
+    );
+    const losingCountries = players.filter(
+      (player) => !winningPrimaryIDs.has(player.clientID),
+    );
+    const persistentIds = (countries: typeof players) =>
+      countries
+        .flatMap((player) => player.controllerClientIDs ?? [player.clientID])
+        .map((clientID) => this.allClients.get(clientID)?.persistentID)
+        .filter((id): id is string => Boolean(id));
+    const winners = persistentIds(winningCountries);
+    const losers = persistentIds(losingCountries);
+    if (winners.length === 0 || losers.length === 0) return;
 
     const base = ServerEnv.matchmakingApiUrl();
     if (!base) return;
@@ -1316,7 +1361,11 @@ export class GameServer {
         "Content-Type": "application/json",
         "x-api-key": ServerEnv.apiKey(),
       },
-      body: JSON.stringify({ winner: winnerPid, loser: loserPid }),
+      body: JSON.stringify(
+        config.rankedType === RankedType.OneVOne
+          ? { winner: winners[0], loser: losers[0] }
+          : { winners, losers },
+      ),
     }).catch((e) => this.log.warn(`failed to report ranked result: ${e}`));
   }
 

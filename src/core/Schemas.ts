@@ -280,6 +280,10 @@ export const GameConfigSchema = z.object({
   gameType: z.enum(GameType),
   gameMode: z.enum(GameMode),
   rankedType: z.enum(RankedType).optional(), // Only set for ranked games.
+  // Ordered public-account groups for ranked shared-control teams. The game
+  // server resolves these IDs to live clients so connection timing cannot mix
+  // players from opposing parties.
+  rankedTeams: z.array(z.array(z.string()).min(1).max(4)).max(2).optional(),
   gameMapSize: z.enum(GameMapSize),
   doomsdayClock: DoomsdayClockConfigSchema.optional(),
   worldMechanics: WorldMechanicsConfigSchema.optional(),
@@ -639,6 +643,9 @@ export const PlayerCosmeticsSchema = z.object({
 
 export const PlayerSchema = z.object({
   clientID: ID,
+  // Stable public account ID. This is intentionally safe to expose: it is the
+  // same identifier used by public profiles and the friends API.
+  publicId: z.string().optional(),
   username: UsernameSchema,
   clanTag: ClanTagSchema,
   cosmetics: PlayerCosmeticsSchema.optional(),

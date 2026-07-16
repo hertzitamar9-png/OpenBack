@@ -15,6 +15,7 @@ uniform float uRailAlpha;
 uniform float uRailFade;             // Zoom-based fade multiplier (0..1)
 uniform float uRailThickness;        // Track width multiplier (1 = default)
 uniform float uGhostOwnerID;         // Player smallID for ghost rail color
+uniform int uGhostActive;
 uniform float uLocalPlayerID;        // Local player smallID (0 = none)
 uniform vec3 uLocalRailColor;        // Rail color for the local player's rails
 
@@ -115,7 +116,8 @@ void main() {
     discard;
 
   uint railType = texelFetch(uRailroadTex, tc, 0).r;
-  uint ghostRailType = texelFetch(uGhostRailTex, tc, 0).r;
+  uint ghostRailType =
+    uGhostActive == 1 ? texelFetch(uGhostRailTex, tc, 0).r : 0u;
   vec2 f = fract(vWorldPos);
 
   bool detailMode = uZoom >= uRailDetailZoom;

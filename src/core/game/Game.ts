@@ -120,6 +120,9 @@ export enum GameMode {
 
 export enum RankedType {
   OneVOne = "1v1",
+  TwoVTwo = "2v2",
+  ThreeVThree = "3v3",
+  FourVFour = "4v4",
 }
 
 export const isGameMode = (value: unknown): value is GameMode =>

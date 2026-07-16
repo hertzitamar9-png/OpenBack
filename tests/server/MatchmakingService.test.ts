@@ -8,6 +8,18 @@ describe("MatchmakingService", () => {
     process.env.API_KEY = "matchmaking-test-key";
   });
 
+  const queued = <T extends { readyState: number }>(
+    publicId: string,
+    elo: number,
+    ws: T,
+    joinedAt: number,
+  ) => ({
+    players: [{ publicId, elo, displayName: publicId, ws }],
+    teamSize: 1 as const,
+    joinedAt,
+    preferences: {},
+  });
+
   it("sends the same assignment before closing both matched sockets", () => {
     const events: string[] = [];
     const socket = (name: string) => ({
@@ -18,20 +30,9 @@ describe("MatchmakingService", () => {
     const a = socket("a");
     const b = socket("b");
     const service = new MatchmakingService({ info: vi.fn() } as never);
-    const queue = (
-      service as unknown as {
-        queue: Array<{
-          publicId: string;
-          elo: number;
-          ws: typeof a;
-          joinedAt: number;
-        }>;
-      }
-    ).queue;
-    queue.push(
-      { publicId: "player-a", elo: 1000, ws: a, joinedAt: 1 },
-      { publicId: "player-b", elo: 1000, ws: b, joinedAt: 2 },
-    );
+    const queue = (service as unknown as { queue: ReturnType<typeof queued>[] })
+      .queue;
+    queue.push(queued("player-a", 1000, a, 1), queued("player-b", 1000, b, 2));
 
     const json = vi.fn();
     service.handleCheckin(
@@ -68,23 +69,10 @@ describe("MatchmakingService", () => {
     });
     const sockets = [socket("a"), socket("b"), socket("c"), socket("d")];
     const service = new MatchmakingService({ info: vi.fn() } as never);
-    const queue = (
-      service as unknown as {
-        queue: Array<{
-          publicId: string;
-          elo: number;
-          ws: (typeof sockets)[number];
-          joinedAt: number;
-        }>;
-      }
-    ).queue;
+    const queue = (service as unknown as { queue: ReturnType<typeof queued>[] })
+      .queue;
     queue.push(
-      ...sockets.map((ws, index) => ({
-        publicId: `player-${index}`,
-        elo: 1000,
-        ws,
-        joinedAt: index,
-      })),
+      ...sockets.map((ws, index) => queued(`player-${index}`, 1000, ws, index)),
     );
 
     const checkIn = (gameId: string) => {
@@ -122,19 +110,11 @@ describe("MatchmakingService", () => {
     const low = socket();
     const high = socket();
     const service = new MatchmakingService({ info: vi.fn() } as never);
-    const queue = (
-      service as unknown as {
-        queue: Array<{
-          publicId: string;
-          elo: number;
-          ws: typeof low;
-          joinedAt: number;
-        }>;
-      }
-    ).queue;
+    const queue = (service as unknown as { queue: ReturnType<typeof queued>[] })
+      .queue;
     queue.push(
-      { publicId: "low", elo: 100, ws: low, joinedAt: Date.now() },
-      { publicId: "high", elo: 3000, ws: high, joinedAt: Date.now() + 1 },
+      queued("low", 100, low, Date.now()),
+      queued("high", 3000, high, Date.now() + 1),
     );
 
     const json = vi.fn();
@@ -163,21 +143,13 @@ describe("MatchmakingService", () => {
     const closest = socket();
     const other = socket();
     const service = new MatchmakingService({ info: vi.fn() } as never);
-    const queue = (
-      service as unknown as {
-        queue: Array<{
-          publicId: string;
-          elo: number;
-          ws: ReturnType<typeof socket>;
-          joinedAt: number;
-        }>;
-      }
-    ).queue;
+    const queue = (service as unknown as { queue: ReturnType<typeof queued>[] })
+      .queue;
     queue.push(
-      { publicId: "oldest", elo: 1000, ws: oldest, joinedAt: 1 },
-      { publicId: "far", elo: 2000, ws: far, joinedAt: 2 },
-      { publicId: "closest", elo: 1030, ws: closest, joinedAt: 3 },
-      { publicId: "other", elo: 1100, ws: other, joinedAt: 4 },
+      queued("oldest", 1000, oldest, 1),
+      queued("far", 2000, far, 2),
+      queued("closest", 1030, closest, 3),
+      queued("other", 1100, other, 4),
     );
 
     const json = vi.fn();
@@ -193,7 +165,10 @@ describe("MatchmakingService", () => {
     expect(closest.send).toHaveBeenCalledOnce();
     expect(far.send).not.toHaveBeenCalled();
     expect(other.send).not.toHaveBeenCalled();
-    expect(queue.map((entry) => entry.publicId)).toEqual(["far", "other"]);
+    expect(queue.map((entry) => entry.players[0].publicId)).toEqual([
+      "far",
+      "other",
+    ]);
   });
 
   it("returns centrally generated randomized rules to the assigned worker", () => {
@@ -207,20 +182,9 @@ describe("MatchmakingService", () => {
       { info: vi.fn() } as never,
       () => config,
     );
-    const queue = (
-      service as unknown as {
-        queue: Array<{
-          publicId: string;
-          elo: number;
-          ws: ReturnType<typeof socket>;
-          joinedAt: number;
-        }>;
-      }
-    ).queue;
-    queue.push(
-      { publicId: "a", elo: 1000, ws: socket(), joinedAt: 1 },
-      { publicId: "b", elo: 1000, ws: socket(), joinedAt: 2 },
-    );
+    const queue = (service as unknown as { queue: ReturnType<typeof queued>[] })
+      .queue;
+    queue.push(queued("a", 1000, socket(), 1), queued("b", 1000, socket(), 2));
     const json = vi.fn();
 
     service.handleCheckin(
@@ -232,5 +196,59 @@ describe("MatchmakingService", () => {
     );
 
     expect(json).toHaveBeenCalledWith({ assignment: true, gameConfig: config });
+  });
+
+  it("assigns complete 4v4 parties and preserves their team order", () => {
+    const socket = () => ({
+      readyState: WebSocket.OPEN,
+      send: vi.fn(),
+      close: vi.fn(),
+    });
+    const createConfig = vi.fn(() => ({ ranked: true }));
+    const service = new MatchmakingService(
+      { info: vi.fn() } as never,
+      createConfig as never,
+    );
+    const makeParty = (prefix: string, joinedAt: number) => ({
+      players: Array.from({ length: 4 }, (_, index) => ({
+        publicId: `${prefix}-${index}`,
+        displayName: `${prefix}-${index}`,
+        elo: 1000 + index,
+        ws: socket(),
+      })),
+      teamSize: 4 as const,
+      joinedAt,
+      preferences: { bots: 200, nations: 100 },
+      partyCode: prefix,
+    });
+    const a = makeParty("a", 1);
+    const b = makeParty("b", 2);
+    const queue = (service as unknown as { queue: Array<typeof a | typeof b> })
+      .queue;
+    queue.push(a, b);
+    const json = vi.fn();
+
+    service.handleCheckin(
+      {
+        header: () => "matchmaking-test-key",
+        body: { gameId: "team-game" },
+      } as never,
+      { json, status: vi.fn() } as never,
+    );
+
+    expect(createConfig).toHaveBeenCalledWith(
+      4,
+      [
+        a.players.map((player) => player.publicId),
+        b.players.map((player) => player.publicId),
+      ],
+      { bots: 200, nations: 100 },
+    );
+    expect(
+      [...a.players, ...b.players].every(
+        (p) => p.ws.send.mock.calls.length === 1,
+      ),
+    ).toBe(true);
+    expect(queue).toHaveLength(0);
   });
 });

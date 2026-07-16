@@ -1,11 +1,14 @@
 #version 300 es
 precision highp float;
+precision highp usampler2D;
 
-uniform sampler2D uTerrain;
+uniform usampler2D uTerrain;
+uniform sampler2D uTerrainPalette;
 
 in vec2 vUV;
 out vec4 fragColor;
 
 void main() {
-  fragColor = texture(uTerrain, vUV);
+  uint terrainByte = texture(uTerrain, vUV).r;
+  fragColor = texelFetch(uTerrainPalette, ivec2(int(terrainByte), 0), 0);
 }

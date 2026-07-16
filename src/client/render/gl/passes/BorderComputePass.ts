@@ -103,13 +103,13 @@ export class BorderComputePass {
       filter: gl.NEAREST,
     });
 
-    // --- RGBA8 border buffer at tile resolution ---
-    // R = border type, G = unused, B = defense proximity flag
+    // Two channels preserve every used border value while saving 151 MB on
+    // Grand Earth compared with the previous RGBA8 allocation.
     this.borderTex = createTexture2D(gl, {
       width: mapW,
       height: mapH,
-      internalFormat: gl.RGBA8,
-      format: gl.RGBA,
+      internalFormat: gl.RG8,
+      format: gl.RG,
       type: gl.UNSIGNED_BYTE,
       data: null,
       filter: gl.NEAREST,
