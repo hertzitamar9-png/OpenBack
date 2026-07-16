@@ -54,4 +54,20 @@ describe("ChunkedTileSet", () => {
     tiles.add(1);
     expect(Array.from(tiles)).toEqual([2048, 1024, 33, 1]);
   });
+
+  it("keeps lazy reverse indexes correct across repeated ownership churn", () => {
+    const tiles = new ChunkedTileSet();
+    const values = [1, 33, 1024, 2048, 4097];
+    values.forEach((tile) => tiles.add(tile));
+
+    expect(tiles.delete(33)).toBe(true);
+    tiles.add(33);
+    expect(tiles.delete(1)).toBe(true);
+    tiles.add(1);
+    expect(tiles.delete(33)).toBe(true);
+
+    expect(Array.from(tiles)).toEqual([1024, 2048, 4097, 1]);
+    expect(tiles.size).toBe(4);
+    expect(tiles.has(33)).toBe(false);
+  });
 });

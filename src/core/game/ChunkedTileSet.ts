@@ -16,11 +16,15 @@ export class ChunkedTileSet implements Set<number> {
 
   private readonly chunks = new Map<
     number,
-    { bits: Uint32Array; orderIndexes: Uint32Array }
+    { bits: Uint32Array; orderIndexes?: Uint32Array }
   >();
   private order = new Uint32Array(64);
   private orderLength = 0;
   private size_ = 0;
+  private lastChunkID = -1;
+  private lastChunk:
+    | { bits: Uint32Array; orderIndexes?: Uint32Array }
+    | undefined;
 
   get size(): number {
     return this.size_;
@@ -28,14 +32,16 @@ export class ChunkedTileSet implements Set<number> {
 
   add(value: number): this {
     const chunkID = value >> ChunkedTileSet.CHUNK_SHIFT;
-    let chunk = this.chunks.get(chunkID);
+    let chunk =
+      chunkID === this.lastChunkID ? this.lastChunk : this.chunks.get(chunkID);
     if (chunk === undefined) {
       chunk = {
         bits: new Uint32Array(ChunkedTileSet.WORDS_PER_CHUNK),
-        orderIndexes: new Uint32Array(ChunkedTileSet.CHUNK_SIZE),
       };
       this.chunks.set(chunkID, chunk);
     }
+    this.lastChunkID = chunkID;
+    this.lastChunk = chunk;
 
     const offset = value & (ChunkedTileSet.CHUNK_SIZE - 1);
     const wordIndex = offset >> ChunkedTileSet.WORD_SHIFT;
@@ -45,7 +51,9 @@ export class ChunkedTileSet implements Set<number> {
       this.ensureOrderCapacity();
       this.order[this.orderLength] = value;
       // Store index + 1 so zero remains "not currently present".
-      chunk.orderIndexes[offset] = this.orderLength + 1;
+      if (chunk.orderIndexes !== undefined) {
+        chunk.orderIndexes[offset] = this.orderLength + 1;
+      }
       this.orderLength++;
       this.size_++;
     }
@@ -53,8 +61,12 @@ export class ChunkedTileSet implements Set<number> {
   }
 
   has(value: number): boolean {
-    const chunk = this.chunks.get(value >> ChunkedTileSet.CHUNK_SHIFT);
+    const chunkID = value >> ChunkedTileSet.CHUNK_SHIFT;
+    const chunk =
+      chunkID === this.lastChunkID ? this.lastChunk : this.chunks.get(chunkID);
     if (chunk === undefined) return false;
+    this.lastChunkID = chunkID;
+    this.lastChunk = chunk;
     const offset = value & (ChunkedTileSet.CHUNK_SIZE - 1);
     return (
       (chunk.bits[offset >> ChunkedTileSet.WORD_SHIFT] &
@@ -64,19 +76,27 @@ export class ChunkedTileSet implements Set<number> {
   }
 
   delete(value: number): boolean {
-    const chunk = this.chunks.get(value >> ChunkedTileSet.CHUNK_SHIFT);
+    const chunkID = value >> ChunkedTileSet.CHUNK_SHIFT;
+    const chunk =
+      chunkID === this.lastChunkID ? this.lastChunk : this.chunks.get(chunkID);
     if (chunk === undefined) return false;
+    this.lastChunkID = chunkID;
+    this.lastChunk = chunk;
 
     const offset = value & (ChunkedTileSet.CHUNK_SIZE - 1);
     const wordIndex = offset >> ChunkedTileSet.WORD_SHIFT;
     const mask = 1 << (offset & 31);
     if ((chunk.bits[wordIndex] & mask) === 0) return false;
 
+    const orderIndexes = this.ensureOrderIndexes(
+      value >> ChunkedTileSet.CHUNK_SHIFT,
+      chunk,
+    );
     chunk.bits[wordIndex] &= ~mask;
-    const storedIndex = chunk.orderIndexes[offset];
+    const storedIndex = orderIndexes[offset];
     if (storedIndex !== 0) {
       this.order[storedIndex - 1] = ChunkedTileSet.DELETED;
-      chunk.orderIndexes[offset] = 0;
+      orderIndexes[offset] = 0;
     }
     this.size_--;
 
@@ -96,6 +116,8 @@ export class ChunkedTileSet implements Set<number> {
     this.order = new Uint32Array(64);
     this.orderLength = 0;
     this.size_ = 0;
+    this.lastChunkID = -1;
+    this.lastChunk = undefined;
   }
 
   *values(): SetIterator<number> {
@@ -152,10 +174,39 @@ export class ChunkedTileSet implements Set<number> {
       next[write] = value;
       const chunk = this.chunks.get(value >> ChunkedTileSet.CHUNK_SHIFT)!;
       const offset = value & (ChunkedTileSet.CHUNK_SIZE - 1);
-      chunk.orderIndexes[offset] = write + 1;
+      if (chunk.orderIndexes !== undefined) {
+        chunk.orderIndexes[offset] = write + 1;
+      }
       write++;
     }
     this.order = next;
     this.orderLength = write;
+  }
+
+  /**
+   * Most territory chunks are only ever gained, not lost. Allocate the large
+   * reverse-index table only when a deletion actually needs it.
+   */
+  private ensureOrderIndexes(
+    chunkID: number,
+    chunk: { bits: Uint32Array; orderIndexes?: Uint32Array },
+  ): Uint32Array {
+    if (chunk.orderIndexes !== undefined) return chunk.orderIndexes;
+    const indexes = new Uint32Array(ChunkedTileSet.CHUNK_SIZE);
+    const min = chunkID << ChunkedTileSet.CHUNK_SHIFT;
+    const max = min + ChunkedTileSet.CHUNK_SIZE;
+    for (let i = 0; i < this.orderLength; i++) {
+      const value = this.order[i];
+      if (
+        value !== ChunkedTileSet.DELETED &&
+        value >= min &&
+        value < max &&
+        this.has(value)
+      ) {
+        indexes[value - min] = i + 1;
+      }
+    }
+    chunk.orderIndexes = indexes;
+    return indexes;
   }
 }

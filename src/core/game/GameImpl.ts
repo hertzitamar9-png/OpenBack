@@ -75,6 +75,7 @@ export function createGame(
 export type CellString = string;
 
 export class GameImpl implements Game {
+  private static readonly OWNER_MASK = 0xfff;
   private _ticks = 0;
   private startTick: number | null = null;
 
@@ -103,6 +104,7 @@ export class GameImpl implements Game {
   private planDrivenUnitIds = new Set<number>();
   private unitGrid: UnitGrid;
   private _unitMap = new Map<number, Unit>();
+  private readonly mapState: Uint16Array;
 
   private playerTeams: Team[] = [];
   private botTeam: Team = ColoredTeams.Bot;
@@ -129,6 +131,7 @@ export class GameImpl implements Game {
     const constructorStart = performance.now();
 
     this._teamGameSpawnAreas = teamGameSpawnAreas;
+    this.mapState = _map.tileStateBuffer();
     this._terraNullius = new TerraNulliusImpl();
     this._width = _map.width();
     this._height = _map.height();
@@ -694,7 +697,7 @@ export class GameImpl implements Game {
     if (!this.isLand(tile)) {
       throw Error(`cannot conquer water`);
     }
-    const previousOwnerID = this._map.ownerID(tile);
+    const previousOwnerID = this.mapState[tile] & GameImpl.OWNER_MASK;
     if (previousOwnerID !== 0) {
       const previousOwner = this._playersBySmallID[
         previousOwnerID - 1
@@ -719,7 +722,7 @@ export class GameImpl implements Game {
       throw new Error("Cannot relinquish water");
     }
 
-    const previousOwnerID = this._map.ownerID(tile);
+    const previousOwnerID = this.mapState[tile] & GameImpl.OWNER_MASK;
     const previousOwner = this._playersBySmallID[
       previousOwnerID - 1
     ] as PlayerImpl;
@@ -740,7 +743,7 @@ export class GameImpl implements Game {
     const numNeighbors = this._map.neighbors4(tile, this.borderNbuf);
     for (let i = 0; i < numNeighbors; i++) {
       const neighbor = this.borderNbuf[i];
-      const neighborOwnerID = this._map.ownerID(neighbor);
+      const neighborOwnerID = this.mapState[neighbor] & GameImpl.OWNER_MASK;
       if (neighborOwnerID === 0) continue;
 
       const neighborOwner = this._playersBySmallID[
@@ -760,7 +763,7 @@ export class GameImpl implements Game {
   }
 
   private updateBorderStatus(t: TileRef): void {
-    const ownerID = this._map.ownerID(t);
+    const ownerID = this.mapState[t] & GameImpl.OWNER_MASK;
     if (ownerID === 0) return;
     const owner = this._playersBySmallID[ownerID - 1] as PlayerImpl;
     if (this._map.isBorderForOwner(t, ownerID)) {
@@ -1128,7 +1131,7 @@ export class GameImpl implements Game {
     this._map.setMagnitude(ref, value);
   }
   ownerID(ref: TileRef): number {
-    return this._map.ownerID(ref);
+    return this.mapState[ref] & GameImpl.OWNER_MASK;
   }
   hasOwner(ref: TileRef): boolean {
     return this._map.hasOwner(ref);
@@ -1197,6 +1200,9 @@ export class GameImpl implements Game {
   }
   tileStateBuffer(): Uint16Array {
     return this._map.tileStateBuffer();
+  }
+  terrainBuffer(): Uint8Array {
+    return this._map.terrainBuffer();
   }
   updateTile(tile: TileRef, state: number): boolean {
     return this._map.updateTile(tile, state);

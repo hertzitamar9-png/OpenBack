@@ -109,7 +109,7 @@ export class RailroadPass {
   private mapH: number;
   private settings: RenderSettings;
 
-  private cpuRailroadState: Uint8Array;
+  private cpuRailroadState: Uint8Array | null = null;
   private railroadDirty = false;
   private hasRailroads = false;
 
@@ -140,8 +140,6 @@ export class RailroadPass {
     this.paletteTex = paletteTex;
     this.terrainTex = terrainTex;
     this.settings = settings;
-    this.cpuRailroadState = new Uint8Array(mapW * mapH);
-
     this.program = createProgram(
       gl,
       overlayVertSrc,
@@ -191,7 +189,7 @@ export class RailroadPass {
       internalFormat: gl.R8UI,
       format: gl.RED_INTEGER,
       type: gl.UNSIGNED_BYTE,
-      data: this.cpuRailroadState,
+      data: null,
       filter: gl.NEAREST,
     });
 
@@ -211,7 +209,7 @@ export class RailroadPass {
   }
 
   uploadRailroadState(railroadState: Uint8Array): void {
-    this.cpuRailroadState.set(railroadState);
+    this.cpuRailroadState = railroadState;
     this.hasRailroads = false;
     for (let i = 0; i < railroadState.length; i++) {
       if (railroadState[i] !== 0) {
@@ -304,7 +302,7 @@ export class RailroadPass {
     if (fade <= 0) return;
 
     // Flush CPU railroad state → GPU
-    if (this.railroadDirty) {
+    if (this.railroadDirty && this.cpuRailroadState !== null) {
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, this.railroadTex);
       gl.texSubImage2D(

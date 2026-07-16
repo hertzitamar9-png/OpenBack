@@ -363,6 +363,7 @@ async function main(): Promise<void> {
     gameConfig.gameMap,
     gameConfig.gameMapSize,
     mapLoader,
+    { loadMiniMap: false },
   );
   const gameView = new GameView(
     {} as unknown as WorkerClient, // only stored; async query methods unused here

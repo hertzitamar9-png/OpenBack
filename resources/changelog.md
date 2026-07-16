@@ -1,3 +1,13 @@
+## OpenBack v0.33.28 - Giant-Map Performance
+
+- Removed enormous per-tile coordinate lookup tables while preserving exact map coordinates, cutting Grand Earth simulation memory by more than one gigabyte.
+- Stopped the browser renderer from downloading and decoding a second pathfinding map that only the simulation worker uses.
+- Reused live trail and railroad buffers instead of keeping redundant full-map renderer copies.
+- Reduced territory and attack hot-path overhead while preserving the deterministic simulation result, graphics, gameplay rules, and map detail.
+- Improved the measured 400-bot Grand Earth simulation from roughly 55 to 78 ticks per second, with the same final game-state hash.
+
+Contributed by **frootz jhklphy**.
+
 ## OpenBack v0.33.27 - In-App Friend Invitations
 
 - Added persistent friend requests and friend lists to OpenBack accounts.

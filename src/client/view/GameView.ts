@@ -1455,6 +1455,9 @@ export class GameView implements GameMap {
   tileStateBuffer(): Uint16Array {
     return this._map.tileStateBuffer();
   }
+  terrainBuffer(): Uint8Array {
+    return this._map.terrainBuffer();
+  }
   updateTile(tile: TileRef, state: number): boolean {
     return this._map.updateTile(tile, state);
   }

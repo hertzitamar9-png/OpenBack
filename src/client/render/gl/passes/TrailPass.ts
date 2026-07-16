@@ -32,11 +32,9 @@ export class TrailPass {
   private affiliationTex: WebGLTexture | null = null;
   private altView = false;
 
-  /** CPU-side trail state (R8UI, 0=none, 1–255=ownerID). */
-  private cpuTrailState: Uint8Array;
   private trailsDirty = false;
 
-  /** Live-game reference — bypasses memcpy. Null for replay path. */
+  /** Stable TrailManager buffer; referenced directly to avoid a full-map copy. */
   private liveTrailRef: Uint8Array | null = null;
 
   /** Dirty row range for partial trail upload. Infinity/-1 = full upload. */
@@ -59,7 +57,6 @@ export class TrailPass {
     this.mapH = mapH;
     this.trailTex = trailTex;
     this.paletteTex = paletteTex;
-    this.cpuTrailState = new Uint8Array(mapW * mapH);
     this.rowHasTrail = new Uint8Array(mapH);
 
     this.program = createProgram(
@@ -124,7 +121,8 @@ export class TrailPass {
   flushTexture(): void {
     if (!this.trailsDirty) return;
     const gl = this.gl;
-    const src = this.liveTrailRef ?? this.cpuTrailState;
+    const src = this.liveTrailRef;
+    if (src === null) return;
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.trailTex);
 
@@ -191,7 +189,8 @@ export class TrailPass {
   }
 
   private refreshActiveRows(minRow: number, maxRow: number): void {
-    const src = this.liveTrailRef ?? this.cpuTrailState;
+    const src = this.liveTrailRef;
+    if (src === null) return;
     const first = Math.max(0, minRow);
     const last = Math.min(this.mapH - 1, maxRow);
     for (let y = first; y <= last; y++) {

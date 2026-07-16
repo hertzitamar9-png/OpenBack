@@ -151,6 +151,7 @@ export function joinLobby(
         message.gameMap,
         message.gameMapSize,
         terrainMapFileLoader,
+        { loadMiniMap: false },
       );
       resolvePrestart();
     }
@@ -468,6 +469,7 @@ async function createClientGame(
       lobbyConfig.gameStartInfo.config.gameMap,
       lobbyConfig.gameStartInfo.config.gameMapSize,
       mapLoader,
+      { loadMiniMap: false },
     );
   }
   // Kick off the font-atlas fetch so it overlaps with worker init; the

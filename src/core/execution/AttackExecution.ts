@@ -8,7 +8,6 @@ import {
   Player,
   PlayerID,
   PlayerType,
-  TerrainType,
   TerraNullius,
 } from "../game/Game";
 import { GameMap, TileRef } from "../game/GameMap";
@@ -21,6 +20,8 @@ import {
 import { FlatBinaryHeap } from "./utils/FlatBinaryHeap"; // adjust path if needed
 
 const malusForRetreat = 25;
+const OWNER_MASK = 0xfff;
+const LAND_BIT = 0x80;
 export class AttackExecution implements Execution {
   private active: boolean = true;
   private toConquer = new FlatBinaryHeap();
@@ -32,6 +33,8 @@ export class AttackExecution implements Execution {
   private mg: Game;
   // Direct GameMap reference to skip the Game delegation hop in hot loops.
   private map: GameMap;
+  private mapState: Uint16Array;
+  private mapTerrain: Uint8Array;
 
   private attack: Attack | null = null;
 
@@ -64,6 +67,8 @@ export class AttackExecution implements Execution {
     }
     this.mg = mg;
     this.map = mg.map();
+    this.mapState = this.map.tileStateBuffer();
+    this.mapTerrain = this.map.terrainBuffer();
 
     if (this._targetID !== null && !mg.hasPlayer(this._targetID)) {
       console.warn(`target ${this._targetID} not found`);
@@ -309,15 +314,18 @@ export class AttackExecution implements Execution {
       let onBorder = false;
       const numNeighbors = this.map.neighbors4(tileToConquer, this.nbuf);
       for (let i = 0; i < numNeighbors; i++) {
-        if (this.map.ownerID(this.nbuf[i]) === this.ownerSmallID) {
+        if ((this.mapState[this.nbuf[i]] & OWNER_MASK) === this.ownerSmallID) {
           onBorder = true;
           break;
         }
       }
-      if (this.map.ownerID(tileToConquer) !== this.targetSmallID || !onBorder) {
+      if (
+        (this.mapState[tileToConquer] & OWNER_MASK) !== this.targetSmallID ||
+        !onBorder
+      ) {
         continue;
       }
-      if (!this.map.isLand(tileToConquer)) {
+      if ((this.mapTerrain[tileToConquer] & LAND_BIT) === 0) {
         continue;
       }
       this.addNeighbors(tileToConquer);
@@ -361,8 +369,8 @@ export class AttackExecution implements Execution {
     for (let i = 0; i < numNeighbors; i++) {
       const neighbor = this.nbuf[i];
       if (
-        this.map.isWater(neighbor) ||
-        this.map.ownerID(neighbor) !== this.targetSmallID
+        (this.mapTerrain[neighbor] & LAND_BIT) === 0 ||
+        (this.mapState[neighbor] & OWNER_MASK) !== this.targetSmallID
       ) {
         continue;
       }
@@ -370,26 +378,13 @@ export class AttackExecution implements Execution {
       let numOwnedByMe = 0;
       const numInner = this.map.neighbors4(neighbor, this.nbuf2);
       for (let j = 0; j < numInner; j++) {
-        if (this.map.ownerID(this.nbuf2[j]) === this.ownerSmallID) {
+        if ((this.mapState[this.nbuf2[j]] & OWNER_MASK) === this.ownerSmallID) {
           numOwnedByMe++;
         }
       }
 
-      let mag: number;
-      switch (this.map.terrainType(neighbor)) {
-        case TerrainType.Plains:
-          mag = 1;
-          break;
-        case TerrainType.Highland:
-          mag = 1.5;
-          break;
-        case TerrainType.Mountain:
-          mag = 2;
-          break;
-        default:
-          mag = 0;
-          break;
-      }
+      const magnitude = this.mapTerrain[neighbor] & 0x1f;
+      const mag = magnitude < 10 ? 1 : magnitude < 20 ? 1.5 : 2;
 
       const priority =
         (this.random.nextInt(0, 7) + 10) * (1 - numOwnedByMe * 0.5 + mag / 2) +

@@ -47,8 +47,9 @@ export async function loadTerrainMap(
   map: GameMapType,
   mapSize: GameMapSize,
   terrainMapFileLoader: GameMapLoader,
+  options: { loadMiniMap?: boolean } = {},
 ): Promise<TerrainMapData> {
-  const cacheKey = `${map}:${mapSize}`;
+  const cacheKey = `${map}:${mapSize}:${options.loadMiniMap === false ? "view" : "full"}`;
   const cached = loadedMaps.get(cacheKey);
   if (cached !== undefined) return cached;
   const mapFiles = terrainMapFileLoader.getMapData(map);
@@ -60,12 +61,11 @@ export async function loadTerrainMap(
       : await genTerrainFromBin(manifest.map4x, await mapFiles.map4xBin());
 
   const miniMap =
-    mapSize === GameMapSize.Normal
-      ? await genTerrainFromBin(
-          mapSize === GameMapSize.Normal ? manifest.map4x : manifest.map16x,
-          await mapFiles.map4xBin(),
-        )
-      : await genTerrainFromBin(manifest.map16x, await mapFiles.map16xBin());
+    options.loadMiniMap === false
+      ? gameMap
+      : mapSize === GameMapSize.Normal
+        ? await genTerrainFromBin(manifest.map4x, await mapFiles.map4xBin())
+        : await genTerrainFromBin(manifest.map16x, await mapFiles.map16xBin());
 
   if (mapSize === GameMapSize.Compact) {
     manifest.nations.forEach((nation) => {
