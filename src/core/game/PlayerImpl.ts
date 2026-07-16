@@ -10,6 +10,7 @@ import {
 } from "../Util";
 import { findLandPath } from "../pathfinding/PathFinder.Land";
 import { AttackImpl } from "./AttackImpl";
+import { ChunkedTileSet } from "./ChunkedTileSet";
 import {
   Alliance,
   AllianceInfo,
@@ -107,7 +108,7 @@ export class PlayerImpl implements Player {
   public _borderTiles: Set<TileRef> = new Set();
 
   public _units: Unit[] = [];
-  public _tiles: Set<TileRef> = new Set();
+  public _tiles: Set<TileRef> = new ChunkedTileSet();
 
   public pastOutgoingAllianceRequests: AllianceRequest[] = [];
   private _expiredAlliances: Alliance[] = [];
@@ -478,7 +479,7 @@ export class PlayerImpl implements Player {
   }
 
   tiles(): ReadonlySet<TileRef> {
-    return new Set(this._tiles.values()) as Set<TileRef>;
+    return this._tiles;
   }
 
   borderTiles(): ReadonlySet<TileRef> {

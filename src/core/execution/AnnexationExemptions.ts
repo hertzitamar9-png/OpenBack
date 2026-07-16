@@ -68,7 +68,7 @@ export function registerPlaneBeachhead(
 export function isPlaneBeachhead(
   game: Game,
   player: Player,
-  cluster: Set<TileRef>,
+  cluster: ReadonlySet<TileRef> | readonly TileRef[],
 ): boolean {
   const byPlayer = planeBeachheads.get(game);
   const protectedTiles = byPlayer?.get(player.smallID());
@@ -83,7 +83,13 @@ export function isPlaneBeachhead(
       protectedTiles.delete(tile);
       continue;
     }
-    if (cluster.has(tile)) intersects = true;
+    if (
+      Array.isArray(cluster)
+        ? cluster.includes(tile)
+        : (cluster as ReadonlySet<TileRef>).has(tile)
+    ) {
+      intersects = true;
+    }
   }
   if (protectedTiles.size === 0) byPlayer!.delete(player.smallID());
   return intersects;

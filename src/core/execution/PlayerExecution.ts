@@ -13,7 +13,7 @@ import { calculateBoundingBox, getMode, inscribed, simpleHash } from "../Util";
 import { hasPlaneBeachhead, isPlaneBeachhead } from "./AnnexationExemptions";
 
 interface ClusterTraversalState {
-  visited: Uint32Array;
+  visited: Uint16Array;
   gen: number;
 }
 
@@ -154,9 +154,9 @@ export class PlayerExecution implements Execution {
 
     // Find the largest cluster with a single linear scan (O(n)).
     let largestIndex = 0;
-    let largestSize = clusters[0].size;
+    let largestSize = clusters[0].length;
     for (let i = 1; i < clusters.length; i++) {
-      const size = clusters[i].size;
+      const size = clusters[i].length;
       if (size > largestSize) {
         largestSize = size;
         largestIndex = i;
@@ -191,7 +191,7 @@ export class PlayerExecution implements Execution {
   }
 
   private surroundedBySamePlayer(
-    cluster: Set<TileRef>,
+    cluster: readonly TileRef[],
     clusterBox: { min: Cell; max: Cell },
   ): false | Player {
     const enemies = new Set<number>();
@@ -244,7 +244,7 @@ export class PlayerExecution implements Execution {
     return false;
   }
 
-  private isSurrounded(cluster: Set<TileRef>): boolean {
+  private isSurrounded(cluster: readonly TileRef[]): boolean {
     let hasEnemy = false;
     let minX = Infinity,
       minY = Infinity,
@@ -279,7 +279,7 @@ export class PlayerExecution implements Execution {
     return inscribed(enemyBox, clusterBox);
   }
 
-  private removeCluster(cluster: Set<TileRef>) {
+  private removeCluster(cluster: readonly TileRef[]) {
     // Aircraft deployment protects every current cluster, including territory
     // gained by the expanding landing wave, from free surrounded annexation.
     if (this.player.hasLandAnnexationProtection()) return;
@@ -327,7 +327,7 @@ export class PlayerExecution implements Execution {
       // deletes an army in a single update.
       const share = Math.min(
         1,
-        cluster.size / Math.max(1, this.player.numTilesOwned()),
+        cluster.length / Math.max(1, this.player.numTilesOwned()),
       );
       this.player.removeTroops(
         Math.max(1, Math.floor(this.player.troops() * share * 0.0125)),
@@ -339,7 +339,7 @@ export class PlayerExecution implements Execution {
       this.encirclements.delete(anchor);
     }
 
-    const firstTile = cluster.values().next().value;
+    const firstTile = cluster[0];
     if (!firstTile) {
       return;
     }
@@ -391,7 +391,7 @@ export class PlayerExecution implements Execution {
     return factor;
   }
 
-  private getCapturingPlayer(cluster: Set<TileRef>): Player | null {
+  private getCapturingPlayer(cluster: readonly TileRef[]): Player | null {
     const neighbors = new Map<Player, number>();
     const map = this.map;
     const mySmallID = this.player.smallID();
@@ -436,7 +436,7 @@ export class PlayerExecution implements Execution {
     return getMode(neighbors);
   }
 
-  private calculateClusters(): Set<TileRef>[] {
+  private calculateClusters(): TileRef[][] {
     const borderTiles = this.player.borderTiles();
     if (borderTiles.size === 0) return [];
 
@@ -444,15 +444,15 @@ export class PlayerExecution implements Execution {
     const currentGen = this.bumpGeneration();
     const visited = state.visited;
 
-    const clusters: Set<TileRef>[] = [];
+    const clusters: TileRef[][] = [];
 
     for (const startTile of borderTiles) {
       if (visited[startTile] === currentGen) continue;
 
-      const cluster = new Set<TileRef>();
+      const cluster: TileRef[] = [];
       const stack: TileRef[] = [startTile];
       visited[startTile] = currentGen;
-      cluster.add(startTile);
+      cluster.push(startTile);
       while (stack.length > 0) {
         const tile = stack.pop()!;
         const count = this.map.neighbors8(tile, this.diagNbuf);
@@ -462,7 +462,7 @@ export class PlayerExecution implements Execution {
             continue;
           }
           visited[neighbor] = currentGen;
-          cluster.add(neighbor);
+          cluster.push(neighbor);
           stack.push(neighbor);
         }
       }
@@ -487,7 +487,10 @@ export class PlayerExecution implements Execution {
     let state = traversalStates.get(this.mg);
     if (!state || state.visited.length < totalTiles) {
       state = {
-        visited: new Uint32Array(totalTiles),
+        // One shared generation buffer serves every player. Uint16 halves the
+        // permanent traversal allocation on every map (150 MB saved on Grand
+        // Earth); the rare wrap simply clears the buffer.
+        visited: new Uint16Array(totalTiles),
         gen: 0,
       };
       traversalStates.set(this.mg, state);
@@ -498,7 +501,7 @@ export class PlayerExecution implements Execution {
   private bumpGeneration(): number {
     const state = this.traversalState();
     state.gen++;
-    if (state.gen === 0xffffffff) {
+    if (state.gen === 0xffff) {
       state.visited.fill(0);
       state.gen = 1;
     }
@@ -507,7 +510,7 @@ export class PlayerExecution implements Execution {
 
   private floodFillWithGen(
     currentGen: number,
-    visited: Uint32Array,
+    visited: Uint16Array,
     startTiles: TileRef[],
     neighborFn: (tile: TileRef, callback: (neighbor: TileRef) => void) => void,
     includeFn: (tile: TileRef) => boolean,

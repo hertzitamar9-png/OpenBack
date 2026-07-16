@@ -1,3 +1,12 @@
+## OpenBack v0.33.26 - Long-Match Stability
+
+- Replaced per-tile boxed territory ownership with a compact sparse tile store, preventing large and long-running matches from growing into multi-gigabyte browser heaps.
+- Halved the permanent territory-cluster traversal memory used by every map while preserving encirclement and annexation behavior.
+- Removed full territory copies from player tile reads so late-game mechanics no longer duplicate entire countries in memory.
+- Improved simulation stability for every map size, including high-player-count custom maps, without reducing visual quality or changing map content.
+
+Contributed by **frootz jhklphy**.
+
 # OpenBack v0.33.25 - Ranked Parties and Grand Map Performance
 
 **Created by frootz jhklphy**
