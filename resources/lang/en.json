@@ -1,7 +1,5 @@
 {
   "account_modal": {
-    "account_controls": "Account Controls",
-    "account_controls_desc": "Logging out keeps your account. Deleting removes it permanently.",
     "account_exists": "An OpenBack account already uses this email. Log in to restore it instead.",
     "auth_choice_desc": "Create a saved account for the first time, or return to an account you logged out of.",
     "auth_choice_title": "Save Your OpenBack Progress",
@@ -934,7 +932,6 @@
     "solo": "Solo",
     "store": "Store",
     "terms_of_service": "Terms of Service",
-    "title": "OpenBack",
     "troubleshooting": "Troubleshooting",
     "tutorials": "Tutorials",
     "upstream_source": "OpenBack source and contributor credits",

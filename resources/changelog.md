@@ -12,6 +12,7 @@
 
 - Added **Grand Earth**, a 12,288 by 6,144-tile real-world map built from Natural Earth's public-domain 1:10m coastline and country data.
 - Grand Earth is 50% wider and twice the total tile area of Shattered Expanse, with 239 named nations whose spawn points were validated against the final terrain.
+- Kept every Grand Earth nation label within the in-game name limit so labels display cleanly in matches and rankings.
 - Expanded Shattered Expanse from 48 to 120 named nations with spawn positions distributed across its enormous playable land area.
 
 ## Accounts and Interface

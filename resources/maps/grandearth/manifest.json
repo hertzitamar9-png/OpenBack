@@ -52,7 +52,7 @@
     {
       "coordinates": [7297, 1877],
       "flag": "un",
-      "name": "Dhekelia Sovereign Base Area"
+      "name": "Dhekelia SBA"
     },
     {
       "coordinates": [7273, 1880],
@@ -177,7 +177,7 @@
     {
       "coordinates": [6944, 3135],
       "flag": "cd",
-      "name": "Democratic Republic of the Congo"
+      "name": "DR Congo"
     },
     {
       "coordinates": [9217, 2132],
@@ -682,7 +682,7 @@
     {
       "coordinates": [3580, 2392],
       "flag": "un",
-      "name": "US Naval Base Guantanamo Bay"
+      "name": "Guantanamo Naval Base"
     },
     {
       "coordinates": [3482, 2343],
@@ -867,12 +867,12 @@
     {
       "coordinates": [7269, 1891],
       "flag": "un",
-      "name": "Akrotiri Sovereign Base Area"
+      "name": "Akrotiri SBA"
     },
     {
       "coordinates": [3641, 4761],
       "flag": "un",
-      "name": "Southern Patagonian Ice Field"
+      "name": "Patagonian Ice Field"
     },
     {
       "coordinates": [7293, 2325],
@@ -972,7 +972,7 @@
     {
       "coordinates": [8503, 4754],
       "flag": "tf",
-      "name": "French Southern and Antarctic Lands"
+      "name": "French Southern Lands"
     },
     {
       "coordinates": [8037, 3231],
@@ -1002,7 +1002,7 @@
     {
       "coordinates": [4058, 2617],
       "flag": "vc",
-      "name": "Saint Vincent and the Grenadines"
+      "name": "St Vincent and Grenadines"
     },
     {
       "coordinates": [4110, 2622],
@@ -1037,7 +1037,7 @@
     {
       "coordinates": [3933, 2466],
       "flag": "vi",
-      "name": "United States Virgin Islands"
+      "name": "US Virgin Islands"
     },
     {
       "coordinates": [3874, 2449],
@@ -1067,7 +1067,7 @@
     {
       "coordinates": [8652, 4884],
       "flag": "hm",
-      "name": "Heard Island and McDonald Islands"
+      "name": "Heard and McDonald Is."
     },
     {
       "coordinates": [5949, 3616],
@@ -1162,12 +1162,12 @@
     {
       "coordinates": [11544, 2836],
       "flag": "fm",
-      "name": "Federated States of Micronesia"
+      "name": "Micronesia"
     },
     {
       "coordinates": [4963, 4948],
       "flag": "gs",
-      "name": "South Georgia and the Islands"
+      "name": "South Georgia Islands"
     },
     {
       "coordinates": [4139, 4833],

@@ -32,6 +32,20 @@ COUNTRIES_URL = (
     "master/geojson/ne_10m_admin_0_countries.geojson"
 )
 
+NATION_NAME_OVERRIDES = {
+    "Dhekelia Sovereign Base Area": "Dhekelia SBA",
+    "Democratic Republic of the Congo": "DR Congo",
+    "US Naval Base Guantanamo Bay": "Guantanamo Naval Base",
+    "Akrotiri Sovereign Base Area": "Akrotiri SBA",
+    "Southern Patagonian Ice Field": "Patagonian Ice Field",
+    "French Southern and Antarctic Lands": "French Southern Lands",
+    "Saint Vincent and the Grenadines": "St Vincent and Grenadines",
+    "United States Virgin Islands": "US Virgin Islands",
+    "Heard Island and McDonald Islands": "Heard and McDonald Is.",
+    "Federated States of Micronesia": "Micronesia",
+    "South Georgia and the Islands": "South Georgia Islands",
+}
+
 
 def fetch_json(url: str) -> dict[str, Any]:
     request = urllib.request.Request(
@@ -164,6 +178,7 @@ def build_nations(
             or properties.get("NAME")
             or ""
         ).strip()
+        name = NATION_NAME_OVERRIDES.get(name, name)
         label = country_label(feature)
         if not name or label is None:
             continue
