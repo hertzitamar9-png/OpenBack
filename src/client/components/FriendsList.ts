@@ -12,6 +12,7 @@ import {
 import { showInGameConfirm } from "../InGameModal";
 import { showToast, translateText } from "../Utils";
 import "./CopyButton";
+import "./SocialChat";
 
 const PAGE_LIMIT = 20;
 
@@ -22,6 +23,7 @@ export class FriendsList extends LitElement {
   }
 
   @property({ type: String }) myPublicId = "";
+  @property({ type: String }) clanTag = "";
 
   @state() private loading = true;
   @state() private actionPending = false;
@@ -195,6 +197,18 @@ export class FriendsList extends LitElement {
     }
   }
 
+  private openChat(publicId: string): void {
+    document.dispatchEvent(
+      new CustomEvent("open-friend-chat", { detail: { publicId } }),
+    );
+  }
+
+  private openParty(): void {
+    document.dispatchEvent(
+      new CustomEvent("open-matchmaking", { detail: { teamSize: 2 } }),
+    );
+  }
+
   private errorKey(err: string): string {
     switch (err) {
       case "not_found":
@@ -227,6 +241,11 @@ export class FriendsList extends LitElement {
       <div class="flex flex-col gap-6">
         ${this.renderTeamInfo()} ${this.renderAddSection()}
         ${this.renderRequestsSection()} ${this.renderFriendsSection()}
+        <social-chat
+          .friends=${this.friends}
+          .myPublicId=${this.myPublicId}
+          .clanTag=${this.clanTag}
+        ></social-chat>
       </div>
     `;
   }
@@ -414,6 +433,18 @@ export class FriendsList extends LitElement {
                     })}
                   </div>
                 </div>
+                <button
+                  @click=${() => this.openChat(f.publicId)}
+                  class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/30 transition-all shrink-0"
+                >
+                  ${translateText("friends.chat")}
+                </button>
+                <button
+                  @click=${this.openParty}
+                  class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/30 transition-all shrink-0"
+                >
+                  ${translateText("friends.party")}
+                </button>
                 <button
                   @click=${() => void this.handleRemove(f.publicId)}
                   ?disabled=${this.actionPending}

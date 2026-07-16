@@ -307,6 +307,32 @@ export type SendFriendRequestResponse = z.infer<
   typeof SendFriendRequestResponseSchema
 >;
 
+export const SocialChatMessageSchema = z.object({
+  id: z.string(),
+  sender: z.string(),
+  senderName: z.string().optional(),
+  text: z.string(),
+  createdAt: z.iso.datetime(),
+});
+export type SocialChatMessage = z.infer<typeof SocialChatMessageSchema>;
+
+export const SocialConversationSchema = z.object({
+  id: z.string(),
+  kind: z.enum(["direct", "group", "clan"]),
+  name: z.string(),
+  members: FriendEntrySchema.array(),
+  lastMessage: SocialChatMessageSchema.optional(),
+});
+export type SocialConversation = z.infer<typeof SocialConversationSchema>;
+
+export const SocialConversationsResponseSchema = z.object({
+  results: SocialConversationSchema.array(),
+});
+
+export const SocialMessagesResponseSchema = z.object({
+  results: SocialChatMessageSchema.array(),
+});
+
 export const NewsItemSchema = z.object({
   id: z.string(),
   title: z.string(),

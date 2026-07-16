@@ -93,6 +93,24 @@ interface StoredClan {
   members: StoredClanMember[];
   requests: StoredClanRequest[];
   bans: StoredClanBan[];
+  chatMessages?: StoredChatMessage[];
+}
+
+interface StoredChatMessage {
+  id: string;
+  sender: string;
+  text: string;
+  createdAt: string;
+}
+
+interface StoredConversation {
+  id: string;
+  kind: "direct" | "group";
+  name?: string;
+  createdBy: string;
+  members: string[];
+  createdAt: string;
+  messages: StoredChatMessage[];
 }
 
 // ---- Persistence ----------------------------------------------------------
@@ -108,6 +126,7 @@ interface PersistShape {
   clans?: StoredClan[];
   friendships?: StoredFriendship[];
   friendRequests?: StoredFriendRequest[];
+  conversations?: StoredConversation[];
 }
 interface StoredFriendship {
   a: string;
@@ -126,6 +145,7 @@ const codes = new Map<string, PendingCode>();
 const clansByTag = new Map<string, StoredClan>();
 let friendships: StoredFriendship[] = [];
 let friendRequests: StoredFriendRequest[] = [];
+let conversations: StoredConversation[] = [];
 // Parsed once at startup. Purchases validate item names/prices against this.
 const cosmetics = CosmeticsSchema.parse(cosmeticsJson);
 const databaseUrl = process.env.DATABASE_URL;
@@ -145,6 +165,7 @@ function hydrate(raw: PersistShape) {
   clansByTag.clear();
   friendships = raw.friendships ?? [];
   friendRequests = raw.friendRequests ?? [];
+  conversations = raw.conversations ?? [];
   for (const u of raw.users ?? []) {
     usersByEmail.set(u.email?.toLowerCase() ?? u.persistentId, u);
     usersByPid.set(u.persistentId, u);
@@ -188,6 +209,7 @@ function persistenceSnapshot(): PersistShape {
     clans: [...clansByTag.values()],
     friendships,
     friendRequests,
+    conversations,
   };
 }
 
@@ -381,6 +403,9 @@ function deleteUser(user: StoredUser): void {
   }
 
   for (const [tag, clan] of clansByTag) {
+    clan.chatMessages = clan.chatMessages?.filter(
+      (message) => message.sender !== user.publicId,
+    );
     clan.requests = clan.requests.filter(
       (request) => request.publicId !== user.publicId,
     );
@@ -405,6 +430,21 @@ function deleteUser(user: StoredUser): void {
   friendRequests = friendRequests.filter(
     (request) => request.from !== user.publicId && request.to !== user.publicId,
   );
+  conversations = conversations
+    .map((conversation) => ({
+      ...conversation,
+      members: conversation.members.filter(
+        (publicId) => publicId !== user.publicId,
+      ),
+      messages: conversation.messages.filter(
+        (message) => message.sender !== user.publicId,
+      ),
+    }))
+    .filter((conversation) =>
+      conversation.kind === "direct"
+        ? conversation.members.length === 2
+        : conversation.members.length > 0,
+    );
 }
 
 async function signToken(user: StoredUser): Promise<{
@@ -1124,6 +1164,214 @@ export function authRouter(): express.Router {
     }
     persist();
     res.json({ ok: true });
+  });
+
+  const chatMessageFor = (message: StoredChatMessage) => ({
+    ...message,
+    senderName: userByPublicId(message.sender)?.displayName,
+  });
+  const conversationMembers = (conversation: StoredConversation) =>
+    conversation.members.map((publicId) =>
+      friendEntry(publicId, conversation.createdAt),
+    );
+  const conversationName = (
+    conversation: StoredConversation,
+    viewerId: string,
+  ) => {
+    if (conversation.kind === "group") return conversation.name ?? "Group";
+    const otherId = conversation.members.find((id) => id !== viewerId);
+    return otherId
+      ? (userByPublicId(otherId)?.displayName ?? otherId)
+      : "Direct chat";
+  };
+  const conversationFor = (
+    conversation: StoredConversation,
+    viewerId: string,
+  ) => ({
+    id: conversation.id,
+    kind: conversation.kind,
+    name: conversationName(conversation, viewerId),
+    members: conversationMembers(conversation),
+    lastMessage: conversation.messages[conversation.messages.length - 1]
+      ? chatMessageFor(conversation.messages[conversation.messages.length - 1])
+      : undefined,
+  });
+
+  router.get("/social/conversations", async (req, res) => {
+    const user = await userFromBearer(req);
+    if (!user?.email) {
+      res.status(401).json({ error: "unauthorized" });
+      return;
+    }
+    const results = conversations
+      .filter((conversation) => conversation.members.includes(user.publicId))
+      .map((conversation) => conversationFor(conversation, user.publicId))
+      .sort((a, b) =>
+        (b.lastMessage?.createdAt ?? "").localeCompare(
+          a.lastMessage?.createdAt ?? "",
+        ),
+      );
+    res.json({ results });
+  });
+
+  router.post("/social/conversations/direct/:id", async (req, res) => {
+    const user = await userFromBearer(req);
+    const targetId = String(req.params.id);
+    if (!user?.email) {
+      res.status(401).json({ error: "unauthorized" });
+      return;
+    }
+    if (!areFriends(user.publicId, targetId)) {
+      res.status(403).json({ error: "friends_only" });
+      return;
+    }
+    let conversation = conversations.find(
+      (candidate) =>
+        candidate.kind === "direct" &&
+        candidate.members.includes(user.publicId) &&
+        candidate.members.includes(targetId),
+    );
+    if (!conversation) {
+      conversation = {
+        id: generateID(),
+        kind: "direct",
+        createdBy: user.publicId,
+        members: [user.publicId, targetId],
+        createdAt: new Date().toISOString(),
+        messages: [],
+      };
+      conversations.push(conversation);
+      persist();
+    }
+    res.json(conversationFor(conversation, user.publicId));
+  });
+
+  router.post("/social/groups", async (req, res) => {
+    const user = await userFromBearer(req);
+    if (!user?.email) {
+      res.status(401).json({ error: "unauthorized" });
+      return;
+    }
+    const parsed = z
+      .object({
+        name: z.string().trim().min(1).max(40),
+        members: z.array(z.string()).min(1).max(19),
+      })
+      .safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "bad_request" });
+      return;
+    }
+    const memberIds = [
+      user.publicId,
+      ...new Set(parsed.data.members.filter((id) => id !== user.publicId)),
+    ];
+    if (
+      memberIds.length < 2 ||
+      memberIds.slice(1).some((id) => !areFriends(user.publicId, id))
+    ) {
+      res.status(403).json({ error: "friends_only" });
+      return;
+    }
+    const conversation: StoredConversation = {
+      id: generateID(),
+      kind: "group",
+      name: parsed.data.name,
+      createdBy: user.publicId,
+      members: memberIds,
+      createdAt: new Date().toISOString(),
+      messages: [],
+    };
+    conversations.push(conversation);
+    persist();
+    res.status(201).json(conversationFor(conversation, user.publicId));
+  });
+
+  router.get("/social/conversations/:id/messages", async (req, res) => {
+    const user = await userFromBearer(req);
+    const conversation = conversations.find(
+      (candidate) => candidate.id === String(req.params.id),
+    );
+    if (!user?.email || !conversation?.members.includes(user.publicId)) {
+      res.status(404).json({ error: "not_found" });
+      return;
+    }
+    res.json({
+      results: conversation.messages.slice(-500).map(chatMessageFor),
+    });
+  });
+
+  router.post("/social/conversations/:id/messages", async (req, res) => {
+    const user = await userFromBearer(req);
+    const conversation = conversations.find(
+      (candidate) => candidate.id === String(req.params.id),
+    );
+    if (!user?.email || !conversation?.members.includes(user.publicId)) {
+      res.status(404).json({ error: "not_found" });
+      return;
+    }
+    if (
+      conversation.kind === "direct" &&
+      !conversation.members
+        .filter((id) => id !== user.publicId)
+        .every((id) => areFriends(user.publicId, id))
+    ) {
+      res.status(403).json({ error: "friends_only" });
+      return;
+    }
+    const parsed = z
+      .object({ text: z.string().trim().min(1).max(500) })
+      .safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "bad_request" });
+      return;
+    }
+    const message: StoredChatMessage = {
+      id: crypto.randomUUID(),
+      sender: user.publicId,
+      text: parsed.data.text,
+      createdAt: new Date().toISOString(),
+    };
+    conversation.messages.push(message);
+    await persistImmediately();
+    res.status(201).json(chatMessageFor(message));
+  });
+
+  router.get("/clans/:tag/chat", async (req, res) => {
+    const user = await userFromBearer(req);
+    const clan = clansByTag.get(String(req.params.tag).toUpperCase());
+    if (!user?.email || !clan || !memberFor(clan, user)) {
+      res.status(404).json({ error: "not_found" });
+      return;
+    }
+    res.json({
+      results: (clan.chatMessages ?? []).slice(-500).map(chatMessageFor),
+    });
+  });
+
+  router.post("/clans/:tag/chat", async (req, res) => {
+    const user = await userFromBearer(req);
+    const clan = clansByTag.get(String(req.params.tag).toUpperCase());
+    if (!user?.email || !clan || !memberFor(clan, user)) {
+      res.status(404).json({ error: "not_found" });
+      return;
+    }
+    const parsed = z
+      .object({ text: z.string().trim().min(1).max(500) })
+      .safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "bad_request" });
+      return;
+    }
+    const message: StoredChatMessage = {
+      id: crypto.randomUUID(),
+      sender: user.publicId,
+      text: parsed.data.text,
+      createdAt: new Date().toISOString(),
+    };
+    (clan.chatMessages ??= []).push(message);
+    await persistImmediately();
+    res.status(201).json(chatMessageFor(message));
   });
 
   // Public player profile by publicId. It intentionally contains only the

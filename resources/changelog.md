@@ -1,3 +1,13 @@
+## OpenBack v0.33.30 - Global Friends and Messaging
+
+- Added persistent direct messages between friends, persistent friend-group chats, and a global clan chat shared by every clan member.
+- Expanded the Friends tab with player friend codes, incoming and outgoing requests, chat, group creation, party entry, and friend removal.
+- Added friend requests by double-clicking signed-in players in both leaderboards and by double-clicking players in clan member lists.
+- Kept ranked-party invitations and accept flows connected to the existing live social service, so friends can form 2v2, 3v3, or 4v4 parties from the same social system.
+- Stored social relationships and conversations in OpenBack's production account database so they remain available across devices and sessions.
+
+Contributed by **frootz jhklphy**.
+
 ## OpenBack v0.33.29 - Long-Match Runtime Smoothing
 
 - Reduced the CPU cost of large simultaneous attack fronts, border changes, territory clusters, and the main execution scheduler without changing combat order or outcomes.

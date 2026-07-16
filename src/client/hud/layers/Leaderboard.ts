@@ -226,6 +226,16 @@ export class Leaderboard extends LitElement implements Controller {
     }
   }
 
+  private async requestFriendForPlayer(
+    event: MouseEvent,
+    player: PlayerView,
+  ): Promise<void> {
+    event.preventDefault();
+    event.stopPropagation();
+    this.openPlayerMenu(event, player);
+    await this.requestFriend();
+  }
+
   render() {
     if (!this.visible) {
       return html``;
@@ -295,6 +305,8 @@ export class Leaderboard extends LitElement implements Controller {
                   ? "font-bold"
                   : ""} cursor-pointer"
                 @click=${() => this.handleRowClickPlayer(player.player)}
+                @dblclick=${(event: MouseEvent) =>
+                  void this.requestFriendForPlayer(event, player.player)}
                 @contextmenu=${(event: MouseEvent) =>
                   this.openPlayerMenu(event, player.player)}
               >

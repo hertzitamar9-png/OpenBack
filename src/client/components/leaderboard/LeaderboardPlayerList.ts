@@ -245,6 +245,8 @@ export class LeaderboardPlayerList extends LitElement {
           ? "bg-blue-500/15"
           : ""}"
         @click=${() => this.openPlayerProfile(player.playerId)}
+        @dblclick=${(event: MouseEvent) =>
+          void this.sendFriendRequestForPlayer(event, player)}
         @contextmenu=${(event: MouseEvent) =>
           this.openFriendMenu(event, player)}
       >
@@ -338,6 +340,22 @@ export class LeaderboardPlayerList extends LitElement {
     } finally {
       this.friendRequestPending = false;
     }
+  }
+
+  private async sendFriendRequestForPlayer(
+    event: MouseEvent,
+    player: PlayerLeaderboardEntry,
+  ): Promise<void> {
+    event.preventDefault();
+    event.stopPropagation();
+    if (player.playerId === this.currentUserId) return;
+    this.contextMenu = {
+      publicId: player.playerId,
+      username: player.username,
+      x: event.clientX,
+      y: event.clientY,
+    };
+    await this.sendContextFriendRequest();
   }
 
   private async openPlayerProfile(publicId: string) {

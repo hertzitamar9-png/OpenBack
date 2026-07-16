@@ -74,6 +74,21 @@ function authenticated(
   });
 }
 
+async function befriend(
+  a: { jwt: string; publicId: string },
+  b: { jwt: string; publicId: string },
+): Promise<void> {
+  await authenticated(`/friends/requests/${b.publicId}`, a.jwt, {
+    method: "POST",
+  });
+  const accepted = await authenticated(
+    `/friends/requests/${a.publicId}/accept`,
+    b.jwt,
+    { method: "POST" },
+  );
+  expect(accepted.status).toBe(200);
+}
+
 describe("friends API", () => {
   test("persists request, acceptance, both friend lists, and removal", async () => {
     const a = await signUp(`friends-a-${Date.now()}@example.com`);
@@ -120,6 +135,73 @@ describe("friends API", () => {
     await expect(empty.json()).resolves.toMatchObject({
       total: 0,
       results: [],
+    });
+  });
+
+  test("persists authorized direct, group, and clan conversations", async () => {
+    const stamp = Date.now();
+    const a = await signUp(`chat-a-${stamp}@example.com`);
+    const b = await signUp(`chat-b-${stamp}@example.com`);
+    const c = await signUp(`chat-c-${stamp}@example.com`);
+    await befriend(a, b);
+    await befriend(a, c);
+
+    const directResponse = await authenticated(
+      `/social/conversations/direct/${b.publicId}`,
+      a.jwt,
+      { method: "POST" },
+    );
+    expect(directResponse.status).toBe(200);
+    const direct = (await directResponse.json()) as { id: string };
+    const directMessage = await authenticated(
+      `/social/conversations/${direct.id}/messages`,
+      a.jwt,
+      { method: "POST", body: JSON.stringify({ text: "hello friend" }) },
+    );
+    expect(directMessage.status).toBe(201);
+    const received = await authenticated(
+      `/social/conversations/${direct.id}/messages`,
+      b.jwt,
+    );
+    await expect(received.json()).resolves.toMatchObject({
+      results: [{ sender: a.publicId, text: "hello friend" }],
+    });
+
+    const groupResponse = await authenticated("/social/groups", a.jwt, {
+      method: "POST",
+      body: JSON.stringify({
+        name: "Strategy Team",
+        members: [b.publicId, c.publicId],
+      }),
+    });
+    expect(groupResponse.status).toBe(201);
+    const group = (await groupResponse.json()) as { id: string };
+    const groupMessage = await authenticated(
+      `/social/conversations/${group.id}/messages`,
+      c.jwt,
+      { method: "POST", body: JSON.stringify({ text: "ready" }) },
+    );
+    expect(groupMessage.status).toBe(201);
+
+    const clanTag = `C${String(stamp).slice(-4)}`;
+    const clan = await authenticated("/clans", a.jwt, {
+      method: "POST",
+      body: JSON.stringify({
+        tag: clanTag,
+        name: "Chat Clan",
+        description: "",
+        isOpen: true,
+      }),
+    });
+    expect(clan.status).toBe(201);
+    const clanMessage = await authenticated(`/clans/${clanTag}/chat`, a.jwt, {
+      method: "POST",
+      body: JSON.stringify({ text: "clan hello" }),
+    });
+    expect(clanMessage.status).toBe(201);
+    const clanHistory = await authenticated(`/clans/${clanTag}/chat`, a.jwt);
+    await expect(clanHistory.json()).resolves.toMatchObject({
+      results: [{ sender: a.publicId, text: "clan hello" }],
     });
   });
 });

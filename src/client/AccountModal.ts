@@ -189,10 +189,14 @@ export class AccountModal extends BaseModal {
 
   private renderFriendsTab(): TemplateResult {
     const myPublicId = this.userMeResponse?.player?.publicId ?? "";
+    const clanTag = this.userMeResponse?.player?.clans?.[0]?.tag ?? "";
     return html`
       <div class="flex flex-col gap-4">
         ${this.renderPublicPlayerId()}
-        <friends-list .myPublicId=${myPublicId}></friends-list>
+        <friends-list
+          .myPublicId=${myPublicId}
+          .clanTag=${clanTag}
+        ></friends-list>
       </div>
     `;
   }

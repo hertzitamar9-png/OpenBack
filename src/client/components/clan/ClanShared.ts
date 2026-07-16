@@ -6,12 +6,38 @@ import type {
   ClanMemberSort,
   ClanMemberStats,
 } from "../../ClanApi";
+import { sendFriendRequest } from "../../FriendsApi";
 import { showToast, translateText } from "../../Utils";
 import "./ClanStatsBreakdown";
 export { renderLoadingSpinner } from "../BaseModal";
 export { showToast };
 
 export type ClanRole = "leader" | "officer" | "member";
+
+async function requestClanMemberFriend(publicId: string): Promise<void> {
+  const result = await sendFriendRequest(publicId);
+  if (typeof result === "string") {
+    showToast(
+      translateText(
+        result === "not_found"
+          ? "friends.error_not_found"
+          : result === "conflict"
+            ? "friends.error_conflict"
+            : "friends.error_generic",
+      ),
+      "red",
+    );
+    return;
+  }
+  showToast(
+    translateText(
+      result.status === "accepted"
+        ? "friends.request_auto_accepted"
+        : "friends.request_sent",
+    ),
+    "green",
+  );
+}
 
 export function defaultOrderForSort(sort: ClanMemberSort): ClanMemberOrder {
   return sort === "default" ? "asc" : "desc";
@@ -386,6 +412,11 @@ export function renderMemberRow(
         ${isMe
         ? "bg-malibu-blue/10 border-malibu-blue/20"
         : "bg-white/5 border-white/10"}"
+      @dblclick=${() => {
+        if (!isMe) {
+          void requestClanMemberFriend(member.publicId);
+        }
+      }}
     >
       <div class="flex items-center gap-3">
         <div
@@ -407,12 +438,25 @@ export function renderMemberRow(
                 .showCopyIcon=${false}
               ></copy-button>
             </div>
-            <span
-              class="text-white/30 text-[10px] shrink-0 text-right whitespace-nowrap"
-              >${translateText("clan_modal.joined_date", {
-                date: formatClanDate(member.joinedAt),
-              })}</span
-            >
+            <div class="flex shrink-0 items-center gap-2">
+              ${!isMe
+                ? html`<button
+                    class="rounded-md border border-blue-500/30 bg-blue-500/15 px-2 py-1 text-[9px] font-bold uppercase text-blue-300 hover:bg-blue-500/25"
+                    @click=${(event: Event) => {
+                      event.stopPropagation();
+                      void requestClanMemberFriend(member.publicId);
+                    }}
+                  >
+                    ${translateText("friends.add_friend")}
+                  </button>`
+                : ""}
+              <span
+                class="text-white/30 text-[10px] text-right whitespace-nowrap"
+                >${translateText("clan_modal.joined_date", {
+                  date: formatClanDate(member.joinedAt),
+                })}</span
+              >
+            </div>
           </div>
         </div>
       </div>
