@@ -85,6 +85,21 @@ describe("GameServer.handleIntent (admin bot)", () => {
   });
 
   describe("toggle_game_start_timer", () => {
+    it("uses the original three-second cancellable countdown by default", () => {
+      vi.setSystemTime(new Date("2026-07-16T12:00:00.000Z"));
+      const game = makeGame();
+
+      expect(
+        apply(game, { type: "toggle_game_start_timer" } as any).status,
+      ).toBe(200);
+      expect((game as any).startsAt).toBe(Date.now() + 3000);
+
+      expect(
+        apply(game, { type: "toggle_game_start_timer" } as any).status,
+      ).toBe(200);
+      expect((game as any).startsAt).toBeUndefined();
+    });
+
     it("sets then clears startsAt", () => {
       const game = makeGame({ startDelay: 0 });
       expect((game as any).startsAt).toBeUndefined();

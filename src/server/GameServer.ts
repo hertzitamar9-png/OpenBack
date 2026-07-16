@@ -63,6 +63,7 @@ const KICK_REASON_ADMIN = "kick_reason.admin";
 const KICK_REASON_HOST_LEFT = "kick_reason.host_left";
 const KICK_REASON_TOO_MUCH_DATA = "kick_reason.too_much_data";
 const KICK_REASON_INVALID_MESSAGE = "kick_reason.invalid_message";
+const DEFAULT_PRIVATE_GAME_START_DELAY_SECONDS = 3;
 // Most 10 Hz turns contain no player intent. Share one immutable-by-convention
 // empty list rather than retaining a separate empty Array for every turn.
 const EMPTY_TURN_INTENTS: StampedIntent[] = [];
@@ -365,7 +366,10 @@ export class GameServer {
           this.startsAt = undefined;
         } else {
           this.setStartsAt(
-            Date.now() + (this.gameConfig.startDelay ?? 0) * 1000,
+            Date.now() +
+              (this.gameConfig.startDelay ??
+                DEFAULT_PRIVATE_GAME_START_DELAY_SECONDS) *
+                1000,
           );
         }
         return { status: 200 };

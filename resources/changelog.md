@@ -1,3 +1,20 @@
+# OpenBack v0.33.24 - Unlimited Naval Routes and Restored Starts
+
+**Created by frootz jhklphy**
+
+## Naval Movement
+
+- Transport ships can now use the complete connected ocean even when the fast large-map route graph misses a complicated coastline.
+- Added an exhaustive route fallback with no distance ceiling, while still preventing ships from crossing land or entering disconnected lakes and seas.
+
+## Match Start
+
+- Restored the original three-second private-lobby start countdown when no custom delay is selected.
+- Pressing the start button again during those three seconds still cancels the countdown.
+- Removed 1.75 seconds of artificial pre-start waiting, so the required OpenBack contributor and AGPL notice no longer holds players after their map is ready.
+
+---
+
 # OpenBack v0.33.23 - Frootz Maps and Global Naval Reach
 
 **Created by frootz jhklphy**

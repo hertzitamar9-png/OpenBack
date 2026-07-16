@@ -11,6 +11,8 @@ import { GameConfig, GameID, PublicGameType } from "../core/Schemas";
 import { Client } from "./Client";
 import { GamePhase, GameServer } from "./GameServer";
 
+const PRESTART_MAP_LOAD_HEAD_START_MS = 250;
+
 export class GameManager {
   private games: Map<GameID, GameServer> = new Map();
 
@@ -129,7 +131,7 @@ export class GameManager {
             } catch (error) {
               this.log.error(`error starting game ${id}: ${error}`);
             }
-          }, 2000);
+          }, PRESTART_MAP_LOAD_HEAD_START_MS);
         }
       }
 

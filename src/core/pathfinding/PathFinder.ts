@@ -48,6 +48,17 @@ const _waterChainCache = new WeakMap<
   { version: number; chain: PathFinder<TileRef> }
 >();
 
+class FallbackPathFinder<T> implements PathFinder<T> {
+  constructor(
+    private primary: PathFinder<T>,
+    private fallback: PathFinder<T>,
+  ) {}
+
+  findPath(from: T | T[], to: T): T[] | null {
+    return this.primary.findPath(from, to) ?? this.fallback.findPath(from, to);
+  }
+}
+
 function buildWaterChain(game: Game): PathFinder<TileRef> {
   const hpa = game.miniWaterHPA();
   const graph = game.miniWaterGraph();
@@ -62,7 +73,13 @@ function buildWaterChain(game: Game): PathFinder<TileRef> {
   }
 
   const componentCheckFn = (t: TileRef) => graph.getComponentId(t);
-  return PathFinderBuilder.create(hpa)
+  // The hierarchical solver is much faster on large maps, but its abstract
+  // graph can occasionally miss an otherwise valid route around a complicated
+  // coastline. Fall back to exhaustive minimap A* before declaring a connected
+  // ocean unreachable, so map size never behaves like a naval range limit.
+  return PathFinderBuilder.create(
+    new FallbackPathFinder(hpa, new AStarWater(miniMap)),
+  )
     .wrap((pf) => new ComponentCheckTransformer(pf, componentCheckFn))
     .wrap((pf) => new SmoothingWaterTransformer(pf, miniMap))
     .wrap((pf) => new ShoreCoercingTransformer(pf, miniMap))
