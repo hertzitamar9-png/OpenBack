@@ -3,6 +3,7 @@ import { customElement, property, state } from "lit/decorators.js";
 import { ClientEnv } from "src/client/ClientEnv";
 import {
   calculateServerTimeOffset,
+  getMapName,
   getSecondsUntilServerTimestamp,
   renderDuration,
   translateText,
@@ -1294,7 +1295,7 @@ export class HostLobbyModal extends BaseModal {
   private async toggleGameStartTimer() {
     await this.putGameConfig();
     console.log(
-      `Starting private game with map: ${GameMapType[this.selectedMap as keyof typeof GameMapType]} ${this.useRandomMap ? " (Randomly selected)" : ""}`,
+      `Starting private game with map: ${getMapName(this.selectedMap) ?? this.selectedMap} ${this.useRandomMap ? " (Randomly selected)" : ""}`,
     );
 
     // If the modal closes as part of starting the game, do not leave the lobby

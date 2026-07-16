@@ -77,6 +77,13 @@ describe("AssetUrls", () => {
     );
   });
 
+  test("preserves inline and runtime-generated asset URLs", () => {
+    const dataUrl = "data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=";
+    const blobUrl = "blob:https://openback.example/asset-id";
+    expect(buildAssetUrl(dataUrl, {})).toBe(dataUrl);
+    expect(buildAssetUrl(blobUrl, {})).toBe(blobUrl);
+  });
+
   // Manifest miss → keep same-origin; the CDN only serves what was explicitly
   // hashed and uploaded, so unknown paths must not be prefixed.
   test("does not prefix baseUrl on manifest misses", () => {

@@ -1,3 +1,34 @@
+# OpenBack v0.33.22 - Grand Earth and Reliable Starts
+
+**Created by frootz jhklphy**
+
+## Match Reliability
+
+- Restored OpenBack's established match-start flow and fixed the client lifecycle crash that could leave the home menu covering a fully loaded map.
+- Home controls now finish rendering before they are connected, removing the missing language, flag, username, token-login, and game-mode initialization failures.
+- Public-lobby connections now rotate to another game worker when one worker is restarting instead of retrying the same unavailable connection.
+
+## Maps
+
+- Added **Grand Earth**, a 12,288 by 6,144-tile real-world map built from Natural Earth's public-domain 1:10m coastline and country data.
+- Grand Earth is 50% wider and twice the total tile area of Shattered Expanse, with 239 named nations whose spawn points were validated against the final terrain.
+- Expanded Shattered Expanse from 48 to 120 named nations with spawn positions distributed across its enormous playable land area.
+
+## Accounts and Interface
+
+- Made Sign Up and Log In use the same OpenBack card style, and made Log Out use the same primary action color while keeping permanent deletion clearly separate.
+- Reorganized profiles around one Player Name, an optional About Me field, and a clearly labeled public Profile Card Color.
+- Replaced the red generic exit confirmation with the standard OpenBack blue action style.
+- Removed expected account-flow 404 noise, prevented duplicate Turnstile execution, and stopped verification tokens from being printed to the console.
+
+## Store and Branding
+
+- Added Air Command, Armored Column, Nuclear Dawn, Naval Grid, Rail Corps, and Storm Front territory skins.
+- Fixed inline shop skins so their artwork also loads on the actual territory renderer, not only in the store preview.
+- Locked the document title and app metadata to OpenBack so language changes cannot restore an old Alpha title.
+
+---
+
 # OpenBack v0.33.21 - Integrated Learning and Clean Map Starts
 
 **Created by frootz jhklphy**

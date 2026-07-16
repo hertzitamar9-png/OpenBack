@@ -297,7 +297,7 @@ class Client {
 
   private hostModal: HostPrivateLobbyModal;
   private joinModal: JoinLobbyModal;
-  private gameModeSelector: GameModeSelector;
+  private gameModeSelector: GameModeSelector | null = null;
   private userSettings: UserSettings = new UserSettings();
   private storeModal: StoreModal;
   private tokenLoginModal: TokenLoginModal;
@@ -367,6 +367,21 @@ class Client {
     document.fonts.add(openBackFont);
     openBackFont.load().catch(() => {});
 
+    // The home controls are rendered by light-DOM Lit components. Wait for
+    // those hosts to finish their first render before wiring their children.
+    // Without this, fast production builds can query the controls too early
+    // and later crash while transitioning from the menu into a loaded match.
+    await Promise.all([
+      customElements.whenDefined("play-page"),
+      customElements.whenDefined("page-footer"),
+    ]);
+    for (const tagName of ["play-page", "page-footer"]) {
+      const host = document.querySelector(tagName) as
+        | (HTMLElement & { updateComplete?: Promise<unknown> })
+        | null;
+      await host?.updateComplete;
+    }
+
     const langSelector = document.querySelector(
       "lang-selector",
     ) as LangSelector;
@@ -389,6 +404,9 @@ class Client {
     this.gameModeSelector = document.querySelector(
       "game-mode-selector",
     ) as GameModeSelector;
+    if (!this.gameModeSelector) {
+      console.warn("Game mode selector element not found");
+    }
 
     window.addEventListener("beforeunload", async () => {
       console.log("Browser is closing");
@@ -462,7 +480,7 @@ class Client {
     // Attach listener to any pattern-input component
     document.querySelectorAll("pattern-input").forEach((patternInput) => {
       patternInput.addEventListener("pattern-input-click", () => {
-        patternsModal.open();
+        patternsModal?.open();
       });
     });
 
@@ -479,12 +497,12 @@ class Client {
     // However, we still want to ensure the modal can be opened.
     // The setupPatternInput above handles the click event for the new buttons.
 
-    this.storeModal.refresh();
+    this.storeModal?.refresh();
 
     window.addEventListener("showPage", (e: any) => {
       if (typeof e?.detail === "string" && e.detail === "page-play") {
         setTimeout(() => {
-          this.storeModal.refresh();
+          this.storeModal?.refresh();
         }, 50);
       }
     });
@@ -956,7 +974,7 @@ class Client {
           modal.isModalOpen = false;
         }
       });
-      this.gameModeSelector.stop();
+      this.gameModeSelector?.stop();
       document.querySelectorAll(".ad").forEach((ad) => {
         (ad as HTMLElement).style.display = "none";
       });
@@ -974,7 +992,7 @@ class Client {
 
     this.lobbyHandle.join.then(() => {
       this.joinModal?.closeWithoutLeaving();
-      this.gameModeSelector.stop();
+      this.gameModeSelector?.stop();
       incrementGamesPlayed();
 
       document.querySelectorAll(".ad").forEach((ad) => {
@@ -1196,6 +1214,7 @@ async function createTurnstileToken(): Promise<{
     sitekey: ClientEnv.turnstileSiteKey(),
     size: "normal",
     appearance: "interaction-only",
+    execution: "execute",
     theme: "light",
   });
 
@@ -1203,7 +1222,7 @@ async function createTurnstileToken(): Promise<{
     window.turnstile.execute(widgetId, {
       callback: (token: string) => {
         window.turnstile.remove(widgetId);
-        console.log(`Turnstile token received: ${token}`);
+        console.log("Turnstile verification completed");
         resolve({ token, createdAt: Date.now() });
       },
       "error-callback": (errorCode: string) => {

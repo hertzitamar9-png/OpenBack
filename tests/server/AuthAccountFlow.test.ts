@@ -53,8 +53,9 @@ describe("email account lifecycle", () => {
       email,
       mode: "login",
     });
-    expect(missingLogin.status).toBe(404);
+    expect(missingLogin.status).toBe(200);
     await expect(missingLogin.json()).resolves.toMatchObject({
+      ok: false,
       error: "not_registered",
       nextAction: "signup",
     });
@@ -83,8 +84,9 @@ describe("email account lifecycle", () => {
       email,
       mode: "signup",
     });
-    expect(duplicateSignUp.status).toBe(409);
+    expect(duplicateSignUp.status).toBe(200);
     await expect(duplicateSignUp.json()).resolves.toMatchObject({
+      ok: false,
       error: "account_exists",
       nextAction: "login",
     });
@@ -164,6 +166,11 @@ describe("email account lifecycle", () => {
       email,
       mode: "login",
     });
-    expect(deletedLogin.status).toBe(404);
+    expect(deletedLogin.status).toBe(200);
+    await expect(deletedLogin.json()).resolves.toMatchObject({
+      ok: false,
+      error: "not_registered",
+      nextAction: "signup",
+    });
   });
 });

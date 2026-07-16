@@ -24,6 +24,8 @@ Licensed under ODbL
 [Natural Earth](https://www.naturalearthdata.com/)  
 Public Domain
 
+OpenBack's Grand Earth map uses Natural Earth's 1:10m land, minor-island, and Admin 0 country datasets. Its native terrain conversion, nation spawn validation, scaling, and gameplay data were created by **frootz jhklphy**.
+
 ### Bedmap3 Antarctica Dataset
 
 Pritchard, H.D., Fretwell, P.T., Fremand, A.C. et al. Bedmap3 updated ice bed, surface and thickness gridded datasets for Antarctica. _Sci Data_ 12, 109 (2025).  

@@ -1,0 +1,1219 @@
+{
+  "categories": ["new", "world"],
+  "id": "GrandEarth",
+  "map": {
+    "height": 6144,
+    "num_land_tiles": 25554241,
+    "width": 12288
+  },
+  "map16x": {
+    "height": 1536,
+    "num_land_tiles": 1567416,
+    "width": 3072
+  },
+  "map4x": {
+    "height": 3072,
+    "num_land_tiles": 6344640,
+    "width": 6144
+  },
+  "multiplayer_frequency": 0,
+  "name": "Grand Earth",
+  "nations": [
+    {
+      "coordinates": [9621, 3104],
+      "name": "Indonesia",
+      "flag": "id"
+    },
+    {
+      "coordinates": [10029, 2985],
+      "name": "Malaysia",
+      "flag": "my"
+    },
+    {
+      "coordinates": [3675, 4374],
+      "name": "Chile",
+      "flag": "cl"
+    },
+    {
+      "coordinates": [3939, 3640],
+      "name": "Bolivia",
+      "flag": "bo"
+    },
+    {
+      "coordinates": [3655, 3514],
+      "name": "Peru",
+      "flag": "pe"
+    },
+    {
+      "coordinates": [3953, 4215],
+      "name": "Argentina",
+      "flag": "ar"
+    },
+    {
+      "coordinates": [7297, 1877],
+      "name": "Dhekelia Sovereign Base Area",
+      "flag": "un"
+    },
+    {
+      "coordinates": [7273, 1880],
+      "name": "Cyprus",
+      "flag": "cy"
+    },
+    {
+      "coordinates": [8852, 2297],
+      "name": "India",
+      "flag": "in"
+    },
+    {
+      "coordinates": [9773, 1962],
+      "name": "China",
+      "flag": "cn"
+    },
+    {
+      "coordinates": [7333, 2017],
+      "name": "Israel",
+      "flag": "il"
+    },
+    {
+      "coordinates": [7348, 1978],
+      "name": "Palestine",
+      "flag": "ps"
+    },
+    {
+      "coordinates": [7372, 1907],
+      "name": "Lebanon",
+      "flag": "lb"
+    },
+    {
+      "coordinates": [7478, 2797],
+      "name": "Ethiopia",
+      "flag": "et"
+    },
+    {
+      "coordinates": [7181, 2825],
+      "name": "South Sudan",
+      "flag": "ss"
+    },
+    {
+      "coordinates": [7686, 2950],
+      "name": "Somalia",
+      "flag": "so"
+    },
+    {
+      "coordinates": [7437, 3053],
+      "name": "Kenya",
+      "flag": "ke"
+    },
+    {
+      "coordinates": [7291, 3528],
+      "name": "Malawi",
+      "flag": "mw"
+    },
+    {
+      "coordinates": [7337, 3278],
+      "name": "United Republic of Tanzania",
+      "flag": "tz"
+    },
+    {
+      "coordinates": [7450, 1877],
+      "name": "Syria",
+      "flag": "sy"
+    },
+    {
+      "coordinates": [7738, 2749],
+      "name": "Somaliland",
+      "flag": "un"
+    },
+    {
+      "coordinates": [6231, 1478],
+      "name": "France",
+      "flag": "fr"
+    },
+    {
+      "coordinates": [4235, 2930],
+      "name": "Suriname",
+      "flag": "sr"
+    },
+    {
+      "coordinates": [4132, 2897],
+      "name": "Guyana",
+      "flag": "gy"
+    },
+    {
+      "coordinates": [10517, 1830],
+      "name": "South Korea",
+      "flag": "kr"
+    },
+    {
+      "coordinates": [10459, 1710],
+      "name": "North Korea",
+      "flag": "kp"
+    },
+    {
+      "coordinates": [5898, 1991],
+      "name": "Morocco",
+      "flag": "ma"
+    },
+    {
+      "coordinates": [5712, 2254],
+      "name": "Western Sahara",
+      "flag": "eh"
+    },
+    {
+      "coordinates": [3274, 2728],
+      "name": "Costa Rica",
+      "flag": "cr"
+    },
+    {
+      "coordinates": [3240, 2639],
+      "name": "Nicaragua",
+      "flag": "ni"
+    },
+    {
+      "coordinates": [6686, 3067],
+      "name": "Republic of the Congo",
+      "flag": "cg"
+    },
+    {
+      "coordinates": [6944, 3135],
+      "name": "Democratic Republic of the Congo",
+      "flag": "cd"
+    },
+    {
+      "coordinates": [9217, 2132],
+      "name": "Bhutan",
+      "flag": "bt"
+    },
+    {
+      "coordinates": [7240, 1375],
+      "name": "Ukraine",
+      "flag": "ua"
+    },
+    {
+      "coordinates": [7113, 1235],
+      "name": "Belarus",
+      "flag": "by"
+    },
+    {
+      "coordinates": [6727, 3774],
+      "name": "Namibia",
+      "flag": "na"
+    },
+    {
+      "coordinates": [6951, 4085],
+      "name": "South Africa",
+      "flag": "za"
+    },
+    {
+      "coordinates": [3992, 2454],
+      "name": "Saint Martin",
+      "flag": "mf"
+    },
+    {
+      "coordinates": [8100, 2317],
+      "name": "Oman",
+      "flag": "om"
+    },
+    {
+      "coordinates": [8328, 1649],
+      "name": "Uzbekistan",
+      "flag": "uz"
+    },
+    {
+      "coordinates": [8488, 1397],
+      "name": "Kazakhstan",
+      "flag": "kz"
+    },
+    {
+      "coordinates": [8621, 1768],
+      "name": "Tajikistan",
+      "flag": "tj"
+    },
+    {
+      "coordinates": [6966, 1191],
+      "name": "Lithuania",
+      "flag": "lt"
+    },
+    {
+      "coordinates": [4452, 3484],
+      "name": "Brazil",
+      "flag": "br"
+    },
+    {
+      "coordinates": [4233, 4196],
+      "name": "Uruguay",
+      "flag": "uy"
+    },
+    {
+      "coordinates": [9698, 1502],
+      "name": "Mongolia",
+      "flag": "mn"
+    },
+    {
+      "coordinates": [7669, 1084],
+      "name": "Russia",
+      "flag": "ru"
+    },
+    {
+      "coordinates": [6668, 1369],
+      "name": "Czechia",
+      "flag": "cz"
+    },
+    {
+      "coordinates": [6474, 1332],
+      "name": "Germany",
+      "flag": "de"
+    },
+    {
+      "coordinates": [7026, 1067],
+      "name": "Estonia",
+      "flag": "ee"
+    },
+    {
+      "coordinates": [7012, 1124],
+      "name": "Latvia",
+      "flag": "lv"
+    },
+    {
+      "coordinates": [6474, 978],
+      "name": "Norway",
+      "flag": "no"
+    },
+    {
+      "coordinates": [6793, 824],
+      "name": "Sweden",
+      "flag": "se"
+    },
+    {
+      "coordinates": [7074, 913],
+      "name": "Finland",
+      "flag": "fi"
+    },
+    {
+      "coordinates": [9740, 2330],
+      "name": "Vietnam",
+      "flag": "vn"
+    },
+    {
+      "coordinates": [9710, 2640],
+      "name": "Cambodia",
+      "flag": "kh"
+    },
+    {
+      "coordinates": [6351, 1374],
+      "name": "Luxembourg",
+      "flag": "lu"
+    },
+    {
+      "coordinates": [8005, 2271],
+      "name": "United Arab Emirates",
+      "flag": "ae"
+    },
+    {
+      "coordinates": [6307, 1338],
+      "name": "Belgium",
+      "flag": "be"
+    },
+    {
+      "coordinates": [7636, 1643],
+      "name": "Georgia",
+      "flag": "ge"
+    },
+    {
+      "coordinates": [6879, 1653],
+      "name": "North Macedonia",
+      "flag": "mk"
+    },
+    {
+      "coordinates": [6830, 1684],
+      "name": "Albania",
+      "flag": "al"
+    },
+    {
+      "coordinates": [7755, 1693],
+      "name": "Azerbaijan",
+      "flag": "az"
+    },
+    {
+      "coordinates": [6855, 1618],
+      "name": "Kosovo",
+      "flag": "xk"
+    },
+    {
+      "coordinates": [7321, 1729],
+      "name": "Turkey",
+      "flag": "tr"
+    },
+    {
+      "coordinates": [6025, 1703],
+      "name": "Spain",
+      "flag": "es"
+    },
+    {
+      "coordinates": [9643, 2408],
+      "name": "Laos",
+      "flag": "la"
+    },
+    {
+      "coordinates": [8687, 1649],
+      "name": "Kyrgyzstan",
+      "flag": "kg"
+    },
+    {
+      "coordinates": [7673, 1691],
+      "name": "Armenia",
+      "flag": "am"
+    },
+    {
+      "coordinates": [6451, 1161],
+      "name": "Denmark",
+      "flag": "dk"
+    },
+    {
+      "coordinates": [6758, 2162],
+      "name": "Libya",
+      "flag": "ly"
+    },
+    {
+      "coordinates": [6451, 1922],
+      "name": "Tunisia",
+      "flag": "tn"
+    },
+    {
+      "coordinates": [6996, 1511],
+      "name": "Romania",
+      "flag": "ro"
+    },
+    {
+      "coordinates": [6807, 1465],
+      "name": "Hungary",
+      "flag": "hu"
+    },
+    {
+      "coordinates": [6794, 1408],
+      "name": "Slovakia",
+      "flag": "sk"
+    },
+    {
+      "coordinates": [6809, 1297],
+      "name": "Poland",
+      "flag": "pl"
+    },
+    {
+      "coordinates": [5877, 1260],
+      "name": "Ireland",
+      "flag": "ie"
+    },
+    {
+      "coordinates": [6071, 1215],
+      "name": "United Kingdom",
+      "flag": "gb"
+    },
+    {
+      "coordinates": [6885, 1724],
+      "name": "Greece",
+      "flag": "gr"
+    },
+    {
+      "coordinates": [7044, 3572],
+      "name": "Zambia",
+      "flag": "zm"
+    },
+    {
+      "coordinates": [5742, 2777],
+      "name": "Sierra Leone",
+      "flag": "sl"
+    },
+    {
+      "coordinates": [5802, 2709],
+      "name": "Guinea",
+      "flag": "gn"
+    },
+    {
+      "coordinates": [5821, 2851],
+      "name": "Liberia",
+      "flag": "lr"
+    },
+    {
+      "coordinates": [6857, 2833],
+      "name": "Central African Republic",
+      "flag": "cf"
+    },
+    {
+      "coordinates": [7142, 2514],
+      "name": "Sudan",
+      "flag": "sd"
+    },
+    {
+      "coordinates": [7594, 2663],
+      "name": "Djibouti",
+      "flag": "dj"
+    },
+    {
+      "coordinates": [7450, 2533],
+      "name": "Eritrea",
+      "flag": "er"
+    },
+    {
+      "coordinates": [6626, 1450],
+      "name": "Austria",
+      "flag": "at"
+    },
+    {
+      "coordinates": [7620, 1942],
+      "name": "Iraq",
+      "flag": "iq"
+    },
+    {
+      "coordinates": [6522, 1545],
+      "name": "Italy",
+      "flag": "it"
+    },
+    {
+      "coordinates": [6398, 1477],
+      "name": "Switzerland",
+      "flag": "ch"
+    },
+    {
+      "coordinates": [8018, 1974],
+      "name": "Iran",
+      "flag": "ir"
+    },
+    {
+      "coordinates": [6335, 1282],
+      "name": "Netherlands",
+      "flag": "nl"
+    },
+    {
+      "coordinates": [6470, 1464],
+      "name": "Liechtenstein",
+      "flag": "li"
+    },
+    {
+      "coordinates": [5953, 2816],
+      "name": "Ivory Coast",
+      "flag": "ci"
+    },
+    {
+      "coordinates": [6853, 1563],
+      "name": "Republic of Serbia",
+      "flag": "rs"
+    },
+    {
+      "coordinates": [6074, 2434],
+      "name": "Mali",
+      "flag": "ml"
+    },
+    {
+      "coordinates": [5639, 2555],
+      "name": "Senegal",
+      "flag": "sn"
+    },
+    {
+      "coordinates": [6400, 2749],
+      "name": "Nigeria",
+      "flag": "ng"
+    },
+    {
+      "coordinates": [6224, 2719],
+      "name": "Benin",
+      "flag": "bj"
+    },
+    {
+      "coordinates": [6757, 3487],
+      "name": "Angola",
+      "flag": "ao"
+    },
+    {
+      "coordinates": [6702, 1508],
+      "name": "Croatia",
+      "flag": "hr"
+    },
+    {
+      "coordinates": [6653, 1500],
+      "name": "Slovenia",
+      "flag": "si"
+    },
+    {
+      "coordinates": [7889, 2210],
+      "name": "Qatar",
+      "flag": "qa"
+    },
+    {
+      "coordinates": [7669, 2259],
+      "name": "Saudi Arabia",
+      "flag": "sa"
+    },
+    {
+      "coordinates": [6969, 3826],
+      "name": "Botswana",
+      "flag": "bw"
+    },
+    {
+      "coordinates": [7165, 3717],
+      "name": "Zimbabwe",
+      "flag": "zw"
+    },
+    {
+      "coordinates": [8483, 2071],
+      "name": "Pakistan",
+      "flag": "pk"
+    },
+    {
+      "coordinates": [7002, 1621],
+      "name": "Bulgaria",
+      "flag": "bg"
+    },
+    {
+      "coordinates": [9593, 2544],
+      "name": "Thailand",
+      "flag": "th"
+    },
+    {
+      "coordinates": [6568, 1572],
+      "name": "San Marino",
+      "flag": "sm"
+    },
+    {
+      "coordinates": [3678, 2414],
+      "name": "Haiti",
+      "flag": "ht"
+    },
+    {
+      "coordinates": [3732, 2420],
+      "name": "Dominican Republic",
+      "flag": "do"
+    },
+    {
+      "coordinates": [6780, 2555],
+      "name": "Chad",
+      "flag": "td"
+    },
+    {
+      "coordinates": [7758, 2068],
+      "name": "Kuwait",
+      "flag": "kw"
+    },
+    {
+      "coordinates": [3110, 2604],
+      "name": "El Salvador",
+      "flag": "sv"
+    },
+    {
+      "coordinates": [3055, 2560],
+      "name": "Guatemala",
+      "flag": "gt"
+    },
+    {
+      "coordinates": [10439, 3372],
+      "name": "East Timor",
+      "flag": "tl"
+    },
+    {
+      "coordinates": [10053, 2920],
+      "name": "Brunei",
+      "flag": "bn"
+    },
+    {
+      "coordinates": [6396, 1579],
+      "name": "Monaco",
+      "flag": "mc"
+    },
+    {
+      "coordinates": [6239, 2136],
+      "name": "Algeria",
+      "flag": "dz"
+    },
+    {
+      "coordinates": [7435, 3547],
+      "name": "Mozambique",
+      "flag": "mz"
+    },
+    {
+      "coordinates": [7217, 3977],
+      "name": "eSwatini",
+      "flag": "sz"
+    },
+    {
+      "coordinates": [7165, 3185],
+      "name": "Burundi",
+      "flag": "bi"
+    },
+    {
+      "coordinates": [7171, 3136],
+      "name": "Rwanda",
+      "flag": "rw"
+    },
+    {
+      "coordinates": [9413, 2335],
+      "name": "Myanmar",
+      "flag": "mm"
+    },
+    {
+      "coordinates": [9204, 2245],
+      "name": "Bangladesh",
+      "flag": "bd"
+    },
+    {
+      "coordinates": [6196, 1619],
+      "name": "Andorra",
+      "flag": "ad"
+    },
+    {
+      "coordinates": [8413, 1906],
+      "name": "Afghanistan",
+      "flag": "af"
+    },
+    {
+      "coordinates": [6797, 1611],
+      "name": "Montenegro",
+      "flag": "me"
+    },
+    {
+      "coordinates": [6760, 1567],
+      "name": "Bosnia and Herzegovina",
+      "flag": "ba"
+    },
+    {
+      "coordinates": [7268, 3004],
+      "name": "Uganda",
+      "flag": "ug"
+    },
+    {
+      "coordinates": [3580, 2392],
+      "name": "US Naval Base Guantanamo Bay",
+      "flag": "un"
+    },
+    {
+      "coordinates": [3482, 2343],
+      "name": "Cuba",
+      "flag": "cu"
+    },
+    {
+      "coordinates": [3178, 2567],
+      "name": "Honduras",
+      "flag": "hn"
+    },
+    {
+      "coordinates": [3475, 3114],
+      "name": "Ecuador",
+      "flag": "ec"
+    },
+    {
+      "coordinates": [3646, 2956],
+      "name": "Colombia",
+      "flag": "co"
+    },
+    {
+      "coordinates": [4091, 3811],
+      "name": "Paraguay",
+      "flag": "py"
+    },
+    {
+      "coordinates": [4177, 4102],
+      "name": "Brazilian Island",
+      "flag": "br"
+    },
+    {
+      "coordinates": [5861, 1720],
+      "name": "Portugal",
+      "flag": "pt"
+    },
+    {
+      "coordinates": [7116, 1453],
+      "name": "Moldova",
+      "flag": "md"
+    },
+    {
+      "coordinates": [8146, 1711],
+      "name": "Turkmenistan",
+      "flag": "tm"
+    },
+    {
+      "coordinates": [7385, 2020],
+      "name": "Jordan",
+      "flag": "jo"
+    },
+    {
+      "coordinates": [8998, 2106],
+      "name": "Nepal",
+      "flag": "np"
+    },
+    {
+      "coordinates": [7108, 4078],
+      "name": "Lesotho",
+      "flag": "ls"
+    },
+    {
+      "coordinates": [6569, 2915],
+      "name": "Cameroon",
+      "flag": "cm"
+    },
+    {
+      "coordinates": [6547, 3086],
+      "name": "Gabon",
+      "flag": "ga"
+    },
+    {
+      "coordinates": [6468, 2476],
+      "name": "Niger",
+      "flag": "ne"
+    },
+    {
+      "coordinates": [6097, 2639],
+      "name": "Burkina Faso",
+      "flag": "bf"
+    },
+    {
+      "coordinates": [6180, 2771],
+      "name": "Togo",
+      "flag": "tg"
+    },
+    {
+      "coordinates": [6108, 2808],
+      "name": "Ghana",
+      "flag": "gh"
+    },
+    {
+      "coordinates": [5648, 2656],
+      "name": "Guinea-Bissau",
+      "flag": "gw"
+    },
+    {
+      "coordinates": [5961, 1838],
+      "name": "Gibraltar",
+      "flag": "gi"
+    },
+    {
+      "coordinates": [2816, 1722],
+      "name": "United States of America",
+      "flag": "us"
+    },
+    {
+      "coordinates": [2665, 1013],
+      "name": "Canada",
+      "flag": "ca"
+    },
+    {
+      "coordinates": [2652, 2255],
+      "name": "Mexico",
+      "flag": "mx"
+    },
+    {
+      "coordinates": [3116, 2484],
+      "name": "Belize",
+      "flag": "bz"
+    },
+    {
+      "coordinates": [3401, 2774],
+      "name": "Panama",
+      "flag": "pa"
+    },
+    {
+      "coordinates": [3939, 2826],
+      "name": "Venezuela",
+      "flag": "ve"
+    },
+    {
+      "coordinates": [11055, 3266],
+      "name": "Papua New Guinea",
+      "flag": "pg"
+    },
+    {
+      "coordinates": [7149, 2178],
+      "name": "Egypt",
+      "flag": "eg"
+    },
+    {
+      "coordinates": [7709, 2548],
+      "name": "Yemen",
+      "flag": "ye"
+    },
+    {
+      "coordinates": [5811, 2403],
+      "name": "Mauritania",
+      "flag": "mr"
+    },
+    {
+      "coordinates": [6474, 3016],
+      "name": "Equatorial Guinea",
+      "flag": "gq"
+    },
+    {
+      "coordinates": [5632, 2606],
+      "name": "Gambia",
+      "flag": "gm"
+    },
+    {
+      "coordinates": [10038, 2305],
+      "name": "Hong Kong S.A.R.",
+      "flag": "hk"
+    },
+    {
+      "coordinates": [6569, 1641],
+      "name": "Vatican",
+      "flag": "va"
+    },
+    {
+      "coordinates": [8776, 1865],
+      "name": "Siachen Glacier",
+      "flag": "un"
+    },
+    {
+      "coordinates": [8307, 1502],
+      "name": "Baykonur Cosmodrome",
+      "flag": "kz"
+    },
+    {
+      "coordinates": [7269, 1891],
+      "name": "Akrotiri Sovereign Base Area",
+      "flag": "un"
+    },
+    {
+      "coordinates": [3641, 4761],
+      "name": "Southern Patagonian Ice Field",
+      "flag": "un"
+    },
+    {
+      "coordinates": [7293, 2325],
+      "name": "Bir Tawil",
+      "flag": "un"
+    },
+    {
+      "coordinates": [7368, 5796],
+      "name": "Antarctica",
+      "flag": "aq"
+    },
+    {
+      "coordinates": [10719, 3895],
+      "name": "Australia",
+      "flag": "au"
+    },
+    {
+      "coordinates": [4801, 535],
+      "name": "Greenland",
+      "flag": "gl"
+    },
+    {
+      "coordinates": [12218, 3680],
+      "name": "Fiji",
+      "flag": "fj"
+    },
+    {
+      "coordinates": [12025, 4460],
+      "name": "New Zealand",
+      "flag": "nz"
+    },
+    {
+      "coordinates": [11778, 3790],
+      "name": "New Caledonia",
+      "flag": "nc"
+    },
+    {
+      "coordinates": [7738, 3707],
+      "name": "Madagascar",
+      "flag": "mg"
+    },
+    {
+      "coordinates": [10323, 2689],
+      "name": "Philippines",
+      "flag": "ph"
+    },
+    {
+      "coordinates": [8898, 2813],
+      "name": "Sri Lanka",
+      "flag": "lk"
+    },
+    {
+      "coordinates": [3791, 2657],
+      "name": "Curaçao",
+      "flag": "cw"
+    },
+    {
+      "coordinates": [3755, 2644],
+      "name": "Aruba",
+      "flag": "aw"
+    },
+    {
+      "coordinates": [3510, 2170],
+      "name": "The Bahamas",
+      "flag": "bs"
+    },
+    {
+      "coordinates": [3695, 2327],
+      "name": "Turks and Caicos Islands",
+      "flag": "tc"
+    },
+    {
+      "coordinates": [10269, 2264],
+      "name": "Taiwan",
+      "flag": "tw"
+    },
+    {
+      "coordinates": [10869, 1838],
+      "name": "Japan",
+      "flag": "jp"
+    },
+    {
+      "coordinates": [4221, 1466],
+      "name": "Saint Pierre and Miquelon",
+      "flag": "pm"
+    },
+    {
+      "coordinates": [5506, 861],
+      "name": "Iceland",
+      "flag": "is"
+    },
+    {
+      "coordinates": [1042, 3673],
+      "name": "French Polynesia",
+      "flag": "pf"
+    },
+    {
+      "coordinates": [8503, 4754],
+      "name": "French Southern and Antarctic Lands",
+      "flag": "tf"
+    },
+    {
+      "coordinates": [8037, 3231],
+      "name": "Seychelles",
+      "flag": "sc"
+    },
+    {
+      "coordinates": [772, 3009],
+      "name": "Kiribati",
+      "flag": "ki"
+    },
+    {
+      "coordinates": [11986, 2830],
+      "name": "Marshall Islands",
+      "flag": "mh"
+    },
+    {
+      "coordinates": [4056, 2704],
+      "name": "Trinidad and Tobago",
+      "flag": "tt"
+    },
+    {
+      "coordinates": [4038, 2658],
+      "name": "Grenada",
+      "flag": "gd"
+    },
+    {
+      "coordinates": [4058, 2617],
+      "name": "Saint Vincent and the Grenadines",
+      "flag": "vc"
+    },
+    {
+      "coordinates": [4110, 2622],
+      "name": "Barbados",
+      "flag": "bb"
+    },
+    {
+      "coordinates": [4062, 2597],
+      "name": "Saint Lucia",
+      "flag": "lc"
+    },
+    {
+      "coordinates": [4050, 2544],
+      "name": "Dominica",
+      "flag": "dm"
+    },
+    {
+      "coordinates": [4021, 2500],
+      "name": "Montserrat",
+      "flag": "ms"
+    },
+    {
+      "coordinates": [4035, 2471],
+      "name": "Antigua and Barbuda",
+      "flag": "ag"
+    },
+    {
+      "coordinates": [4002, 2480],
+      "name": "Saint Kitts and Nevis",
+      "flag": "kn"
+    },
+    {
+      "coordinates": [3933, 2466],
+      "name": "United States Virgin Islands",
+      "flag": "vi"
+    },
+    {
+      "coordinates": [3874, 2449],
+      "name": "Puerto Rico",
+      "flag": "pr"
+    },
+    {
+      "coordinates": [3937, 2443],
+      "name": "British Virgin Islands",
+      "flag": "vg"
+    },
+    {
+      "coordinates": [3505, 2453],
+      "name": "Jamaica",
+      "flag": "jm"
+    },
+    {
+      "coordinates": [3371, 2412],
+      "name": "Cayman Islands",
+      "flag": "ky"
+    },
+    {
+      "coordinates": [3933, 1969],
+      "name": "Bermuda",
+      "flag": "bm"
+    },
+    {
+      "coordinates": [8652, 4884],
+      "name": "Heard Island and McDonald Islands",
+      "flag": "hm"
+    },
+    {
+      "coordinates": [5949, 3616],
+      "name": "Saint Helena",
+      "flag": "sh"
+    },
+    {
+      "coordinates": [8108, 3764],
+      "name": "Mauritius",
+      "flag": "mu"
+    },
+    {
+      "coordinates": [7622, 3472],
+      "name": "Comoros",
+      "flag": "km"
+    },
+    {
+      "coordinates": [6367, 3062],
+      "name": "São Tomé and Principe",
+      "flag": "st"
+    },
+    {
+      "coordinates": [5337, 2557],
+      "name": "Cabo Verde",
+      "flag": "cv"
+    },
+    {
+      "coordinates": [6636, 1847],
+      "name": "Malta",
+      "flag": "mt"
+    },
+    {
+      "coordinates": [6072, 1392],
+      "name": "Jersey",
+      "flag": "je"
+    },
+    {
+      "coordinates": [6056, 1383],
+      "name": "Guernsey",
+      "flag": "gg"
+    },
+    {
+      "coordinates": [5989, 1221],
+      "name": "Isle of Man",
+      "flag": "im"
+    },
+    {
+      "coordinates": [6822, 1018],
+      "name": "Aland",
+      "flag": "ax"
+    },
+    {
+      "coordinates": [5903, 949],
+      "name": "Faroe Islands",
+      "flag": "fo"
+    },
+    {
+      "coordinates": [9750, 3430],
+      "name": "Indian Ocean Territories",
+      "flag": "au"
+    },
+    {
+      "coordinates": [9687, 3025],
+      "name": "Singapore",
+      "flag": "sg"
+    },
+    {
+      "coordinates": [165, 3795],
+      "name": "Tonga",
+      "flag": "to"
+    },
+    {
+      "coordinates": [64, 3559],
+      "name": "Wallis and Futuna",
+      "flag": "wf"
+    },
+    {
+      "coordinates": [258, 3537],
+      "name": "Samoa",
+      "flag": "ws"
+    },
+    {
+      "coordinates": [11576, 3346],
+      "name": "Solomon Islands",
+      "flag": "sb"
+    },
+    {
+      "coordinates": [8652, 2929],
+      "name": "Maldives",
+      "flag": "mv"
+    },
+    {
+      "coordinates": [11544, 2836],
+      "name": "Federated States of Micronesia",
+      "flag": "fm"
+    },
+    {
+      "coordinates": [4963, 4948],
+      "name": "South Georgia and the Islands",
+      "flag": "gs"
+    },
+    {
+      "coordinates": [4139, 4833],
+      "name": "Falkland Islands",
+      "flag": "fk"
+    },
+    {
+      "coordinates": [11840, 3596],
+      "name": "Vanuatu",
+      "flag": "vu"
+    },
+    {
+      "coordinates": [346, 3721],
+      "name": "Niue",
+      "flag": "nu"
+    },
+    {
+      "coordinates": [316, 3560],
+      "name": "American Samoa",
+      "flag": "as"
+    },
+    {
+      "coordinates": [10737, 2815],
+      "name": "Palau",
+      "flag": "pw"
+    },
+    {
+      "coordinates": [11082, 2616],
+      "name": "Guam",
+      "flag": "gu"
+    },
+    {
+      "coordinates": [11117, 2553],
+      "name": "Northern Mariana Islands",
+      "flag": "mp"
+    },
+    {
+      "coordinates": [7869, 2182],
+      "name": "Bahrain",
+      "flag": "bh"
+    },
+    {
+      "coordinates": [10019, 2316],
+      "name": "Macao S.A.R",
+      "flag": "mo"
+    }
+  ],
+  "translation_key": "map.grandearth"
+}

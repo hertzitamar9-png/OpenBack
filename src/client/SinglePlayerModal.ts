@@ -1,6 +1,6 @@
 import { TemplateResult, html } from "lit";
 import { customElement, state } from "lit/decorators.js";
-import { translateText } from "../client/Utils";
+import { getMapName, translateText } from "../client/Utils";
 import { UserMeResponse } from "../core/ApiSchemas";
 import { assetUrl } from "../core/AssetUrls";
 import { DoomsdayClockSpeed } from "../core/game/DoomsdayClock";
@@ -739,7 +739,7 @@ export class SinglePlayerModal extends BaseModal {
     }
 
     console.log(
-      `Starting single player game with map: ${GameMapType[this.selectedMap as keyof typeof GameMapType]}${this.useRandomMap ? " (Randomly selected)" : ""}`,
+      `Starting single player game with map: ${getMapName(this.selectedMap) ?? this.selectedMap}${this.useRandomMap ? " (Randomly selected)" : ""}`,
     );
     const clientID = generateID();
     const gameID = generateID();

@@ -649,14 +649,16 @@ export function authRouter(): express.Router {
     const email = parsed.data.email.toLowerCase();
     const accountExists = usersByEmail.has(email);
     if (parsed.data.mode === "signup" && accountExists) {
-      res.status(409).json({
+      res.json({
+        ok: false,
         error: "account_exists",
         nextAction: "login",
       });
       return;
     }
     if (parsed.data.mode === "login" && !accountExists) {
-      res.status(404).json({
+      res.json({
+        ok: false,
         error: "not_registered",
         nextAction: "signup",
       });

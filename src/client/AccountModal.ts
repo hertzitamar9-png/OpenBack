@@ -19,7 +19,6 @@ import {
   requestLoginCode,
   verifyLoginCode,
 } from "./Auth";
-import "./components/baseComponents/stats/DiscordUserHeader";
 import "./components/baseComponents/stats/PlayerGameHistoryView";
 import type { PlayerGameHistoryCache } from "./components/baseComponents/stats/PlayerGameHistoryView";
 import "./components/baseComponents/stats/PlayerStatsTable";
@@ -223,20 +222,20 @@ export class AccountModal extends BaseModal {
     }
     return html`
       <div class="flex flex-col gap-6">
-        <div class="bg-white/5 rounded-xl border border-white/10 p-6">
-          <div class="flex flex-col items-center gap-4">
+        <div
+          class="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/5 px-5 py-4"
+        >
+          <div class="min-w-0">
             <div
-              class="text-xs text-white/40 uppercase tracking-widest font-bold border-b border-white/5 pb-2 px-8"
+              class="text-xs font-bold uppercase tracking-wider text-white/40"
             >
               ${translateText("account_modal.connected_as")}
             </div>
-            <div class="flex items-center gap-8 justify-center flex-wrap">
-              <discord-user-header
-                .data=${this.userMeResponse?.user?.discord ?? null}
-              ></discord-user-header>
-              ${this.renderLoggedInAs()}
+            <div class="mt-1 truncate text-sm font-semibold text-white/80">
+              ${this.userMeResponse?.user?.email ?? ""}
             </div>
           </div>
+          ${this.renderCurrency()}
         </div>
         <div
           class="overflow-hidden rounded-xl border border-white/10 bg-white/5"
@@ -507,13 +506,7 @@ export class AccountModal extends BaseModal {
 
   private renderLoggedInAs(): TemplateResult {
     const me = this.userMeResponse?.user;
-    if (me?.discord) {
-      return html`
-        <div class="flex flex-col items-center gap-3 w-full">
-          ${this.renderCurrency()}
-        </div>
-      `;
-    } else if (me?.email) {
+    if (me?.email) {
       return html`
         <div class="flex flex-col items-center gap-3 w-full">
           <div class="text-white text-lg font-medium">
@@ -586,7 +579,7 @@ export class AccountModal extends BaseModal {
   private renderLogoutButton(): TemplateResult {
     return html`
       <o-button
-        variant="danger"
+        variant="primary"
         size="md"
         translationKey="account_modal.log_out"
         @click=${() => (this.dangerAction = "logout")}
@@ -596,23 +589,35 @@ export class AccountModal extends BaseModal {
 
   private renderAccountDangerZone(): TemplateResult {
     return html`
-      <section class="rounded-xl border border-red-400/20 bg-red-500/5 p-6">
-        <h3 class="text-sm font-black uppercase tracking-wider text-red-200">
-          ${translateText("account_modal.account_controls")}
-        </h3>
-        <p class="mb-4 mt-1 text-xs text-white/45">
-          ${translateText("account_modal.account_controls_desc")}
-        </p>
-        <div class="flex flex-wrap gap-3">
+      <div class="grid gap-4 md:grid-cols-2">
+        <section
+          class="rounded-xl border border-malibu-blue/20 bg-malibu-blue/5 p-6"
+        >
+          <h3
+            class="text-sm font-black uppercase tracking-wider text-malibu-blue"
+          >
+            ${translateText("account_modal.log_out")}
+          </h3>
+          <p class="mb-4 mt-1 text-xs leading-5 text-white/45">
+            ${translateText("account_modal.log_out_short_desc")}
+          </p>
           ${this.renderLogoutButton()}
+        </section>
+        <section class="rounded-xl border border-red-400/20 bg-red-500/5 p-6">
+          <h3 class="text-sm font-black uppercase tracking-wider text-red-200">
+            ${translateText("account_modal.delete_account")}
+          </h3>
+          <p class="mb-4 mt-1 text-xs leading-5 text-white/45">
+            ${translateText("account_modal.delete_account_short_desc")}
+          </p>
           <o-button
             variant="danger"
             size="md"
             translationKey="account_modal.delete_account"
             @click=${() => (this.dangerAction = "delete-first")}
           ></o-button>
-        </div>
-      </section>
+        </section>
+      </div>
     `;
   }
 
@@ -670,7 +675,7 @@ export class AccountModal extends BaseModal {
               @click=${() => this.cancelDangerAction()}
             ></o-button>
             <o-button
-              variant="danger"
+              variant=${deleting ? "danger" : "primary"}
               size="md"
               .translationKey=${finalDelete
                 ? "account_modal.delete_account_forever"
@@ -876,7 +881,7 @@ export class AccountModal extends BaseModal {
               </span>
             </button>
             <button
-              class="rounded-2xl border border-white/15 bg-white/5 p-6 text-left transition hover:border-white/35 hover:bg-white/10"
+              class="rounded-2xl border border-malibu-blue/30 bg-malibu-blue/10 p-6 text-left transition hover:border-malibu-blue hover:bg-malibu-blue/15"
               @click=${() => this.chooseAuthMode("login")}
             >
               <strong class="block text-xl text-white">

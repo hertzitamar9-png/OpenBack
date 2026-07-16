@@ -8,9 +8,8 @@ interface LobbySocketOptions {
   pollIntervalMs?: number;
 }
 
-function getRandomWorkerPath(numWorkers: number): string {
-  const workerIndex = Math.floor(Math.random() * numWorkers);
-  return `/w${workerIndex}`;
+function getRandomWorkerIndex(numWorkers: number): number {
+  return Math.floor(Math.random() * Math.max(1, numWorkers));
 }
 
 export class PublicLobbySocket {
@@ -18,6 +17,7 @@ export class PublicLobbySocket {
   private wsReconnectTimeout: number | null = null;
   private wsConnectionAttempts = 0;
   private wsAttemptCounted = false;
+  private workerIndex = 0;
   private workerPath: string = "";
   private stopped = true;
   // Latest full snapshot, used as the base for applying counts-only deltas.
@@ -38,7 +38,8 @@ export class PublicLobbySocket {
     this.stopped = false;
     this.wsConnectionAttempts = 0;
     // Get config to determine number of workers, then pick a random one
-    this.workerPath = getRandomWorkerPath(ClientEnv.numWorkers());
+    this.workerIndex = getRandomWorkerIndex(ClientEnv.numWorkers());
+    this.workerPath = `/w${this.workerIndex}`;
     this.connectWebSocket();
   }
 
@@ -145,6 +146,12 @@ export class PublicLobbySocket {
     if (this.wsConnectionAttempts >= this.maxWsAttempts) {
       console.error("Max WebSocket attempts reached");
     } else {
+      // A worker may be restarting while the rest of the service is healthy.
+      // Rotate across the advertised workers instead of retrying one dead
+      // shard until the client gives up.
+      const numWorkers = Math.max(1, ClientEnv.numWorkers());
+      this.workerIndex = (this.workerIndex + 1) % numWorkers;
+      this.workerPath = `/w${this.workerIndex}`;
       this.scheduleReconnect();
     }
   }

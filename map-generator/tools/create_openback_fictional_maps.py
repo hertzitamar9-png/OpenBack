@@ -371,7 +371,7 @@ def create_shattered_expanse(output_root: Path) -> None:
         lambda value: 255 if value >= 128 else 0
     )
 
-    names = (
+    core_names = (
         "Dawnreach", "Tidehold", "Ashen Cay", "Glasshaven", "Stormrest", "Blue Lantern",
         "Crown Atoll", "Farwake", "Sunken Gate", "Iron Shoals", "Mistward", "Ember Isle",
         "Windscar", "Pearl Bastion", "Drift Crown", "Saltspire", "Moon Anchorage", "Wavebreak",
@@ -380,6 +380,21 @@ def create_shattered_expanse(output_root: Path) -> None:
         "Golden Shoal", "Whisper Isle", "Crimson Atoll", "Northstar", "Sea Lantern", "Gale Crown",
         "Mariners Rest", "Broken Compass", "Turtle Reach", "Last Horizon", "Shardhaven", "Foamspire",
         "Blackwake", "Silver Current", "Rains End", "Azure Crown", "Cinder Key", "Tideglass",
+    )
+    # The largest OpenBack map needs enough independent nations to use its
+    # actual scale. Keep the original 48 and distribute 72 additional realms.
+    realm_prefixes = (
+        "Amber", "Boreal", "Crystal", "Dusklight", "Emerald", "Flint",
+        "Granite", "Highland", "Ivory",
+    )
+    realm_suffixes = (
+        "Dominion", "Frontier", "Kingdom", "March", "Province", "Republic",
+        "Territory", "Union",
+    )
+    names = core_names + tuple(
+        f"{prefix} {suffix}"
+        for prefix in realm_prefixes
+        for suffix in realm_suffixes
     )
     land_tiles = mask.histogram()[255]
     if land_tiles < 10_000_000:

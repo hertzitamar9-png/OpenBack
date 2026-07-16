@@ -106,6 +106,54 @@
       "priceSoft": 500,
       "rarity": "uncommon",
       "artist": "OpenBack"
+    },
+    "air_command": {
+      "name": "air_command",
+      "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzA3MWEzMyIvPjxwYXRoIGQ9Ik0xNSA0NUwxODUgMTU1TTE1IDE1NUwxODUgNDUiIHN0cm9rZT0iIzE1OTllOCIgc3Ryb2tlLXdpZHRoPSIxMCIgb3BhY2l0eT0iLjU1Ii8+PHBhdGggZD0iTTEwMCAyOGwxNyA1MCA1OCAyMi01OCAyMi0xNyA1MC0xNy01MC01OC0yMiA1OC0yMnoiIGZpbGw9IiNkZmY3ZmYiIHN0cm9rZT0iIzA3MTExZiIgc3Ryb2tlLXdpZHRoPSI3Ii8+PC9zdmc+",
+      "product": null,
+      "priceSoft": 1000,
+      "rarity": "epic",
+      "artist": "OpenBack"
+    },
+    "armored_column": {
+      "name": "armored_column",
+      "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzIzMzExZiIvPjxwYXRoIGQ9Ik0wIDQwaDIwME0wIDEwMGgyMDBNMCAxNjBoMjAwIiBzdHJva2U9IiM3ODhiNWIiIHN0cm9rZS13aWR0aD0iMjQiLz48ZyBmaWxsPSIjMTExYTEwIiBzdHJva2U9IiNiNmM2OGQiIHN0cm9rZS13aWR0aD0iNSI+PHJlY3QgeD0iMjIiIHk9IjI0IiB3aWR0aD0iNTgiIGhlaWdodD0iMzQiIHJ4PSI5Ii8+PHJlY3QgeD0iMTIwIiB5PSI4NCIgd2lkdGg9IjU4IiBoZWlnaHQ9IjM0IiByeD0iOSIvPjxyZWN0IHg9IjQwIiB5PSIxNDQiIHdpZHRoPSI1OCIgaGVpZ2h0PSIzNCIgcng9IjkiLz48L2c+PC9zdmc+",
+      "product": null,
+      "priceSoft": 750,
+      "rarity": "rare",
+      "artist": "OpenBack"
+    },
+    "nuclear_dawn": {
+      "name": "nuclear_dawn",
+      "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj48ZGVmcz48cmFkaWFsR3JhZGllbnQgaWQ9ImciPjxzdG9wIHN0b3AtY29sb3I9IiNmZmY3YWUiLz48c3RvcCBvZmZzZXQ9Ii40NSIgc3RvcC1jb2xvcj0iI2ZmOTQxOCIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzY4MTMxMyIvPjwvcmFkaWFsR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjMWIwYzE3Ii8+PGNpcmNsZSBjeD0iMTAwIiBjeT0iOTUiIHI9Ijc1IiBmaWxsPSJ1cmwoI2cpIi8+PHBhdGggZD0iTTg4IDE3OGgyNGw5LTQ0SDc5ek01NSAxNTVoOTAiIHN0cm9rZT0iIzIyMGIwYiIgc3Ryb2tlLXdpZHRoPSIxMiIgZmlsbD0ibm9uZSIvPjwvc3ZnPg==",
+      "product": null,
+      "priceSoft": 1500,
+      "rarity": "legendary",
+      "artist": "OpenBack"
+    },
+    "naval_grid": {
+      "name": "naval_grid",
+      "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzA2MWEyYiIvPjxnIHN0cm9rZT0iIzE2ODhiOCIgc3Ryb2tlLXdpZHRoPSIyIiBvcGFjaXR5PSIuNjUiPjxwYXRoIGQ9Ik0wIDQwaDIwME0wIDgwaDIwME0wIDEyMGgyMDBNMCAxNjBoMjAwTTQwIDB2MjAwTTgwIDB2MjAwTTEyMCAwdjIwME0xNjAgMHYyMDAiLz48L2c+PHBhdGggZD0iTTI4IDExNmw3Mi01OCA3MiA1OC03MiAzMXoiIGZpbGw9IiNkNmVlZjYiIHN0cm9rZT0iIzAyMGMxNiIgc3Ryb2tlLXdpZHRoPSI4Ii8+PGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSIxNyIgZmlsbD0iIzE3YjllOCIvPjwvc3ZnPg==",
+      "product": null,
+      "priceSoft": 750,
+      "rarity": "rare",
+      "artist": "OpenBack"
+    },
+    "rail_corps": {
+      "name": "rail_corps",
+      "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzJiMjQxZCIvPjxwYXRoIGQ9Ik0zMCAwbDYwIDIwME0xMTAgMGw2MCAyMDAiIHN0cm9rZT0iI2Q0OWE0YSIgc3Ryb2tlLXdpZHRoPSIxMyIvPjxwYXRoIGQ9Ik0yMiAzMGgxMjZNMzUgNzBoMTI2TTQ4IDExMGgxMjZNNjEgMTUwaDEyNk03NCAxOTBoMTI2IiBzdHJva2U9IiMxNzEyMGUiIHN0cm9rZS13aWR0aD0iOSIvPjxjaXJjbGUgY3g9IjEwMSIgY3k9IjEwMCIgcj0iMjciIGZpbGw9IiNkNDlhNGEiIHN0cm9rZT0iIzE3MTIwZSIgc3Ryb2tlLXdpZHRoPSI3Ii8+PC9zdmc+",
+      "product": null,
+      "priceSoft": 500,
+      "rarity": "uncommon",
+      "artist": "OpenBack"
+    },
+    "storm_front": {
+      "name": "storm_front",
+      "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzE0MWIyZCIvPjxwYXRoIGQ9Ik0wIDU4UTQ1IDI1IDkwIDU4dDExMCAwdjM4UTE1MCA2MyAxMDAgOTZUMCA5NnptMCA3MHE0OC0zMiA5OCAwdDEwMiAwdjQ1cS00OC0zMC05OCAwVDAgMTczeiIgZmlsbD0iIzU1Njk4NyIvPjxwYXRoIGQ9Ik0xMTggNDRMNzUgMTEyaDM1bC0yNCA1MiA2Mi03OGgtMzd6IiBmaWxsPSIjZmZlODVhIiBzdHJva2U9IiMxMTE4MjciIHN0cm9rZS13aWR0aD0iNSIvPjwvc3ZnPg==",
+      "product": null,
+      "priceSoft": 1000,
+      "rarity": "epic",
+      "artist": "OpenBack"
     }
   },
   "colorPalettes": {},

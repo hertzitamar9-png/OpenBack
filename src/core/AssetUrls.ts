@@ -45,7 +45,7 @@ export function normalizeAssetPath(path: string): string {
 }
 
 function isAbsoluteUrl(path: string): boolean {
-  return /^https?:\/\//i.test(path);
+  return /^(?:https?:\/\/|data:|blob:)/i.test(path);
 }
 
 export function buildAssetUrl(

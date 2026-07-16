@@ -26,6 +26,8 @@ tests/perf/output/
 # Locally built Go binary (gen-maps uses `go run .`)
 map-generator/map-generator
 .openback-tools/
+__pycache__/
+*.pyc
 
 # Syncthing folder markers
 .stfolder/

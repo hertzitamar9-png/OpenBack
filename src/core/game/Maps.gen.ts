@@ -48,6 +48,7 @@ export enum GameMapType {
   FracturedEurasia = "Fractured Eurasia", // map-generator/assets/maps/fracturedeurasia/info.json
   GatewayToTheAtlantic = "Gateway to the Atlantic", // map-generator/assets/maps/gatewaytotheatlantic/info.json
   GiantWorldMap = "Giant World Map", // map-generator/assets/maps/giantworldmap/info.json
+  GrandEarth = "Grand Earth", // map-generator/assets/maps/grandearth/info.json
   GreatLakes = "Great Lakes", // map-generator/assets/maps/greatlakes/info.json
   GulfOfStLawrence = "Gulf of St. Lawrence", // map-generator/assets/maps/gulfofstlawrence/info.json
   Halkidiki = "Halkidiki", // map-generator/assets/maps/halkidiki/info.json
@@ -498,6 +499,13 @@ export const maps: readonly MapInfo[] = [
     translationKey: "map.giantworldmap",
     categories: ["world"],
     multiplayerFrequency: 10,
+  },
+  {
+    id: "GrandEarth",
+    type: GameMapType.GrandEarth,
+    translationKey: "map.grandearth",
+    categories: ["new", "world"],
+    multiplayerFrequency: 0,
   },
   {
     id: "GreatLakes",

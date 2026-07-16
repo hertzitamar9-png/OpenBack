@@ -21,243 +21,603 @@
   "nations": [
     {
       "coordinates": [3744, 2260],
-      "flag": "",
-      "name": "Dawnreach"
+      "name": "Dawnreach",
+      "flag": ""
     },
     {
       "coordinates": [8168, 3660],
-      "flag": "",
-      "name": "Tidehold"
+      "name": "Tidehold",
+      "flag": ""
     },
     {
       "coordinates": [20, 4416],
-      "flag": "",
-      "name": "Ashen Cay"
+      "name": "Ashen Cay",
+      "flag": ""
     },
     {
       "coordinates": [244, 20],
-      "flag": "",
-      "name": "Glasshaven"
+      "name": "Glasshaven",
+      "flag": ""
     },
     {
       "coordinates": [6880, 20],
-      "flag": "",
-      "name": "Stormrest"
+      "name": "Stormrest",
+      "flag": ""
     },
     {
       "coordinates": [5452, 4584],
-      "flag": "",
-      "name": "Blue Lantern"
+      "name": "Blue Lantern",
+      "flag": ""
     },
     {
       "coordinates": [2596, 4584],
-      "flag": "",
-      "name": "Crown Atoll"
+      "name": "Crown Atoll",
+      "flag": ""
     },
     {
       "coordinates": [1308, 2344],
-      "flag": "",
-      "name": "Farwake"
+      "name": "Farwake",
+      "flag": ""
     },
     {
       "coordinates": [2680, 76],
-      "flag": "",
-      "name": "Sunken Gate"
+      "name": "Sunken Gate",
+      "flag": ""
     },
     {
       "coordinates": [6040, 2176],
-      "flag": "",
-      "name": "Iron Shoals"
+      "name": "Iron Shoals",
+      "flag": ""
     },
     {
       "coordinates": [4780, 384],
-      "flag": "",
-      "name": "Mistward"
+      "name": "Mistward",
+      "flag": ""
     },
     {
       "coordinates": [8168, 1616],
-      "flag": "",
-      "name": "Ember Isle"
+      "name": "Ember Isle",
+      "flag": ""
     },
     {
       "coordinates": [4024, 3856],
-      "flag": "",
-      "name": "Windscar"
+      "name": "Windscar",
+      "flag": ""
     },
     {
       "coordinates": [6712, 3828],
-      "flag": "",
-      "name": "Pearl Bastion"
+      "name": "Pearl Bastion",
+      "flag": ""
     },
     {
       "coordinates": [2456, 3184],
-      "flag": "",
-      "name": "Drift Crown"
+      "name": "Drift Crown",
+      "flag": ""
     },
     {
       "coordinates": [1196, 1000],
-      "flag": "",
-      "name": "Saltspire"
+      "name": "Saltspire",
+      "flag": ""
     },
     {
       "coordinates": [5228, 3240],
-      "flag": "",
-      "name": "Moon Anchorage"
+      "name": "Moon Anchorage",
+      "flag": ""
     },
     {
       "coordinates": [216, 3100],
-      "flag": "",
-      "name": "Wavebreak"
+      "name": "Wavebreak",
+      "flag": ""
     },
     {
       "coordinates": [2512, 1784],
-      "flag": "",
-      "name": "Starfall"
+      "name": "Starfall",
+      "flag": ""
     },
     {
       "coordinates": [3632, 972],
-      "flag": "",
-      "name": "Riven Keys"
+      "name": "Riven Keys",
+      "flag": ""
     },
     {
       "coordinates": [6936, 1280],
-      "flag": "",
-      "name": "Coral March"
+      "name": "Coral March",
+      "flag": ""
     },
     {
       "coordinates": [5144, 1476],
-      "flag": "",
-      "name": "Thunder Cay"
+      "name": "Thunder Cay",
+      "flag": ""
     },
     {
       "coordinates": [5900, 580],
-      "flag": "",
-      "name": "Frostwake"
+      "name": "Frostwake",
+      "flag": ""
     },
     {
       "coordinates": [7552, 4584],
-      "flag": "",
-      "name": "Sable Harbor"
+      "name": "Sable Harbor",
+      "flag": ""
     },
     {
       "coordinates": [7748, 2624],
-      "flag": "",
-      "name": "Brightwater"
+      "name": "Brightwater",
+      "flag": ""
     },
     {
       "coordinates": [1588, 4192],
-      "flag": "",
-      "name": "Tempest Reach"
+      "name": "Tempest Reach",
+      "flag": ""
     },
     {
       "coordinates": [7776, 608],
-      "flag": "",
-      "name": "Verdant Shard"
+      "name": "Verdant Shard",
+      "flag": ""
     },
     {
       "coordinates": [4920, 2372],
-      "flag": "",
-      "name": "Obsidian Key"
+      "name": "Obsidian Key",
+      "flag": ""
     },
     {
       "coordinates": [3100, 3828],
-      "flag": "",
-      "name": "Cloudrest"
+      "name": "Cloudrest",
+      "flag": ""
     },
     {
       "coordinates": [748, 3856],
-      "flag": "",
-      "name": "Deepwatch"
+      "name": "Deepwatch",
+      "flag": ""
     },
     {
       "coordinates": [6516, 2960],
-      "flag": "",
-      "name": "Golden Shoal"
+      "name": "Golden Shoal",
+      "flag": ""
     },
     {
       "coordinates": [3548, 4584],
-      "flag": "",
-      "name": "Whisper Isle"
+      "name": "Whisper Isle",
+      "flag": ""
     },
     {
       "coordinates": [2736, 944],
-      "flag": "",
-      "name": "Crimson Atoll"
+      "name": "Crimson Atoll",
+      "flag": ""
     },
     {
       "coordinates": [3940, 160],
-      "flag": "",
-      "name": "Northstar"
+      "name": "Northstar",
+      "flag": ""
     },
     {
       "coordinates": [4220, 3016],
-      "flag": "",
-      "name": "Sea Lantern"
+      "name": "Sea Lantern",
+      "flag": ""
     },
     {
       "coordinates": [1084, 20],
-      "flag": "",
-      "name": "Gale Crown"
+      "name": "Gale Crown",
+      "flag": ""
     },
     {
       "coordinates": [6880, 2204],
-      "flag": "",
-      "name": "Mariners Rest"
+      "name": "Mariners Rest",
+      "flag": ""
     },
     {
       "coordinates": [2960, 2568],
-      "flag": "",
-      "name": "Broken Compass"
+      "name": "Broken Compass",
+      "flag": ""
     },
     {
       "coordinates": [1896, 160],
-      "flag": "",
-      "name": "Turtle Reach"
+      "name": "Turtle Reach",
+      "flag": ""
     },
     {
       "coordinates": [4808, 3912],
-      "flag": "",
-      "name": "Last Horizon"
+      "name": "Last Horizon",
+      "flag": ""
     },
     {
       "coordinates": [524, 1364],
-      "flag": "",
-      "name": "Shardhaven"
+      "name": "Shardhaven",
+      "flag": ""
     },
     {
       "coordinates": [3268, 1644],
-      "flag": "",
-      "name": "Foamspire"
+      "name": "Foamspire",
+      "flag": ""
     },
     {
       "coordinates": [2064, 2428],
-      "flag": "",
-      "name": "Blackwake"
+      "name": "Blackwake",
+      "flag": ""
     },
     {
       "coordinates": [7412, 3548],
-      "flag": "",
-      "name": "Silver Current"
+      "name": "Silver Current",
+      "flag": ""
     },
     {
       "coordinates": [4276, 4556],
-      "flag": "",
-      "name": "Rains End"
+      "name": "Rains End",
+      "flag": ""
     },
     {
       "coordinates": [7468, 1756],
-      "flag": "",
-      "name": "Azure Crown"
+      "name": "Azure Crown",
+      "flag": ""
     },
     {
       "coordinates": [5872, 3548],
-      "flag": "",
-      "name": "Cinder Key"
+      "name": "Cinder Key",
+      "flag": ""
     },
     {
       "coordinates": [2232, 3856],
-      "flag": "",
-      "name": "Tideglass"
+      "name": "Tideglass",
+      "flag": ""
+    },
+    {
+      "coordinates": [524, 664],
+      "name": "Amber Dominion",
+      "flag": ""
+    },
+    {
+      "coordinates": [3548, 2904],
+      "name": "Amber Frontier",
+      "flag": ""
+    },
+    {
+      "coordinates": [20, 3744],
+      "name": "Amber Kingdom",
+      "flag": ""
+    },
+    {
+      "coordinates": [1812, 3352],
+      "name": "Amber March",
+      "flag": ""
+    },
+    {
+      "coordinates": [5284, 804],
+      "name": "Amber Province",
+      "flag": ""
+    },
+    {
+      "coordinates": [6740, 636],
+      "name": "Amber Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [4248, 692],
+      "name": "Amber Territory",
+      "flag": ""
+    },
+    {
+      "coordinates": [5424, 3968],
+      "name": "Amber Union",
+      "flag": ""
+    },
+    {
+      "coordinates": [5452, 2008],
+      "name": "Boreal Dominion",
+      "flag": ""
+    },
+    {
+      "coordinates": [7496, 76],
+      "name": "Boreal Frontier",
+      "flag": ""
+    },
+    {
+      "coordinates": [804, 3268],
+      "name": "Boreal Kingdom",
+      "flag": ""
+    },
+    {
+      "coordinates": [8168, 2204],
+      "name": "Boreal March",
+      "flag": ""
+    },
+    {
+      "coordinates": [3408, 440],
+      "name": "Boreal Province",
+      "flag": ""
+    },
+    {
+      "coordinates": [7244, 4108],
+      "name": "Boreal Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [1952, 1700],
+      "name": "Boreal Territory",
+      "flag": ""
+    },
+    {
+      "coordinates": [832, 4416],
+      "name": "Boreal Union",
+      "flag": ""
+    },
+    {
+      "coordinates": [4892, 4500],
+      "name": "Crystal Dominion",
+      "flag": ""
+    },
+    {
+      "coordinates": [2036, 4556],
+      "name": "Crystal Frontier",
+      "flag": ""
+    },
+    {
+      "coordinates": [7272, 832],
+      "name": "Crystal Kingdom",
+      "flag": ""
+    },
+    {
+      "coordinates": [1056, 1532],
+      "name": "Crystal March",
+      "flag": ""
+    },
+    {
+      "coordinates": [7888, 3212],
+      "name": "Crystal Province",
+      "flag": ""
+    },
+    {
+      "coordinates": [4724, 3380],
+      "name": "Crystal Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [3772, 1728],
+      "name": "Crystal Territory",
+      "flag": ""
+    },
+    {
+      "coordinates": [2316, 440],
+      "name": "Crystal Union",
+      "flag": ""
+    },
+    {
+      "coordinates": [3240, 2148],
+      "name": "Dusklight Dominion",
+      "flag": ""
+    },
+    {
+      "coordinates": [2932, 3352],
+      "name": "Dusklight Frontier",
+      "flag": ""
+    },
+    {
+      "coordinates": [4416, 20],
+      "name": "Dusklight Kingdom",
+      "flag": ""
+    },
+    {
+      "coordinates": [2540, 2288],
+      "name": "Dusklight March",
+      "flag": ""
+    },
+    {
+      "coordinates": [6376, 1812],
+      "name": "Dusklight Province",
+      "flag": ""
+    },
+    {
+      "coordinates": [3884, 3380],
+      "name": "Dusklight Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [2680, 4080],
+      "name": "Dusklight Territory",
+      "flag": ""
+    },
+    {
+      "coordinates": [3184, 1168],
+      "name": "Dusklight Union",
+      "flag": ""
+    },
+    {
+      "coordinates": [5396, 2484],
+      "name": "Emerald Dominion",
+      "flag": ""
+    },
+    {
+      "coordinates": [2064, 2904],
+      "name": "Emerald Frontier",
+      "flag": ""
+    },
+    {
+      "coordinates": [6236, 244],
+      "name": "Emerald Kingdom",
+      "flag": ""
+    },
+    {
+      "coordinates": [6768, 3352],
+      "name": "Emerald March",
+      "flag": ""
+    },
+    {
+      "coordinates": [5844, 1756],
+      "name": "Emerald Province",
+      "flag": ""
+    },
+    {
+      "coordinates": [8168, 2820],
+      "name": "Emerald Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [7692, 2148],
+      "name": "Emerald Territory",
+      "flag": ""
+    },
+    {
+      "coordinates": [412, 3520],
+      "name": "Emerald Union",
+      "flag": ""
+    },
+    {
+      "coordinates": [5228, 356],
+      "name": "Flint Dominion",
+      "flag": ""
+    },
+    {
+      "coordinates": [7020, 1728],
+      "name": "Flint Frontier",
+      "flag": ""
+    },
+    {
+      "coordinates": [3968, 2652],
+      "name": "Flint Kingdom",
+      "flag": ""
+    },
+    {
+      "coordinates": [1616, 3744],
+      "name": "Flint March",
+      "flag": ""
+    },
+    {
+      "coordinates": [6292, 3912],
+      "name": "Flint Province",
+      "flag": ""
+    },
+    {
+      "coordinates": [2596, 3632],
+      "name": "Flint Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [4388, 4080],
+      "name": "Flint Territory",
+      "flag": ""
+    },
+    {
+      "coordinates": [412, 4584],
+      "name": "Flint Union",
+      "flag": ""
+    },
+    {
+      "coordinates": [4752, 804],
+      "name": "Granite Dominion",
+      "flag": ""
+    },
+    {
+      "coordinates": [5648, 244],
+      "name": "Granite Frontier",
+      "flag": ""
+    },
+    {
+      "coordinates": [7244, 412],
+      "name": "Granite Kingdom",
+      "flag": ""
+    },
+    {
+      "coordinates": [776, 1000],
+      "name": "Granite March",
+      "flag": ""
+    },
+    {
+      "coordinates": [3884, 4332],
+      "name": "Granite Province",
+      "flag": ""
+    },
+    {
+      "coordinates": [6544, 1420],
+      "name": "Granite Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [1028, 2652],
+      "name": "Granite Territory",
+      "flag": ""
+    },
+    {
+      "coordinates": [5116, 3632],
+      "name": "Granite Union",
+      "flag": ""
+    },
+    {
+      "coordinates": [7664, 4192],
+      "name": "Highland Dominion",
+      "flag": ""
+    },
+    {
+      "coordinates": [5676, 916],
+      "name": "Highland Frontier",
+      "flag": ""
+    },
+    {
+      "coordinates": [2512, 1280],
+      "name": "Highland Kingdom",
+      "flag": ""
+    },
+    {
+      "coordinates": [2176, 2036],
+      "name": "Highland March",
+      "flag": ""
+    },
+    {
+      "coordinates": [7272, 2120],
+      "name": "Highland Province",
+      "flag": ""
+    },
+    {
+      "coordinates": [3408, 2512],
+      "name": "Highland Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [4304, 3408],
+      "name": "Highland Territory",
+      "flag": ""
+    },
+    {
+      "coordinates": [6880, 4276],
+      "name": "Highland Union",
+      "flag": ""
+    },
+    {
+      "coordinates": [3156, 748],
+      "name": "Ivory Dominion",
+      "flag": ""
+    },
+    {
+      "coordinates": [5088, 2736],
+      "name": "Ivory Frontier",
+      "flag": ""
+    },
+    {
+      "coordinates": [2288, 20],
+      "name": "Ivory Kingdom",
+      "flag": ""
+    },
+    {
+      "coordinates": [3548, 1364],
+      "name": "Ivory March",
+      "flag": ""
+    },
+    {
+      "coordinates": [7496, 1364],
+      "name": "Ivory Province",
+      "flag": ""
+    },
+    {
+      "coordinates": [5060, 2008],
+      "name": "Ivory Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [2904, 1756],
+      "name": "Ivory Territory",
+      "flag": ""
+    },
+    {
+      "coordinates": [5116, 4192],
+      "name": "Ivory Union",
+      "flag": ""
     }
   ],
   "translation_key": "map.shatteredexpanse"

@@ -244,6 +244,366 @@
       "coordinates": [2232, 3856],
       "name": "Tideglass",
       "flag": ""
+    },
+    {
+      "coordinates": [524, 664],
+      "name": "Amber Dominion",
+      "flag": ""
+    },
+    {
+      "coordinates": [3548, 2904],
+      "name": "Amber Frontier",
+      "flag": ""
+    },
+    {
+      "coordinates": [20, 3744],
+      "name": "Amber Kingdom",
+      "flag": ""
+    },
+    {
+      "coordinates": [1812, 3352],
+      "name": "Amber March",
+      "flag": ""
+    },
+    {
+      "coordinates": [5284, 804],
+      "name": "Amber Province",
+      "flag": ""
+    },
+    {
+      "coordinates": [6740, 636],
+      "name": "Amber Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [4248, 692],
+      "name": "Amber Territory",
+      "flag": ""
+    },
+    {
+      "coordinates": [5424, 3968],
+      "name": "Amber Union",
+      "flag": ""
+    },
+    {
+      "coordinates": [5452, 2008],
+      "name": "Boreal Dominion",
+      "flag": ""
+    },
+    {
+      "coordinates": [7496, 76],
+      "name": "Boreal Frontier",
+      "flag": ""
+    },
+    {
+      "coordinates": [804, 3268],
+      "name": "Boreal Kingdom",
+      "flag": ""
+    },
+    {
+      "coordinates": [8168, 2204],
+      "name": "Boreal March",
+      "flag": ""
+    },
+    {
+      "coordinates": [3408, 440],
+      "name": "Boreal Province",
+      "flag": ""
+    },
+    {
+      "coordinates": [7244, 4108],
+      "name": "Boreal Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [1952, 1700],
+      "name": "Boreal Territory",
+      "flag": ""
+    },
+    {
+      "coordinates": [832, 4416],
+      "name": "Boreal Union",
+      "flag": ""
+    },
+    {
+      "coordinates": [4892, 4500],
+      "name": "Crystal Dominion",
+      "flag": ""
+    },
+    {
+      "coordinates": [2036, 4556],
+      "name": "Crystal Frontier",
+      "flag": ""
+    },
+    {
+      "coordinates": [7272, 832],
+      "name": "Crystal Kingdom",
+      "flag": ""
+    },
+    {
+      "coordinates": [1056, 1532],
+      "name": "Crystal March",
+      "flag": ""
+    },
+    {
+      "coordinates": [7888, 3212],
+      "name": "Crystal Province",
+      "flag": ""
+    },
+    {
+      "coordinates": [4724, 3380],
+      "name": "Crystal Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [3772, 1728],
+      "name": "Crystal Territory",
+      "flag": ""
+    },
+    {
+      "coordinates": [2316, 440],
+      "name": "Crystal Union",
+      "flag": ""
+    },
+    {
+      "coordinates": [3240, 2148],
+      "name": "Dusklight Dominion",
+      "flag": ""
+    },
+    {
+      "coordinates": [2932, 3352],
+      "name": "Dusklight Frontier",
+      "flag": ""
+    },
+    {
+      "coordinates": [4416, 20],
+      "name": "Dusklight Kingdom",
+      "flag": ""
+    },
+    {
+      "coordinates": [2540, 2288],
+      "name": "Dusklight March",
+      "flag": ""
+    },
+    {
+      "coordinates": [6376, 1812],
+      "name": "Dusklight Province",
+      "flag": ""
+    },
+    {
+      "coordinates": [3884, 3380],
+      "name": "Dusklight Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [2680, 4080],
+      "name": "Dusklight Territory",
+      "flag": ""
+    },
+    {
+      "coordinates": [3184, 1168],
+      "name": "Dusklight Union",
+      "flag": ""
+    },
+    {
+      "coordinates": [5396, 2484],
+      "name": "Emerald Dominion",
+      "flag": ""
+    },
+    {
+      "coordinates": [2064, 2904],
+      "name": "Emerald Frontier",
+      "flag": ""
+    },
+    {
+      "coordinates": [6236, 244],
+      "name": "Emerald Kingdom",
+      "flag": ""
+    },
+    {
+      "coordinates": [6768, 3352],
+      "name": "Emerald March",
+      "flag": ""
+    },
+    {
+      "coordinates": [5844, 1756],
+      "name": "Emerald Province",
+      "flag": ""
+    },
+    {
+      "coordinates": [8168, 2820],
+      "name": "Emerald Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [7692, 2148],
+      "name": "Emerald Territory",
+      "flag": ""
+    },
+    {
+      "coordinates": [412, 3520],
+      "name": "Emerald Union",
+      "flag": ""
+    },
+    {
+      "coordinates": [5228, 356],
+      "name": "Flint Dominion",
+      "flag": ""
+    },
+    {
+      "coordinates": [7020, 1728],
+      "name": "Flint Frontier",
+      "flag": ""
+    },
+    {
+      "coordinates": [3968, 2652],
+      "name": "Flint Kingdom",
+      "flag": ""
+    },
+    {
+      "coordinates": [1616, 3744],
+      "name": "Flint March",
+      "flag": ""
+    },
+    {
+      "coordinates": [6292, 3912],
+      "name": "Flint Province",
+      "flag": ""
+    },
+    {
+      "coordinates": [2596, 3632],
+      "name": "Flint Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [4388, 4080],
+      "name": "Flint Territory",
+      "flag": ""
+    },
+    {
+      "coordinates": [412, 4584],
+      "name": "Flint Union",
+      "flag": ""
+    },
+    {
+      "coordinates": [4752, 804],
+      "name": "Granite Dominion",
+      "flag": ""
+    },
+    {
+      "coordinates": [5648, 244],
+      "name": "Granite Frontier",
+      "flag": ""
+    },
+    {
+      "coordinates": [7244, 412],
+      "name": "Granite Kingdom",
+      "flag": ""
+    },
+    {
+      "coordinates": [776, 1000],
+      "name": "Granite March",
+      "flag": ""
+    },
+    {
+      "coordinates": [3884, 4332],
+      "name": "Granite Province",
+      "flag": ""
+    },
+    {
+      "coordinates": [6544, 1420],
+      "name": "Granite Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [1028, 2652],
+      "name": "Granite Territory",
+      "flag": ""
+    },
+    {
+      "coordinates": [5116, 3632],
+      "name": "Granite Union",
+      "flag": ""
+    },
+    {
+      "coordinates": [7664, 4192],
+      "name": "Highland Dominion",
+      "flag": ""
+    },
+    {
+      "coordinates": [5676, 916],
+      "name": "Highland Frontier",
+      "flag": ""
+    },
+    {
+      "coordinates": [2512, 1280],
+      "name": "Highland Kingdom",
+      "flag": ""
+    },
+    {
+      "coordinates": [2176, 2036],
+      "name": "Highland March",
+      "flag": ""
+    },
+    {
+      "coordinates": [7272, 2120],
+      "name": "Highland Province",
+      "flag": ""
+    },
+    {
+      "coordinates": [3408, 2512],
+      "name": "Highland Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [4304, 3408],
+      "name": "Highland Territory",
+      "flag": ""
+    },
+    {
+      "coordinates": [6880, 4276],
+      "name": "Highland Union",
+      "flag": ""
+    },
+    {
+      "coordinates": [3156, 748],
+      "name": "Ivory Dominion",
+      "flag": ""
+    },
+    {
+      "coordinates": [5088, 2736],
+      "name": "Ivory Frontier",
+      "flag": ""
+    },
+    {
+      "coordinates": [2288, 20],
+      "name": "Ivory Kingdom",
+      "flag": ""
+    },
+    {
+      "coordinates": [3548, 1364],
+      "name": "Ivory March",
+      "flag": ""
+    },
+    {
+      "coordinates": [7496, 1364],
+      "name": "Ivory Province",
+      "flag": ""
+    },
+    {
+      "coordinates": [5060, 2008],
+      "name": "Ivory Republic",
+      "flag": ""
+    },
+    {
+      "coordinates": [2904, 1756],
+      "name": "Ivory Territory",
+      "flag": ""
+    },
+    {
+      "coordinates": [5116, 4192],
+      "name": "Ivory Union",
+      "flag": ""
     }
   ]
 }

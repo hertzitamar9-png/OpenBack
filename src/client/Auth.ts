@@ -68,8 +68,19 @@ export async function requestLoginCode(
       credentials: "include",
       body: JSON.stringify({ email, mode }),
     });
-    if (!response.ok) return readEmailAuthError(response);
-    const json = await response.json();
+    const json = (await response.json()) as {
+      ok?: boolean;
+      error?: EmailAuthError;
+      nextAction?: EmailAuthMode;
+      devCode?: string;
+    };
+    if (!response.ok || json.ok === false) {
+      return {
+        ok: false,
+        error: json.error ?? "unknown",
+        nextAction: json.nextAction,
+      };
+    }
     return { ok: true, devCode: json.devCode };
   } catch (e) {
     console.error("requestLoginCode failed", e);

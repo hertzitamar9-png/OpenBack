@@ -28,6 +28,7 @@ const FREQUENCY_EXEMPTIONS: Set<GameMapName> = new Set([
   "EuropeClassic",
   "BritanniaClassic",
   "ShatteredExpanse",
+  "GrandEarth",
 ]);
 
 // Keys in the en.json "map" section that are UI strings, not map names.
@@ -248,7 +249,7 @@ describe("Map consistency", () => {
     }
   });
 
-  test("Shattered Expanse is the widest and largest map in OpenBack", () => {
+  test("Grand Earth is the widest and largest map in OpenBack", () => {
     const manifests = allMapKeys.map((key) =>
       JSON.parse(
         fs.readFileSync(
@@ -257,25 +258,25 @@ describe("Map consistency", () => {
         ),
       ),
     );
-    const shattered = manifests.find(
-      (manifest) => manifest.id === "ShatteredExpanse",
+    const grandEarth = manifests.find(
+      (manifest) => manifest.id === "GrandEarth",
     );
-    expect(shattered).toBeDefined();
-    expect(shattered.categories).toContain("fictional");
-    expect(shattered.map.width).toBe(8192);
-    expect(shattered.map.height).toBe(4608);
-    expect(shattered.map.num_land_tiles).toBeGreaterThan(10_000_000);
+    expect(grandEarth).toBeDefined();
+    expect(grandEarth.categories).toContain("world");
+    expect(grandEarth.map.width).toBe(12_288);
+    expect(grandEarth.map.height).toBe(6_144);
+    expect(grandEarth.map.num_land_tiles).toBeGreaterThan(25_000_000);
 
     const otherMaps = manifests.filter(
-      (manifest) => manifest.id !== "ShatteredExpanse",
+      (manifest) => manifest.id !== "GrandEarth",
     );
-    const shatteredArea = shattered.map.width * shattered.map.height;
+    const grandEarthArea = grandEarth.map.width * grandEarth.map.height;
     expect(
-      otherMaps.every((manifest) => manifest.map.width < shattered.map.width),
+      otherMaps.every((manifest) => manifest.map.width < grandEarth.map.width),
     ).toBe(true);
     expect(
       otherMaps.every(
-        (manifest) => manifest.map.width * manifest.map.height < shatteredArea,
+        (manifest) => manifest.map.width * manifest.map.height < grandEarthArea,
       ),
     ).toBe(true);
   });

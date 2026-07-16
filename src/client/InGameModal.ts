@@ -33,7 +33,7 @@ function showDialog(props: Partial<ConfirmDialog>): Promise<boolean> {
 
 /** In-game replacement for `confirm()`. Resolves true when confirmed. */
 export function showInGameConfirm(message: string): Promise<boolean> {
-  return showDialog({ message, variant: "danger", buttons: "confirmCancel" });
+  return showDialog({ message, variant: "primary", buttons: "confirmCancel" });
 }
 
 /** In-game replacement for `alert()`. Resolves once dismissed. */
