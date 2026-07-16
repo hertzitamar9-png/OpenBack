@@ -29,44 +29,48 @@ export class FlatBinaryHeap {
   //insert tiles
   enqueue(tile: TileRef, priority: number): void {
     if (this.len === this.pri.length) this.grow(); // ensure space
+    const pri = this.pri;
+    const tiles = this.tiles;
     let i = this.len++;
 
     /* sift-up */
     while (i > 0) {
       const parent = (i - 1) >> 1;
-      if (priority >= this.pri[parent]) break;
-      this.pri[i] = this.pri[parent];
-      this.tiles[i] = this.tiles[parent];
+      if (priority >= pri[parent]) break;
+      pri[i] = pri[parent];
+      tiles[i] = tiles[parent];
       i = parent;
     }
-    this.pri[i] = priority;
-    this.tiles[i] = tile;
+    pri[i] = priority;
+    tiles[i] = tile;
   }
 
   /** remove and return the lowest-priority tile (no per-call allocation) */
   dequeue(): TileRef {
     if (this.len === 0) throw new Error("heap empty");
 
-    const topTile = this.tiles[0];
+    const pri = this.pri;
+    const tiles = this.tiles;
+    const topTile = tiles[0];
 
-    const lastPri = this.pri[--this.len];
-    const lastTile = this.tiles[this.len];
+    const newLen = --this.len;
+    const lastPri = pri[newLen];
+    const lastTile = tiles[newLen];
 
     /* sift-down */
     let i = 0;
     while (true) {
       const left = (i << 1) + 1;
-      if (left >= this.len) break;
+      if (left >= newLen) break;
       const right = left + 1;
-      const child =
-        right < this.len && this.pri[right] < this.pri[left] ? right : left;
-      if (lastPri <= this.pri[child]) break;
-      this.pri[i] = this.pri[child];
-      this.tiles[i] = this.tiles[child];
+      const child = right < newLen && pri[right] < pri[left] ? right : left;
+      if (lastPri <= pri[child]) break;
+      pri[i] = pri[child];
+      tiles[i] = tiles[child];
       i = child;
     }
-    this.pri[i] = lastPri;
-    this.tiles[i] = lastTile;
+    pri[i] = lastPri;
+    tiles[i] = lastTile;
     return topTile;
   }
 

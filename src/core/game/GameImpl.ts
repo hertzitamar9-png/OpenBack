@@ -95,7 +95,8 @@ export class GameImpl implements Game {
   private _nextUnitID = 1;
 
   private updates: GameUpdates = createGameUpdatesMap();
-  private tileUpdatePairs: number[] = [];
+  private tileUpdatePairs = new Uint32Array(4096);
+  private tileUpdatePairLength = 0;
   /** [smallID, tilesOwned, gold, troops] quads — see PlayerImpl.toUpdate. */
   private playerStatsQuads: number[] = [];
   /** [smallID, direction, index, troops] quads — see packAttackTroopDeltas. */
@@ -433,25 +434,27 @@ export class GameImpl implements Game {
 
   executeNextTick(): GameUpdates {
     this.updates = createGameUpdatesMap();
-    this.tileUpdatePairs.length = 0;
-    this.execs.forEach((e) => {
+    this.tileUpdatePairLength = 0;
+    for (let i = 0; i < this.execs.length; i++) {
+      const e = this.execs[i];
       if (
         (!this.inSpawnPhase() || e.activeDuringSpawnPhase()) &&
         e.isActive()
       ) {
         e.tick(this._ticks);
       }
-    });
+    }
     const inited: Execution[] = [];
     const unInited: Execution[] = [];
-    this.unInitExecs.forEach((e) => {
+    for (let i = 0; i < this.unInitExecs.length; i++) {
+      const e = this.unInitExecs[i];
       if (!this.inSpawnPhase() || e.activeDuringSpawnPhase()) {
         e.init(this, this._ticks);
         inited.push(e);
       } else {
         unInited.push(e);
       }
-    });
+    }
 
     this.removeInactiveExecutions();
 
@@ -481,21 +484,21 @@ export class GameImpl implements Game {
   }
 
   private recordTileUpdate(tile: TileRef): void {
+    if (this.tileUpdatePairLength + 2 > this.tileUpdatePairs.length) {
+      const grown = new Uint32Array(this.tileUpdatePairs.length * 2);
+      grown.set(this.tileUpdatePairs);
+      this.tileUpdatePairs = grown;
+    }
     // Low 16 bits: tile state, bits 16-23: terrain byte
-    this.tileUpdatePairs.push(
-      tile,
+    this.tileUpdatePairs[this.tileUpdatePairLength++] = tile;
+    this.tileUpdatePairs[this.tileUpdatePairLength++] =
       (this._map.tileState(tile) & 0xffff) |
-        (this._map.terrainByte(tile) << 16),
-    );
+      (this._map.terrainByte(tile) << 16);
   }
 
   drainPackedTileUpdates(): Uint32Array {
-    const pairs = this.tileUpdatePairs;
-    const packed = new Uint32Array(pairs.length);
-    for (let i = 0; i < pairs.length; i++) {
-      packed[i] = pairs[i];
-    }
-    pairs.length = 0;
+    const packed = this.tileUpdatePairs.slice(0, this.tileUpdatePairLength);
+    this.tileUpdatePairLength = 0;
     return packed;
   }
 
@@ -557,9 +560,7 @@ export class GameImpl implements Game {
 
   private hash(): number {
     let hash = 1;
-    this._players.forEach((p) => {
-      hash += p.hash();
-    });
+    for (const player of this._players.values()) hash += player.hash();
     return hash;
   }
 
@@ -1300,13 +1301,12 @@ export class GameImpl implements Game {
   }
 }
 
-// Or a more dynamic approach that will catch new enum values:
+const GAME_UPDATE_TYPES = Object.values(GameUpdateType).filter(
+  (key): key is GameUpdateType => typeof key === "number",
+);
+
 const createGameUpdatesMap = (): GameUpdates => {
   const map = {} as GameUpdates;
-  Object.values(GameUpdateType)
-    .filter((key) => !isNaN(Number(key))) // Filter out reverse mappings
-    .forEach((key) => {
-      map[key as GameUpdateType] = [];
-    });
+  for (const key of GAME_UPDATE_TYPES) map[key] = [];
   return map;
 };

@@ -35,6 +35,7 @@ export class AttackExecution implements Execution {
   private map: GameMap;
   private mapState: Uint16Array;
   private mapTerrain: Uint8Array;
+  private mapWidth: number;
 
   private attack: Attack | null = null;
 
@@ -69,6 +70,7 @@ export class AttackExecution implements Execution {
     this.map = mg.map();
     this.mapState = this.map.tileStateBuffer();
     this.mapTerrain = this.map.terrainBuffer();
+    this.mapWidth = this.map.width();
 
     if (this._targetID !== null && !mg.hasPlayer(this._targetID)) {
       console.warn(`target ${this._targetID} not found`);
@@ -312,7 +314,7 @@ export class AttackExecution implements Execution {
       }
 
       let onBorder = false;
-      const numNeighbors = this.map.neighbors4(tileToConquer, this.nbuf);
+      const numNeighbors = this.neighbors4(tileToConquer, this.nbuf);
       for (let i = 0; i < numNeighbors; i++) {
         if ((this.mapState[this.nbuf[i]] & OWNER_MASK) === this.ownerSmallID) {
           onBorder = true;
@@ -365,7 +367,7 @@ export class AttackExecution implements Execution {
 
     const tickNow = this.mg.ticks(); // cache tick
 
-    const numNeighbors = this.map.neighbors4(tile, this.nbuf);
+    const numNeighbors = this.neighbors4(tile, this.nbuf);
     for (let i = 0; i < numNeighbors; i++) {
       const neighbor = this.nbuf[i];
       if (
@@ -376,7 +378,7 @@ export class AttackExecution implements Execution {
       }
       this.attack.addBorderTile(neighbor);
       let numOwnedByMe = 0;
-      const numInner = this.map.neighbors4(neighbor, this.nbuf2);
+      const numInner = this.neighbors4(neighbor, this.nbuf2);
       for (let j = 0; j < numInner; j++) {
         if ((this.mapState[this.nbuf2[j]] & OWNER_MASK) === this.ownerSmallID) {
           numOwnedByMe++;
@@ -392,6 +394,17 @@ export class AttackExecution implements Execution {
 
       this.toConquer.enqueue(neighbor, priority);
     }
+  }
+
+  private neighbors4(ref: TileRef, out: TileRef[]): number {
+    const width = this.mapWidth;
+    const x = ref % width;
+    let count = 0;
+    if (x !== 0) out[count++] = ref - 1;
+    if (x !== width - 1) out[count++] = ref + 1;
+    if (ref >= width) out[count++] = ref - width;
+    if (ref + width < this.mapState.length) out[count++] = ref + width;
+    return count;
   }
 
   private handleDeadDefender() {

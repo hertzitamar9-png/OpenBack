@@ -1,3 +1,12 @@
+## OpenBack v0.33.29 - Long-Match Runtime Smoothing
+
+- Reduced the CPU cost of large simultaneous attack fronts, border changes, territory clusters, and the main execution scheduler without changing combat order or outcomes.
+- Reused compact typed storage for live territory updates, reducing temporary garbage and memory pressure during sustained conquest.
+- Removed idle per-frame allocations from natural-disaster effects, attack indicators, nuclear trajectory markers, and player status tracking while preserving every active animation.
+- Improved late-game stability across giant custom maps and regular maps with the same deterministic simulation and client-state results.
+
+Contributed by **frootz jhklphy**.
+
 ## OpenBack v0.33.28 - Giant-Map Performance
 
 - Removed enormous per-tile coordinate lookup tables while preserving exact map coordinates, cutting Grand Earth simulation memory by more than one gigabyte.

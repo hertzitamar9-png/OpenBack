@@ -107,10 +107,16 @@ export class WorldEventPass {
   }
 
   draw(camera: Float32Array): void {
+    if (this.events.length === 0) return;
     const now = performance.now();
-    this.events = this.events.filter(
-      (e) => now - e.start < e.durationTicks * this.msPerTick,
-    );
+    let write = 0;
+    for (let read = 0; read < this.events.length; read++) {
+      const event = this.events[read];
+      if (now - event.start < event.durationTicks * this.msPerTick) {
+        this.events[write++] = event;
+      }
+    }
+    this.events.length = write;
     if (this.events.length === 0) return;
     const kinds: Record<string, number> = {
       earthquake: 0,

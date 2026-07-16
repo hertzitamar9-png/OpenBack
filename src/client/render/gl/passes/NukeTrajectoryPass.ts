@@ -290,15 +290,9 @@ export class NukeTrajectoryPass {
     d: NukeTrajectoryData,
     pixelSize: number,
   ): void {
-    const markers: [number, number][] = [];
-    if (d.tUntargetableStart >= 0) {
-      markers.push([d.tUntargetableStart, 0]);
-      markers.push([d.tUntargetableEnd, 0]);
-    }
-    if (d.tSamIntercept < 1.0) {
-      markers.push([d.tSamIntercept, 1]);
-    }
-    if (markers.length === 0) return;
+    const hasUntargetable = d.tUntargetableStart >= 0;
+    const hasSamIntercept = d.tSamIntercept < 1.0;
+    if (!hasUntargetable && !hasSamIntercept) return;
 
     const gl = this.gl;
     const s = this.settings.nukeTrajectory;
@@ -312,8 +306,14 @@ export class NukeTrajectoryPass {
     gl.uniform2f(this.uMarkerRadii, s.markerCircleRadius, s.markerXRadius);
 
     gl.bindVertexArray(this.markerVAO);
-    for (const [t, type] of markers) {
-      gl.uniform4f(this.uMarker, t, type, 0, 0);
+    if (hasUntargetable) {
+      gl.uniform4f(this.uMarker, d.tUntargetableStart, 0, 0, 0);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+      gl.uniform4f(this.uMarker, d.tUntargetableEnd, 0, 0, 0);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+    }
+    if (hasSamIntercept) {
+      gl.uniform4f(this.uMarker, d.tSamIntercept, 1, 0, 0);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
   }

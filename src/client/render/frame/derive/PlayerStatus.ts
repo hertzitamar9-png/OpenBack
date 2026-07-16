@@ -8,6 +8,8 @@ const NUKE_ACTIVE_TYPES: ReadonlySet<string> = new Set([
 ]);
 
 const OWNER_MASK = 0xfff;
+const nukeActiveOwnersScratch = new Set<number>();
+const nukeTargetsMeOwnersScratch = new Set<number>();
 
 export interface ComputePlayerStatusOptions {
   /** Optional live index of active nuke-like unit IDs. */
@@ -86,8 +88,10 @@ export function computePlayerStatus(
   // Nukes: single pass over units → per-owner flags (avoids the
   // O(players × units) scan of checking every unit per player).
   // Shown during replay too, except the nukeTargetsMe flag.
-  const nukeActiveOwners = new Set<number>();
-  const nukeTargetsMeOwners = new Set<number>();
+  const nukeActiveOwners = nukeActiveOwnersScratch;
+  const nukeTargetsMeOwners = nukeTargetsMeOwnersScratch;
+  nukeActiveOwners.clear();
+  nukeTargetsMeOwners.clear();
   if (opts.nukeIds) {
     for (const id of opts.nukeIds) {
       const u = units.get(id);

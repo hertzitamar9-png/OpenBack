@@ -195,16 +195,18 @@ export class ChunkedTileSet implements Set<number> {
     const indexes = new Uint32Array(ChunkedTileSet.CHUNK_SIZE);
     const min = chunkID << ChunkedTileSet.CHUNK_SHIFT;
     const max = min + ChunkedTileSet.CHUNK_SIZE;
+    const bits = chunk.bits;
     for (let i = 0; i < this.orderLength; i++) {
       const value = this.order[i];
-      if (
-        value !== ChunkedTileSet.DELETED &&
-        value >= min &&
-        value < max &&
-        this.has(value)
-      ) {
-        indexes[value - min] = i + 1;
+      if (value === ChunkedTileSet.DELETED || value < min || value >= max) {
+        continue;
       }
+      const offset = value - min;
+      if (
+        (bits[offset >> ChunkedTileSet.WORD_SHIFT] & (1 << (offset & 31))) !==
+        0
+      )
+        indexes[offset] = i + 1;
     }
     chunk.orderIndexes = indexes;
     return indexes;

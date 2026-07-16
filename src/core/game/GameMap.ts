@@ -197,7 +197,7 @@ export class GameMapImpl implements GameMap {
 
   // Terrain getters (immutable)
   isLand(ref: TileRef): boolean {
-    return Boolean(this.terrain[ref] & (1 << GameMapImpl.IS_LAND_BIT));
+    return (this.terrain[ref] & (1 << GameMapImpl.IS_LAND_BIT)) !== 0;
   }
 
   isOceanShore(ref: TileRef): boolean {
@@ -209,16 +209,16 @@ export class GameMapImpl implements GameMap {
     if (x !== 0 && this.isOcean(ref - 1)) return true;
     if (x !== w - 1 && this.isOcean(ref + 1)) return true;
     if (ref >= w && this.isOcean(ref - w)) return true;
-    if (ref < (this.height_ - 1) * w && this.isOcean(ref + w)) return true;
+    if (ref + w < this.terrain.length && this.isOcean(ref + w)) return true;
     return false;
   }
 
   isOcean(ref: TileRef): boolean {
-    return Boolean(this.terrain[ref] & (1 << GameMapImpl.OCEAN_BIT));
+    return (this.terrain[ref] & (1 << GameMapImpl.OCEAN_BIT)) !== 0;
   }
 
   isShoreline(ref: TileRef): boolean {
-    return Boolean(this.terrain[ref] & (1 << GameMapImpl.SHORELINE_BIT));
+    return (this.terrain[ref] & (1 << GameMapImpl.SHORELINE_BIT)) !== 0;
   }
 
   magnitude(ref: TileRef): number {
@@ -273,7 +273,7 @@ export class GameMapImpl implements GameMap {
   }
 
   hasFallout(ref: TileRef): boolean {
-    return Boolean(this.state[ref] & (1 << GameMapImpl.FALLOUT_BIT));
+    return (this.state[ref] & (1 << GameMapImpl.FALLOUT_BIT)) !== 0;
   }
 
   setFallout(ref: TileRef, value: boolean): void {
@@ -292,10 +292,12 @@ export class GameMapImpl implements GameMap {
   }
 
   isOnEdgeOfMap(ref: TileRef): boolean {
-    const x = this.x(ref);
-    const y = this.y(ref);
+    const x = ref % this.width_;
     return (
-      x === 0 || x === this.width() - 1 || y === 0 || y === this.height() - 1
+      x === 0 ||
+      x === this.width_ - 1 ||
+      ref < this.width_ ||
+      ref >= this.state.length - this.width_
     );
   }
 
@@ -311,14 +313,14 @@ export class GameMapImpl implements GameMap {
     if (x !== 0 && (state[ref - 1] & mask) !== ownerID) return true;
     if (x !== w - 1 && (state[ref + 1] & mask) !== ownerID) return true;
     if (ref >= w && (state[ref - w] & mask) !== ownerID) return true;
-    if (ref < (this.height_ - 1) * w && (state[ref + w] & mask) !== ownerID) {
+    if (ref + w < state.length && (state[ref + w] & mask) !== ownerID) {
       return true;
     }
     return false;
   }
 
   hasDefenseBonus(ref: TileRef): boolean {
-    return Boolean(this.state[ref] & (1 << GameMapImpl.DEFENSE_BONUS_BIT));
+    return (this.state[ref] & (1 << GameMapImpl.DEFENSE_BONUS_BIT)) !== 0;
   }
 
   setDefenseBonus(ref: TileRef, value: boolean): void {
@@ -360,7 +362,7 @@ export class GameMapImpl implements GameMap {
     const x = ref % w;
 
     if (ref >= w) neighbors.push(ref - w);
-    if (ref < (this.height_ - 1) * w) neighbors.push(ref + w);
+    if (ref + w < this.state.length) neighbors.push(ref + w);
     if (x !== 0) neighbors.push(ref - 1);
     if (x !== w - 1) neighbors.push(ref + 1);
 
@@ -374,7 +376,7 @@ export class GameMapImpl implements GameMap {
     if (x !== 0) callback(ref - 1);
     if (x !== w - 1) callback(ref + 1);
     if (ref >= w) callback(ref - w);
-    if (ref < (this.height_ - 1) * w) callback(ref + w);
+    if (ref + w < this.state.length) callback(ref + w);
   }
 
   neighbors4(ref: TileRef, out: TileRef[]): number {
@@ -385,7 +387,7 @@ export class GameMapImpl implements GameMap {
     if (x !== 0) out[n++] = ref - 1;
     if (x !== w - 1) out[n++] = ref + 1;
     if (ref >= w) out[n++] = ref - w;
-    if (ref < (this.height_ - 1) * w) out[n++] = ref + w;
+    if (ref + w < this.state.length) out[n++] = ref + w;
     return n;
   }
 
@@ -393,7 +395,7 @@ export class GameMapImpl implements GameMap {
     const w = this.width_;
     const x = ref % w;
     const hasN = ref >= w;
-    const hasS = ref < (this.height_ - 1) * w;
+    const hasS = ref + w < this.state.length;
     let n = 0;
 
     if (x !== 0) {
@@ -418,7 +420,7 @@ export class GameMapImpl implements GameMap {
     const w = this.width_;
     const x = ref % w;
     const hasN = ref >= w;
-    const hasS = ref < (this.height_ - 1) * w;
+    const hasS = ref + w < this.state.length;
 
     if (x !== 0) {
       if (hasN) callback(ref - 1 - w);

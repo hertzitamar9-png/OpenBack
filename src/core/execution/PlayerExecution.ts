@@ -28,6 +28,8 @@ export class PlayerExecution implements Execution {
   private mg: Game;
   // Direct GameMap reference to skip the Game delegation hop in hot loops.
   private map: GameMap;
+  private mapState: Uint16Array;
+  private mapTerrain: Uint8Array;
   private active = true;
   // Reusable neighbor buffer to avoid closures/allocation in cluster checks.
   private nbuf: TileRef[] = [0, 0, 0, 0];
@@ -50,6 +52,8 @@ export class PlayerExecution implements Execution {
   init(mg: Game, ticks: number) {
     this.mg = mg;
     this.map = mg.map();
+    this.mapState = this.map.tileStateBuffer();
+    this.mapTerrain = this.map.terrainBuffer();
     this.config = mg.config();
     this.lastCalc =
       ticks + (simpleHash(this.player.id()) % this.ticksPerClusterCalc);
@@ -194,7 +198,7 @@ export class PlayerExecution implements Execution {
     cluster: readonly TileRef[],
     clusterBox: { min: Cell; max: Cell },
   ): false | Player {
-    const enemies = new Set<number>();
+    let enemyID = 0;
 
     let minX = Infinity,
       minY = Infinity,
@@ -210,13 +214,14 @@ export class PlayerExecution implements Execution {
       const numNeighbors = map.neighbors4(tile, this.nbuf);
       for (let i = 0; i < numNeighbors; i++) {
         const n = this.nbuf[i];
-        const ownerId = map.ownerID(n);
+        const ownerId = this.mapState[n] & 0xfff;
         if (ownerId === 0) {
           // Unowned neighbor: the cluster is not fully surrounded.
           return false;
         }
         if (ownerId !== mySmallID) {
-          enemies.add(ownerId);
+          if (enemyID !== 0 && enemyID !== ownerId) return false;
+          enemyID = ownerId;
           const px = map.x(n);
           const py = map.y(n);
           minX = Math.min(minX, px);
@@ -225,15 +230,15 @@ export class PlayerExecution implements Execution {
           maxY = Math.max(maxY, py);
         }
       }
-      if (enemies.size !== 1) {
+      if (enemyID === 0) {
         return false;
       }
     }
-    if (enemies.size !== 1) {
+    if (enemyID === 0) {
       return false;
     }
 
-    const enemy = this.mg.playerBySmallID(Array.from(enemies)[0]) as Player;
+    const enemy = this.mg.playerBySmallID(enemyID) as Player;
     const localEnemyBox = {
       min: new Cell(minX, minY),
       max: new Cell(maxX, maxY),
@@ -253,13 +258,13 @@ export class PlayerExecution implements Execution {
     const map = this.map;
     const mySmallID = this.player.smallID();
     for (const tr of cluster) {
-      if (map.isShore(tr) || map.isOnEdgeOfMap(tr)) {
+      if ((this.mapTerrain[tr] & 0xc0) === 0xc0 || map.isOnEdgeOfMap(tr)) {
         return false;
       }
       const numNeighbors = map.neighbors4(tr, this.nbuf);
       for (let i = 0; i < numNeighbors; i++) {
         const n = this.nbuf[i];
-        const ownerId = map.ownerID(n);
+        const ownerId = this.mapState[n] & 0xfff;
         if (ownerId !== 0 && ownerId !== mySmallID) {
           hasEnemy = true;
           const x = map.x(n);
@@ -289,7 +294,7 @@ export class PlayerExecution implements Execution {
     if (isPlaneBeachhead(this.mg, this.player, cluster)) return;
 
     for (const t of cluster) {
-      if (this.mg?.ownerID(t) !== this.player?.smallID()) {
+      if ((this.mapState[t] & 0xfff) !== this.player.smallID()) {
         // Other removeCluster operations could change tile owners,
         // so double check.
         return;
@@ -349,7 +354,7 @@ export class PlayerExecution implements Execution {
       this.traversalState().visited,
       [firstTile],
       (tile, cb) => this.mg.forEachNeighbor(tile, cb),
-      (tile) => this.mg.ownerID(tile) === this.player.smallID(),
+      (tile) => (this.mapState[tile] & 0xfff) === this.player.smallID(),
     );
 
     if (this.player.numTilesOwned() === tiles.size) {
@@ -398,7 +403,7 @@ export class PlayerExecution implements Execution {
     for (const t of cluster) {
       const numNeighbors = map.neighbors4(t, this.nbuf);
       for (let i = 0; i < numNeighbors; i++) {
-        const ownerId = map.ownerID(this.nbuf[i]);
+        const ownerId = this.mapState[this.nbuf[i]] & 0xfff;
         if (ownerId === 0 || ownerId === mySmallID) {
           continue;
         }

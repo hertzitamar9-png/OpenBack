@@ -104,6 +104,7 @@ export class FxAttackRingPass {
   // -------------------------------------------------------------------------
 
   update(rings: AttackRingInput[]): void {
+    if (rings.length === 0 && this.active.length === 0) return;
     const now = performance.now();
     const incoming = this.incomingUnitIds;
     incoming.clear();
