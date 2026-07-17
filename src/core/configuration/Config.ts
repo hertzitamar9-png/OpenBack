@@ -1040,8 +1040,6 @@ export class Config {
     const customUnits = new Set<UnitType>([
       UnitType.Tank,
       UnitType.TankMine,
-      UnitType.Plane,
-      UnitType.Runway,
       UnitType.MilitaryBase,
       UnitType.Warship,
       UnitType.MANPAD,
