@@ -34,6 +34,7 @@ export class MatchmakingModal extends BaseModal {
   @state() private socket: WebSocket | null = null;
   @state() private gameID: string | null = null;
   @state() private teamSize: RankedTeamSize = 1;
+  @state() private withFriends = false;
   @state() private party: PartyState | null = null;
   @state() private joinCode = "";
   @state() private bots = 100;
@@ -90,10 +91,15 @@ export class MatchmakingModal extends BaseModal {
         "blue",
       );
     }
-    if (this.teamSize > 1 && this.party === null) {
+    if (this.teamSize > 1 && this.withFriends && this.party === null) {
       return this.renderPartyEntry();
     }
-    if (this.teamSize > 1 && this.party !== null && !this.party.queued) {
+    if (
+      this.teamSize > 1 &&
+      this.withFriends &&
+      this.party !== null &&
+      !this.party.queued
+    ) {
       return this.renderPartyLobby();
     }
     if (this.gameID === null) {
@@ -266,11 +272,14 @@ export class MatchmakingModal extends BaseModal {
     socket.onopen = async () => {
       console.log("Connected to matchmaking server");
       if (!this.isModalOpen || socket.readyState !== WebSocket.OPEN) return;
-      if (this.teamSize === 1) {
+      if (this.teamSize === 1 || !this.withFriends) {
         socket.send(
           JSON.stringify({
             type: "join",
             jwt: this.playToken,
+            teamSize: this.teamSize,
+            bots: this.bots,
+            nations: this.nations,
           }),
         );
       } else if (this.joinCode.length === 6) {
@@ -314,6 +323,8 @@ export class MatchmakingModal extends BaseModal {
       args?.teamSize === 2 || args?.teamSize === 3 || args?.teamSize === 4
         ? args.teamSize
         : 1;
+    this.withFriends =
+      args?.withFriends === true || typeof args?.partyCode === "string";
     this.party = null;
     this.joinCode =
       typeof args?.partyCode === "string"
@@ -366,7 +377,11 @@ export class MatchmakingModal extends BaseModal {
 
   protected onClose(): void {
     this.connected = false;
-    if (this.socket?.readyState === WebSocket.OPEN && this.teamSize > 1) {
+    if (
+      this.socket?.readyState === WebSocket.OPEN &&
+      this.teamSize > 1 &&
+      this.withFriends
+    ) {
       this.socket.send(JSON.stringify({ type: "party_leave" }));
     }
     this.socket?.close();

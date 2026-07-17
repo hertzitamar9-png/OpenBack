@@ -76,6 +76,13 @@ export async function fetchPublicPlayerGames(
     const res = await fetch(url.toString(), {
       headers: { Accept: "application/json" },
     });
+    // A newly-created/local account has no archived history yet. Older OpenBack
+    // account services do not expose the history route and answer 404; treat
+    // that state as an empty history instead of telling the player the feature
+    // failed.
+    if (res.status === 404) {
+      return { results: [], nextCursor: null };
+    }
     if (!res.ok) {
       console.warn(
         "fetchPublicPlayerGames: unexpected status",

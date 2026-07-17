@@ -1,3 +1,14 @@
+## OpenBack v0.33.31 - Social Team Matchmaking
+
+- Added separate Ranked and With Friends choices for 2v2, 3v3, and 4v4, including real solo teammate matching and the existing invite-code party flow.
+- Kept private team lobbies flexible for uneven player arrangements such as 3v1 or 4v2, with configurable bots, nations, teams, and shared-country control.
+- Fixed flag previews so the complete flag remains visible instead of being cropped to its center.
+- Made pending friend requests permanently visible in the Friends tab, including a clear empty state.
+- Replaced the account statistics emoji with a consistent OpenBack chart icon and made accounts with no recorded matches show an empty history instead of an availability error.
+- Hardened the public robots response against stale blocking caches so search crawlers receive explicit index permission.
+
+Contributed by **frootz jhklphy**.
+
 ## OpenBack v0.33.30 - Global Friends and Messaging
 
 - Added persistent direct messages between friends, persistent friend-group chats, and a global clan chat shared by every clan member.

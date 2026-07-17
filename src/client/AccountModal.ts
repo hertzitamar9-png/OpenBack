@@ -434,14 +434,14 @@ export class AccountModal extends BaseModal {
   private renderStatsTab(): TemplateResult {
     if (!this.hasAnyStats()) {
       return this.renderEmptyState(
-        "📊",
+        this.renderStatsIcon("h-10 w-10"),
         translateText("account_modal.no_stats"),
       );
     }
     return html`
       <div class="bg-white/5 rounded-xl border border-white/10 p-6">
         <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
-          <span class="text-blue-400">📊</span>
+          ${this.renderStatsIcon("h-5 w-5")}
           ${translateText("account_modal.stats_overview")}
         </h3>
         <player-stats-tree-view
@@ -474,7 +474,28 @@ export class AccountModal extends BaseModal {
     `;
   }
 
-  private renderEmptyState(icon: string, message: string): TemplateResult {
+  private renderStatsIcon(className: string): TemplateResult {
+    return html`<svg
+      class=${`${className} text-blue-400`}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M4 20V10" />
+      <path d="M10 20V4" />
+      <path d="M16 20v-7" />
+      <path d="M22 20H2" />
+    </svg>`;
+  }
+
+  private renderEmptyState(
+    icon: string | TemplateResult,
+    message: string,
+  ): TemplateResult {
     return html`
       <div
         class="bg-white/5 rounded-xl border border-white/10 p-12 flex flex-col items-center justify-center text-center"

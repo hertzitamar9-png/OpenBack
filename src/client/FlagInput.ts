@@ -110,7 +110,7 @@ export class FlagInput extends LitElement {
 
     const img = document.createElement("img");
     img.src = url;
-    img.className = "w-full h-full object-cover pointer-events-none";
+    img.className = "w-full h-full object-contain pointer-events-none bg-white";
     img.draggable = false;
     preview.appendChild(img);
   }

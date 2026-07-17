@@ -270,7 +270,12 @@ declare global {
     toggle_game_start_timer: CustomEvent;
     "join-changed": CustomEvent;
     "open-matchmaking": CustomEvent<
-      { teamSize?: 1 | 2 | 3 | 4; partyCode?: string } | undefined
+      | {
+          teamSize?: 1 | 2 | 3 | 4;
+          partyCode?: string;
+          withFriends?: boolean;
+        }
+      | undefined
     >;
     userMeResponse: CustomEvent<UserMeResponse | false>;
     "leave-lobby": CustomEvent;

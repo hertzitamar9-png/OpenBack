@@ -205,7 +205,9 @@ export class FriendsList extends LitElement {
 
   private openParty(): void {
     document.dispatchEvent(
-      new CustomEvent("open-matchmaking", { detail: { teamSize: 2 } }),
+      new CustomEvent("open-matchmaking", {
+        detail: { teamSize: 2, withFriends: true },
+      }),
     );
   }
 
@@ -296,8 +298,7 @@ export class FriendsList extends LitElement {
     `;
   }
 
-  private renderRequestsSection(): TemplateResult | "" {
-    if (this.incoming.length === 0 && this.outgoing.length === 0) return "";
+  private renderRequestsSection(): TemplateResult {
     return html`
       <div class="bg-white/5 rounded-xl border border-white/10 p-6">
         <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
@@ -331,6 +332,11 @@ export class FriendsList extends LitElement {
                 )}
               </div>
             `
+          : ""}
+        ${this.incoming.length === 0 && this.outgoing.length === 0
+          ? html`<p class="text-sm text-white/45">
+              ${translateText("friends.no_pending_requests")}
+            </p>`
           : ""}
       </div>
     `;

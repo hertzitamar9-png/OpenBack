@@ -34,6 +34,12 @@ interface QueueGroup {
   partyCode?: string;
 }
 
+interface MatchSelection {
+  a: QueueGroup;
+  b: QueueGroup;
+  consumed: QueueGroup[];
+}
+
 interface Party {
   code: string;
   teamSize: Exclude<RankedTeamSize, 1>;
@@ -116,9 +122,15 @@ export class MatchmakingService {
     };
 
     switch (type) {
-      case "join":
-        this.joinSoloQueue(player, this.parsePreferences(msg));
+      case "join": {
+        const teamSize = this.parseTeamSize(msg.teamSize ?? 1);
+        if (teamSize === null) {
+          this.send(ws, { type: "error", error: "invalid_team_size" });
+          return;
+        }
+        this.joinSoloQueue(player, teamSize, this.parsePreferences(msg));
         break;
+      }
       case "party_create": {
         const teamSize = this.parseTeamSize(msg.teamSize);
         if (teamSize === null || teamSize === 1) {
@@ -145,12 +157,13 @@ export class MatchmakingService {
 
   private joinSoloQueue(
     player: RankedPlayer,
+    teamSize: RankedTeamSize,
     preferences: RankedPreferences,
   ): void {
     this.removeByPublicId(player.publicId);
     this.queue.push({
       players: [player],
-      teamSize: 1,
+      teamSize,
       joinedAt: Date.now(),
       preferences,
     });
@@ -267,7 +280,7 @@ export class MatchmakingService {
     );
   }
 
-  private findMatch(): [QueueGroup, QueueGroup] | null {
+  private findMatch(): MatchSelection | null {
     for (let i = this.queue.length - 1; i >= 0; i--) {
       const group = this.queue[i];
       if (
@@ -283,6 +296,7 @@ export class MatchmakingService {
     }
     if (!oldest) return null;
 
+    const isCompleteTeam = oldest.players.length === oldest.teamSize;
     let closest: QueueGroup | null = null;
     let closestGap = Infinity;
     const oldestElo = this.averageElo(oldest);
@@ -290,6 +304,7 @@ export class MatchmakingService {
       if (
         group === oldest ||
         group.teamSize !== oldest.teamSize ||
+        (group.players.length === group.teamSize) !== isCompleteTeam ||
         !this.samePreferences(group.preferences, oldest.preferences)
       ) {
         continue;
@@ -304,7 +319,109 @@ export class MatchmakingService {
         closestGap = gap;
       }
     }
-    return closest ? [oldest, closest] : null;
+    if (isCompleteTeam) {
+      if (closest) {
+        return { a: oldest, b: closest, consumed: [oldest, closest] };
+      }
+      const soloOpponents = this.queue
+        .filter(
+          (group) =>
+            group !== oldest &&
+            group.players.length === 1 &&
+            group.teamSize === oldest!.teamSize &&
+            this.samePreferences(group.preferences, oldest!.preferences),
+        )
+        .sort(
+          (a, b) =>
+            Math.abs(oldestElo - this.averageElo(a)) -
+              Math.abs(oldestElo - this.averageElo(b)) ||
+            a.joinedAt - b.joinedAt,
+        )
+        .slice(0, oldest.teamSize);
+      if (soloOpponents.length !== oldest.teamSize) return null;
+      return {
+        a: oldest,
+        b: this.combineQueueGroups(soloOpponents, oldest),
+        consumed: [oldest, ...soloOpponents],
+      };
+    }
+
+    const compatibleSolos = this.queue
+      .filter(
+        (group) =>
+          group.players.length === 1 &&
+          group.teamSize === oldest!.teamSize &&
+          this.samePreferences(group.preferences, oldest!.preferences),
+      )
+      .sort((a, b) => {
+        if (a === oldest) return -1;
+        if (b === oldest) return 1;
+        const gapA = Math.abs(oldestElo - this.averageElo(a));
+        const gapB = Math.abs(oldestElo - this.averageElo(b));
+        return gapA - gapB || a.joinedAt - b.joinedAt;
+      });
+    const needed = oldest.teamSize * 2;
+    if (compatibleSolos.length < needed) {
+      if (compatibleSolos.length < oldest.teamSize) return null;
+      const partyOpponent = this.queue
+        .filter(
+          (group) =>
+            group.players.length === group.teamSize &&
+            group.teamSize === oldest!.teamSize &&
+            this.samePreferences(group.preferences, oldest!.preferences),
+        )
+        .sort(
+          (a, b) =>
+            Math.abs(oldestElo - this.averageElo(a)) -
+              Math.abs(oldestElo - this.averageElo(b)) ||
+            a.joinedAt - b.joinedAt,
+        )[0];
+      if (!partyOpponent) return null;
+      const soloTeam = compatibleSolos.slice(0, oldest.teamSize);
+      return {
+        a: this.combineQueueGroups(soloTeam, oldest),
+        b: partyOpponent,
+        consumed: [...soloTeam, partyOpponent],
+      };
+    }
+
+    const consumed = compatibleSolos.slice(0, needed);
+    const ranked = [...consumed].sort(
+      (a, b) => this.averageElo(b) - this.averageElo(a),
+    );
+    const teams: QueueGroup[][] = [[], []];
+    const totals = [0, 0];
+    for (const group of ranked) {
+      const open = teams
+        .map((team, index) => ({ index, size: team.length }))
+        .filter(({ size }) => size < oldest.teamSize)
+        .map(({ index }) => index);
+      const index =
+        open.length === 1
+          ? open[0]
+          : totals[open[0]] <= totals[open[1]]
+            ? open[0]
+            : open[1];
+      teams[index].push(group);
+      totals[index] += this.averageElo(group);
+    }
+    return {
+      a: this.combineQueueGroups(teams[0], oldest),
+      b: this.combineQueueGroups(teams[1], oldest),
+      consumed,
+    };
+  }
+
+  private combineQueueGroups(
+    groups: QueueGroup[],
+    template: QueueGroup,
+  ): QueueGroup {
+    return {
+      players: groups.flatMap((group) => group.players),
+      teamSize: template.teamSize,
+      joinedAt: Math.min(...groups.map((group) => group.joinedAt)),
+      preferences: template.preferences,
+    };
   }
 
   private averageElo(group: QueueGroup): number {
@@ -329,9 +446,8 @@ export class MatchmakingService {
       res.json({ assignment: false });
       return;
     }
-    const [a, b] = match;
-    this.removeQueueGroup(a);
-    this.removeQueueGroup(b);
+    const { a, b, consumed } = match;
+    for (const group of consumed) this.removeQueueGroup(group);
     const allPlayers = [...a.players, ...b.players];
     for (const player of allPlayers) {
       this.send(player.ws, { type: "match-assignment", gameId });

@@ -60,6 +60,8 @@ app.get("/api/openback/content", handleOpenBackContentApi);
 app.get("/robots.txt", (_req, res) => {
   const origin = ServerEnv.authOrigin().replace(/\/+$/, "");
   res
+    .set("Cache-Control", "no-store, max-age=0")
+    .set("X-Robots-Tag", "index, follow")
     .type("text/plain")
     .send(
       [`User-agent: *`, `Allow: /`, `Sitemap: ${origin}/sitemap.xml`, ``].join(

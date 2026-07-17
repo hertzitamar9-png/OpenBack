@@ -112,21 +112,46 @@ export class RankedModal extends BaseModal {
                 : translateText("mode_selector.ranked_title")),
             () => this.handleRanked(),
           )}
-          ${this.renderCard(
+          ${this.renderTeamCard(
             translateText("mode_selector.ranked_2v2_title"),
-            translateText("matchmaking_modal.party_required"),
-            () => this.handleRanked(2),
+            2,
           )}
-          ${this.renderCard(
+          ${this.renderTeamCard(
             translateText("matchmaking_modal.ranked_3v3_title"),
-            translateText("matchmaking_modal.party_required"),
-            () => this.handleRanked(3),
+            3,
           )}
-          ${this.renderCard(
+          ${this.renderTeamCard(
             translateText("matchmaking_modal.ranked_4v4_title"),
-            translateText("matchmaking_modal.party_required"),
-            () => this.handleRanked(4),
+            4,
           )}
+        </div>
+      </div>
+    `;
+  }
+
+  private renderTeamCard(title: string, teamSize: 2 | 3 | 4) {
+    return html`
+      <div
+        class="flex min-h-32 flex-col items-center justify-center gap-3 rounded-2xl bg-surface p-5"
+      >
+        <h3
+          class="text-lg sm:text-xl font-bold text-white uppercase tracking-widest leading-tight"
+        >
+          ${title}
+        </h3>
+        <div class="grid w-full grid-cols-2 gap-2">
+          <button
+            class="rounded-lg bg-blue-600 px-3 py-2 text-xs font-black uppercase tracking-wider text-white transition-colors hover:bg-blue-500"
+            @click=${() => this.handleRanked(teamSize, false)}
+          >
+            ${translateText("matchmaking_modal.ranked_solo")}
+          </button>
+          <button
+            class="rounded-lg bg-cyan-700 px-3 py-2 text-xs font-black uppercase tracking-wider text-white transition-colors hover:bg-cyan-600"
+            @click=${() => this.handleRanked(teamSize, true)}
+          >
+            ${translateText("matchmaking_modal.ranked_with_friends")}
+          </button>
         </div>
       </div>
     `;
@@ -154,7 +179,7 @@ export class RankedModal extends BaseModal {
     `;
   }
 
-  private async handleRanked(teamSize: 1 | 2 | 3 | 4 = 1) {
+  private async handleRanked(teamSize: 1 | 2 | 3 | 4 = 1, withFriends = false) {
     if ((await userAuth()) === false) {
       this.close();
       window.showPage?.("page-account");
@@ -162,7 +187,9 @@ export class RankedModal extends BaseModal {
     }
 
     document.dispatchEvent(
-      new CustomEvent("open-matchmaking", { detail: { teamSize } }),
+      new CustomEvent("open-matchmaking", {
+        detail: { teamSize, withFriends },
+      }),
     );
   }
 }

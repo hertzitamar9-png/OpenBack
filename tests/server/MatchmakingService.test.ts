@@ -13,9 +13,10 @@ describe("MatchmakingService", () => {
     elo: number,
     ws: T,
     joinedAt: number,
+    teamSize: 1 | 2 | 3 | 4 = 1,
   ) => ({
     players: [{ publicId, elo, displayName: publicId, ws }],
-    teamSize: 1 as const,
+    teamSize,
     joinedAt,
     preferences: {},
   });
@@ -249,6 +250,102 @@ describe("MatchmakingService", () => {
         (p) => p.ws.send.mock.calls.length === 1,
       ),
     ).toBe(true);
+    expect(queue).toHaveLength(0);
+  });
+
+  it("builds balanced 2v2 teams from players who queue without a party", () => {
+    const socket = () => ({
+      readyState: WebSocket.OPEN,
+      send: vi.fn(),
+      close: vi.fn(),
+    });
+    let assignedTeams: string[][] = [];
+    const createConfig = vi.fn((_teamSize: number, teams: string[][]) => {
+      assignedTeams = teams;
+      return { ranked: true };
+    });
+    const service = new MatchmakingService(
+      { info: vi.fn() } as never,
+      createConfig as never,
+    );
+    const entries = [
+      queued("a", 1400, socket(), 1, 2),
+      queued("b", 1000, socket(), 2, 2),
+      queued("c", 1300, socket(), 3, 2),
+      queued("d", 1100, socket(), 4, 2),
+    ];
+    const queue = (service as unknown as { queue: typeof entries }).queue;
+    queue.push(...entries);
+    const json = vi.fn();
+
+    service.handleCheckin(
+      {
+        header: () => "matchmaking-test-key",
+        body: { gameId: "solo-team-game" },
+      } as never,
+      { json, status: vi.fn() } as never,
+    );
+
+    const teams = assignedTeams;
+    expect(teams).toHaveLength(2);
+    expect(teams[0]).toHaveLength(2);
+    expect(teams[1]).toHaveLength(2);
+    expect(teams.flat().sort()).toEqual(["a", "b", "c", "d"]);
+    expect(queue).toHaveLength(0);
+    expect(
+      entries.every(
+        (entry) => entry.players[0].ws.send.mock.calls.length === 1,
+      ),
+    ).toBe(true);
+  });
+
+  it("matches a ranked friends party against a complete solo-queue team", () => {
+    const socket = () => ({
+      readyState: WebSocket.OPEN,
+      send: vi.fn(),
+      close: vi.fn(),
+    });
+    let assignedTeams: string[][] = [];
+    const service = new MatchmakingService(
+      { info: vi.fn() } as never,
+      ((_teamSize: number, teams: string[][]) => {
+        assignedTeams = teams;
+        return { ranked: true };
+      }) as never,
+    );
+    const party = {
+      players: ["friend-a", "friend-b"].map((publicId) => ({
+        publicId,
+        displayName: publicId,
+        elo: 1200,
+        ws: socket(),
+      })),
+      teamSize: 2 as const,
+      joinedAt: 1,
+      preferences: {},
+      partyCode: "PARTY1",
+    };
+    const soloA = queued("solo-a", 1210, socket(), 2, 2);
+    const soloB = queued("solo-b", 1190, socket(), 3, 2);
+    const queue = (
+      service as unknown as {
+        queue: Array<typeof party | typeof soloA | typeof soloB>;
+      }
+    ).queue;
+    queue.push(party, soloA, soloB);
+
+    service.handleCheckin(
+      {
+        header: () => "matchmaking-test-key",
+        body: { gameId: "mixed-team-game" },
+      } as never,
+      { json: vi.fn(), status: vi.fn() } as never,
+    );
+
+    expect(assignedTeams).toEqual([
+      ["friend-a", "friend-b"],
+      ["solo-a", "solo-b"],
+    ]);
     expect(queue).toHaveLength(0);
   });
 });
