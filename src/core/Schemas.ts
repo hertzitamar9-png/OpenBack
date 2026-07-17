@@ -858,7 +858,8 @@ export type GameEndInfo = z.infer<typeof GameEndInfoSchema>;
 const GitCommitSchema = z
   .string()
   .regex(/^[0-9a-fA-F]{40}$/)
-  .or(z.literal("DEV"));
+  .or(z.literal("DEV"))
+  .or(z.literal("unknown"));
 
 export const PartialAnalyticsRecordSchema = z.object({
   info: GameEndInfoSchema,

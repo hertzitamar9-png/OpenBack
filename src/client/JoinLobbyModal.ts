@@ -1036,7 +1036,11 @@ export class JoinLobbyModal extends BaseModal {
     }
 
     const gitCommit = ClientEnv.gitCommit();
-    if (gitCommit !== "DEV" && parsed.data.gitCommit !== gitCommit) {
+    if (
+      gitCommit !== "DEV" &&
+      gitCommit !== "unknown" &&
+      parsed.data.gitCommit !== gitCommit
+    ) {
       const safeLobbyId = this.sanitizeForLog(lobbyId);
       console.warn(
         `Git commit hash mismatch for game ${safeLobbyId}`,
