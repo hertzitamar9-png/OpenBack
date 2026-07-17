@@ -18,13 +18,13 @@ import { SendWinnerEvent } from "../../Transport";
 import { GameView } from "../../view";
 
 const WIN_MODAL_DISMISSED_KEY = "openback-win-modal-dismissed";
+const DEATH_VIDEO_SEEN_KEY = "openback-death-video-seen";
 
 @customElement("win-modal")
 export class WinModal extends LitElement implements Controller {
   public game: GameView;
   public eventBus: EventBus;
 
-  private deathCount = 0;
   private showLogoOnDeath = false;
   private wasAlive = true;
 
@@ -241,8 +241,7 @@ export class WinModal extends LitElement implements Controller {
       (this.game.inSpawnPhase() || myPlayer.hasSpawned());
 
     if (alive) {
-      // Player is alive (new game / respawned): keep deathCount so the FIRST
-      // death ever shows the video and every later death shows the logo.
+      // Player is alive (new game / respawned): ready for the next death.
       this.wasAlive = true;
     } else if (
       myPlayer &&
@@ -252,8 +251,13 @@ export class WinModal extends LitElement implements Controller {
     ) {
       // Transition alive -> dead: handle exactly once per death.
       this.wasAlive = false;
-      this.deathCount += 1;
-      this.showLogoOnDeath = this.deathCount >= 2; // first death = video, rest = logo
+      // First death ever (across sessions) shows the tutorial video; every
+      // later death shows the logo. Persisted so reloads/new games are counted.
+      const seenVideo = localStorage.getItem(DEATH_VIDEO_SEEN_KEY) === "true";
+      this.showLogoOnDeath = seenVideo;
+      if (!seenVideo) {
+        localStorage.setItem(DEATH_VIDEO_SEEN_KEY, "true");
+      }
       this._title = translateText("win_modal.died");
       this.show(true);
     }
