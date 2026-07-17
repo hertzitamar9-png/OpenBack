@@ -52,19 +52,19 @@ export class Footer extends LitElement {
           >
             Blog
           </button>
-          <a
-            href="/terms-of-service.html"
+          <button
+            type="button"
+            class="nav-menu-item hover:text-white transition-colors cursor-pointer"
+            data-page="page-terms"
             data-i18n="main.terms_of_service"
-            target="_blank"
-            class="hover:text-white transition-colors"
-          ></a>
+          ></button>
           <span data-i18n="main.copyright"></span>
-          <a
-            href="/privacy-policy.html"
+          <button
+            type="button"
+            class="nav-menu-item hover:text-white transition-colors cursor-pointer"
+            data-page="page-privacy"
             data-i18n="main.privacy_policy"
-            target="_blank"
-            class="hover:text-white transition-colors"
-          ></a>
+          ></button>
         </div>
       </footer>
     `;

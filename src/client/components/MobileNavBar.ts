@@ -102,6 +102,16 @@ export class MobileNavBar extends LitElement {
           data-page="page-blog"
           data-i18n="main.blog"
         ></button>
+        <button
+          class="nav-menu-item block w-full text-left font-bold uppercase tracking-[0.05em] text-white/70 transition-all duration-200 cursor-pointer hover:text-blue-600 hover:translate-x-2.5 text-[clamp(18px,2.8vh,32px)] py-[clamp(0.2rem,0.8vh,0.75rem)] [&.active]:text-blue-600"
+          data-page="page-terms"
+          data-i18n="main.terms_of_service"
+        ></button>
+        <button
+          class="nav-menu-item block w-full text-left font-bold uppercase tracking-[0.05em] text-white/70 transition-all duration-200 cursor-pointer hover:text-blue-600 hover:translate-x-2.5 text-[clamp(18px,2.8vh,32px)] py-[clamp(0.2rem,0.8vh,0.75rem)] [&.active]:text-blue-600"
+          data-page="page-privacy"
+          data-i18n="main.privacy_policy"
+        ></button>
         <div
           class="nav-menu-item flex items-center w-full cursor-pointer"
           data-page="page-news"

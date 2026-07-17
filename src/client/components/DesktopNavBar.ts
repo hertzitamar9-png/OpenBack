@@ -50,7 +50,7 @@ export class DesktopNavBar extends LitElement {
 
     return html`
       <nav
-        class="hidden lg:flex w-full bg-zinc-900/90 backdrop-blur-md items-center justify-center gap-5 xl:gap-7 py-4 shrink-0 z-50 relative"
+        class="hidden lg:flex w-full bg-zinc-900/90 backdrop-blur-md items-center justify-center gap-3 xl:gap-5 py-4 shrink-0 z-50 relative text-xs xl:text-sm"
       >
         <div class="flex items-center justify-center">
           <div class="h-8">
@@ -77,6 +77,16 @@ export class DesktopNavBar extends LitElement {
           class="nav-menu-item text-white/70 hover:text-malibu-blue font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue"
           data-page="page-blog"
           data-i18n="main.blog"
+        ></button>
+        <button
+          class="nav-menu-item text-white/70 hover:text-malibu-blue font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue"
+          data-page="page-terms"
+          data-i18n="main.terms_of_service"
+        ></button>
+        <button
+          class="nav-menu-item text-white/70 hover:text-malibu-blue font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue"
+          data-page="page-privacy"
+          data-i18n="main.privacy_policy"
         ></button>
         <!-- Desktop Navigation Menu Items -->
         <div class="relative">

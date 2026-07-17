@@ -1,3 +1,10 @@
+## OpenBack v0.33.42 - Legal Navigation Tabs
+
+- Added Terms of Service and Privacy Policy tabs alongside Tutorials and Blog on desktop and mobile.
+- Opened both legal pages inside the main OpenBack navigation instead of separate browser tabs.
+
+Contributed by **frootz jhklphy**.
+
 ## OpenBack v0.33.41 - Clear Browser Title
 
 - Shortened the browser-tab title to simply “OpenBack.”
