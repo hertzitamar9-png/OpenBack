@@ -26,6 +26,7 @@ export class WinModal extends LitElement implements Controller {
 
   private deathCount = 0;
   private showLogoOnDeath = false;
+  private wasAlive = true;
 
   @state()
   isVisible = false;
@@ -234,37 +235,27 @@ export class WinModal extends LitElement implements Controller {
 
   tick() {
     const myPlayer = this.game.myPlayer();
-    if (
-      myPlayer &&
+    const alive =
+      !!myPlayer &&
       myPlayer.isAlive() &&
-      (this.game.inSpawnPhase() || myPlayer.hasSpawned())
-    ) {
+      (this.game.inSpawnPhase() || myPlayer.hasSpawned());
+
+    if (alive) {
       // Player is alive (new game / respawned): reset death tracking so the
       // first death of the next game shows the video again.
       this.deathCount = 0;
       this.showLogoOnDeath = false;
-    }
-    if (
-      myPlayer &&
-      !myPlayer.isAlive() &&
-      !this.game.inSpawnPhase() &&
-      myPlayer.hasSpawned() &&
-      this.deathCount === 0
-    ) {
-      this.deathCount += 1;
-      this.showLogoOnDeath = false; // first death: keep the video
-      this._title = translateText("win_modal.died");
-      this.show(true);
+      this.wasAlive = true;
     } else if (
       myPlayer &&
-      !myPlayer.isAlive() &&
       !this.game.inSpawnPhase() &&
       myPlayer.hasSpawned() &&
-      this.deathCount >= 1 &&
-      !this.showLogoOnDeath
+      this.wasAlive
     ) {
+      // Transition alive -> dead: handle exactly once per death.
+      this.wasAlive = false;
       this.deathCount += 1;
-      this.showLogoOnDeath = true; // second death and onward: show the logo
+      this.showLogoOnDeath = this.deathCount >= 2; // first death = video, rest = logo
       this._title = translateText("win_modal.died");
       this.show(true);
     }
