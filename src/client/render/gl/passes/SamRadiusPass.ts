@@ -284,6 +284,7 @@ export class SAMRadiusPass {
     for (const u of structures.values()) {
       if (u.unitType !== UT_SAM_LAUNCHER) continue;
       if (!u.isActive) continue;
+      if (u.visibleToLocal === false) continue;
 
       const x = u.pos % w;
       const y = (u.pos - x) / w;

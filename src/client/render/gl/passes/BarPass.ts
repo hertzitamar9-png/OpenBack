@@ -132,12 +132,14 @@ export class BarPass {
         unit.health >= this.warshipMaxHealth
       )
         continue;
+      if (unit.visibleToLocal === false) continue;
       this.pushHealth(unit, unit.health / this.warshipMaxHealth);
     }
 
     // --- Progress bars (structures) ---
     for (const unit of structures.values()) {
       if (!unit.isActive) continue;
+      if (unit.visibleToLocal === false) continue;
       const progress = this.computeStructureProgress(unit, gameTick);
       if (progress !== null) this.pushProgress(unit, progress);
     }

@@ -637,6 +637,29 @@ export class GameView implements GameMap {
       this._visibleTrailUnitIds,
     );
 
+    // Fog of war: a unit is visible to the local player only when it sits on a
+    // tile they own (mirrors FogPass.mine()). Own units are always visible even
+    // at sea; enemy/ally units on non-owned tiles are culled from rendering.
+    const wm = this._config.worldMechanics?.();
+    const fogEnabled = wm?.fogOfWar ?? false;
+    for (const [, state] of this._unitStates) {
+      if (state.unitType === UnitType.TransportShip) continue; // handled above
+      if (!fogEnabled || localSmallID === undefined) {
+        if (state.visibleToLocal !== true) this._unitsDirty = true;
+        state.visibleToLocal = true;
+        continue;
+      }
+      if (!state.isActive) {
+        state.visibleToLocal = true;
+        continue;
+      }
+      const visible =
+        state.ownerID === localSmallID ||
+        this.ownerID(state.pos) === localSmallID;
+      if (state.visibleToLocal !== visible) this._unitsDirty = true;
+      state.visibleToLocal = visible;
+    }
+
     // Changed-tile delta refs (zero-copy: state field unused in live mode).
     const changedCount = this.updatedTiles.length;
     for (let i = 0; i < changedCount; i++) {

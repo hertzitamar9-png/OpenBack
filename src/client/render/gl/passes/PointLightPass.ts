@@ -188,6 +188,7 @@ export class PointLightPass {
 
     for (const unit of units.values()) {
       if (!unit.isActive) continue;
+      if (unit.visibleToLocal === false) continue;
       const typeIdx = this.typeToIdx.get(unit.unitType);
       if (typeIdx === undefined) continue;
       const cfg = this.typeConfigs[typeIdx];
