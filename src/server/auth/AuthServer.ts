@@ -18,7 +18,12 @@ import {
 import { base64urlToUuid, uuidToBase64url } from "../../core/Base64";
 import { GameEnv } from "../../core/configuration/Config";
 import { CosmeticsSchema } from "../../core/CosmeticSchemas";
-import { GameMode, HumansVsNations, RankedType } from "../../core/game/Game";
+import {
+  GameMode,
+  GameType,
+  HumansVsNations,
+  RankedType,
+} from "../../core/game/Game";
 import { GameRecord, GameRecordSchema } from "../../core/Schemas";
 import { generateID, replacer } from "../../core/Util";
 import { ServerEnv } from "../ServerEnv";
@@ -872,7 +877,8 @@ function awardMatchCurrency(
     record.info.config.maxPlayers ?? record.info.players.length,
   );
   const minimumNationCount = Math.ceil(suggestedNationCount / 2);
-  if (record.info.players.length < minimumNationCount) return;
+  const isSoloGame = record.info.config.gameType === GameType.Singleplayer;
+  if (!isSoloGame && record.info.players.length < minimumNationCount) return;
 
   const rewardedPlayers = new Set<string>();
   for (const summary of summaries) {

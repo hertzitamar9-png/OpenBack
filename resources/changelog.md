@@ -1,3 +1,10 @@
+## OpenBack v0.33.45 - Solo Match Rewards
+
+- Award the normal 100-cap completion reward and 200-cap total victory reward in single-player games too.
+- Keep the half-map suggested-population requirement only for multiplayer matches, where it prevents underfilled reward farming.
+
+Contributed by **frootz jhklphy**.
+
 ## OpenBack v0.33.44 - OB Ranked Progression
 
 - Renamed the visible ranked rating from Elo to OB and made new ranked players begin at 0 OB.

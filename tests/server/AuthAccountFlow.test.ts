@@ -308,6 +308,36 @@ describe("email account lifecycle", () => {
       player: { currency: { soft: 200 } },
     });
 
+    const soloRecord = {
+      ...underfilledRecord,
+      info: {
+        ...underfilledRecord.info,
+        gameID: "SOLO0001",
+        config: {
+          ...underfilledRecord.info.config,
+          gameType: "Singleplayer",
+          rankedType: undefined,
+          rankedTeams: undefined,
+        },
+      },
+    };
+    const soloArchive = await fetch(`${origin}/game/SOLO0001`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": "auth-account-test-key",
+      },
+      body: JSON.stringify(soloRecord),
+    });
+    expect(soloArchive.status, await soloArchive.text()).toBe(200);
+
+    const paidSoloProfile = await fetch(`${origin}/users/@me`, {
+      headers: { Authorization: `Bearer ${verifiedBody.jwt}` },
+    });
+    await expect(paidSoloProfile.json()).resolves.toMatchObject({
+      player: { currency: { soft: 400 } },
+    });
+
     const opponentRefresh = await fetch(`${origin}/auth/refresh`, {
       method: "POST",
     });
@@ -330,7 +360,7 @@ describe("email account lifecycle", () => {
     });
     await expect(obRewardedProfile.json()).resolves.toMatchObject({
       player: {
-        currency: { soft: 800 },
+        currency: { soft: 1000 },
         leaderboard: { oneVone: { elo: expect.any(Number) } },
       },
     });
