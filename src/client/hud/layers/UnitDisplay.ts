@@ -159,7 +159,7 @@ export class UnitDisplay extends LitElement implements Controller {
 
     return html`
       <div class="border-t border-white/10 px-1 py-0.5 w-full">
-        <div class="grid grid-cols-[repeat(16,minmax(0,1fr))] gap-px w-full">
+        <div class="flex gap-1 w-full overflow-x-auto">
           ${this.renderUnitItem(
             cityIcon,
             this._cities,
@@ -340,7 +340,7 @@ export class UnitDisplay extends LitElement implements Controller {
           title=${translateText("unit_type." + structureKey)}
           class="${this.canBuild(unitType)
             ? ""
-            : "opacity-40"} h-12 border border-slate-500 rounded-sm px-1 py-0.5 flex flex-col items-center justify-center cursor-pointer
+            : "opacity-40"} h-14 w-24 shrink-0 border border-slate-500 rounded-sm px-1 py-1 flex flex-col items-center justify-center cursor-pointer
              ${selected ? "hover:bg-gray-400/10" : "hover:bg-gray-800"}
              rounded-sm text-white ${selected ? "bg-slate-400/20" : ""}"
           @click=${() => {

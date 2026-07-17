@@ -337,7 +337,7 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
     const playerTeam = getTranslatedPlayerTeamLabel(player.team());
 
     return html`
-      <div class="flex items-start gap-1 lg:gap-2 p-1 lg:p-1.5">
+      <div class="flex items-stretch gap-1 lg:gap-2 p-1 lg:p-1.5">
         <!-- Left: Gold & Troop bar -->
         <div class="flex flex-col gap-1 shrink-0 w-28 md:w-36">
           <div class="flex items-center gap-1">
@@ -375,7 +375,7 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
           </div>
         </div>
         <!-- Right: Player identity + Units below -->
-        <div class="flex flex-col justify-between self-stretch">
+        <div class="flex flex-1 flex-col justify-between self-stretch min-w-0">
           <div
             class="flex items-center gap-2 font-bold text-sm lg:text-lg ${this.getPlayerNameColor(
               isFriendly ?? false,
@@ -410,7 +410,7 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
             ${this.renderPlayerNameIcons(player)} ${allianceHtml ?? ""}
           </div>
           <div
-            class="grid gap-0.5 lg:gap-1 mt-0.5"
+            class="grid gap-0.5 lg:gap-1 mt-0.5 w-full"
             style="grid-template-columns: repeat(${this.unitColumns(
               player,
             )}, minmax(0, 1fr));"
