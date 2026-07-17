@@ -1032,7 +1032,23 @@ export class Config {
     return 4;
   }
 
-  openBackSnapRadius(): number {
+  openBackSnapRadius(unitType?: UnitType): number {
+    // Original/base units (city, factory, port, defense post, missile silo,
+    // SAM, nukes) keep the wider snap so they feel the same as before.
+    // The custom OpenBack units snap from much closer, matching the tight
+    // feel of placing a city.
+    const customUnits = new Set<UnitType>([
+      UnitType.Tank,
+      UnitType.TankMine,
+      UnitType.Plane,
+      UnitType.Runway,
+      UnitType.MilitaryBase,
+      UnitType.Warship,
+      UnitType.MANPAD,
+    ]);
+    if (unitType !== undefined && customUnits.has(unitType)) {
+      return 6;
+    }
     return this.structureMinDist();
   }
 

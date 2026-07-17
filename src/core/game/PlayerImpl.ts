@@ -1664,7 +1664,7 @@ export class PlayerImpl implements Player {
   ): TileRef | null {
     const snapRadius = requireNoParkedPlane
       ? this.mg.config().openBackVehicleSnapRadius()
-      : this.mg.config().openBackSnapRadius();
+      : this.mg.config().openBackSnapRadius(UnitType.Runway);
     const snapRadiusSquared = snapRadius ** 2;
     let best: TileRef | null = null;
     let bestDist = Infinity;
@@ -1688,7 +1688,7 @@ export class PlayerImpl implements Player {
     type: UnitType.MANPAD | UnitType.MilitaryBase | UnitType.TankMine,
     targetTile: TileRef,
   ): TileRef | null {
-    const snapRadiusSquared = this.mg.config().openBackSnapRadius() ** 2;
+    const snapRadiusSquared = this.mg.config().openBackSnapRadius(type) ** 2;
     let best: TileRef | null = null;
     let bestDist = Infinity;
     for (const unit of this.units(type)) {
