@@ -561,21 +561,19 @@ export class CosmeticContainer extends LitElement {
   render() {
     return html`
       <slot></slot>
-      ${
-        this.product || this.priceHard !== null || this.priceSoft !== null
-          ? html`<purchase-button
-              .product=${this.product}
-              .priceHard=${this.priceHard}
-              .priceSoft=${this.priceSoft}
-              .rarity=${this.rarity}
-              .dollarLabelKey=${this.dollarLabelKey}
-              .priceSuffix=${this.priceSuffix}
-              .onPurchaseDollar=${this.onPurchaseDollar}
-              .onPurchaseHard=${this.onPurchaseHard}
-              .onPurchaseSoft=${this.onPurchaseSoft}
-            ></purchase-button>`
-          : null
-      }
+      ${this.product || this.priceHard !== null || this.priceSoft !== null
+        ? html`<purchase-button
+            .product=${this.product}
+            .priceHard=${this.priceHard}
+            .priceSoft=${this.priceSoft}
+            .rarity=${this.rarity}
+            .dollarLabelKey=${this.dollarLabelKey}
+            .priceSuffix=${this.priceSuffix}
+            .onPurchaseDollar=${this.onPurchaseDollar}
+            .onPurchaseHard=${this.onPurchaseHard}
+            .onPurchaseSoft=${this.onPurchaseSoft}
+          ></purchase-button>`
+        : null}
     `;
   }
 }
