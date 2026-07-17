@@ -1,7 +1,7 @@
 import type { Express, Request } from "express";
-import fsPromises from "fs/promises";
 import { parse } from "node-html-parser";
-import path from "path";
+import fsPromises from "node:fs/promises";
+import path from "node:path";
 import type { Logger } from "winston";
 import { z } from "zod";
 import { GAME_ID_REGEX, GameInfo } from "../core/Schemas";

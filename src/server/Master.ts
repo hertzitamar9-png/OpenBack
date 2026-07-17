@@ -1,10 +1,10 @@
-import cluster from "cluster";
-import crypto from "crypto";
 import express from "express";
 import rateLimit from "express-rate-limit";
-import http from "http";
-import path from "path";
-import { fileURLToPath } from "url";
+import cluster from "node:cluster";
+import crypto from "node:crypto";
+import http from "node:http";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { GameEnv } from "../core/configuration/Config";
 import { logger } from "./Logger";
 import { MapPlaylist } from "./MapPlaylist";

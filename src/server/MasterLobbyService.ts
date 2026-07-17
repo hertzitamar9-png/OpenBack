@@ -1,4 +1,4 @@
-import { Worker } from "cluster";
+import { Worker } from "node:cluster";
 import winston from "winston";
 import { PublicGameInfo, PublicGameType } from "../core/Schemas";
 import { generateID } from "../core/Util";

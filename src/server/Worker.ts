@@ -1,10 +1,10 @@
 import compression from "compression";
 import express, { NextFunction, Request, Response } from "express";
 import rateLimit from "express-rate-limit";
-import http from "http";
 import ipAnonymize from "ip-anonymize";
-import path from "path";
-import { fileURLToPath } from "url";
+import http from "node:http";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { WebSocket, WebSocketServer } from "ws";
 import { z } from "zod";
 import { GameEnv } from "../core/configuration/Config";

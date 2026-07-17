@@ -1,7 +1,7 @@
-import { createHash } from "crypto";
-import fs from "fs";
 import { globSync } from "glob";
-import path from "path";
+import { createHash } from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
 import {
   type AssetManifest,
   encodeAssetPath,

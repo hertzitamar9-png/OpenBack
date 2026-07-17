@@ -1,6 +1,6 @@
-import crypto from "crypto";
 import type express from "express";
-import type http from "http";
+import crypto from "node:crypto";
+import type http from "node:http";
 import type { Logger } from "winston";
 import { WebSocket, WebSocketServer } from "ws";
 import type { GameConfig } from "../core/Schemas";

@@ -1,8 +1,8 @@
-import fs from "fs/promises";
-import path from "path";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { normalizeAssetPath } from "src/core/AssetUrls";
 import { GameMapType } from "src/core/game/Game";
-import { fileURLToPath } from "url";
 import { logger } from "./Logger";
 import { getRuntimeAssetManifest } from "./RuntimeAssetManifest";
 

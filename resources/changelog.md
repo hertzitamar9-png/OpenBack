@@ -1,3 +1,9 @@
+## OpenBack v0.33.52 - Deno Runtime Compatibility
+
+- Made the complete OpenBack server compatible with Deno Deploy's Node runtime so website, accounts, matchmaking, game workers, and WebSockets can deploy together.
+
+Contributed by **frootz jhklphy**.
+
 ## OpenBack v0.33.51 - Compact Player Board and Reliable Cosmetics
 
 - Restored the desktop build bar to its original single-row layout.

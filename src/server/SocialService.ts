@@ -1,4 +1,4 @@
-import type http from "http";
+import type http from "node:http";
 import type { Logger } from "winston";
 import { WebSocket, WebSocketServer } from "ws";
 import { areFriends, resolveRankedPlayer } from "./auth/AuthServer";

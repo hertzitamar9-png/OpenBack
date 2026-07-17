@@ -1,7 +1,7 @@
-import crypto from "crypto";
 import express from "express";
-import fs from "fs";
 import { jwtVerify, SignJWT } from "jose";
+import crypto from "node:crypto";
+import fs from "node:fs";
 import nodemailer from "nodemailer";
 import { Pool } from "pg";
 import cosmeticsJson from "resources/cosmetics.json";
