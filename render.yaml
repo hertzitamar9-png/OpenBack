@@ -18,7 +18,7 @@ services:
       - key: SUBDOMAIN
         value: main
       - key: GAME_ENV
-        value: prod
+        value: dev
       - key: NUM_WORKERS
         value: "1"
       - key: API_KEY
@@ -26,7 +26,7 @@ services:
       - key: ADMIN_BOT_API_KEY
         sync: false
       - key: TURNSTILE_SITE_KEY
-        sync: false
+        value: 1x00000000000000000000AA
       - key: CDN_BASE
         sync: false
       - key: COSMETICS_BASE_URL
