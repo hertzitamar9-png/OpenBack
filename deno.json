@@ -1,4 +1,8 @@
 {
+  "imports": {
+    "resources/": "./resources/",
+    "src/": "./src/"
+  },
   "deploy": {
     "install": "npm ci",
     "build": "npm run build-prod",
