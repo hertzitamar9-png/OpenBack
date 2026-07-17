@@ -307,44 +307,40 @@ export class UnitDisplay extends LitElement implements Controller {
           this.requestUpdate();
         }}
       >
-        ${
-          hovered
-            ? html`
-                <div
-                  class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 text-gray-200 text-center w-max text-xs bg-gray-800/90 backdrop-blur-xs rounded-sm p-1 z-[100] shadow-lg pointer-events-none"
-                >
-                  <div class="font-bold text-sm mb-1">
-                    ${translateText(
+        ${hovered
+          ? html`
+              <div
+                class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 text-gray-200 text-center w-max text-xs bg-gray-800/90 backdrop-blur-xs rounded-sm p-1 z-[100] shadow-lg pointer-events-none"
+              >
+                <div class="font-bold text-sm mb-1">
+                  ${translateText(
                     "unit_type." + structureKey,
                   )}${` [${displayHotkey}]`}
-                  </div>
-                  <div class="p-2">
-                    ${translateText("build_menu.desc." + structureKey)}
-                  </div>
-                  ${
-                  unitType === UnitType.Warship
-                    ? html`<div
-                        class="mt-1 px-2 py-1 text-[10px] text-cyan-300 border-t border-white/10"
-                      >
-                        ⇧ ${translateText("build_menu.warship_shift_hint")}
-                      </div>`
-                    : null
-                }
-                  <div class="flex items-center justify-center gap-1">
-                    <img src=${goldCoinIcon} width="13" height="13" />
-                    <span class="text-yellow-300"
-                      >${renderNumber(this.cost(unitType))}</span
-                    >
-                  </div>
                 </div>
-              `
-            : null
-        }
+                <div class="p-2">
+                  ${translateText("build_menu.desc." + structureKey)}
+                </div>
+                ${unitType === UnitType.Warship
+                  ? html`<div
+                      class="mt-1 px-2 py-1 text-[10px] text-cyan-300 border-t border-white/10"
+                    >
+                      ⇧ ${translateText("build_menu.warship_shift_hint")}
+                    </div>`
+                  : null}
+                <div class="flex items-center justify-center gap-1">
+                  <img src=${goldCoinIcon} width="13" height="13" />
+                  <span class="text-yellow-300"
+                    >${renderNumber(this.cost(unitType))}</span
+                  >
+                </div>
+              </div>
+            `
+          : null}
         <div
           title=${translateText("unit_type." + structureKey)}
-          class="${
-            this.canBuild(unitType) ? "" : "opacity-40"
-          } min-w-0 h-9 border border-slate-500 rounded-sm px-px py-px flex flex-col items-center justify-center cursor-pointer
+          class="${this.canBuild(unitType)
+            ? ""
+            : "opacity-40"} min-w-0 h-9 border border-slate-500 rounded-sm px-px py-px flex flex-col items-center justify-center cursor-pointer
              ${selected ? "hover:bg-gray-400/10" : "hover:bg-gray-800"}
              rounded-sm text-white ${selected ? "bg-slate-400/20" : ""}"
           @click=${() => {
@@ -392,11 +388,9 @@ export class UnitDisplay extends LitElement implements Controller {
           <div class="flex items-center justify-center gap-0.5 h-5">
             <span class="text-[8px] text-gray-400">${displayHotkey}</span>
             <img src=${icon} alt=${structureKey} class="align-middle size-4" />
-            ${
-              number !== null
-                ? html`<span class="text-[9px]">${renderNumber(number)}</span>`
-                : null
-            }
+            ${number !== null
+              ? html`<span class="text-[9px]">${renderNumber(number)}</span>`
+              : null}
           </div>
           <div
             class="w-full truncate text-center text-[8px] leading-3 font-semibold text-white/90"
