@@ -753,11 +753,9 @@ export class GameView implements GameMap {
         objective.reward === "radar" &&
         objective.ownerID === this._myPlayer?.id()
       ) {
-        f.fogReveals.push({
-          x: this._map.x(tile),
-          y: this._map.y(tile),
-          radius: 45,
-        });
+        // Radar objectives no longer punch bright reveal holes in the fog;
+        // fog now only clears over your own owned tiles so the moving clouds
+        // read cleanly instead of showing white reveal blobs.
       }
     }
     f.structuresDirty = this._structuresDirty;
