@@ -809,6 +809,9 @@
   "host_modal": {
     "anonymous_players": "Anonymous players",
     "assigned_teams": "Assigned Teams",
+    "team_selection_help": "Choose your own team. The party owner can edit every player; Auto keeps balanced assignment.",
+    "team_auto": "Auto",
+    "choose_team_for": "Choose a team for {username}",
     "bots": "Tribes: ",
     "bots_disabled": "Disabled",
     "compact_map": "Compact Map",

@@ -4,7 +4,12 @@ import WebSocket from "ws";
 import { z } from "zod";
 import { isAdminRole } from "../core/ApiSchemas";
 import { GameEnv } from "../core/configuration/Config";
-import { GameType, RankedType } from "../core/game/Game";
+import {
+  ColoredTeams,
+  GameMode,
+  GameType,
+  RankedType,
+} from "../core/game/Game";
 import {
   ClientID,
   ClientMessageSchema,
@@ -133,6 +138,8 @@ export class GameServer {
 
   private lobbyInfoIntervalId: ReturnType<typeof setInterval> | null = null;
 
+  private selectedTeams = new Map<ClientID, string>();
+
   private visibleAt?: number;
 
   constructor(
@@ -188,6 +195,14 @@ export class GameServer {
   }
 
   public updateGameConfig(gameConfig: Partial<GameConfig>): void {
+    if (
+      (gameConfig.gameMode !== undefined &&
+        gameConfig.gameMode !== this.gameConfig.gameMode) ||
+      (gameConfig.playerTeams !== undefined &&
+        gameConfig.playerTeams !== this.gameConfig.playerTeams)
+    ) {
+      this.selectedTeams.clear();
+    }
     if (gameConfig.gameMap !== undefined) {
       this.gameConfig.gameMap = gameConfig.gameMap;
     }
@@ -329,6 +344,45 @@ export class GameServer {
           gameID: this.id,
         });
         this.kickClient(target, reason);
+        return { status: 200 };
+      }
+
+      case "set_player_team": {
+        if (this.hasStarted()) {
+          return { status: 409, error: "game already started" };
+        }
+        if (this.gameConfig.gameMode !== GameMode.Team) {
+          return { status: 409, error: "team selection requires a team game" };
+        }
+        if (
+          stamped.targetClientID !== actor.clientID &&
+          !actor.isLobbyCreator &&
+          !actor.isAdmin
+        ) {
+          return {
+            status: 403,
+            error: "players may only choose their own team",
+          };
+        }
+        if (
+          !this.activeClients.some(
+            (client) => client.clientID === stamped.targetClientID,
+          )
+        ) {
+          return { status: 404, error: "player is not in this lobby" };
+        }
+        if (stamped.team === null) {
+          this.selectedTeams.delete(stamped.targetClientID);
+        } else {
+          const coloredTeams = Object.values(ColoredTeams);
+          const numberedTeam =
+            /^Team ([1-9]|[1-9][0-9]|[1-3][0-9]{2}|400)$/.test(stamped.team);
+          if (!coloredTeams.includes(stamped.team) && !numberedTeam) {
+            return { status: 400, error: "invalid team" };
+          }
+          this.selectedTeams.set(stamped.targetClientID, stamped.team);
+        }
+        this.broadcastLobbyInfo();
         return { status: 200 };
       }
 
@@ -693,6 +747,7 @@ export class GameServer {
       this.activeClients = this.activeClients.filter(
         (c) => c.clientID !== client.clientID,
       );
+      this.selectedTeams.delete(client.clientID);
 
       if (!this._hasStarted) {
         // Remove persistentId if the game has not started to prevent going over max players
@@ -1084,11 +1139,13 @@ export class GameServer {
               clanTag: hideClanTags ? null : (c.clanTag ?? null),
               clientID: c.clientID,
               friends: friendsFor(c),
+              selectedTeam: this.selectedTeams.get(c.clientID) ?? null,
             }
           : {
               username: this.anonName(viewer, c.clientID),
               clanTag: null,
               clientID: c.clientID,
+              selectedTeam: this.selectedTeams.get(c.clientID) ?? null,
             },
       ),
       lobbyCreatorClientID: this.lobbyCreatorID,
@@ -1117,6 +1174,7 @@ export class GameServer {
         cosmetics: c.cosmetics,
         isLobbyCreator: this.lobbyCreatorID === c.clientID,
         friends: friendsFor(c),
+        selectedTeam: this.selectedTeams.get(c.clientID),
       }));
     }
 
@@ -1142,6 +1200,7 @@ export class GameServer {
           (controller) => this.lobbyCreatorID === controller.clientID,
         ),
         friends: friendIDs.size > 0 ? [...friendIDs] : undefined,
+        selectedTeam: this.selectedTeams.get(primary.clientID),
       };
     };
 
@@ -1240,6 +1299,7 @@ export class GameServer {
       this.activeClients = this.activeClients.filter(
         (c) => c.clientID !== clientID,
       );
+      this.selectedTeams.delete(clientID);
     } else {
       this.log.warn(`cannot kick client, not found in game`, {
         clientID,

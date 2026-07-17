@@ -35,6 +35,10 @@ export class LobbyTeamView extends LitElement {
   @property({ attribute: "team-count" }) teamCount: TeamCountConfig = 2;
   @property({ type: Function }) onKickPlayer?: (clientID: string) => void;
   @property({ type: Function }) onToggleNameReveal?: (clientID: string) => void;
+  @property({ type: Function }) onSelectTeam?: (
+    clientID: string,
+    team: Team | null,
+  ) => void;
   @property({ type: Array }) nameReveals: string[] = [];
   @property({ type: Boolean }) anonymizeNames: boolean = false;
   @property({ type: Number }) nationCount: number = 0;
@@ -144,6 +148,11 @@ export class LobbyTeamView extends LitElement {
           <div class="font-semibold text-gray-200 mb-1 text-sm">
             ${translateText("host_modal.assigned_teams")}
           </div>
+          ${this.onSelectTeam && this.teamCount !== HumansVsNations
+            ? html`<div class="text-[11px] text-white/50 mb-2">
+                ${translateText("host_modal.team_selection_help")}
+              </div>`
+            : html``}
           <div class="w-full grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3">
             ${repeat(
               active,
@@ -227,7 +236,7 @@ export class LobbyTeamView extends LitElement {
     const maxTeamSize =
       preview.team === ColoredTeams.Nations
         ? this.effectiveNationCount
-        : this.teamMaxSize;
+        : Math.max(this.teamMaxSize, preview.players.length);
 
     const teamLabel = getTranslatedPlayerTeamLabel(preview.team);
 
@@ -267,6 +276,7 @@ export class LobbyTeamView extends LitElement {
                       : "bg-gray-700/70 border-transparent"}"
                   >
                     <span class="truncate text-white">${displayName}</span>
+                    ${this.renderTeamSelector(p)}
                     ${this.renderRevealToggle(p.clientID)}
                     ${p.clientID === this.lobbyCreatorClientID
                       ? html`<span class="ml-2 text-[11px] text-green-300"
@@ -292,6 +302,39 @@ export class LobbyTeamView extends LitElement {
         </div>
       </div>
     `;
+  }
+
+  private renderTeamSelector(client: ClientInfo) {
+    if (
+      !this.onSelectTeam ||
+      this.teamCount === HumansVsNations ||
+      (client.clientID !== this.currentClientID &&
+        this.currentClientID !== this.lobbyCreatorClientID)
+    ) {
+      return html``;
+    }
+    const selected = client.selectedTeam ?? "";
+    return html`<select
+      class="ml-auto min-w-24 rounded-md border border-white/15 bg-gray-900 px-1.5 py-1 text-[11px] text-white"
+      aria-label=${translateText("host_modal.choose_team_for", {
+        username: this.getClientDisplayName(client),
+      })}
+      .value=${selected}
+      @change=${(event: Event) => {
+        const value = (event.currentTarget as HTMLSelectElement).value;
+        this.onSelectTeam?.(client.clientID, value === "" ? null : value);
+      }}
+    >
+      <option value="">${translateText("host_modal.team_auto")}</option>
+      ${this.getTeamList()
+        .filter((team) => team !== ColoredTeams.Nations)
+        .map(
+          (team) =>
+            html`<option value=${team}>
+              ${getTranslatedPlayerTeamLabel(team)}
+            </option>`,
+        )}
+    </select>`;
   }
 
   private getTeamList(): Team[] {
@@ -363,6 +406,8 @@ export class LobbyTeamView extends LitElement {
           false,
           c.clanTag,
           c.friends ?? [],
+          [c.clientID],
+          c.selectedTeam ?? null,
         ),
     );
     const assignment = assignTeamsLobbyPreview(

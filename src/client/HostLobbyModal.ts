@@ -39,6 +39,7 @@ import { crazyGamesSDK } from "./CrazyGamesSDK";
 import { showInGameConfirm } from "./InGameModal";
 import { JoinLobbyEvent } from "./Main";
 import { terrainMapFileLoader } from "./TerrainMapFileLoader";
+import { SendSetPlayerTeamIntentEvent } from "./Transport";
 import {
   getBotsForCompactMap,
   getNationsForCompactMap,
@@ -536,6 +537,8 @@ export class HostLobbyModal extends BaseModal {
             .teamCount=${this.teamCount}
             .nationCount=${this.nations}
             .onKickPlayer=${(clientID: string) => this.kickPlayer(clientID)}
+            .onSelectTeam=${(clientID: string, team: string | null) =>
+              this.selectPlayerTeam(clientID, team)}
             .onToggleNameReveal=${(clientID: string) =>
               this.toggleNameReveal(clientID)}
             .nameReveals=${this.nameReveals}
@@ -1331,6 +1334,10 @@ export class HostLobbyModal extends BaseModal {
         composed: true,
       }),
     );
+  }
+
+  private selectPlayerTeam(clientID: string, team: string | null) {
+    this.eventBus?.emit(new SendSetPlayerTeamIntentEvent(clientID, team));
   }
 
   private async loadNationCount() {

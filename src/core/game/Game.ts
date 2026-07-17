@@ -449,6 +449,7 @@ export class PlayerInfo {
     public readonly controllerClientIDs: ClientID[] = clientID === null
       ? []
       : [clientID],
+    public readonly selectedTeam: Team | null = null,
   ) {
     this.displayName = formatPlayerDisplayName(this.name, this.clanTag);
   }

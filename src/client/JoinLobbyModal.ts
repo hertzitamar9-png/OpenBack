@@ -32,6 +32,7 @@ import { crazyGamesSDK } from "./CrazyGamesSDK";
 import { showInGameConfirm } from "./InGameModal";
 import { JoinLobbyEvent } from "./Main";
 import { terrainMapFileLoader } from "./TerrainMapFileLoader";
+import { SendSetPlayerTeamIntentEvent } from "./Transport";
 import { normaliseMapKey } from "./Utils";
 import { BaseModal } from "./components/BaseModal";
 import "./components/CopyButton";
@@ -161,6 +162,10 @@ export class JoinLobbyModal extends BaseModal {
                           this.gameConfig?.nations ?? "default",
                           this.nationCount,
                         )}
+                        .onSelectTeam=${(
+                          clientID: string,
+                          team: string | null,
+                        ) => this.selectPlayerTeam(clientID, team)}
                       ></lobby-player-view>
                     `
                   : ""}
@@ -953,6 +958,11 @@ export class JoinLobbyModal extends BaseModal {
         detail: { message, duration: 3000, color },
       }),
     );
+  }
+
+  private selectPlayerTeam(clientID: string, team: string | null) {
+    if (clientID !== this.currentClientID) return;
+    this.eventBus?.emit(new SendSetPlayerTeamIntentEvent(clientID, team));
   }
 
   private async checkActiveLobby(lobbyId: string): Promise<boolean> {

@@ -1,3 +1,11 @@
+## OpenBack v0.33.37 - Player-Chosen Teams
+
+- Let every player choose their own team in team-game lobbies, with automatic balanced assignment still available as the default.
+- Let the party owner move any lobby player between teams to explicitly decide who plays together and who plays against whom.
+- Saved lobby team choices on the server and carried them into the real match so the displayed teams no longer change when the game starts.
+
+Contributed by **frootz jhklphy**.
+
 ## OpenBack v0.33.36 - Compact Two-Row Unit HUD
 
 - Made the desktop HUD substantially narrower and arranged all enabled unit controls into two compact rows instead of one long row.

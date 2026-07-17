@@ -178,6 +178,13 @@ export class SendKickPlayerIntentEvent implements GameEvent {
   constructor(public readonly target: string) {}
 }
 
+export class SendSetPlayerTeamIntentEvent implements GameEvent {
+  constructor(
+    public readonly target: string,
+    public readonly team: string | null,
+  ) {}
+}
+
 export class SendUpdateGameConfigIntentEvent implements GameEvent {
   constructor(public readonly config: Partial<GameConfig>) {}
 }
@@ -271,6 +278,10 @@ export class Transport {
 
     this.eventBus.on(SendKickPlayerIntentEvent, (e) =>
       this.onSendKickPlayerIntent(e),
+    );
+
+    this.eventBus.on(SendSetPlayerTeamIntentEvent, (e) =>
+      this.onSendSetPlayerTeamIntent(e),
     );
 
     this.eventBus.on(SendUpdateGameConfigIntentEvent, (e) =>
@@ -663,6 +674,14 @@ export class Transport {
     this.sendIntent({
       type: "kick_player",
       targetClientID: event.target,
+    });
+  }
+
+  private onSendSetPlayerTeamIntent(event: SendSetPlayerTeamIntentEvent) {
+    this.sendIntent({
+      type: "set_player_team",
+      targetClientID: event.target,
+      team: event.team,
     });
   }
 

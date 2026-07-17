@@ -49,6 +49,7 @@ export type Intent =
   | UpgradeStructureIntent
   | DeleteUnitIntent
   | KickPlayerIntent
+  | SetPlayerTeamIntent
   | TogglePauseIntent
   | UpdateGameConfigIntent
   | ToggleGameStartTimer;
@@ -81,6 +82,7 @@ export type AllianceExtensionIntent = z.infer<
 >;
 export type DeleteUnitIntent = z.infer<typeof DeleteUnitIntentSchema>;
 export type KickPlayerIntent = z.infer<typeof KickPlayerIntentSchema>;
+export type SetPlayerTeamIntent = z.infer<typeof SetPlayerTeamIntentSchema>;
 export type TogglePauseIntent = z.infer<typeof TogglePauseIntentSchema>;
 export type UpdateGameConfigIntent = z.infer<
   typeof UpdateGameConfigIntentSchema
@@ -166,6 +168,7 @@ const ClientInfoSchema = z.object({
   username: UsernameSchema,
   clanTag: ClanTagSchema,
   friends: z.array(z.string()).optional(),
+  selectedTeam: z.string().min(1).max(32).nullable().optional(),
 });
 
 export const GameInfoSchema = z.object({
@@ -225,6 +228,7 @@ export interface ClientInfo {
   username: string;
   clanTag: string | null;
   friends?: ClientID[];
+  selectedTeam?: string | null;
 }
 export enum LogSeverity {
   Debug = "DEBUG",
@@ -530,6 +534,12 @@ export const KickPlayerIntentSchema = z.object({
   targetPublicID: ID.optional(),
 });
 
+export const SetPlayerTeamIntentSchema = z.object({
+  type: z.literal("set_player_team"),
+  targetClientID: ID,
+  team: z.string().min(1).max(32).nullable(),
+});
+
 export const TogglePauseIntentSchema = z.object({
   type: z.literal("toggle_pause"),
   paused: z.boolean().default(false),
@@ -567,6 +577,7 @@ export const IntentSchema = z.discriminatedUnion("type", [
   AllianceExtensionIntentSchema,
   DeleteUnitIntentSchema,
   KickPlayerIntentSchema,
+  SetPlayerTeamIntentSchema,
   TogglePauseIntentSchema,
   UpdateGameConfigIntentSchema,
   ToggleGameStartTimerIntentSchema,
@@ -652,6 +663,7 @@ export const PlayerSchema = z.object({
   isLobbyCreator: z.boolean().optional(),
   friends: z.array(ID).optional(),
   controllerClientIDs: z.array(ID).min(1).max(20).optional(),
+  selectedTeam: z.string().min(1).max(32).optional(),
 });
 
 export const GameStartInfoSchema = z.object({

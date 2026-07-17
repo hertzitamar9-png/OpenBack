@@ -35,6 +35,35 @@ describe("assignTeams", () => {
     );
   };
 
+  const createPlayerWithTeam = (id: string, team: string): PlayerInfo =>
+    new PlayerInfo(
+      `Player ${id}`,
+      PlayerType.Human,
+      id,
+      id,
+      false,
+      null,
+      [],
+      [id],
+      team,
+    );
+
+  it("keeps explicit lobby choices and balances automatic players around them", () => {
+    const players = [
+      createPlayerWithTeam("1", ColoredTeams.Red),
+      createPlayerWithTeam("2", ColoredTeams.Red),
+      createPlayerWithTeam("3", ColoredTeams.Red),
+      createPlayer("4"),
+    ];
+
+    const result = assignTeams(players, teams);
+
+    expect(result.get(players[0])).toBe(ColoredTeams.Red);
+    expect(result.get(players[1])).toBe(ColoredTeams.Red);
+    expect(result.get(players[2])).toBe(ColoredTeams.Red);
+    expect(result.get(players[3])).toBe(ColoredTeams.Blue);
+  });
+
   it("should assign players to teams when no clans are present", () => {
     const players = [
       createPlayer("1"),

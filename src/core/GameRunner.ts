@@ -57,6 +57,7 @@ export async function createGameRunner(
       p.clanTag,
       p.friends ?? [],
       p.controllerClientIDs ?? [p.clientID],
+      p.selectedTeam ?? null,
     );
   });
 
