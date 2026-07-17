@@ -122,6 +122,10 @@ export class UnitDisplay extends LitElement implements Controller {
     }
   }
 
+  getTickIntervalMs() {
+    return 500;
+  }
+
   tick() {
     const player = this.game?.myPlayer();
     if (!player) return;
