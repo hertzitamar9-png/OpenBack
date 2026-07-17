@@ -4,7 +4,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import nodemailer from "nodemailer";
 import { Pool } from "pg";
-import cosmeticsJson from "resources/cosmetics.json";
+import cosmeticsJson from "resources/cosmetics.json" with { type: "json" };
 import { z } from "zod";
 import {
   PlayerGameModeFilter,

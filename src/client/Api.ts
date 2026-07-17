@@ -1,4 +1,4 @@
-import newsItemsFallback from "resources/news.json";
+import newsItemsFallback from "resources/news.json" with { type: "json" };
 import { z } from "zod";
 import type { NewsItem } from "../core/ApiSchemas";
 import {

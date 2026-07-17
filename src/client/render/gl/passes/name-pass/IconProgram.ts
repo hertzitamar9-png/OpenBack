@@ -6,7 +6,7 @@
  * The shared playerDataTex is also passed in but not owned/deleted.
  */
 
-import emojiAtlasMeta from "resources/atlases/emoji-atlas-meta.json";
+import emojiAtlasMeta from "resources/atlases/emoji-atlas-meta.json" with { type: "json" };
 import { assetUrl } from "src/core/AssetUrls";
 import type { RenderSettings } from "../../RenderSettings";
 import iconFragSrc from "../../shaders/name/icon.frag.glsl?raw";

@@ -23,7 +23,7 @@ import { DynamicInstanceBuffer } from "../../DynamicBuffer";
 import type { RenderSettings } from "../../RenderSettings";
 import { createProgram, shaderSrc } from "../../utils/GlUtils";
 
-import fxAtlasMeta from "resources/atlases/fx-atlas-meta.json";
+import fxAtlasMeta from "resources/atlases/fx-atlas-meta.json" with { type: "json" };
 import { assetUrl } from "src/core/AssetUrls";
 
 import spriteFragSrc from "../../shaders/fx/sprite.frag.glsl?raw";

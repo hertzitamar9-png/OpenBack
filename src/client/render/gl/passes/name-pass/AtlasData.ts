@@ -3,7 +3,7 @@
  * kerning data, and icon atlas index maps from static JSON assets.
  */
 
-import emojiAtlasMeta from "resources/atlases/emoji-atlas-meta.json";
+import emojiAtlasMeta from "resources/atlases/emoji-atlas-meta.json" with { type: "json" };
 import { assetUrl } from "src/core/AssetUrls";
 import type { BMChar, BMKerning, ParsedAtlas } from "./Types";
 import { CHAR_RANGE } from "./Types";

@@ -1,6 +1,6 @@
 ## OpenBack v0.33.52 - Deno Runtime Compatibility
 
-- Made the complete OpenBack server and its resource imports compatible with Deno Deploy's Node runtime so website, accounts, matchmaking, game workers, and WebSockets can deploy together.
+- Made the complete OpenBack server, project aliases, and JSON resources compatible with Deno Deploy's Node runtime so website, accounts, matchmaking, game workers, and WebSockets can deploy together.
 
 Contributed by **frootz jhklphy**.
 

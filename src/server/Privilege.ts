@@ -9,7 +9,7 @@ import {
   skipNonAlphabeticTransformer,
   toAsciiLowerCaseTransformer,
 } from "obscenity";
-import countries from "resources/countries.json";
+import countries from "resources/countries.json" with { type: "json" };
 
 import { Cosmetics } from "../core/CosmeticSchemas";
 import { decodePatternData } from "../core/PatternDecoder";

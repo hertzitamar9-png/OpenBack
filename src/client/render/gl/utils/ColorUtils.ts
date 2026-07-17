@@ -8,7 +8,7 @@
  * Float32Array(PALETTE_SIZE × 2 × 4) to the GPURenderer constructor.
  */
 
-import renderDefaults from "../render-settings.json";
+import renderDefaults from "../render-settings.json" with { type: "json" };
 
 /** Must cover 12-bit smallID range (0-4095). */
 const PALETTE_SIZE = 4096;

@@ -1,6 +1,6 @@
-import colorblindTheme from "./colorblind-theme.json";
-import defaultTheme from "./default-theme.json";
-import defaults from "./render-settings.json";
+import colorblindTheme from "./colorblind-theme.json" with { type: "json" };
+import defaultTheme from "./default-theme.json" with { type: "json" };
+import defaults from "./render-settings.json" with { type: "json" };
 
 /**
  * Theme data — player/team palettes and color-derivation knobs. Loaded from a
