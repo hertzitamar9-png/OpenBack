@@ -121,17 +121,15 @@ export class CosmeticButton extends LitElement {
         <span class="text-[10px] font-bold text-white/50 uppercase"
           >${translateText(currencyKey)}</span
         >
-        ${
-          pack.bonusAmount > 0
-            ? html`<div
-                class="absolute top-3 -right-8 bg-green-500 text-white text-[10px] font-black px-8 py-0.5 rotate-45 shadow-md uppercase tracking-wide pointer-events-none"
-              >
-                ${translateText("cosmetics.free", {
-                  numFree: pack.bonusAmount.toLocaleString(),
-                })}
-              </div>`
-            : nothing
-        }
+        ${pack.bonusAmount > 0
+          ? html`<div
+              class="absolute top-3 -right-8 bg-green-500 text-white text-[10px] font-black px-8 py-0.5 rotate-45 shadow-md uppercase tracking-wide pointer-events-none"
+            >
+              ${translateText("cosmetics.free", {
+                numFree: pack.bonusAmount.toLocaleString(),
+              })}
+            </div>`
+          : nothing}
       </div>`;
     }
 
@@ -220,51 +218,42 @@ export class CosmeticButton extends LitElement {
         .priceSoft=${isPurchasable ? (priceSoft ?? null) : null}
         .dollarLabelKey=${dollarLabelKey}
         .priceSuffix=${priceSuffix}
-        .onPurchaseDollar=${
-          isPurchasable && c?.product
-            ? () => this.onPurchase?.(this.resolved, "dollar")
-            : undefined
-        }
-        .onPurchaseHard=${
-          isPurchasable && priceHard !== undefined
-            ? () => this.onPurchase?.(this.resolved, "hard")
-            : undefined
-        }
-        .onPurchaseSoft=${
-          isPurchasable && priceSoft !== undefined
-            ? () => this.onPurchase?.(this.resolved, "soft")
-            : undefined
-        }
+        .onPurchaseDollar=${isPurchasable && c?.product
+          ? () => this.onPurchase?.(this.resolved, "dollar")
+          : undefined}
+        .onPurchaseHard=${isPurchasable && priceHard !== undefined
+          ? () => this.onPurchase?.(this.resolved, "hard")
+          : undefined}
+        .onPurchaseSoft=${isPurchasable && priceSoft !== undefined
+          ? () => this.onPurchase?.(this.resolved, "soft")
+          : undefined}
         .name=${this.displayName}
       >
         <button
-          class="group relative flex flex-col items-center w-full ${
-            isPattern || isSkin ? "gap-2" : "gap-1"
-          } rounded-lg cursor-pointer transition-all duration-200 flex-1"
+          class="group relative flex flex-col items-center w-full ${isPattern ||
+          isSkin
+            ? "gap-2"
+            : "gap-1"} rounded-lg cursor-pointer transition-all duration-200 flex-1"
           @click=${() => this.handleClick()}
         >
-          ${
-            (c?.product ?? priceHard ?? priceSoft)
-              ? html`<cosmetic-info
-                  .artist=${artist}
-                  .rarity=${c!.rarity}
-                  .colorPalette=${this.resolved.colorPalette?.name}
-                  .showAdFree=${isPurchasable}
-                ></cosmetic-info>`
-              : nothing
-          }
+          ${(c?.product ?? priceHard ?? priceSoft)
+            ? html`<cosmetic-info
+                .artist=${artist}
+                .rarity=${c!.rarity}
+                .colorPalette=${this.resolved.colorPalette?.name}
+                .showAdFree=${isPurchasable}
+              ></cosmetic-info>`
+            : nothing}
 
           <div class=${previewClass}>${this.renderPreview()}</div>
         </button>
-        ${
-          isOwnedSubscription
-            ? html`<div
-                class="w-full mt-2 px-4 py-2 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-lg text-xs font-bold uppercase tracking-wider text-center"
-              >
-                ${translateText("store.current_plan")}
-              </div>`
-            : nothing
-        }
+        ${isOwnedSubscription
+          ? html`<div
+              class="w-full mt-2 px-4 py-2 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-lg text-xs font-bold uppercase tracking-wider text-center"
+            >
+              ${translateText("store.current_plan")}
+            </div>`
+          : nothing}
       </cosmetic-container>
     `;
   }
