@@ -127,8 +127,8 @@ export class CosmeticButton extends LitElement {
                 class="absolute top-3 -right-8 bg-green-500 text-white text-[10px] font-black px-8 py-0.5 rotate-45 shadow-md uppercase tracking-wide pointer-events-none"
               >
                 ${translateText("cosmetics.free", {
-                numFree: pack.bonusAmount.toLocaleString(),
-              })}
+                  numFree: pack.bonusAmount.toLocaleString(),
+                })}
               </div>`
             : nothing
         }
@@ -205,6 +205,10 @@ export class CosmeticButton extends LitElement {
       type === "subscription" ? translateText("store.price_per_month") : "";
     const sizeClass = type === "flag" ? "gap-1 p-0 w-36" : "gap-2 p-3 w-48";
     const crazygamesClass = isPattern || isSkin ? "no-crazygames " : "";
+    const previewClass =
+      type === "flag"
+        ? "w-full aspect-square flex items-center justify-center rounded-lg overflow-hidden"
+        : "w-full aspect-square flex items-center justify-center bg-white/5 rounded-lg p-2 border border-white/10 group-hover:border-white/20 transition-colors duration-200 overflow-hidden";
 
     return html`
       <cosmetic-container
@@ -250,11 +254,7 @@ export class CosmeticButton extends LitElement {
               : nothing
           }
 
-          <div
-            class="w-full aspect-square flex items-center justify-center bg-white/5 rounded-lg p-2 border border-white/10 group-hover:border-white/20 transition-colors duration-200 overflow-hidden"
-          >
-            ${this.renderPreview()}
-          </div>
+          <div class=${previewClass}>${this.renderPreview()}</div>
         </button>
         ${
           isOwnedSubscription
