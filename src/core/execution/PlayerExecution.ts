@@ -67,7 +67,10 @@ export class PlayerExecution implements Execution {
       this.lastStructureCount !== units.length
     ) {
       for (const u of units) {
-        if (!Structures.has(u.type())) {
+        const isReadyVehicle =
+          (u.type() === UnitType.Plane || u.type() === UnitType.Tank) &&
+          u.isLoaded() === true;
+        if (!Structures.has(u.type()) && !isReadyVehicle) {
           continue;
         }
 
@@ -85,6 +88,25 @@ export class PlayerExecution implements Execution {
           u.delete(true, captor);
         } else {
           captor.captureUnit(u);
+        }
+      }
+
+      // A parked tank is physically based at the military base on its tile.
+      // Launched tanks (loaded=false) remain independent until their mission
+      // ends, but a ready tank cannot survive losing or destroying its base.
+      const activeBaseTiles = new Set(
+        this.player
+          .units(UnitType.MilitaryBase)
+          .filter((base) => base.isActive() && !base.isUnderConstruction())
+          .map((base) => base.tile()),
+      );
+      for (const tank of this.player.units(UnitType.Tank)) {
+        if (
+          tank.isActive() &&
+          tank.isLoaded() === true &&
+          !activeBaseTiles.has(tank.tile())
+        ) {
+          tank.delete(false);
         }
       }
       this.lastStructureOwnershipCheck = this.player.lastTileChange();

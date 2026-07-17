@@ -16,6 +16,8 @@ import { Platform } from "../../Platform";
 import { SendWinnerEvent } from "../../Transport";
 import { GameView } from "../../view";
 
+const WIN_MODAL_DISMISSED_KEY = "openback-win-modal-dismissed";
+
 @customElement("win-modal")
 export class WinModal extends LitElement implements Controller {
   public game: GameView;
@@ -52,18 +54,20 @@ export class WinModal extends LitElement implements Controller {
   render() {
     return html`
       <div
-        class="${this.isVisible
-          ? "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-800/70 p-6 shrink-0 rounded-lg z-[10010] shadow-2xl backdrop-blur-xs text-white w-87.5 max-w-[90%] md:w-175"
-          : "hidden"}"
+        class="${
+          this.isVisible
+            ? "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-800/70 p-6 shrink-0 rounded-lg z-[10010] shadow-2xl backdrop-blur-xs text-white w-87.5 max-w-[90%] md:w-175"
+            : "hidden"
+        }"
       >
         <h2 class="m-0 mb-4 text-[26px] text-center text-white">
           ${this._title || ""}
         </h2>
         ${this.innerHtml()}
         <div
-          class="${this.showButtons
-            ? "flex justify-between gap-2.5"
-            : "hidden"}"
+          class="${
+            this.showButtons ? "flex justify-between gap-2.5" : "hidden"
+          }"
         >
           <o-button
             variant="primary"
@@ -72,24 +76,28 @@ export class WinModal extends LitElement implements Controller {
             translationKey="win_modal.exit"
             @click=${this._handleExit}
           ></o-button>
-          ${this.isRankedGame
-            ? html`
-                <o-button
-                  variant="primary"
-                  width="block"
-                  class="flex-1"
-                  translationKey="win_modal.requeue"
-                  @click=${this._handleRequeue}
-                ></o-button>
-              `
-            : null}
+          ${
+            this.isRankedGame
+              ? html`
+                  <o-button
+                    variant="primary"
+                    width="block"
+                    class="flex-1"
+                    translationKey="win_modal.requeue"
+                    @click=${this._handleRequeue}
+                  ></o-button>
+                `
+              : null
+          }
           <o-button
             variant="primary"
             width="block"
             class="flex-1"
-            .title=${this.game?.myPlayer()?.isAlive()
-              ? translateText("win_modal.keep")
-              : translateText("win_modal.spectate")}
+            .title=${
+              this.game?.myPlayer()?.isAlive()
+                ? translateText("win_modal.keep")
+                : translateText("win_modal.spectate")
+            }
             @click=${this.hide}
           ></o-button>
         </div>
@@ -170,6 +178,9 @@ export class WinModal extends LitElement implements Controller {
 
   async show() {
     crazyGamesSDK.gameplayStop();
+    if (localStorage.getItem(WIN_MODAL_DISMISSED_KEY) === "true") {
+      return;
+    }
     await this.loadPatternContent();
     // Check if this is a ranked game
     this.isRankedGame =
@@ -183,6 +194,7 @@ export class WinModal extends LitElement implements Controller {
   }
 
   hide() {
+    localStorage.setItem(WIN_MODAL_DISMISSED_KEY, "true");
     this.isVisible = false;
     this.showButtons = false;
     this.requestUpdate();

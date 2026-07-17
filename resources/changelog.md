@@ -1,3 +1,18 @@
+## OpenBack v0.33.36 - Compact Two-Row Unit HUD
+
+- Made the desktop HUD substantially narrower and arranged all enabled unit controls into two compact rows instead of one long row.
+- Remembered dismissal of the end-of-game help/result popup so it no longer reappears after every win or death on the same browser.
+
+Contributed by **frootz jhklphy**.
+
+## OpenBack v0.33.35 - Capturable Ready Vehicles
+
+- Made parked, ready planes and tanks transfer to the player who conquers their tile, including the new owner's color and full usability.
+- Made bombs destroy planes caught in their blast while tanks remain protected from bomb damage.
+- Made ready tanks depend on the military base beneath them, so destroying or losing that base removes its parked tank while launched tanks continue their mission normally.
+
+Contributed by **frootz jhklphy**.
+
 ## OpenBack v0.33.34 - Unified Stacking Preview
 
 - Made the green stacking preview for runways, MANPADs, military bases, and tank mines use the exact same highlight and cursor-ghost rendering path as existing city, factory, and structure upgrades.

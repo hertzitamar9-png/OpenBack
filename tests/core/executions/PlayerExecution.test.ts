@@ -83,6 +83,63 @@ describe("PlayerExecution", () => {
     expect(city.isActive()).toBe(true);
   });
 
+  test.each([UnitType.Plane, UnitType.Tank] as const)(
+    "ready %s transfers with conquered territory",
+    (unitType) => {
+      const tile = game.ref(50, 50);
+      player.conquer(tile);
+      if (unitType === UnitType.Tank) {
+        player.buildUnit(UnitType.MilitaryBase, tile, {});
+      }
+      const vehicle = player.buildUnit(unitType, tile, {
+        trajectory: [],
+        ...(unitType === UnitType.Plane ? { troops: 1_000 } : {}),
+      });
+      vehicle.setLoaded(true);
+
+      otherPlayer.conquer(tile);
+      executeTicks(game, 2);
+
+      expect(vehicle.isActive()).toBe(true);
+      expect(vehicle.owner()).toBe(otherPlayer);
+      expect(vehicle.isLoaded()).toBe(true);
+      expect(otherPlayer.units(unitType)).toContain(vehicle);
+    },
+  );
+
+  test.each([UnitType.Plane, UnitType.Tank] as const)(
+    "launched %s does not transfer with the tile beneath it",
+    (unitType) => {
+      const tile = game.ref(50, 50);
+      player.conquer(tile);
+      const vehicle = player.buildUnit(unitType, tile, {
+        trajectory: [],
+        ...(unitType === UnitType.Plane ? { troops: 1_000 } : {}),
+      });
+      vehicle.setLoaded(false);
+
+      otherPlayer.conquer(tile);
+      executeTicks(game, 2);
+
+      expect(vehicle.owner()).toBe(player);
+    },
+  );
+
+  test("ready tank is removed when its military base is destroyed", () => {
+    const tile = game.ref(50, 50);
+    player.conquer(tile);
+    const base = player.buildUnit(UnitType.MilitaryBase, tile, {});
+    const tank = player.buildUnit(UnitType.Tank, tile, { trajectory: [] });
+    tank.setLoaded(true);
+    game.executeNextTick();
+
+    base.delete(false);
+    executeTicks(game, 2);
+
+    expect(tank.isActive()).toBe(false);
+    expect(player.units(UnitType.Tank)).not.toContain(tank);
+  });
+
   test("war exhaustion reduces both income streams during a long war", async () => {
     const exhaustedGame = await setup(
       "big_plains",
