@@ -1,3 +1,10 @@
+## OpenBack v0.33.39 - Full-Tile Flags
+
+- Made every flag fill its entire flag tile edge-to-edge without the extra white inset card.
+- Kept the full flag artwork visible by stretching the source image to the tile instead of cropping it.
+
+Contributed by **frootz jhklphy**.
+
 ## OpenBack v0.33.38 - Claim Anonymous Profiles on Login
 
 - Let players attach an unregistered email to their existing anonymous browser account during login verification.

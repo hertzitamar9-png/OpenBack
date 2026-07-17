@@ -81,13 +81,15 @@ export class FlagInput extends LitElement {
           id="flag-preview"
           class=${showSelect ? "hidden" : "w-full h-full overflow-hidden"}
         ></span>
-        ${showSelect
-          ? html`<span
-              class="text-[7px] lg:text-[10px] font-black tracking-wider text-white uppercase leading-tight lg:leading-none w-full text-center px-0.5 lg:px-1"
-            >
-              ${translateText("flag_input.title")}
-            </span>`
-          : null}
+        ${
+          showSelect
+            ? html`<span
+                class="text-[7px] lg:text-[10px] font-black tracking-wider text-white uppercase leading-tight lg:leading-none w-full text-center px-0.5 lg:px-1"
+              >
+                ${translateText("flag_input.title")}
+              </span>`
+            : null
+        }
       </button>
     `;
   }
@@ -110,7 +112,9 @@ export class FlagInput extends LitElement {
 
     const img = document.createElement("img");
     img.src = url;
-    img.className = "w-full h-full object-contain pointer-events-none bg-white";
+    // Fill the tile edge-to-edge. `contain` plus a white background made every
+    // flag look like a small card inside another white square.
+    img.className = "block w-full h-full object-fill pointer-events-none";
     img.draggable = false;
     preview.appendChild(img);
   }

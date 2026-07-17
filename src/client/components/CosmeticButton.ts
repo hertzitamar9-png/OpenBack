@@ -121,15 +121,17 @@ export class CosmeticButton extends LitElement {
         <span class="text-[10px] font-bold text-white/50 uppercase"
           >${translateText(currencyKey)}</span
         >
-        ${pack.bonusAmount > 0
-          ? html`<div
-              class="absolute top-3 -right-8 bg-green-500 text-white text-[10px] font-black px-8 py-0.5 rotate-45 shadow-md uppercase tracking-wide pointer-events-none"
-            >
-              ${translateText("cosmetics.free", {
+        ${
+          pack.bonusAmount > 0
+            ? html`<div
+                class="absolute top-3 -right-8 bg-green-500 text-white text-[10px] font-black px-8 py-0.5 rotate-45 shadow-md uppercase tracking-wide pointer-events-none"
+              >
+                ${translateText("cosmetics.free", {
                 numFree: pack.bonusAmount.toLocaleString(),
               })}
-            </div>`
-          : nothing}
+              </div>`
+            : nothing
+        }
       </div>`;
     }
 
@@ -168,7 +170,7 @@ export class CosmeticButton extends LitElement {
     return html`<img
       src=${c.url}
       alt=${c.name}
-      class="w-full h-full object-contain pointer-events-none"
+      class="w-full h-full object-fill pointer-events-none"
       draggable="false"
       loading="lazy"
       @error=${(e: Event) => {
@@ -201,7 +203,7 @@ export class CosmeticButton extends LitElement {
         : DEFAULT_DOLLAR_LABEL_KEY;
     const priceSuffix =
       type === "subscription" ? translateText("store.price_per_month") : "";
-    const sizeClass = type === "flag" ? "gap-1 p-1.5 w-36" : "gap-2 p-3 w-48";
+    const sizeClass = type === "flag" ? "gap-1 p-0 w-36" : "gap-2 p-3 w-48";
     const crazygamesClass = isPattern || isSkin ? "no-crazygames " : "";
 
     return html`
@@ -214,32 +216,39 @@ export class CosmeticButton extends LitElement {
         .priceSoft=${isPurchasable ? (priceSoft ?? null) : null}
         .dollarLabelKey=${dollarLabelKey}
         .priceSuffix=${priceSuffix}
-        .onPurchaseDollar=${isPurchasable && c?.product
-          ? () => this.onPurchase?.(this.resolved, "dollar")
-          : undefined}
-        .onPurchaseHard=${isPurchasable && priceHard !== undefined
-          ? () => this.onPurchase?.(this.resolved, "hard")
-          : undefined}
-        .onPurchaseSoft=${isPurchasable && priceSoft !== undefined
-          ? () => this.onPurchase?.(this.resolved, "soft")
-          : undefined}
+        .onPurchaseDollar=${
+          isPurchasable && c?.product
+            ? () => this.onPurchase?.(this.resolved, "dollar")
+            : undefined
+        }
+        .onPurchaseHard=${
+          isPurchasable && priceHard !== undefined
+            ? () => this.onPurchase?.(this.resolved, "hard")
+            : undefined
+        }
+        .onPurchaseSoft=${
+          isPurchasable && priceSoft !== undefined
+            ? () => this.onPurchase?.(this.resolved, "soft")
+            : undefined
+        }
         .name=${this.displayName}
       >
         <button
-          class="group relative flex flex-col items-center w-full ${isPattern ||
-          isSkin
-            ? "gap-2"
-            : "gap-1"} rounded-lg cursor-pointer transition-all duration-200 flex-1"
+          class="group relative flex flex-col items-center w-full ${
+            isPattern || isSkin ? "gap-2" : "gap-1"
+          } rounded-lg cursor-pointer transition-all duration-200 flex-1"
           @click=${() => this.handleClick()}
         >
-          ${(c?.product ?? priceHard ?? priceSoft)
-            ? html`<cosmetic-info
-                .artist=${artist}
-                .rarity=${c!.rarity}
-                .colorPalette=${this.resolved.colorPalette?.name}
-                .showAdFree=${isPurchasable}
-              ></cosmetic-info>`
-            : nothing}
+          ${
+            (c?.product ?? priceHard ?? priceSoft)
+              ? html`<cosmetic-info
+                  .artist=${artist}
+                  .rarity=${c!.rarity}
+                  .colorPalette=${this.resolved.colorPalette?.name}
+                  .showAdFree=${isPurchasable}
+                ></cosmetic-info>`
+              : nothing
+          }
 
           <div
             class="w-full aspect-square flex items-center justify-center bg-white/5 rounded-lg p-2 border border-white/10 group-hover:border-white/20 transition-colors duration-200 overflow-hidden"
@@ -247,13 +256,15 @@ export class CosmeticButton extends LitElement {
             ${this.renderPreview()}
           </div>
         </button>
-        ${isOwnedSubscription
-          ? html`<div
-              class="w-full mt-2 px-4 py-2 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-lg text-xs font-bold uppercase tracking-wider text-center"
-            >
-              ${translateText("store.current_plan")}
-            </div>`
-          : nothing}
+        ${
+          isOwnedSubscription
+            ? html`<div
+                class="w-full mt-2 px-4 py-2 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-lg text-xs font-bold uppercase tracking-wider text-center"
+              >
+                ${translateText("store.current_plan")}
+              </div>`
+            : nothing
+        }
       </cosmetic-container>
     `;
   }
