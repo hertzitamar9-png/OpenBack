@@ -109,6 +109,20 @@ export async function startWorker() {
   });
 
   app.set("trust proxy", 3);
+
+  // Redirect Render's default *.onrender.com domain to the custom domain so
+  // only the branded subdomain is used.
+  const defaultRenderDomain = "openback-cbe3.onrender.com";
+  const canonicalDomain = ServerEnv.jwtAudienceRaw();
+  app.use((req, res, next) => {
+    const host = req.headers.host?.toLowerCase() ?? "";
+    if (host === defaultRenderDomain && canonicalDomain) {
+      const target = `https://${canonicalDomain}${req.originalUrl}`;
+      return res.redirect(301, target);
+    }
+    next();
+  });
+
   app.use(compression());
 
   app.use(
