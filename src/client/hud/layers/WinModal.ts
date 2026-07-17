@@ -24,7 +24,8 @@ export class WinModal extends LitElement implements Controller {
   public game: GameView;
   public eventBus: EventBus;
 
-  private hasShownDeathModal = false;
+  private deathCount = 0;
+  private showLogoOnDeath = false;
 
   @state()
   isVisible = false;
@@ -101,14 +102,19 @@ export class WinModal extends LitElement implements Controller {
   }
 
   innerHtml() {
-    return this.isWin ? this.renderYoutubeTutorial() : this.renderLogo();
+    if (this.isWin) {
+      return this.renderYoutubeTutorial();
+    }
+    return this.showLogoOnDeath
+      ? this.renderLogo()
+      : this.renderYoutubeTutorial();
   }
 
   renderLogo() {
     return html`
       <div class="text-center mb-6 bg-black/30 p-2.5 rounded-sm">
         <img
-          src=${assetUrl("images/OpenBackLogo.svg")}
+          src=${assetUrl("images/death_logo.png")}
           alt="OpenBack"
           class="mx-auto w-50 max-w-full"
         />
@@ -227,17 +233,32 @@ export class WinModal extends LitElement implements Controller {
       myPlayer.isAlive() &&
       (this.game.inSpawnPhase() || myPlayer.hasSpawned())
     ) {
-      // Player is alive (new game / respawned): allow the death modal to show again.
-      this.hasShownDeathModal = false;
+      // Player is alive (new game / respawned): reset death tracking so the
+      // first death of the next game shows the video again.
+      this.deathCount = 0;
+      this.showLogoOnDeath = false;
     }
     if (
-      !this.hasShownDeathModal &&
       myPlayer &&
       !myPlayer.isAlive() &&
       !this.game.inSpawnPhase() &&
-      myPlayer.hasSpawned()
+      myPlayer.hasSpawned() &&
+      this.deathCount === 0
     ) {
-      this.hasShownDeathModal = true;
+      this.deathCount += 1;
+      this.showLogoOnDeath = false; // first death: keep the video
+      this._title = translateText("win_modal.died");
+      this.show(true);
+    } else if (
+      myPlayer &&
+      !myPlayer.isAlive() &&
+      !this.game.inSpawnPhase() &&
+      myPlayer.hasSpawned() &&
+      this.deathCount >= 1 &&
+      !this.showLogoOnDeath
+    ) {
+      this.deathCount += 1;
+      this.showLogoOnDeath = true; // second death and onward: show the logo
       this._title = translateText("win_modal.died");
       this.show(true);
     }
