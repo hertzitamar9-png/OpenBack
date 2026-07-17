@@ -626,7 +626,7 @@ export function calculateObGain(
   const upsetStrength = 1 - expectedObScore(winnerRating, loserRating);
   const opponentQuality = Math.min(1, Math.max(0.2, loserRating / 1000));
   return Math.max(
-    1,
+    10,
     Math.min(500, Math.round(500 * upsetStrength * opponentQuality)),
   );
 }

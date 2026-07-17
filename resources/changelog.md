@@ -1,3 +1,10 @@
+## OpenBack v0.33.49 - Minimum Ranked Win Gain
+
+- Guarantee at least 10 OB for every ranked victory, including heavily favored wins.
+- Keep the maximum ranked victory gain at 500 OB and leave opponent-scaled losses unchanged.
+
+Contributed by **frootz jhklphy**.
+
 ## OpenBack v0.33.48 - Fair Even-Match OB
 
 - Award exactly 50 OB when a 100 OB player defeats another 100 OB player.
