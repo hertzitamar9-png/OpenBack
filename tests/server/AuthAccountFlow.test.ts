@@ -66,9 +66,14 @@ describe("email account lifecycle", () => {
         displayName: "Remembered Player",
         bio: "Kept while claiming the account",
         bannerColor: "#2457a7",
+        selectedFlag: "country:il",
+        selectedCosmetic: "pattern:hexagon",
       }),
     });
     expect(profileResponse.status).toBe(200);
+    const anonymousProfile = (await profileResponse.json()) as {
+      player: { publicId: string };
+    };
 
     const loginCodeResponse = await postJson(
       "/auth/request-code",
@@ -86,18 +91,27 @@ describe("email account lifecycle", () => {
     expect(verified.status).toBe(200);
     const verifiedBody = (await verified.json()) as { jwt: string };
 
-    await expect(
-      fetch(`${origin}/users/@me`, {
-        headers: { Authorization: `Bearer ${verifiedBody.jwt}` },
-      }).then((response) => response.json()),
-    ).resolves.toMatchObject({
+    const claimedProfile = await fetch(`${origin}/users/@me`, {
+      headers: { Authorization: `Bearer ${verifiedBody.jwt}` },
+    }).then((response) => response.json());
+    expect(claimedProfile).toMatchObject({
       user: {
         email,
         displayName: "Remembered Player",
         bio: "Kept while claiming the account",
         bannerColor: "#2457a7",
+        selectedFlag: "country:il",
+        selectedCosmetic: "pattern:hexagon",
+      },
+      player: {
+        publicId: anonymousProfile.player.publicId,
       },
     });
+    // Keeping the same public ID is what preserves the relational data stored
+    // against the player: clans, friends, currency, Elo, and match history.
+    expect(claimedProfile.player.publicId).toBe(
+      anonymousProfile.player.publicId,
+    );
   });
 
   test("separates sign-up from login, restores data, and deletes permanently", async () => {
