@@ -14,7 +14,7 @@ services:
       - key: GIT_COMMIT
         sync: false
       - key: DOMAIN
-        value: openback.infy.click
+        value: openback.servegame.com
       - key: SUBDOMAIN
         value: main
       - key: GAME_ENV
@@ -28,7 +28,7 @@ services:
       - key: TURNSTILE_SITE_KEY
         value: 1x00000000000000000000AA
       - key: CDN_BASE
-        sync: false
+        value: https://openback.servegame.com
       - key: COSMETICS_BASE_URL
         sync: false
     healthCheckPath: /
