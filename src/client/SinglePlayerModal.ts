@@ -66,7 +66,7 @@ const DEFAULT_OPTIONS = {
   doomsdayClockSpeed: "normal" as DoomsdayClockSpeed,
   strategicObjectives: false,
   naturalDisasters: false,
-  fogOfWar: false,
+  fogOfWar: true,
 } as const;
 
 @customElement("single-player-modal")

@@ -245,7 +245,7 @@ export class Leaderboard extends LitElement implements Controller {
     return html`
       <div
         class="${this.showTopFive
-          ? "max-h-[10rem]"
+          ? "max-h-[14rem]"
           : "max-h-[60vh]"} overflow-y-auto text-white text-xs md:text-xs lg:text-sm mt-2 ${this
           .visible
           ? ""

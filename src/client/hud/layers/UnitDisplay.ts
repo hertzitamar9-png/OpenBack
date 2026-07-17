@@ -162,8 +162,8 @@ export class UnitDisplay extends LitElement implements Controller {
     }
 
     return html`
-      <div class="border-t border-white/10 px-1 py-1 w-full">
-        <div class="flex gap-1.5 w-full overflow-x-auto pb-1">
+      <div class="border-t border-white/10 px-1.5 py-1.5 w-full bg-black/30">
+        <div class="flex gap-1.5 w-full overflow-x-auto pb-1.5 snap-x">
           ${this.renderUnitItem(
             cityIcon,
             this._cities,
@@ -344,9 +344,10 @@ export class UnitDisplay extends LitElement implements Controller {
           title=${translateText("unit_type." + structureKey)}
           class="${this.canBuild(unitType)
             ? ""
-            : "opacity-40"} h-12 w-20 shrink-0 border border-slate-500 rounded-sm px-1 py-0.5 flex flex-col items-center justify-center gap-0.5 cursor-pointer
-             ${selected ? "hover:bg-gray-400/10" : "hover:bg-gray-800"}
-             rounded-sm text-white ${selected ? "bg-slate-400/20" : ""}"
+            : "opacity-40"} h-16 w-20 shrink-0 snap-start border rounded-md px-1 py-1 flex flex-col items-center justify-between cursor-pointer
+             ${selected
+            ? "border-cyan-400 bg-cyan-500/15 ring-1 ring-cyan-400/50"
+            : "border-white/15 bg-slate-800/70 hover:bg-slate-700/70"}"
           @click=${() => {
             if (selected) {
               this.uiState.ghostStructure = null;
@@ -389,9 +390,9 @@ export class UnitDisplay extends LitElement implements Controller {
           @mouseleave=${() =>
             this.eventBus?.emit(new ToggleStructureEvent(null))}
         >
-          <div class="flex items-center justify-center gap-0.5 h-5">
+          <div class="flex items-center justify-center gap-0.5 h-6">
             <span class="text-[9px] text-gray-400">${displayHotkey}</span>
-            <img src=${icon} alt=${structureKey} class="align-middle size-4" />
+            <img src=${icon} alt=${structureKey} class="align-middle size-5" />
             ${number !== null
               ? html`<span class="text-[10px]">${renderNumber(number)}</span>`
               : null}

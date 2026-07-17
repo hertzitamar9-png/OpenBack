@@ -90,7 +90,7 @@ export class HostLobbyModal extends BaseModal {
   @state() private doomsdayClockSpeed: DoomsdayClockSpeed = "normal";
   @state() private strategicObjectives = false;
   @state() private naturalDisasters = false;
-  @state() private fogOfWar = false;
+  @state() private fogOfWar = true;
   @state() private sharedControl = false;
   @state() private sharedControlSize = 2;
   @state() private anonymizeNames: boolean = false;
