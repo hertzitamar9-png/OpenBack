@@ -1,3 +1,9 @@
+## OpenBack v0.33.41 - Clear Browser Title
+
+- Shortened the browser-tab title to simply “OpenBack.”
+
+Contributed by **frootz jhklphy**.
+
 ## OpenBack v0.33.40 - Hide Unlinked Profiles
 
 - Keep anonymous profile data private until the player signs up or logs in.
