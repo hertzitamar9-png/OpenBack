@@ -159,9 +159,7 @@ export class UnitDisplay extends LitElement implements Controller {
 
     return html`
       <div class="border-t border-white/10 px-1 py-0.5 w-full">
-        <div
-          class="grid grid-cols-[repeat(16,max-content)] gap-px w-full justify-start"
-        >
+        <div class="grid grid-cols-[repeat(16,minmax(0,1fr))] gap-px w-full">
           ${this.renderUnitItem(
             cityIcon,
             this._cities,

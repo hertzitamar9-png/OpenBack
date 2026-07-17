@@ -220,10 +220,34 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
     }
   }
 
+  private unitEntries(player: PlayerView): Array<[UnitType, string]> {
+    const entries: Array<[UnitType, string]> = [
+      [UnitType.City, cityIcon],
+      [UnitType.Factory, factoryIcon],
+      [UnitType.Port, portIcon],
+      [UnitType.MissileSilo, missileSiloIcon],
+      [UnitType.SAMLauncher, samLauncherIcon],
+      [UnitType.Warship, warshipIcon],
+      [UnitType.Plane, planeIcon],
+      [UnitType.Runway, runwayIcon],
+      [UnitType.MANPAD, manpadIcon],
+      [UnitType.MilitaryBase, militaryBaseIcon],
+      [UnitType.Tank, tankIcon],
+      [UnitType.TankMine, tankMineIcon],
+    ];
+    return entries.filter(([type]) => !this.game.config().isUnitDisabled(type));
+  }
+
+  private unitColumns(player: PlayerView): number {
+    const count = this.unitEntries(player).length;
+    // Split into two as-balanced-as-possible lines.
+    return Math.max(1, Math.ceil(count / 2));
+  }
+
   private displayUnitCount(player: PlayerView, type: UnitType, icon: string) {
     return !this.game.config().isUnitDisabled(type)
       ? html`<div
-          class="flex items-center justify-center gap-0.5 lg:gap-1 px-1 lg:px-1.5 py-px border rounded-md border-gray-500 text-[9px] lg:text-[10px] w-fit h-5 lg:h-6"
+          class="flex items-center justify-center gap-0.5 lg:gap-1 px-1 lg:px-1.5 py-px border rounded-md border-gray-500 text-[9px] lg:text-[10px] w-full h-5 lg:h-6"
           translate="no"
         >
           <img
@@ -385,31 +409,15 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
                 >`}
             ${this.renderPlayerNameIcons(player)} ${allianceHtml ?? ""}
           </div>
-          <div class="grid grid-cols-7 gap-0.5 lg:gap-1 mt-0.5">
-            ${this.displayUnitCount(player, UnitType.City, cityIcon)}
-            ${this.displayUnitCount(player, UnitType.Factory, factoryIcon)}
-            ${this.displayUnitCount(player, UnitType.Port, portIcon)}
-            ${this.displayUnitCount(
+          <div
+            class="grid gap-0.5 lg:gap-1 mt-0.5"
+            style="grid-template-columns: repeat(${this.unitColumns(
               player,
-              UnitType.MissileSilo,
-              missileSiloIcon,
+            )}, minmax(0, 1fr));"
+          >
+            ${this.unitEntries(player).map(([type, icon]) =>
+              this.displayUnitCount(player, type, icon),
             )}
-            ${this.displayUnitCount(
-              player,
-              UnitType.SAMLauncher,
-              samLauncherIcon,
-            )}
-            ${this.displayUnitCount(player, UnitType.Warship, warshipIcon)}
-            ${this.displayUnitCount(player, UnitType.Plane, planeIcon)}
-            ${this.displayUnitCount(player, UnitType.Runway, runwayIcon)}
-            ${this.displayUnitCount(player, UnitType.MANPAD, manpadIcon)}
-            ${this.displayUnitCount(
-              player,
-              UnitType.MilitaryBase,
-              militaryBaseIcon,
-            )}
-            ${this.displayUnitCount(player, UnitType.Tank, tankIcon)}
-            ${this.displayUnitCount(player, UnitType.TankMine, tankMineIcon)}
           </div>
         </div>
       </div>
