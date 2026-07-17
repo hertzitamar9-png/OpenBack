@@ -18,7 +18,7 @@ import {
 } from "./Cosmetics";
 import { translateText } from "./Utils";
 
-type StoreTab = "patterns" | "flags" | "packs" | "subscriptions";
+type StoreTab = "patterns" | "flags" | "subscriptions";
 
 @customElement("store-modal")
 export class StoreModal extends BaseModal {
@@ -34,7 +34,8 @@ export class StoreModal extends BaseModal {
     }
     return {
       tabs: [
-        { key: "packs", label: translateText("store.packs") },
+        { key: "patterns", label: translateText("store.patterns") },
+        { key: "flags", label: translateText("store.flags") },
         ...(SUBSCRIPTIONS_ENABLED
           ? [
               {
@@ -43,8 +44,6 @@ export class StoreModal extends BaseModal {
               },
             ]
           : []),
-        { key: "patterns", label: translateText("store.patterns") },
-        { key: "flags", label: translateText("store.flags") },
       ],
     };
   }
@@ -158,37 +157,6 @@ export class StoreModal extends BaseModal {
     `;
   }
 
-  private renderPackGrid(): TemplateResult {
-    const items = resolveCosmetics(
-      this.cosmetics,
-      this.userMeResponse,
-      this.affiliateCode,
-    ).filter((r) => r.type === "pack" && r.relationship === "purchasable");
-
-    if (items.length === 0) {
-      return html`<div
-        class="text-white/40 text-sm font-bold uppercase tracking-wider text-center py-8"
-      >
-        ${translateText("store.no_packs")}
-      </div>`;
-    }
-
-    return html`
-      <div
-        class="flex flex-wrap gap-4 p-8 justify-center items-stretch content-start"
-      >
-        ${items.map(
-          (r) => html`
-            <cosmetic-button
-              .resolved=${r}
-              .onPurchase=${purchaseCosmetic}
-            ></cosmetic-button>
-          `,
-        )}
-      </div>
-    `;
-  }
-
   private renderSubscriptionGrid(): TemplateResult {
     const items = resolveCosmetics(
       this.cosmetics,
@@ -244,9 +212,8 @@ export class StoreModal extends BaseModal {
         return this.renderFlagGrid();
       case "subscriptions":
         return this.renderSubscriptionGrid();
-      case "packs":
       default:
-        return this.renderPackGrid();
+        return this.renderPatternGrid();
     }
   }
 
@@ -257,10 +224,7 @@ export class StoreModal extends BaseModal {
       this.affiliateCode,
     ).filter(
       (r) =>
-        (r.type === "pattern" ||
-          r.type === "skin" ||
-          r.type === "flag" ||
-          r.type === "pack") &&
+        (r.type === "pattern" || r.type === "skin" || r.type === "flag") &&
         r.relationship === "purchasable",
     );
 

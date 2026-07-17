@@ -232,6 +232,23 @@ describe("email account lifecycle", () => {
     });
     expect(archived.status, await archived.text()).toBe(200);
 
+    const duplicateArchive = await fetch(`${origin}/game/HISTORY1`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": "auth-account-test-key",
+      },
+      body: JSON.stringify(gameRecord),
+    });
+    expect(duplicateArchive.status, await duplicateArchive.text()).toBe(200);
+
+    const rewardedProfile = await fetch(`${origin}/users/@me`, {
+      headers: { Authorization: `Bearer ${verifiedBody.jwt}` },
+    });
+    await expect(rewardedProfile.json()).resolves.toMatchObject({
+      player: { currency: { soft: 200 } },
+    });
+
     const history = await fetch(
       `${origin}/public/player/${savedProfile.player.publicId}/games`,
     );

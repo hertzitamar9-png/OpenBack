@@ -38,6 +38,8 @@ const SESSION_COOKIE = "openback_session";
 const SESSION_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 400;
 const JWT_EXPIRES_S = 60 * 60 * 24 * 30; // 30 days, refreshed while session valid
 const CODE_TTL_MS = 1000 * 60 * 10; // 10 minute magic code
+const MATCH_COMPLETION_REWARD = 100;
+const MATCH_VICTORY_BONUS = 100;
 
 interface StoredUser {
   persistentId: string;
@@ -814,6 +816,25 @@ function summariesForGame(record: GameRecord): StoredPlayerGame[] {
   });
 }
 
+function awardMatchCurrency(summaries: StoredPlayerGame[]): void {
+  const rewardedPlayers = new Set<string>();
+  for (const summary of summaries) {
+    if (
+      summary.result === "incomplete" ||
+      rewardedPlayers.has(summary.publicId)
+    ) {
+      continue;
+    }
+    const account = userByPublicId(summary.publicId);
+    if (!account) continue;
+    const reward =
+      MATCH_COMPLETION_REWARD +
+      (summary.result === "victory" ? MATCH_VICTORY_BONUS : 0);
+    account.currencySoft = (account.currencySoft ?? 0) + reward;
+    rewardedPlayers.add(summary.publicId);
+  }
+}
+
 async function storeFullGameRecord(record: GameRecord): Promise<void> {
   const serialized = JSON.stringify(record, replacer);
   if (database) {
@@ -892,11 +913,15 @@ export function authRouter(): express.Router {
       return;
     }
     try {
+      const alreadyArchived =
+        (await loadFullGameRecord(parsed.data.info.gameID)) !== null;
+      const summaries = summariesForGame(parsed.data);
       await storeFullGameRecord(parsed.data);
       playerGames = playerGames.filter(
         (game) => game.gameId !== parsed.data.info.gameID,
       );
-      playerGames.push(...summariesForGame(parsed.data));
+      playerGames.push(...summaries);
+      if (!alreadyArchived) awardMatchCurrency(summaries);
       await persistImmediately();
       res.json({ ok: true });
     } catch (error) {

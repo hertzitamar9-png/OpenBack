@@ -4,7 +4,15 @@ import { Product } from "../../core/CosmeticSchemas";
 import "./PurchaseButton";
 import { DEFAULT_DOLLAR_LABEL_KEY } from "./PurchaseButton";
 
-type Rarity = "common" | "uncommon" | "rare" | "epic" | "legendary" | string;
+type Rarity =
+  | "common"
+  | "uncommon"
+  | "rare"
+  | "epic"
+  | "legendary"
+  | "mythic"
+  | "ultra"
+  | string;
 
 interface RarityConfig {
   gradient: string;
@@ -17,6 +25,10 @@ interface RarityConfig {
   shimmerColor?: string; // rgb triplet e.g. "255,200,80"
   borderSweep?: boolean;
   borderSweepColor?: string; // rgb triplet e.g. "192,132,252"
+  animationClass: string;
+  hoverScale?: string;
+  backdropOpacity?: number;
+  sparkleColor?: string;
 }
 
 const rarityConfig: Record<string, RarityConfig> = {
@@ -26,6 +38,7 @@ const rarityConfig: Record<string, RarityConfig> = {
     glow: "rgba(255,255,255,0.5)",
     hoverGlowSize: "10px",
     nameColor: "rgba(255,255,255,0.7)",
+    animationClass: "rarity-common",
   },
   uncommon: {
     gradient: "rgba(30,100,30,0.65)",
@@ -33,6 +46,7 @@ const rarityConfig: Record<string, RarityConfig> = {
     glow: "rgba(74,222,128,0.6)",
     hoverGlowSize: "12px",
     nameColor: "rgba(255,255,255,1)",
+    animationClass: "rarity-uncommon",
   },
   rare: {
     gradient: "rgba(20,60,160,0.70)",
@@ -40,6 +54,7 @@ const rarityConfig: Record<string, RarityConfig> = {
     glow: "rgba(96,165,250,0.7)",
     hoverGlowSize: "14px",
     nameColor: "rgba(255,255,255,1)",
+    animationClass: "rarity-rare",
   },
   epic: {
     gradient: "rgba(90,20,160,0.75)",
@@ -49,6 +64,7 @@ const rarityConfig: Record<string, RarityConfig> = {
     nameColor: "rgba(255,255,255,1)",
     shimmer: true,
     shimmerColor: "192,132,252",
+    animationClass: "rarity-epic",
   },
   legendary: {
     gradient: "rgba(180,80,0,0.75)",
@@ -61,6 +77,44 @@ const rarityConfig: Record<string, RarityConfig> = {
     shimmerColor: "255,200,80",
     borderSweep: true,
     borderSweepColor: "255,200,80",
+    animationClass: "rarity-legendary",
+    hoverScale: "1.1",
+    backdropOpacity: 0.5,
+    sparkleColor: "255,220,100",
+  },
+  mythic: {
+    gradient:
+      "linear-gradient(135deg, rgba(115,20,145,0.88), rgba(15,120,150,0.82))",
+    border: "rgba(236,72,153,0.8)",
+    glow: "rgba(34,211,238,1)",
+    hoverGlowSize: "32px",
+    nameColor: "rgb(245,208,254)",
+    legendary: true,
+    shimmer: true,
+    shimmerColor: "34,211,238",
+    borderSweep: true,
+    borderSweepColor: "236,72,153",
+    animationClass: "rarity-mythic",
+    hoverScale: "1.12",
+    backdropOpacity: 0.62,
+    sparkleColor: "103,232,249",
+  },
+  ultra: {
+    gradient:
+      "linear-gradient(135deg, rgba(190,24,93,0.9), rgba(109,40,217,0.9), rgba(8,145,178,0.9))",
+    border: "rgba(255,255,255,0.92)",
+    glow: "rgba(255,255,255,1)",
+    hoverGlowSize: "42px",
+    nameColor: "rgb(255,255,255)",
+    legendary: true,
+    shimmer: true,
+    shimmerColor: "255,255,255",
+    borderSweep: true,
+    borderSweepColor: "255,255,255",
+    animationClass: "rarity-ultra",
+    hoverScale: "1.14",
+    backdropOpacity: 0.72,
+    sparkleColor: "255,255,255",
   },
 };
 
@@ -71,6 +125,42 @@ if (!document.getElementById(STYLE_ID)) {
   const style = document.createElement("style");
   style.id = STYLE_ID;
   style.textContent = `
+    @keyframes rarity-common-breathe {
+      0%, 100% { box-shadow: 0 0 0 rgba(255,255,255,0); }
+      50% { box-shadow: 0 0 7px rgba(255,255,255,0.14); }
+    }
+    @keyframes rarity-uncommon-grow {
+      0%, 100% { box-shadow: 0 0 5px rgba(74,222,128,0.12); }
+      50% { box-shadow: 0 0 12px rgba(74,222,128,0.42); }
+    }
+    @keyframes rarity-rare-wave {
+      0%, 100% { box-shadow: 0 0 7px rgba(96,165,250,0.2); }
+      50% { box-shadow: 0 0 17px rgba(59,130,246,0.58); }
+    }
+    @keyframes rarity-epic-shift {
+      0%, 100% { box-shadow: 0 0 9px rgba(192,132,252,0.28); }
+      50% { box-shadow: 0 0 22px rgba(168,85,247,0.72); }
+    }
+    @keyframes rarity-legendary-flare {
+      0%, 100% { box-shadow: 0 0 11px rgba(251,146,60,0.4); }
+      50% { box-shadow: 0 0 27px rgba(250,204,21,0.82); }
+    }
+    @keyframes rarity-mythic-aurora {
+      0%, 100% { box-shadow: -7px 0 25px rgba(236,72,153,0.55), 7px 0 22px rgba(34,211,238,0.35); }
+      50% { box-shadow: 8px 0 34px rgba(34,211,238,0.85), -8px 0 28px rgba(217,70,239,0.7); }
+    }
+    @keyframes rarity-ultra-spectrum {
+      0%, 100% { box-shadow: -10px 0 34px rgba(244,63,94,0.8), 10px 0 34px rgba(34,211,238,0.72); }
+      33% { box-shadow: 0 -8px 40px rgba(250,204,21,0.9), 0 9px 36px rgba(168,85,247,0.82); }
+      66% { box-shadow: 10px 0 42px rgba(34,211,238,0.9), -10px 0 38px rgba(236,72,153,0.85); }
+    }
+    .rarity-common { animation: rarity-common-breathe 5.5s ease-in-out infinite; }
+    .rarity-uncommon { animation: rarity-uncommon-grow 4.6s ease-in-out infinite; }
+    .rarity-rare { animation: rarity-rare-wave 3.8s ease-in-out infinite; }
+    .rarity-epic { animation: rarity-epic-shift 3s ease-in-out infinite; }
+    .rarity-legendary { animation: rarity-legendary-flare 2.4s ease-in-out infinite; }
+    .rarity-mythic { animation: rarity-mythic-aurora 1.9s ease-in-out infinite; }
+    .rarity-ultra { animation: rarity-ultra-spectrum 1.35s linear infinite; }
     @keyframes legendary-pulse {
       0%   { box-shadow: 0 0 15px rgba(251,146,60,0.8), 0 0 30px rgba(251,146,60,0.4); }
       50%  { box-shadow: 0 0 25px rgba(251,146,60,0.9), 0 0 45px rgba(251,146,60,0.5); }
@@ -199,6 +289,8 @@ export class CosmeticContainer extends LitElement {
   private _sparkles: HTMLDivElement[] = [];
   private _glowColor = fallback.glow;
   private _glowSize = fallback.hoverGlowSize;
+  private _hoverScale = "1";
+  private _backdropOpacity = 0;
   private _isLegendary = false;
   private _hasGlint = false;
   private _hasBorderSweep = false;
@@ -216,10 +308,26 @@ export class CosmeticContainer extends LitElement {
     this._isLegendary = !!cfg.legendary;
     this._hasGlint = !!cfg.shimmer;
     this._hasBorderSweep = !!cfg.borderSweep;
+    this._hoverScale = cfg.hoverScale ?? "1";
+    this._backdropOpacity = cfg.backdropOpacity ?? 0;
+
+    this.classList.remove(
+      "rarity-common",
+      "rarity-uncommon",
+      "rarity-rare",
+      "rarity-epic",
+      "rarity-legendary",
+      "rarity-mythic",
+      "rarity-ultra",
+    );
+    this.classList.add(cfg.animationClass);
 
     this.style.position = "relative";
     this.style.overflow = "hidden";
-    this.style.background = `linear-gradient(to top, ${cfg.gradient} 0%, rgba(15,15,20,0.85) 100%)`;
+    this.style.background = cfg.gradient.startsWith("linear-gradient")
+      ? cfg.gradient
+      : `linear-gradient(to top, ${cfg.gradient} 0%, rgba(15,15,20,0.85) 100%)`;
+    this.style.backgroundSize = "200% 200%";
     this.style.border = `1px solid ${this.selected ? cfg.glow : cfg.border}`;
     this.style.backdropFilter = "blur(8px)";
     this.style.borderRadius = "0.75rem";
@@ -315,12 +423,14 @@ export class CosmeticContainer extends LitElement {
       const el = document.createElement("div");
       el.className = `legendary-sparkle-${i}`;
       el.textContent = "✦";
+      const sparkleColor =
+        (rarityConfig[this.rarity] ?? fallback).sparkleColor ?? "255,220,100";
       el.style.cssText = `
         pointer-events: none;
         position: absolute;
         font-size: 10px;
-        color: rgba(255,220,100,0.9);
-        text-shadow: 0 0 6px rgba(255,200,60,1);
+        color: rgba(${sparkleColor},0.95);
+        text-shadow: 0 0 8px rgba(${sparkleColor},1);
         z-index: 11;
         opacity: 0;
         display: none;
@@ -371,11 +481,11 @@ export class CosmeticContainer extends LitElement {
       this._ensureLegendaryElements();
     }
     if (this._isLegendary) {
-      this.style.transform = "scale(1.12)";
+      this.style.transform = `scale(${this._hoverScale})`;
       this.style.zIndex = "10";
       this.classList.add("legendary-hovered");
       this._sparkles.forEach((s) => (s.style.display = "block"));
-      CosmeticContainer._ensureBackdrop().style.background = "rgba(0,0,0,0.6)";
+      CosmeticContainer._ensureBackdrop().style.background = `rgba(0,0,0,${this._backdropOpacity})`;
     }
     if (this._hasBorderSweep && this._borderSweep) {
       this._borderSweep.style.display = "block";
@@ -451,19 +561,21 @@ export class CosmeticContainer extends LitElement {
   render() {
     return html`
       <slot></slot>
-      ${this.product || this.priceHard !== null || this.priceSoft !== null
-        ? html`<purchase-button
-            .product=${this.product}
-            .priceHard=${this.priceHard}
-            .priceSoft=${this.priceSoft}
-            .rarity=${this.rarity}
-            .dollarLabelKey=${this.dollarLabelKey}
-            .priceSuffix=${this.priceSuffix}
-            .onPurchaseDollar=${this.onPurchaseDollar}
-            .onPurchaseHard=${this.onPurchaseHard}
-            .onPurchaseSoft=${this.onPurchaseSoft}
-          ></purchase-button>`
-        : null}
+      ${
+        this.product || this.priceHard !== null || this.priceSoft !== null
+          ? html`<purchase-button
+              .product=${this.product}
+              .priceHard=${this.priceHard}
+              .priceSoft=${this.priceSoft}
+              .rarity=${this.rarity}
+              .dollarLabelKey=${this.dollarLabelKey}
+              .priceSuffix=${this.priceSuffix}
+              .onPurchaseDollar=${this.onPurchaseDollar}
+              .onPurchaseHard=${this.onPurchaseHard}
+              .onPurchaseSoft=${this.onPurchaseSoft}
+            ></purchase-button>`
+          : null
+      }
     `;
   }
 }

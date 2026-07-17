@@ -62,7 +62,15 @@ const CosmeticSchema = z.object({
   priceHard: z.number().optional(),
   artist: z.string().optional(),
   rarity: z
-    .enum(["common", "uncommon", "rare", "epic", "legendary"])
+    .enum([
+      "common",
+      "uncommon",
+      "rare",
+      "epic",
+      "legendary",
+      "mythic",
+      "ultra",
+    ])
     .or(z.string()),
 });
 

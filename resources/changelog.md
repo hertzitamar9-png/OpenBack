@@ -1,3 +1,12 @@
+## OpenBack v0.33.43 - Earnable Store Collection
+
+- Earn 100 caps for every completed match and a further 100-cap victory bonus, with server-side protection against duplicate rewards.
+- Removed the nonfunctional Packs section so the store opens directly on skins and patterns.
+- Added 12 new skins and 10 new collectible flags across the full rarity ladder.
+- Added Mythic and Ultra rarities, with every rarity from Common upward receiving its own increasingly vivid color and animation treatment.
+
+Contributed by **frootz jhklphy**.
+
 ## OpenBack v0.33.42 - Legal Navigation Tabs
 
 - Added Terms of Service and Privacy Policy tabs alongside Tutorials and Blog on desktop and mobile.
