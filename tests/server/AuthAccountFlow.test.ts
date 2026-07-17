@@ -6,11 +6,14 @@ import http from "http";
 import os from "os";
 import path from "path";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { base64urlToUuid } from "../../src/core/Base64";
+import { MapPlaylist } from "../../src/server/MapPlaylist";
 
 const authDataDir = fs.mkdtempSync(path.join(os.tmpdir(), "openback-auth-"));
 process.env.AUTH_DATA_DIR = authDataDir;
 process.env.GAME_ENV = "dev";
 process.env.DOMAIN = "localhost";
+process.env.API_KEY = "auth-account-test-key";
 
 let server: http.Server;
 let origin: string;
@@ -122,6 +125,68 @@ describe("email account lifecycle", () => {
       selectedCosmetic: "pattern:hexagon",
     });
     expect(publicProfileBody).not.toHaveProperty("email");
+
+    const jwtPayload = JSON.parse(
+      Buffer.from(verifiedBody.jwt.split(".")[1], "base64url").toString("utf8"),
+    ) as { sub: string };
+    const now = Date.now();
+    const gameRecord = {
+      info: {
+        gameID: "HISTORY1",
+        lobbyCreatedAt: now - 65_000,
+        lobbyFillTime: 5_000,
+        config: new MapPlaylist().get1v1Config(() => 0),
+        players: [
+          {
+            clientID: "CLIENT01",
+            username: "Saved General",
+            clanTag: null,
+            persistentID: base64urlToUuid(jwtPayload.sub),
+            stats: undefined,
+          },
+        ],
+        start: now - 60_000,
+        end: now,
+        duration: 60,
+        num_turns: 0,
+        winner: ["player", "CLIENT01"],
+      },
+      version: "v0.0.2",
+      gitCommit: "DEV",
+      subdomain: "test",
+      domain: "localhost",
+      turns: [],
+    };
+    const archived = await fetch(`${origin}/game/HISTORY1`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": "auth-account-test-key",
+      },
+      body: JSON.stringify(gameRecord),
+    });
+    expect(archived.status, await archived.text()).toBe(200);
+
+    const history = await fetch(
+      `${origin}/public/player/${savedProfile.player.publicId}/games`,
+    );
+    expect(history.status).toBe(200);
+    await expect(history.json()).resolves.toMatchObject({
+      results: [
+        {
+          gameId: "HISTORY1",
+          username: "Saved General",
+          result: "victory",
+          durationSeconds: 60,
+        },
+      ],
+      nextCursor: null,
+    });
+    const archivedRecord = await fetch(`${origin}/game/HISTORY1`);
+    expect(archivedRecord.status).toBe(200);
+    await expect(archivedRecord.json()).resolves.toMatchObject({
+      info: { gameID: "HISTORY1" },
+    });
 
     const loggedOut = await postJson("/auth/logout", {}, firstCookie);
     expect(loggedOut.status).toBe(200);

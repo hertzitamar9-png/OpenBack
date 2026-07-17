@@ -7,7 +7,10 @@ import { Pool } from "pg";
 import cosmeticsJson from "resources/cosmetics.json";
 import { z } from "zod";
 import {
+  PlayerGameModeFilter,
+  PlayerGameTypeFilter,
   PlayerProfileSchema,
+  PublicPlayerGame,
   RankedLeaderboardResponseSchema,
   UserMeResponse,
   UserMeResponseSchema,
@@ -15,8 +18,9 @@ import {
 import { base64urlToUuid, uuidToBase64url } from "../../core/Base64";
 import { GameEnv } from "../../core/configuration/Config";
 import { CosmeticsSchema } from "../../core/CosmeticSchemas";
-import { RankedType } from "../../core/game/Game";
-import { generateID } from "../../core/Util";
+import { GameMode, HumansVsNations, RankedType } from "../../core/game/Game";
+import { GameRecord, GameRecordSchema } from "../../core/Schemas";
+import { generateID, replacer } from "../../core/Util";
 import { ServerEnv } from "../ServerEnv";
 import { ensureKeys, getPrivateKey, getPublicJwk } from "./keys";
 
@@ -120,6 +124,7 @@ interface StoredConversation {
 // treated as durable storage.
 const DATA_DIR = process.env.AUTH_DATA_DIR ?? "/tmp";
 const DATA_FILE = `${DATA_DIR}/openback-auth.json`;
+const GAME_RECORD_DIR = `${DATA_DIR}/openback-games`;
 interface PersistShape {
   users: StoredUser[];
   sessions: Record<string, Session>;
@@ -127,6 +132,10 @@ interface PersistShape {
   friendships?: StoredFriendship[];
   friendRequests?: StoredFriendRequest[];
   conversations?: StoredConversation[];
+  playerGames?: StoredPlayerGame[];
+}
+interface StoredPlayerGame extends PublicPlayerGame {
+  publicId: string;
 }
 interface StoredFriendship {
   a: string;
@@ -146,6 +155,7 @@ const clansByTag = new Map<string, StoredClan>();
 let friendships: StoredFriendship[] = [];
 let friendRequests: StoredFriendRequest[] = [];
 let conversations: StoredConversation[] = [];
+let playerGames: StoredPlayerGame[] = [];
 // Parsed once at startup. Purchases validate item names/prices against this.
 const cosmetics = CosmeticsSchema.parse(cosmeticsJson);
 const databaseUrl = process.env.DATABASE_URL;
@@ -166,6 +176,7 @@ function hydrate(raw: PersistShape) {
   friendships = raw.friendships ?? [];
   friendRequests = raw.friendRequests ?? [];
   conversations = raw.conversations ?? [];
+  playerGames = raw.playerGames ?? [];
   for (const u of raw.users ?? []) {
     usersByEmail.set(u.email?.toLowerCase() ?? u.persistentId, u);
     usersByPid.set(u.persistentId, u);
@@ -184,6 +195,13 @@ async function loadPersisted() {
           id INTEGER PRIMARY KEY,
           data JSONB NOT NULL,
           updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `);
+      await database.query(`
+        CREATE TABLE IF NOT EXISTS openback_games (
+          game_id TEXT PRIMARY KEY,
+          record JSONB NOT NULL,
+          started_at BIGINT NOT NULL
         )
       `);
       const result = await database.query<{ data: PersistShape }>(
@@ -210,6 +228,7 @@ function persistenceSnapshot(): PersistShape {
     friendships,
     friendRequests,
     conversations,
+    playerGames,
   };
 }
 
@@ -445,6 +464,7 @@ function deleteUser(user: StoredUser): void {
         ? conversation.members.length === 2
         : conversation.members.length > 0,
     );
+  playerGames = playerGames.filter((game) => game.publicId !== user.publicId);
 }
 
 async function signToken(user: StoredUser): Promise<{
@@ -753,6 +773,94 @@ export async function sendCodeEmail(
   }
 }
 
+function gameResultFor(
+  record: GameRecord,
+  clientID: string,
+): "victory" | "defeat" | "incomplete" {
+  const winner = record.info.winner;
+  if (!winner) return "incomplete";
+  if (winner[0] === "nation") return "defeat";
+  const winnerIDs = new Set(winner.slice(winner[0] === "team" ? 2 : 1));
+  return winnerIDs.has(clientID) ? "victory" : "defeat";
+}
+
+function summariesForGame(record: GameRecord): StoredPlayerGame[] {
+  const config = record.info.config;
+  return record.info.players.flatMap((player) => {
+    const account =
+      usersByPid.get(player.persistentID ?? "") ??
+      (player.publicId ? userByPublicId(player.publicId) : null);
+    if (!account) return [];
+    return [
+      {
+        publicId: account.publicId,
+        gameId: record.info.gameID,
+        start: new Date(record.info.start).toISOString(),
+        durationSeconds: record.info.duration,
+        map: config.gameMap,
+        mode: config.gameMode,
+        type: config.gameType,
+        playerTeams:
+          config.playerTeams === undefined ? null : String(config.playerTeams),
+        rankedType: config.rankedType ?? "unranked",
+        result: gameResultFor(record, player.clientID),
+        totalPlayers: record.info.players.length,
+        username: player.username,
+        clanTag: player.clanTag ?? null,
+      },
+    ];
+  });
+}
+
+async function storeFullGameRecord(record: GameRecord): Promise<void> {
+  const serialized = JSON.stringify(record, replacer);
+  if (database) {
+    await database.query(
+      `INSERT INTO openback_games (game_id, record, started_at)
+       VALUES ($1, $2::jsonb, $3)
+       ON CONFLICT (game_id) DO UPDATE
+       SET record = EXCLUDED.record, started_at = EXCLUDED.started_at`,
+      [record.info.gameID, serialized, record.info.start],
+    );
+    return;
+  }
+  fs.mkdirSync(GAME_RECORD_DIR, { recursive: true });
+  fs.writeFileSync(`${GAME_RECORD_DIR}/${record.info.gameID}.json`, serialized);
+}
+
+async function loadFullGameRecord(gameId: string): Promise<unknown | null> {
+  if (!/^[A-Za-z0-9_-]{1,64}$/.test(gameId)) return null;
+  if (database) {
+    const result = await database.query<{ record: unknown }>(
+      "SELECT record FROM openback_games WHERE game_id = $1",
+      [gameId],
+    );
+    return result.rows[0]?.record ?? null;
+  }
+  const path = `${GAME_RECORD_DIR}/${gameId}.json`;
+  if (!fs.existsSync(path)) return null;
+  return JSON.parse(fs.readFileSync(path, "utf-8"));
+}
+
+function matchesGameMode(
+  game: StoredPlayerGame,
+  filter: PlayerGameModeFilter | undefined,
+): boolean {
+  if (!filter) return true;
+  if (filter === "ranked") return game.rankedType !== "unranked";
+  if (filter === "hvn") return game.playerTeams === HumansVsNations;
+  if (filter === "team") {
+    return game.mode === GameMode.Team && game.playerTeams !== HumansVsNations;
+  }
+  return game.mode === GameMode.FFA && game.rankedType === "unranked";
+}
+
+function historyCursor(game: StoredPlayerGame): string {
+  return Buffer.from(JSON.stringify([game.start, game.gameId])).toString(
+    "base64url",
+  );
+}
+
 // ---- Routes ---------------------------------------------------------------
 export function authRouter(): express.Router {
   const router = express.Router();
@@ -769,6 +877,75 @@ export function authRouter(): express.Router {
   router.get("/.well-known/jwks.json", async (_req, res) => {
     await ensureKeys();
     res.json({ keys: [getPublicJwk()] });
+  });
+
+  router.post("/game/:id", async (req, res) => {
+    if (req.header("x-api-key") !== ServerEnv.apiKey()) {
+      res.status(401).json({ error: "unauthorized" });
+      return;
+    }
+    const parsed = GameRecordSchema.safeParse(req.body);
+    if (!parsed.success || parsed.data.info.gameID !== req.params.id) {
+      res.status(400).json({ error: "invalid_game_record" });
+      return;
+    }
+    try {
+      await storeFullGameRecord(parsed.data);
+      playerGames = playerGames.filter(
+        (game) => game.gameId !== parsed.data.info.gameID,
+      );
+      playerGames.push(...summariesForGame(parsed.data));
+      await persistImmediately();
+      res.json({ ok: true });
+    } catch (error) {
+      console.error("[auth] failed to archive game", error);
+      res.status(503).json({ error: "archive_unavailable" });
+    }
+  });
+
+  router.get("/game/:id", async (req, res) => {
+    const record = await loadFullGameRecord(req.params.id);
+    if (!record) {
+      res.status(404).json({ error: "not_found" });
+      return;
+    }
+    res.type("application/json").send(JSON.stringify(record, replacer));
+  });
+
+  router.get("/public/player/:publicId/games", (req, res) => {
+    const mode = req.query.filter as PlayerGameModeFilter | undefined;
+    const type = req.query.type as PlayerGameTypeFilter | undefined;
+    if (mode && !["ffa", "team", "hvn", "ranked"].includes(mode)) {
+      res.status(400).json({ error: "invalid_filter" });
+      return;
+    }
+    if (type && !["public", "private", "singleplayer"].includes(type)) {
+      res.status(400).json({ error: "invalid_type" });
+      return;
+    }
+    const ordered = playerGames
+      .filter(
+        (game) =>
+          game.publicId === req.params.publicId &&
+          matchesGameMode(game, mode) &&
+          (!type || game.type.toLowerCase() === type),
+      )
+      .sort(
+        (a, b) =>
+          b.start.localeCompare(a.start) || b.gameId.localeCompare(a.gameId),
+      );
+    const cursor = typeof req.query.cursor === "string" ? req.query.cursor : "";
+    const cursorIndex = cursor
+      ? ordered.findIndex((game) => historyCursor(game) === cursor)
+      : -1;
+    const startIndex = cursorIndex >= 0 ? cursorIndex + 1 : 0;
+    const page = ordered.slice(startIndex, startIndex + 25);
+    const hasMore = startIndex + page.length < ordered.length;
+    res.json({
+      results: page.map(({ publicId: _publicId, ...game }) => game),
+      nextCursor:
+        hasMore && page.length ? historyCursor(page[page.length - 1]) : null,
+    });
   });
 
   router.post("/auth/request-code", async (req, res) => {
