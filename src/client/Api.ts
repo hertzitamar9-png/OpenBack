@@ -15,6 +15,7 @@ import {
   UserMeResponseSchema,
 } from "../core/ApiSchemas";
 import { AnalyticsRecord, AnalyticsRecordSchema } from "../core/Schemas";
+import { GameEnv } from "../core/configuration/Config";
 import { getAuthHeader, logOut, userAuth } from "./Auth";
 import { ClientEnv } from "./ClientEnv";
 
@@ -386,7 +387,12 @@ export async function openSubscriptionPortal(): Promise<string | false> {
 }
 
 export function getApiBase() {
-  return ClientEnv.jwtIssuer();
+  if (ClientEnv.env() === GameEnv.Dev) return ClientEnv.jwtIssuer();
+  // In production the SPA, auth, and social endpoints are all served from the
+  // same origin as the page, so use it directly. This avoids cross-origin
+  // (CORS) failures when the configured DOMAIN differs from the host the user
+  // actually visits (e.g. a custom domain fronting the Render default).
+  return window.location.origin;
 }
 
 export function getAudience() {

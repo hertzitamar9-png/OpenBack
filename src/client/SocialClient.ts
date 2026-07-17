@@ -1,3 +1,4 @@
+import { GameEnv } from "../core/configuration/Config";
 import { getPlayToken } from "./Auth";
 import { ClientEnv } from "./ClientEnv";
 import { showInGameConfirm } from "./InGameModal";
@@ -52,7 +53,11 @@ class OpenBackSocialClient {
     ) {
       return;
     }
-    const endpoint = new URL("/social", ClientEnv.jwtIssuer());
+    const base =
+      ClientEnv.env() === GameEnv.Dev
+        ? ClientEnv.jwtIssuer()
+        : window.location.origin;
+    const endpoint = new URL("/social", base);
     endpoint.protocol = endpoint.protocol === "https:" ? "wss:" : "ws:";
     const socket = new WebSocket(endpoint);
     this.socket = socket;
