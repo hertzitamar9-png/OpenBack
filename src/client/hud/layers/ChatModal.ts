@@ -80,9 +80,10 @@ export class ChatModal extends LitElement {
             ${this.categories.map(
               (category) => html`
                 <button
-                  class="chat-option-button ${
-                    this.selectedCategory === category.id ? "selected" : ""
-                  }"
+                  class="chat-option-button ${this.selectedCategory ===
+                  category.id
+                    ? "selected"
+                    : ""}"
                   @click=${() => this.selectCategory(category.id)}
                 >
                   ${translateText(`chat.cat.${category.id}`)}
@@ -91,59 +92,56 @@ export class ChatModal extends LitElement {
             )}
           </div>
 
-          ${
-            this.selectedCategory
-              ? html`
-                  <div class="chat-column">
-                    <div class="column-title">
-                      ${translateText("chat.phrase")}
-                    </div>
-                    <div class="phrase-scroll-area">
-                      ${this.getPhrasesForCategory(this.selectedCategory).map(
+          ${this.selectedCategory
+            ? html`
+                <div class="chat-column">
+                  <div class="column-title">
+                    ${translateText("chat.phrase")}
+                  </div>
+                  <div class="phrase-scroll-area">
+                    ${this.getPhrasesForCategory(this.selectedCategory).map(
                       (phrase) => html`
                         <button
-                          class="chat-option-button ${
-                            this.selectedPhraseText ===
-                            translateText(
-                              `chat.${this.selectedCategory}.${phrase.key}`,
-                            )
-                              ? "selected"
-                              : ""
-                          }"
+                          class="chat-option-button ${this
+                            .selectedPhraseText ===
+                          translateText(
+                            `chat.${this.selectedCategory}.${phrase.key}`,
+                          )
+                            ? "selected"
+                            : ""}"
                           @click=${() => this.selectPhrase(phrase)}
                         >
                           ${this.renderPhrasePreview(phrase)}
                         </button>
                       `,
                     )}
-                    </div>
                   </div>
-                `
-              : null
-          }
-          ${
-            this.requiresPlayerSelection || this.selectedPlayer
-              ? html`
-                  <div class="chat-column">
-                    <div class="column-title">
-                      ${translateText("chat.player")}
-                    </div>
+                </div>
+              `
+            : null}
+          ${this.requiresPlayerSelection || this.selectedPlayer
+            ? html`
+                <div class="chat-column">
+                  <div class="column-title">
+                    ${translateText("chat.player")}
+                  </div>
 
-                    <input
-                      class="player-search-input"
-                      type="text"
-                      placeholder="${translateText("chat.search")}"
-                      .value=${this.playerSearchQuery}
-                      @input=${this.onPlayerSearchInput}
-                    />
+                  <input
+                    class="player-search-input"
+                    type="text"
+                    placeholder="${translateText("chat.search")}"
+                    .value=${this.playerSearchQuery}
+                    @input=${this.onPlayerSearchInput}
+                  />
 
-                    <div class="player-scroll-area">
-                      ${this.getSortedFilteredPlayers().map(
+                  <div class="player-scroll-area">
+                    ${this.getSortedFilteredPlayers().map(
                       (player) => html`
                         <button
-                          class="chat-option-button ${
-                            this.selectedPlayer === player ? "selected" : ""
-                          }"
+                          class="chat-option-button ${this.selectedPlayer ===
+                          player
+                            ? "selected"
+                            : ""}"
                           style="border: 2px solid ${player
                             .territoryColor()
                             .toHex()};"
@@ -153,28 +151,23 @@ export class ChatModal extends LitElement {
                         </button>
                       `,
                     )}
-                    </div>
                   </div>
-                `
-              : null
-          }
+                </div>
+              `
+            : null}
         </div>
 
         <div class="chat-preview">
-          ${
-            this.previewText
-              ? translateText(this.previewText)
-              : translateText("chat.build")
-          }
+          ${this.previewText
+            ? translateText(this.previewText)
+            : translateText("chat.build")}
         </div>
         <div class="chat-send">
           <button
             class="chat-send-button"
             @click=${this.sendChatMessage}
-            ?disabled=${
-              !this.previewText ||
-              (this.requiresPlayerSelection && !this.selectedPlayer)
-            }
+            ?disabled=${!this.previewText ||
+            (this.requiresPlayerSelection && !this.selectedPlayer)}
           >
             ${translateText("chat.send")}
           </button>

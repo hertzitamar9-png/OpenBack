@@ -819,11 +819,9 @@ export class GraphicsSettingsModal extends LitElement implements Controller {
                 </div>
               </div>
               <div class="text-sm text-slate-400">
-                ${
-                  namesColored
-                    ? translateText("graphics_setting.colored")
-                    : translateText("graphics_setting.black")
-                }
+                ${namesColored
+                  ? translateText("graphics_setting.colored")
+                  : translateText("graphics_setting.black")}
               </div>
             </button>
 
@@ -871,11 +869,9 @@ export class GraphicsSettingsModal extends LitElement implements Controller {
                 </div>
               </div>
               <div class="text-sm text-slate-400">
-                ${
-                  classicIcons
-                    ? translateText("user_setting.on")
-                    : translateText("user_setting.off")
-                }
+                ${classicIcons
+                  ? translateText("user_setting.on")
+                  : translateText("user_setting.off")}
               </div>
             </button>
 
@@ -892,11 +888,9 @@ export class GraphicsSettingsModal extends LitElement implements Controller {
                 </div>
               </div>
               <div class="text-sm text-slate-400">
-                ${
-                  classicNumbers
-                    ? translateText("user_setting.on")
-                    : translateText("user_setting.off")
-                }
+                ${classicNumbers
+                  ? translateText("user_setting.on")
+                  : translateText("user_setting.off")}
               </div>
             </button>
 
@@ -913,11 +907,9 @@ export class GraphicsSettingsModal extends LitElement implements Controller {
                 </div>
               </div>
               <div class="text-sm text-slate-400">
-                ${
-                  showDots
-                    ? translateText("user_setting.on")
-                    : translateText("user_setting.off")
-                }
+                ${showDots
+                  ? translateText("user_setting.on")
+                  : translateText("user_setting.off")}
               </div>
             </button>
 
@@ -1210,11 +1202,9 @@ export class GraphicsSettingsModal extends LitElement implements Controller {
                 </div>
               </div>
               <div class="text-sm text-slate-400">
-                ${
-                  this.currentSpecialEffects()
-                    ? translateText("user_setting.on")
-                    : translateText("user_setting.off")
-                }
+                ${this.currentSpecialEffects()
+                  ? translateText("user_setting.on")
+                  : translateText("user_setting.off")}
               </div>
             </button>
 
@@ -1231,11 +1221,9 @@ export class GraphicsSettingsModal extends LitElement implements Controller {
                 </div>
               </div>
               <div class="text-sm text-slate-400">
-                ${
-                  this.currentFallout()
-                    ? translateText("user_setting.on")
-                    : translateText("user_setting.off")
-                }
+                ${this.currentFallout()
+                  ? translateText("user_setting.on")
+                  : translateText("user_setting.off")}
               </div>
             </button>
 
@@ -1258,11 +1246,9 @@ export class GraphicsSettingsModal extends LitElement implements Controller {
                 </div>
               </div>
               <div class="text-sm text-slate-400">
-                ${
-                  colorblind
-                    ? translateText("user_setting.on")
-                    : translateText("user_setting.off")
-                }
+                ${colorblind
+                  ? translateText("user_setting.on")
+                  : translateText("user_setting.off")}
               </div>
             </button>
 
