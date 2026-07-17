@@ -14,6 +14,7 @@ const staticDir = path.join(__dirname, "../../static");
 const resourcesDir = path.join(__dirname, "../../resources");
 
 const landTilesCache = new Map<GameMapType, number>();
+const nationCountCache = new Map<GameMapType, number>();
 
 function mapDirName(map: GameMapType): string {
   const key = (
@@ -55,5 +56,21 @@ export async function getMapLandTiles(map: GameMapType): Promise<number> {
   } catch (error) {
     log.error(`Failed to load manifest for ${map}: ${error}`, { map });
     return 1_000_000; // Default fallback
+  }
+}
+
+// Gets the map author's suggested/default number of nations.
+export async function getMapNationCount(map: GameMapType): Promise<number> {
+  const cached = nationCountCache.get(map);
+  if (cached !== undefined) return cached;
+
+  try {
+    const raw = await readManifestFile(map);
+    const count = (JSON.parse(raw) as { nations: unknown[] }).nations.length;
+    nationCountCache.set(map, count);
+    return count;
+  } catch (error) {
+    log.error(`Failed to load nation count for ${map}: ${error}`, { map });
+    return 400;
   }
 }

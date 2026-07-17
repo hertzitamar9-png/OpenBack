@@ -1,3 +1,10 @@
+## OpenBack v0.33.46 - Nation-Count Reward Validation
+
+- Apply the same nation-count requirement to multiplayer and single-player rewards.
+- Award 100 caps for finishing and 200 total for winning in either mode only when configured nations reach at least half the map's suggested count.
+
+Contributed by **frootz jhklphy**.
+
 ## OpenBack v0.33.45 - Solo Match Rewards
 
 - Award the normal 100-cap completion reward and 200-cap total victory reward in single-player games too.

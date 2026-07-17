@@ -19,13 +19,14 @@ import { base64urlToUuid, uuidToBase64url } from "../../core/Base64";
 import { GameEnv } from "../../core/configuration/Config";
 import { CosmeticsSchema } from "../../core/CosmeticSchemas";
 import {
+  GameMapSize,
   GameMode,
-  GameType,
   HumansVsNations,
   RankedType,
 } from "../../core/game/Game";
 import { GameRecord, GameRecordSchema } from "../../core/Schemas";
 import { generateID, replacer } from "../../core/Util";
+import { getMapNationCount } from "../MapLandTiles";
 import { ServerEnv } from "../ServerEnv";
 import { requireDurableAuthStorage } from "./AuthPersistence";
 import { ensureKeys, getPrivateKey, getPublicJwk } from "./keys";
@@ -868,17 +869,29 @@ function summariesForGame(record: GameRecord): StoredPlayerGame[] {
   });
 }
 
-function awardMatchCurrency(
+async function awardMatchCurrency(
   record: GameRecord,
   summaries: StoredPlayerGame[],
-): void {
-  const suggestedNationCount = Math.max(
-    1,
-    record.info.config.maxPlayers ?? record.info.players.length,
-  );
+): Promise<void> {
+  const config = record.info.config;
+  const fullMapNationCount = await getMapNationCount(config.gameMap);
+  const suggestedNationCount =
+    config.gameMapSize === GameMapSize.Compact
+      ? Math.max(1, Math.floor(fullMapNationCount * 0.25))
+      : fullMapNationCount;
+  const configuredNationCount =
+    typeof config.nations === "number"
+      ? config.nations
+      : config.nations === "disabled"
+        ? 0
+        : config.gameMode === GameMode.Team &&
+            config.playerTeams === HumansVsNations
+          ? record.info.players.length
+          : config.gameMapSize === GameMapSize.Compact
+            ? suggestedNationCount
+            : fullMapNationCount;
   const minimumNationCount = Math.ceil(suggestedNationCount / 2);
-  const isSoloGame = record.info.config.gameType === GameType.Singleplayer;
-  if (!isSoloGame && record.info.players.length < minimumNationCount) return;
+  if (configuredNationCount < minimumNationCount) return;
 
   const rewardedPlayers = new Set<string>();
   for (const summary of summaries) {
@@ -984,7 +997,7 @@ export function authRouter(): express.Router {
         (game) => game.gameId !== parsed.data.info.gameID,
       );
       playerGames.push(...summaries);
-      if (!alreadyArchived) awardMatchCurrency(parsed.data, summaries);
+      if (!alreadyArchived) await awardMatchCurrency(parsed.data, summaries);
       await persistImmediately();
       res.json({ ok: true });
     } catch (error) {

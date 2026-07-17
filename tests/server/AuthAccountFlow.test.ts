@@ -211,7 +211,10 @@ describe("email account lifecycle", () => {
         gameID: "HISTORY1",
         lobbyCreatedAt: now - 65_000,
         lobbyFillTime: 5_000,
-        config: new MapPlaylist().get1v1Config(() => 0),
+        config: {
+          ...new MapPlaylist().get1v1Config(() => 0),
+          nations: 400,
+        },
         players: [
           {
             clientID: "CLIENT01",
@@ -286,7 +289,12 @@ describe("email account lifecycle", () => {
       info: {
         ...gameRecord.info,
         gameID: "UNDER001",
-        config: { ...gameRecord.info.config, maxPlayers: 10 },
+        config: {
+          ...gameRecord.info.config,
+          gameMap: "World",
+          gameMapSize: "Normal",
+          nations: 1,
+        },
       },
     };
     const underfilledArchive = await fetch(`${origin}/game/UNDER001`, {
@@ -331,10 +339,37 @@ describe("email account lifecycle", () => {
     });
     expect(soloArchive.status, await soloArchive.text()).toBe(200);
 
-    const paidSoloProfile = await fetch(`${origin}/users/@me`, {
+    const unpaidSoloProfile = await fetch(`${origin}/users/@me`, {
       headers: { Authorization: `Bearer ${verifiedBody.jwt}` },
     });
-    await expect(paidSoloProfile.json()).resolves.toMatchObject({
+    await expect(unpaidSoloProfile.json()).resolves.toMatchObject({
+      player: { currency: { soft: 200 } },
+    });
+
+    const eligibleSoloRecord = {
+      ...soloRecord,
+      info: {
+        ...soloRecord.info,
+        gameID: "SOLO0002",
+        config: { ...soloRecord.info.config, nations: 400 },
+      },
+    };
+    const eligibleSoloArchive = await fetch(`${origin}/game/SOLO0002`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": "auth-account-test-key",
+      },
+      body: JSON.stringify(eligibleSoloRecord),
+    });
+    expect(eligibleSoloArchive.status, await eligibleSoloArchive.text()).toBe(
+      200,
+    );
+
+    const paidEligibleSoloProfile = await fetch(`${origin}/users/@me`, {
+      headers: { Authorization: `Bearer ${verifiedBody.jwt}` },
+    });
+    await expect(paidEligibleSoloProfile.json()).resolves.toMatchObject({
       player: { currency: { soft: 400 } },
     });
 
