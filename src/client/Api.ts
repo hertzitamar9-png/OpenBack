@@ -137,7 +137,11 @@ export async function getUserMe(): Promise<UserMeResponse | false> {
         console.error("Invalid response", error);
         return false;
       }
-      return result.data;
+      // Anonymous sessions keep their profile privately so a later sign-up or
+      // login can claim it, but they must not look like signed-in accounts in
+      // the UI. This prevents a guest name from appearing without the saved
+      // account data that only a linked account is meant to reveal.
+      return hasLinkedAccount(result.data) ? result.data : false;
     } catch (e) {
       return false;
     }

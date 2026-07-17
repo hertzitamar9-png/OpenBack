@@ -1,3 +1,10 @@
+## OpenBack v0.33.40 - Hide Unlinked Profiles
+
+- Keep anonymous profile data private until the player signs up or logs in.
+- Reveal the saved name, description, banner, cosmetics, currency, clans, and history together after the account is linked.
+
+Contributed by **frootz jhklphy**.
+
 ## OpenBack v0.33.39 - Full-Tile Flags
 
 - Made every flag fill its entire flag tile edge-to-edge without the extra white inset card or preview padding.
