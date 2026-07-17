@@ -759,7 +759,7 @@
   "leaderboard_modal": {
     "clan": "クラン",
     "clans_tab": "クラン",
-    "elo": "ELO",
+    "elo": "OB",
     "error": "リーダーボードを読み込めませんでした。",
     "games": "試合数",
     "loading": "読み込み中…",
@@ -938,8 +938,8 @@
   },
   "matchmaking_modal": {
     "connecting": "サーバーに接続中…",
-    "elo": "あなたのELO :{elo}",
-    "no_elo": "まだELOはありません",
+    "elo": "あなたのOB :{elo}",
+    "no_elo": "まだOBはありません",
     "searching": "対戦相手を検索中…",
     "title": "1v1ランクマッチを作成。",
     "waiting_for_game": "ゲーム開始を待っています…"

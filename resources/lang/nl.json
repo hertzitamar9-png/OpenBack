@@ -331,7 +331,7 @@
     "connecting": "Verbinden met matchmakingserver...",
     "searching": "Zoeken naar een spel...",
     "waiting_for_game": "Wachten tot het spel begint...",
-    "elo": "Jouw ELO: {elo}"
+    "elo": "Jouw OB: {elo}"
   },
   "username": {
     "enter_username": "Voer je gebruikersnaam in",

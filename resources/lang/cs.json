@@ -759,7 +759,7 @@
   "leaderboard_modal": {
     "clan": "Klan",
     "clans_tab": "Klany",
-    "elo": "ELO",
+    "elo": "OB",
     "error": "Chyba při načítání žebříčku",
     "games": "Hry",
     "loading": "Načítání...",
@@ -938,8 +938,8 @@
   },
   "matchmaking_modal": {
     "connecting": "Připojuji se k serveru pro hledání hry...",
-    "elo": "Vaše ELO: {elo}",
-    "no_elo": "Žádné ELO",
+    "elo": "Vaše OB: {elo}",
+    "no_elo": "Žádné OB",
     "searching": "Vyhledávání hry...",
     "title": "1v1 hodnocená hra",
     "waiting_for_game": "Čekání na spuštění hry..."

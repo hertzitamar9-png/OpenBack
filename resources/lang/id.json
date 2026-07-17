@@ -243,7 +243,7 @@
     "clan": "Klan",
     "player": "Pemain",
     "games": "Permainan",
-    "elo": "ELO",
+    "elo": "OB",
     "win_score": "Skor Kemenangan",
     "win_score_tooltip": "Kemenangan dihitung berdasarkan bobot partisipasi klan dan tingkat kesulitan pertandingan",
     "loss_score": "Skor Kekalahan",
@@ -385,8 +385,8 @@
     "connecting": "Menghubungkan ke server pencarian lawan...",
     "searching": "Mencari permainan...",
     "waiting_for_game": "Menunggu permainan untuk dimulai...",
-    "elo": "ELO anda: {elo}",
-    "no_elo": "Belum ada ELO"
+    "elo": "OB anda: {elo}",
+    "no_elo": "Belum ada OB"
   },
   "username": {
     "enter_username": "Masukkan nama pengguna",

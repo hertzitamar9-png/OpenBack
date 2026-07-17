@@ -759,7 +759,7 @@
   "leaderboard_modal": {
     "clan": "Clan",
     "clans_tab": "Clans",
-    "elo": "ELO",
+    "elo": "OB",
     "error": "Erreur lors du chargement du classement",
     "games": "Parties",
     "loading": "Chargement...",
@@ -938,8 +938,8 @@
   },
   "matchmaking_modal": {
     "connecting": "Connexion au serveur de matchmaking...",
-    "elo": "Votre ELO : {elo}",
-    "no_elo": "Pas encore d'ELO",
+    "elo": "Votre OB : {elo}",
+    "no_elo": "Pas encore d'OB",
     "searching": "Recherche d'une partie...",
     "title": "Matchmaking 1v1 Classé",
     "waiting_for_game": "En attente du début de la partie..."

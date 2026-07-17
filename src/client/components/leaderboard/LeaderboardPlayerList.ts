@@ -404,7 +404,7 @@ export class LeaderboardPlayerList extends LitElement {
                   </div>
                   <div class="text-right text-sm font-black text-white">
                     ${profile?.elo !== undefined
-                      ? html`<div>${profile.elo} ELO</div>`
+                      ? html`<div>${profile.elo} OB</div>`
                       : ""}
                     ${profile?.selectedFlag
                       ? html`<div class="mt-1 text-xs text-white/70">

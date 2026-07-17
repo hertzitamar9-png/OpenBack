@@ -759,7 +759,7 @@
   "leaderboard_modal": {
     "clan": "Klan",
     "clans_tab": "Klaner",
-    "elo": "ELO",
+    "elo": "OB",
     "error": "Fejl ved indlæsning af rangliste",
     "games": "Spil",
     "loading": "Indlæser...",
@@ -938,8 +938,8 @@
   },
   "matchmaking_modal": {
     "connecting": "Forbinder til matchmaking-server...",
-    "elo": "Dit ELO: {elo}",
-    "no_elo": "Intet ELO endnu",
+    "elo": "Dit OB: {elo}",
+    "no_elo": "Intet OB endnu",
     "searching": "Søger efter spil...",
     "title": "1v1 Rangeret Matchmaking",
     "waiting_for_game": "Venter på, at spillet starter..."

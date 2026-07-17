@@ -243,7 +243,7 @@
     "clan": "Clan",
     "player": "Spieler",
     "games": "Spiele",
-    "elo": "ELO",
+    "elo": "OB",
     "win_score": "Siegpunkte",
     "win_score_tooltip": "Gewichtete Siege basierend auf Clan Beteiligung und Spielschwierigkeit",
     "loss_score": "Niederlagenpunkte",
@@ -385,8 +385,8 @@
     "connecting": "Verbinge mit em Server...",
     "searching": "Spiel wird gsuecht...",
     "waiting_for_game": "Wart ufe Spielbeginn...",
-    "elo": "Dini ELO: {elo}",
-    "no_elo": "No kei ELO"
+    "elo": "Dini OB: {elo}",
+    "no_elo": "No kei OB"
   },
   "username": {
     "enter_username": "Gib e Benutzername i",

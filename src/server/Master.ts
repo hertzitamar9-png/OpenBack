@@ -31,7 +31,7 @@ const server = http.createServer(app);
 const log = logger.child({ comp: "m" });
 
 // Ranked matchmaking lives in the master so it shares the auth user store
-// (and thus Elo) directly.
+// (and thus OB) directly.
 // Generate ranked rules in the single master process. With multiple game
 // workers this keeps the no-repeat map history global instead of giving each
 // worker an independent random sequence.

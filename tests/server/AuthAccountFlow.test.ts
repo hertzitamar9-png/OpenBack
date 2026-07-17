@@ -17,12 +17,16 @@ process.env.API_KEY = "auth-account-test-key";
 
 let server: http.Server;
 let origin: string;
+let calculateObChange: typeof import("../../src/server/auth/AuthServer").calculateObChange;
+let recordRankedResult: typeof import("../../src/server/auth/AuthServer").recordRankedResult;
 
 beforeAll(async () => {
-  const { authRouter } = await import("../../src/server/auth/AuthServer");
+  const auth = await import("../../src/server/auth/AuthServer");
+  calculateObChange = auth.calculateObChange;
+  recordRankedResult = auth.recordRankedResult;
   const app = express();
   app.use(express.json());
-  app.use(authRouter());
+  app.use(auth.authRouter());
   server = app.listen(0, "127.0.0.1");
   await new Promise<void>((resolve) => server.once("listening", resolve));
   const address = server.address();
@@ -49,6 +53,13 @@ async function postJson(pathname: string, body: unknown, cookie?: string) {
 }
 
 describe("email account lifecycle", () => {
+  test("calculates OB changes from both players' ratings", () => {
+    expect(calculateObChange(100, 100, 40, true)).toBe(20);
+    expect(calculateObChange(10_000, 0, 40, true)).toBe(1);
+    expect(calculateObChange(0, 10_000, 40, true)).toBe(40);
+    expect(calculateObChange(10_000, 0, 40, false)).toBe(40);
+  });
+
   test("claims an anonymous profile when login email is not registered", async () => {
     const email = `claim-${Date.now()}@example.com`;
     const refresh = await fetch(`${origin}/auth/refresh`, { method: "POST" });
@@ -268,6 +279,60 @@ describe("email account lifecycle", () => {
     expect(archivedRecord.status).toBe(200);
     await expect(archivedRecord.json()).resolves.toMatchObject({
       info: { gameID: "HISTORY1" },
+    });
+
+    const underfilledRecord = {
+      ...gameRecord,
+      info: {
+        ...gameRecord.info,
+        gameID: "UNDER001",
+        config: { ...gameRecord.info.config, maxPlayers: 10 },
+      },
+    };
+    const underfilledArchive = await fetch(`${origin}/game/UNDER001`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": "auth-account-test-key",
+      },
+      body: JSON.stringify(underfilledRecord),
+    });
+    expect(underfilledArchive.status, await underfilledArchive.text()).toBe(
+      200,
+    );
+
+    const unpaidUnderfilledProfile = await fetch(`${origin}/users/@me`, {
+      headers: { Authorization: `Bearer ${verifiedBody.jwt}` },
+    });
+    await expect(unpaidUnderfilledProfile.json()).resolves.toMatchObject({
+      player: { currency: { soft: 200 } },
+    });
+
+    const opponentRefresh = await fetch(`${origin}/auth/refresh`, {
+      method: "POST",
+    });
+    const opponentBody = (await opponentRefresh.json()) as { jwt: string };
+    const opponentPayload = JSON.parse(
+      Buffer.from(opponentBody.jwt.split(".")[1], "base64url").toString("utf8"),
+    ) as { sub: string };
+    const opponentPersistentId = base64urlToUuid(opponentPayload.sub);
+    for (let game = 0; game < 6; game++) {
+      expect(
+        recordRankedResult(
+          base64urlToUuid(jwtPayload.sub),
+          opponentPersistentId,
+        ),
+      ).toBe(true);
+    }
+
+    const obRewardedProfile = await fetch(`${origin}/users/@me`, {
+      headers: { Authorization: `Bearer ${verifiedBody.jwt}` },
+    });
+    await expect(obRewardedProfile.json()).resolves.toMatchObject({
+      player: {
+        currency: { soft: 800 },
+        leaderboard: { oneVone: { elo: expect.any(Number) } },
+      },
     });
 
     const loggedOut = await postJson("/auth/logout", {}, firstCookie);

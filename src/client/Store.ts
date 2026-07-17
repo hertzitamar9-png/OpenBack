@@ -75,10 +75,7 @@ export class StoreModal extends BaseModal {
       onBack: () => this.close(),
       ariaLabel: translateText("common.back"),
       rightContent: currency
-        ? html`<currency-display
-            .hard=${currency.hard}
-            .soft=${currency.soft}
-          ></currency-display>`
+        ? html`<currency-display .soft=${currency.soft}></currency-display>`
         : html`<not-logged-in-warning></not-logged-in-warning>`,
     });
   }

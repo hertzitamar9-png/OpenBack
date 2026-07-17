@@ -759,7 +759,7 @@
   "leaderboard_modal": {
     "clan": "Klano",
     "clans_tab": "Klanoj",
-    "elo": "ELO",
+    "elo": "OB",
     "error": "Eraro ŝargante ĉampionejon",
     "games": "Ludoj",
     "loading": "Ŝargante...",
@@ -938,8 +938,8 @@
   },
   "matchmaking_modal": {
     "connecting": "Konektante al ludkreanta servilo...",
-    "elo": "Via ELO: {elo}",
-    "no_elo": "Ankoraŭ neniu ELO",
+    "elo": "Via OB: {elo}",
+    "no_elo": "Ankoraŭ neniu OB",
     "searching": "Serĉante ludon...",
     "title": "1 kontraŭ 1 Ranginflua Ludkreado",
     "waiting_for_game": "Atendante Ludkomencon..."

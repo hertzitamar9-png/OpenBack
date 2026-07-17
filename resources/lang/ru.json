@@ -759,7 +759,7 @@
   "leaderboard_modal": {
     "clan": "Клан",
     "clans_tab": "Кланы",
-    "elo": "ELO",
+    "elo": "OB",
     "error": "Ошибка загрузки таблицы лидеров",
     "games": "Игры",
     "loading": "Загрузка...",
@@ -938,8 +938,8 @@
   },
   "matchmaking_modal": {
     "connecting": "Подключение к серверу подбора игроков...",
-    "elo": "Ваш ELO: {elo}",
-    "no_elo": "ELO отсутствует",
+    "elo": "Ваш OB: {elo}",
+    "no_elo": "OB отсутствует",
     "searching": "Поиск игры...",
     "title": "Рейтинговый подбор 1 на 1",
     "waiting_for_game": "Ожидание начала игры..."

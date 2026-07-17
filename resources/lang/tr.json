@@ -331,7 +331,7 @@
     "connecting": "Maç bulma sunucusuna bağlanılıyor...",
     "searching": "Oyun aranıyor...",
     "waiting_for_game": "Oyunun başlaması bekleniyor...",
-    "elo": "Senin ELO'n: {elo}"
+    "elo": "Senin OB'n: {elo}"
   },
   "username": {
     "enter_username": "Kullanıcı adınızı girin",

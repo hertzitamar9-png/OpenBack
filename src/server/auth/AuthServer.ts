@@ -57,6 +57,8 @@ interface StoredUser {
   peakElo?: number;
   rankedWins?: number;
   rankedLosses?: number;
+  rankedObEarned?: number;
+  obMilestones?: number[];
   // Shop wallet + owned cosmetics (flare strings, e.g. "pattern:foo").
   currencySoft?: number;
   currencyHard?: number;
@@ -536,8 +538,15 @@ async function userFromBearer(
   return userFromToken(auth.slice(7));
 }
 
-// Default ELO for a player who has not completed a ranked game yet.
-export const DEFAULT_ELO = 1000;
+// New ranked players begin at zero OB and build their rating through play.
+export const DEFAULT_OB = 0;
+const OB_PROGRESS_REWARD_STEP = 100;
+const OB_PROGRESS_REWARD_CAPS = 100;
+const OB_MILESTONE_REWARD_CAPS = 500;
+export const OB_MILESTONES = [
+  100, 200, 300, 500, 700, 1200, 1500, 2000, 2500, 3000, 4000, 5000, 6000, 7000,
+  8000, 9000, 10_000,
+] as const;
 
 // Used by the matchmaking service (same master process) to resolve a queued
 // player's identity and current rating from their play token.
@@ -553,7 +562,7 @@ export async function resolveRankedPlayer(token: string): Promise<{
     publicId: user.publicId,
     persistentId: user.persistentId,
     displayName: usernameFor(user),
-    elo: user.elo ?? DEFAULT_ELO,
+    elo: user.elo ?? DEFAULT_OB,
   };
 }
 
@@ -565,10 +574,10 @@ export function areFriends(a: string, b: string): boolean {
   );
 }
 
-// chess.com / FIDE-style dynamic K-factor: new accounts converge fast, settled
+// Chess.com / FIDE-style dynamic K-factor: new accounts converge fast, settled
 // players are stable, and top players barely move (so ratings mean something).
 function eloKFactor(user: StoredUser): number {
-  const elo = user.elo ?? DEFAULT_ELO;
+  const elo = user.elo ?? DEFAULT_OB;
   const games = (user.rankedWins ?? 0) + (user.rankedLosses ?? 0);
   if (games < 30) return 40; // provisional / placement
   if (elo >= 2400) return 10; // master tier
@@ -576,12 +585,56 @@ function eloKFactor(user: StoredUser): number {
   return 32; // established
 }
 
-// Applies an Elo update after a ranked 1v1 result and persists it. This is the
-// same math chess.com uses: the reward scales with the opponent's strength —
+// Applies an OB update after a ranked 1v1 result and persists it. This is the
+// same math chess rating systems use: the reward scales with opponent strength—
 // upsetting a much higher-rated player earns (and costs them) a lot, while
 // beating someone far below you barely moves the needle. Each side uses its own
 // dynamic K-factor so a veteran's rating isn't swung by a newcomer's placement.
 // Players are identified by persistentId (what the game server has on hand).
+function awardObProgress(
+  user: StoredUser,
+  previousOb: number,
+  nextOb: number,
+): void {
+  const gained = Math.max(0, nextOb - previousOb);
+  const previousEarned = user.rankedObEarned ?? 0;
+  const nextEarned = previousEarned + gained;
+  const progressSteps =
+    Math.floor(nextEarned / OB_PROGRESS_REWARD_STEP) -
+    Math.floor(previousEarned / OB_PROGRESS_REWARD_STEP);
+
+  const claimedMilestones = new Set(user.obMilestones ?? []);
+  let newMilestones = 0;
+  for (const milestone of OB_MILESTONES) {
+    if (
+      previousOb < milestone &&
+      nextOb >= milestone &&
+      !claimedMilestones.has(milestone)
+    ) {
+      claimedMilestones.add(milestone);
+      newMilestones++;
+    }
+  }
+
+  const caps =
+    progressSteps * OB_PROGRESS_REWARD_CAPS +
+    newMilestones * OB_MILESTONE_REWARD_CAPS;
+  if (caps > 0) user.currencySoft = (user.currencySoft ?? 0) + caps;
+  user.rankedObEarned = nextEarned;
+  user.obMilestones = [...claimedMilestones].sort((a, b) => a - b);
+}
+
+export function calculateObChange(
+  rating: number,
+  opponentRating: number,
+  kFactor: number,
+  won: boolean,
+): number {
+  const expected = 1 / (1 + 10 ** ((opponentRating - rating) / 400));
+  const score = won ? 1 : 0;
+  return Math.max(1, Math.round(Math.abs(kFactor * (score - expected))));
+}
+
 export function recordRankedResult(
   winnerPersistentId: string,
   loserPersistentId: string,
@@ -589,20 +642,15 @@ export function recordRankedResult(
   const winner = usersByPid.get(winnerPersistentId);
   const loser = usersByPid.get(loserPersistentId);
   if (!winner || !loser) return false;
-  const rw = winner.elo ?? DEFAULT_ELO;
-  const rl = loser.elo ?? DEFAULT_ELO;
-  // Expected score for the winner given the rating gap (0..1). A big underdog
-  // has expectedW near 0, so (1 - expectedW) — and thus the points gained — is
-  // large; a heavy favorite has expectedW near 1 and gains almost nothing.
-  const expectedW = 1 / (1 + 10 ** ((rl - rw) / 400));
-  const expectedL = 1 - expectedW;
+  const rw = winner.elo ?? DEFAULT_OB;
+  const rl = loser.elo ?? DEFAULT_OB;
   const kw = eloKFactor(winner);
   const kl = eloKFactor(loser);
-  // Guarantee at least 1 point of movement so every ranked game feels rewarding.
-  const gain = Math.max(1, Math.round(kw * (1 - expectedW)));
-  const drop = Math.max(1, Math.round(kl * expectedL));
+  const gain = calculateObChange(rw, rl, kw, true);
+  const drop = calculateObChange(rl, rw, kl, false);
   winner.elo = rw + gain;
   loser.elo = Math.max(0, rl - drop);
+  awardObProgress(winner, rw, winner.elo);
   winner.peakElo = Math.max(winner.peakElo ?? winner.elo, winner.elo);
   loser.peakElo = Math.max(loser.peakElo ?? loser.elo, loser.elo);
   winner.rankedWins = (winner.rankedWins ?? 0) + 1;
@@ -629,27 +677,26 @@ export function recordRankedTeamResult(
   const winnerUsers = winners as StoredUser[];
   const loserUsers = losers as StoredUser[];
   const winnerAverage =
-    winnerUsers.reduce((sum, user) => sum + (user.elo ?? DEFAULT_ELO), 0) /
+    winnerUsers.reduce((sum, user) => sum + (user.elo ?? DEFAULT_OB), 0) /
     winnerUsers.length;
   const loserAverage =
-    loserUsers.reduce((sum, user) => sum + (user.elo ?? DEFAULT_ELO), 0) /
+    loserUsers.reduce((sum, user) => sum + (user.elo ?? DEFAULT_OB), 0) /
     loserUsers.length;
-  const expectedWinner = 1 / (1 + 10 ** ((loserAverage - winnerAverage) / 400));
-  const expectedLoser = 1 - expectedWinner;
-
   for (const winner of winnerUsers) {
-    const rating = winner.elo ?? DEFAULT_ELO;
+    const rating = winner.elo ?? DEFAULT_OB;
     winner.elo =
       rating +
-      Math.max(1, Math.round(eloKFactor(winner) * (1 - expectedWinner)));
+      calculateObChange(rating, loserAverage, eloKFactor(winner), true);
+    awardObProgress(winner, rating, winner.elo);
     winner.peakElo = Math.max(winner.peakElo ?? winner.elo, winner.elo);
     winner.rankedWins = (winner.rankedWins ?? 0) + 1;
   }
   for (const loser of loserUsers) {
-    const rating = loser.elo ?? DEFAULT_ELO;
+    const rating = loser.elo ?? DEFAULT_OB;
     loser.elo = Math.max(
       0,
-      rating - Math.max(1, Math.round(eloKFactor(loser) * expectedLoser)),
+      rating -
+        calculateObChange(rating, winnerAverage, eloKFactor(loser), false),
     );
     loser.peakElo = Math.max(loser.peakElo ?? loser.elo, loser.elo);
     loser.rankedLosses = (loser.rankedLosses ?? 0) + 1;
@@ -816,7 +863,17 @@ function summariesForGame(record: GameRecord): StoredPlayerGame[] {
   });
 }
 
-function awardMatchCurrency(summaries: StoredPlayerGame[]): void {
+function awardMatchCurrency(
+  record: GameRecord,
+  summaries: StoredPlayerGame[],
+): void {
+  const suggestedNationCount = Math.max(
+    1,
+    record.info.config.maxPlayers ?? record.info.players.length,
+  );
+  const minimumNationCount = Math.ceil(suggestedNationCount / 2);
+  if (record.info.players.length < minimumNationCount) return;
+
   const rewardedPlayers = new Set<string>();
   for (const summary of summaries) {
     if (
@@ -921,7 +978,7 @@ export function authRouter(): express.Router {
         (game) => game.gameId !== parsed.data.info.gameID,
       );
       playerGames.push(...summaries);
-      if (!alreadyArchived) awardMatchCurrency(summaries);
+      if (!alreadyArchived) awardMatchCurrency(parsed.data, summaries);
       await persistImmediately();
       res.json({ ok: true });
     } catch (error) {
@@ -1609,7 +1666,7 @@ export function authRouter(): express.Router {
     );
   });
 
-  // Ranked 1v1 leaderboard, sorted by ELO descending, paginated.
+  // Ranked 1v1 leaderboard, sorted by OB descending, paginated.
   const LEADERBOARD_PAGE_SIZE = 50;
   router.get("/leaderboard/ranked", (req, res) => {
     const page = Math.floor(Number(req.query.page ?? 1));

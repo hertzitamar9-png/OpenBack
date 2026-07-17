@@ -469,11 +469,11 @@ const tutorials: OpenBackContentPage[] = [
       },
       {
         title: "What other players can see",
-        text: "Your public description and banner color appear on the player card opened from ranked rankings. Your selected flag, selected map cosmetic, clan tag, public player ID, and Elo can appear there too. Your email and session information remain private and are never part of that public card.",
+        text: "Your public description and banner color appear on the player card opened from ranked rankings. Your selected flag, selected map cosmetic, clan tag, public player ID, and OB can appear there too. Your email and session information remain private and are never part of that public card.",
       },
       {
         title: "Log out or delete",
-        text: "Log Out removes the session from the current browser but preserves the account, profile, Elo, clan identity, currency, and saved cosmetics for the next login. Delete My Account uses two explicit confirmations and permanently removes the saved account data; logging in cannot restore a deleted account.",
+        text: "Log Out removes the session from the current browser but preserves the account, profile, OB, clan identity, currency, and saved cosmetics for the next login. Delete My Account uses two explicit confirmations and permanently removes the saved account data; logging in cannot restore a deleted account.",
         tips: [
           "Use Log Out when changing devices or temporarily leaving the account.",
           "Use Delete My Account only when the saved identity should be removed permanently.",

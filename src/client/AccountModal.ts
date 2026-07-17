@@ -521,12 +521,7 @@ export class AccountModal extends BaseModal {
     const currency = this.userMeResponse?.player?.currency;
     if (!currency) return html``;
 
-    return html`
-      <currency-display
-        .hard=${currency.hard}
-        .soft=${currency.soft}
-      ></currency-display>
-    `;
+    return html` <currency-display .soft=${currency.soft}></currency-display> `;
   }
 
   private renderLoggedInAs(): TemplateResult {

@@ -759,7 +759,7 @@
   "leaderboard_modal": {
     "clan": "军团",
     "clans_tab": "军团",
-    "elo": "ELO",
+    "elo": "OB",
     "error": "加载排行榜时出错",
     "games": "游戏场数",
     "loading": "正在加载……",
@@ -938,8 +938,8 @@
   },
   "matchmaking_modal": {
     "connecting": "正在连接到匹配服务器……",
-    "elo": "你的 ELO 分：{elo}",
-    "no_elo": "暂无ELO",
+    "elo": "你的 OB 分：{elo}",
+    "no_elo": "暂无OB",
     "searching": "正在搜索游戏……",
     "title": "1v1 排位赛",
     "waiting_for_game": "正在等待游戏开始……"

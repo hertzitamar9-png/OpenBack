@@ -238,7 +238,7 @@
     "clan": "Klan",
     "player": "Mängija",
     "games": "Mängud",
-    "elo": "ELO",
+    "elo": "OB",
     "win_score": "Võidupunktid",
     "win_score_tooltip": "Võitude kaalutud arv, arvestades klani osalust ning mängu raskust",
     "loss_score": "Kaotuspunktid",
@@ -376,7 +376,7 @@
     "connecting": "Ühendamine mängu otsingu serveriga...",
     "searching": "Mängu otsing...",
     "waiting_for_game": "Mängu alguse ootamine...",
-    "elo": "Sinu ELO: {elo}"
+    "elo": "Sinu OB: {elo}"
   },
   "username": {
     "enter_username": "Sisestage oma kasutajanimi",

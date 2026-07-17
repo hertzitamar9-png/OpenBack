@@ -238,7 +238,7 @@
     "clan": "Clan",
     "player": "Jugador",
     "games": "Partides",
-    "elo": "ELO",
+    "elo": "OB",
     "win_score": "Puntuació Victòries",
     "win_score_tooltip": "Victòries equilibrades basades en la participació del clan i la dificultat del partit",
     "loss_score": "Puntuació Derrotes",
@@ -376,7 +376,7 @@
     "connecting": "Connectant-se al servidor de matchmaking...",
     "searching": "Buscant partida...",
     "waiting_for_game": "Esperant l'inici de la partida...",
-    "elo": "El teu ELO: {elo}"
+    "elo": "El teu OB: {elo}"
   },
   "username": {
     "enter_username": "Escriu el teu nom d'usuari",

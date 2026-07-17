@@ -759,7 +759,7 @@
   "leaderboard_modal": {
     "clan": "Klán",
     "clans_tab": "Klánok",
-    "elo": "ELO",
+    "elo": "OB",
     "error": "A toplista betöltése sikertelen",
     "games": "Játék",
     "loading": "Betöltés...",
@@ -938,8 +938,8 @@
   },
   "matchmaking_modal": {
     "connecting": "Kapcsolódás a szerverhez...",
-    "elo": "Az ELO-d: {elo}",
-    "no_elo": "Még nincs ELO-d",
+    "elo": "Az OB-d: {elo}",
+    "no_elo": "Még nincs OB-d",
     "searching": "Játék keresése...",
     "title": "1v1 Rangsorolt meccskeresés",
     "waiting_for_game": "Várakozás a játék indítására..."

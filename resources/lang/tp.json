@@ -107,7 +107,7 @@
   "map": {
     "map": "sitelen ma",
     "world": "ma",
-    "europe": "ma Elopa",
+    "europe": "ma OBpa",
     "mena": "ma Mena",
     "northamerica": "ma Mewika sewi",
     "oceania": "ma Osijanja",
@@ -126,7 +126,7 @@
     "knownworld": "ma ale",
     "faroeislands": "ma telo Paja",
     "deglaciatedantarctica": "ma Antasika seli",
-    "europeclassic": "ma Elopa (majuna)",
+    "europeclassic": "ma OBpa (majuna)",
     "falklandislands": "ma telo Palan",
     "baikal": "telo Paka"
   },

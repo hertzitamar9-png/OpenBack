@@ -1,3 +1,13 @@
+## OpenBack v0.33.44 - OB Ranked Progression
+
+- Renamed the visible ranked rating from Elo to OB and made new ranked players begin at 0 OB.
+- Made OB changes follow an opponent-strength rating formula: upsets award more, expected wins award less, and a 10,000 OB favorite gains only a tiny amount against an unranked opponent.
+- Award 100 caps for each full 100 OB gained and a one-time 500-cap bonus at OB checkpoints from 100 through 10,000.
+- Keep normal match rewards at 100 caps for finishing and 200 total for winning, but only when the game starts with at least half the map's suggested nation count.
+- Removed the unused second currency from the store and account displays so players see caps as the single spendable currency.
+
+Contributed by **frootz jhklphy**.
+
 ## OpenBack v0.33.43 - Earnable Store Collection
 
 - Earn 100 caps for every completed match and a further 100-cap victory bonus, with server-side protection against duplicate rewards.
