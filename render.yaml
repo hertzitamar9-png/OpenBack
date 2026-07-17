@@ -1,0 +1,35 @@
+# Render Blueprint for OpenBack
+# Builds the existing multi-stage Dockerfile (nginx + supervisord + node server).
+# Add the custom domain openback.infy.click in the Render dashboard and point
+# its DNS at openback-cbe3.onrender.com (CNAME host: openback).
+
+services:
+  - type: web
+    name: openback
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    # Render assigns $PORT at runtime; the Dockerfile's start.sh rewrites
+    # nginx to listen on it.
+    envVars:
+      - key: GIT_COMMIT
+        sync: false
+      - key: DOMAIN
+        value: openback.infy.click
+      - key: SUBDOMAIN
+        value: main
+      - key: GAME_ENV
+        value: prod
+      - key: NUM_WORKERS
+        value: "1"
+      - key: API_KEY
+        sync: false
+      - key: ADMIN_BOT_API_KEY
+        sync: false
+      - key: TURNSTILE_SITE_KEY
+        sync: false
+      - key: CDN_BASE
+        sync: false
+      - key: COSMETICS_BASE_URL
+        sync: false
+    healthCheckPath: /
+    autoDeploy: true
