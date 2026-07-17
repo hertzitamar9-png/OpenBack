@@ -958,6 +958,8 @@ export function authRouter(): express.Router {
     }
     const email = parsed.data.email.toLowerCase();
     const accountExists = usersByEmail.has(email);
+    const sessionUser = userFromSession(req);
+    const canClaimAnonymousAccount = Boolean(sessionUser && !sessionUser.email);
     if (parsed.data.mode === "signup" && accountExists) {
       res.json({
         ok: false,
@@ -966,7 +968,11 @@ export function authRouter(): express.Router {
       });
       return;
     }
-    if (parsed.data.mode === "login" && !accountExists) {
+    if (
+      parsed.data.mode === "login" &&
+      !accountExists &&
+      !canClaimAnonymousAccount
+    ) {
       res.json({
         ok: false,
         error: "not_registered",
@@ -1023,6 +1029,7 @@ export function authRouter(): express.Router {
       return;
     }
     const existing = usersByEmail.get(email);
+    const sessionUser = userFromSession(req);
     if (mode === "signup" && existing) {
       codes.delete(email);
       res.status(409).json({
@@ -1031,7 +1038,7 @@ export function authRouter(): express.Router {
       });
       return;
     }
-    if (mode === "login" && !existing) {
+    if (mode === "login" && !existing && !(sessionUser && !sessionUser.email)) {
       codes.delete(email);
       res.status(404).json({
         error: "not_registered",
@@ -1041,9 +1048,6 @@ export function authRouter(): express.Router {
     }
     codes.delete(email);
     const oldSession = getCookie(req, SESSION_COOKIE);
-    const sessionUser = oldSession
-      ? usersByPid.get(sessions.get(oldSession)?.persistentId ?? "")
-      : undefined;
     let user: StoredUser;
     if (existing) {
       user = existing;

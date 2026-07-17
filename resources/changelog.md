@@ -1,3 +1,10 @@
+## OpenBack v0.33.38 - Claim Anonymous Profiles on Login
+
+- Let players attach an unregistered email to their existing anonymous browser account during login verification.
+- Preserve the player’s saved name, description, banner, cosmetics, currency, clans, and match history when the anonymous profile becomes an email account.
+
+Contributed by **frootz jhklphy**.
+
 ## OpenBack v0.33.37 - Player-Chosen Teams
 
 - Let every player choose their own team in team-game lobbies, with automatic balanced assignment still available as the default.

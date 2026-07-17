@@ -49,6 +49,57 @@ async function postJson(pathname: string, body: unknown, cookie?: string) {
 }
 
 describe("email account lifecycle", () => {
+  test("claims an anonymous profile when login email is not registered", async () => {
+    const email = `claim-${Date.now()}@example.com`;
+    const refresh = await fetch(`${origin}/auth/refresh`, { method: "POST" });
+    const refreshBody = (await refresh.json()) as { jwt: string };
+    const cookie = refresh.headers.get("set-cookie")?.split(";")[0];
+    expect(cookie).toBeTruthy();
+
+    const profileResponse = await fetch(`${origin}/users/@me`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${refreshBody.jwt}`,
+      },
+      body: JSON.stringify({
+        displayName: "Remembered Player",
+        bio: "Kept while claiming the account",
+        bannerColor: "#2457a7",
+      }),
+    });
+    expect(profileResponse.status).toBe(200);
+
+    const loginCodeResponse = await postJson(
+      "/auth/request-code",
+      { email, mode: "login" },
+      cookie,
+    );
+    expect(loginCodeResponse.status).toBe(200);
+    const loginCode = (await loginCodeResponse.json()) as { devCode: string };
+
+    const verified = await postJson(
+      "/auth/verify-code",
+      { email, code: loginCode.devCode, mode: "login" },
+      cookie,
+    );
+    expect(verified.status).toBe(200);
+    const verifiedBody = (await verified.json()) as { jwt: string };
+
+    await expect(
+      fetch(`${origin}/users/@me`, {
+        headers: { Authorization: `Bearer ${verifiedBody.jwt}` },
+      }).then((response) => response.json()),
+    ).resolves.toMatchObject({
+      user: {
+        email,
+        displayName: "Remembered Player",
+        bio: "Kept while claiming the account",
+        bannerColor: "#2457a7",
+      },
+    });
+  });
+
   test("separates sign-up from login, restores data, and deletes permanently", async () => {
     const email = `account-${Date.now()}@example.com`;
 
