@@ -113,11 +113,17 @@ export class WinModal extends LitElement implements Controller {
   renderLogo() {
     return html`
       <div class="text-center mb-6 bg-black/30 p-2.5 rounded-sm">
-        <img
-          src=${assetUrl("images/death_logo.png")}
-          alt="OpenBack"
-          class="mx-auto w-50 max-w-full"
-        />
+        <h3 class="text-xl font-semibold text-white mb-3">
+          ${translateText("win_modal.died")}
+        </h3>
+        <!-- 56.25% = 9:16, same frame size as the tutorial video -->
+        <div class="relative w-full pb-[56.25%]">
+          <img
+            src=${assetUrl("images/death_logo.png")}
+            alt="OpenBack"
+            class="absolute top-0 left-0 w-full h-full object-contain rounded-sm"
+          />
+        </div>
       </div>
     `;
   }
