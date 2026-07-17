@@ -174,7 +174,7 @@ export class SendResourceModal extends LitElement {
   private getFillColor(): string {
     return this.mode === "troops"
       ? "rgb(168 85 247)" /* purple */
-      : "rgb(234 179 8)" /* amber */;
+      : "rgb(234 179 8)"; /* amber */
   }
 
   private getMinKeepRatio(): number {
