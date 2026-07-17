@@ -1,3 +1,10 @@
+## OpenBack v0.33.48 - Fair Even-Match OB
+
+- Award exactly 50 OB when a 100 OB player defeats another 100 OB player.
+- Preserve the 500 OB maximum for major underdog victories and tiny gains for heavily favored wins.
+
+Contributed by **frootz jhklphy**.
+
 ## OpenBack v0.33.47 - High-Stakes OB Upsets
 
 - Cap the OB a winner can earn from one ranked game at 500, reserved for major wins against strong opponents.

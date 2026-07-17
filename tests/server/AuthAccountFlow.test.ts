@@ -56,7 +56,7 @@ async function postJson(pathname: string, body: unknown, cookie?: string) {
 
 describe("email account lifecycle", () => {
   test("calculates OB changes from both players' ratings", () => {
-    expect(calculateObGain(100, 100)).toBe(25);
+    expect(calculateObGain(100, 100)).toBe(50);
     expect(calculateObGain(10_000, 100)).toBe(1);
     expect(calculateObGain(100, 10_000)).toBe(500);
     expect(calculateObLoss(500, 100)).toBe(45);
@@ -399,7 +399,7 @@ describe("email account lifecycle", () => {
     });
     await expect(obRewardedProfile.json()).resolves.toMatchObject({
       player: {
-        currency: { soft: 1000 },
+        currency: { soft: 1600 },
         leaderboard: { oneVone: { elo: expect.any(Number) } },
       },
     });
