@@ -1,6 +1,7 @@
 import { html, LitElement, TemplateResult } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { translateText, TUTORIAL_VIDEO_URL } from "../../../client/Utils";
+import { assetUrl } from "../../../core/AssetUrls";
 import { EventBus } from "../../../core/EventBus";
 import { GameUpdateType } from "../../../core/game/GameUpdates";
 import { getUserMe } from "../../Api";
@@ -100,7 +101,19 @@ export class WinModal extends LitElement implements Controller {
   }
 
   innerHtml() {
-    return this.renderYoutubeTutorial();
+    return this.isWin ? this.renderYoutubeTutorial() : this.renderLogo();
+  }
+
+  renderLogo() {
+    return html`
+      <div class="text-center mb-6 bg-black/30 p-2.5 rounded-sm">
+        <img
+          src=${assetUrl("images/OpenBackLogo.svg")}
+          alt="OpenBack"
+          class="mx-auto w-50 max-w-full"
+        />
+      </div>
+    `;
   }
 
   renderYoutubeTutorial() {
@@ -170,9 +183,9 @@ export class WinModal extends LitElement implements Controller {
     `;
   }
 
-  async show() {
+  async show(force = false) {
     crazyGamesSDK.gameplayStop();
-    if (localStorage.getItem(WIN_MODAL_DISMISSED_KEY) === "true") {
+    if (!force && localStorage.getItem(WIN_MODAL_DISMISSED_KEY) === "true") {
       return;
     }
     await this.loadPatternContent();
@@ -210,6 +223,14 @@ export class WinModal extends LitElement implements Controller {
   tick() {
     const myPlayer = this.game.myPlayer();
     if (
+      myPlayer &&
+      myPlayer.isAlive() &&
+      (this.game.inSpawnPhase() || myPlayer.hasSpawned())
+    ) {
+      // Player is alive (new game / respawned): allow the death modal to show again.
+      this.hasShownDeathModal = false;
+    }
+    if (
       !this.hasShownDeathModal &&
       myPlayer &&
       !myPlayer.isAlive() &&
@@ -218,7 +239,7 @@ export class WinModal extends LitElement implements Controller {
     ) {
       this.hasShownDeathModal = true;
       this._title = translateText("win_modal.died");
-      this.show();
+      this.show(true);
     }
     const updates = this.game.updatesSinceLastTick();
     const winUpdates = updates !== null ? updates[GameUpdateType.Win] : [];
