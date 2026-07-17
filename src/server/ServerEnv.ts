@@ -103,7 +103,6 @@ export class ServerEnv {
     // Default to the site origin so asset URLs are absolute. The game worker
     // is inlined as a same-origin Blob and cannot resolve root-relative URLs,
     // so it needs a full origin to fetch map binaries/manifests.
-    if (ServerEnv.env() === GameEnv.Dev) return "http://localhost:9000";
     return `https://${ServerEnv.jwtAudienceRaw()}`;
   }
   static shareOrigin(): string {
