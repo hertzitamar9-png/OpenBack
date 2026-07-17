@@ -241,10 +241,8 @@ export class WinModal extends LitElement implements Controller {
       (this.game.inSpawnPhase() || myPlayer.hasSpawned());
 
     if (alive) {
-      // Player is alive (new game / respawned): reset death tracking so the
-      // first death of the next game shows the video again.
-      this.deathCount = 0;
-      this.showLogoOnDeath = false;
+      // Player is alive (new game / respawned): keep deathCount so the FIRST
+      // death ever shows the video and every later death shows the logo.
       this.wasAlive = true;
     } else if (
       myPlayer &&

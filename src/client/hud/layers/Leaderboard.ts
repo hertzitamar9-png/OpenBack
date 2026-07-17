@@ -26,9 +26,11 @@ export class Leaderboard extends LitElement implements Controller {
   public game: GameView | null = null;
   public eventBus: EventBus | null = null;
 
+  @state()
   players: Entry[] = [];
 
   @property({ type: Boolean }) visible = false;
+  @state()
   private showTopFive = true;
   @state()
   private contextMenu: {
@@ -242,7 +244,9 @@ export class Leaderboard extends LitElement implements Controller {
     }
     return html`
       <div
-        class="max-h-[7.5rem] overflow-y-auto text-white text-xs md:text-xs lg:text-sm mt-2 ${this
+        class="${this.showTopFive
+          ? "max-h-[7.5rem]"
+          : "max-h-[60vh]"} overflow-y-auto text-white text-xs md:text-xs lg:text-sm mt-2 ${this
           .visible
           ? ""
           : "hidden"}"
