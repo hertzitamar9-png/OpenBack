@@ -6,6 +6,7 @@ import { normalizeAssetPath } from "../../src/core/AssetUrls";
 import {
   buildPublicAssetManifest,
   clearPublicAssetManifestCache,
+  copyRootPublicFiles,
   createHashedPublicAssetFiles,
 } from "../../src/server/PublicAssetManifest";
 
@@ -92,6 +93,18 @@ describe("PublicAssetManifest", () => {
       await fs.rm(tempDir, { recursive: true, force: true });
       tempDir = null;
     }
+  });
+
+  test("copies changelog to its stable root URL", async () => {
+    const { resourcesDir, outDir } = await createTempResources();
+    const changelog = "## OpenBack v1.0.0\n";
+    await fs.writeFile(path.join(resourcesDir, "changelog.md"), changelog);
+
+    copyRootPublicFiles(resourcesDir, outDir);
+
+    await expect(
+      fs.readFile(path.join(outDir, "changelog.md"), "utf8"),
+    ).resolves.toBe(changelog);
   });
 
   test("hashes manifest.json from its rewritten content", async () => {

@@ -26,6 +26,7 @@ const HASHED_PUBLIC_ASSET_GLOBS = [
 const ROOT_PUBLIC_FILES = new Set([
   "LICENSE",
   "ads.txt",
+  "changelog.md",
   "cosmetics.json",
   "favicon.png",
   "favicon.svg",

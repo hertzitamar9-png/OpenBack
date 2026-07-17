@@ -441,11 +441,11 @@ export class StructurePass {
       gl.vertexAttribPointer(1, 4, gl.FLOAT, false, BYTES_PER_INSTANCE, 0);
       gl.vertexAttribPointer(2, 2, gl.FLOAT, false, BYTES_PER_INSTANCE, 16);
 
-      // -- Green highlight on existing structure being upgraded --
+      // -- Green highlight on existing structure being upgraded or stacked --
       const highlightedTile =
         g.canUpgrade && g.upgradeTargetTile !== null
           ? g.upgradeTargetTile
-          : g.snapTargetTile;
+          : null;
       if (highlightedTile !== null) {
         const tx = highlightedTile % this.mapW;
         const ty = (highlightedTile - tx) / this.mapW;
@@ -457,34 +457,29 @@ export class StructurePass {
         this.ghostBuf[5] = 0;
         gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.ghostBuf);
 
-        // Snapped added units intentionally use the exact same alpha, green
-        // tint, model buffer and draw call as original city/unit upgrades.
         gl.uniform1f(this.uGhostAlpha, 0.6);
         gl.uniform3f(this.uOutlineColor, 0.0, 0.8, 0.0); // green highlight
         gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, 1);
       }
 
-      // -- Ghost icon at cursor (the green snapped structure above replaces it
-      // while stacking, exactly like the existing upgrade preview). --
-      if (g.snapTargetTile === null) {
-        this.ghostBuf[0] = g.tileX;
-        this.ghostBuf[1] = g.tileY;
-        this.ghostBuf[2] = g.ownerID;
-        this.ghostBuf[3] = 0;
-        this.ghostBuf[4] = atlasIdx;
-        this.ghostBuf[5] = 0;
-        gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.ghostBuf);
+      // -- Ghost icon at cursor (shared by upgrades and stack previews) --
+      this.ghostBuf[0] = g.tileX;
+      this.ghostBuf[1] = g.tileY;
+      this.ghostBuf[2] = g.ownerID;
+      this.ghostBuf[3] = 0;
+      this.ghostBuf[4] = atlasIdx;
+      this.ghostBuf[5] = 0;
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.ghostBuf);
 
-        gl.uniform1f(this.uGhostAlpha, g.canBuild ? 0.78 : 0.22);
-        if (g.canUpgrade) {
-          gl.uniform3f(this.uOutlineColor, 0.0, 0.8, 0.0); // green tint — upgrade
-        } else if (g.canBuild) {
-          gl.uniform3f(this.uOutlineColor, 0, 0, 0); // no tint — valid build
-        } else {
-          gl.uniform3f(this.uOutlineColor, 0.8, 0.2, 0.2); // red tint — can't build
-        }
-        gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, 1);
+      gl.uniform1f(this.uGhostAlpha, g.canBuild ? 0.78 : 0.22);
+      if (g.canUpgrade) {
+        gl.uniform3f(this.uOutlineColor, 0.0, 0.8, 0.0); // green tint — upgrade
+      } else if (g.canBuild) {
+        gl.uniform3f(this.uOutlineColor, 0, 0, 0); // no tint — valid build
+      } else {
+        gl.uniform3f(this.uOutlineColor, 0.8, 0.2, 0.2); // red tint — can't build
       }
+      gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, 1);
 
       // Restore instance attrs to main buffer
       gl.bindBuffer(gl.ARRAY_BUFFER, this.instanceBuf.buffer);

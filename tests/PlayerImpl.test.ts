@@ -66,6 +66,38 @@ describe("PlayerImpl", () => {
     );
     expect(cityToUpgrade).toBe(false);
   });
+  test.each([
+    UnitType.Runway,
+    UnitType.MANPAD,
+    UnitType.MilitaryBase,
+    UnitType.TankMine,
+  ] as const)(
+    "%s auto-snaps to a nearby owned stack using the regular structure radius",
+    (unitType) => {
+      const stackTile = game.ref(0, 0);
+      const nearbyUnownedTile = game.ref(0, 1);
+      player.buildUnit(unitType, stackTile, {});
+
+      const buildable = player.buildableUnits(nearbyUnownedTile, [unitType])[0];
+
+      expect(buildable.canBuild).toBe(stackTile);
+    },
+  );
+  test.each([
+    UnitType.Runway,
+    UnitType.MANPAD,
+    UnitType.MilitaryBase,
+    UnitType.TankMine,
+  ] as const)(
+    "%s does not snap beyond the regular structure radius",
+    (unitType) => {
+      player.buildUnit(unitType, game.ref(0, 0), {});
+
+      const buildable = player.buildableUnits(game.ref(50, 50), [unitType])[0];
+
+      expect(buildable.canBuild).toBe(false);
+    },
+  );
   test("Unit cannot be upgraded when not enough gold", () => {
     player.buildUnit(UnitType.City, game.ref(0, 0), {});
     player.removeGold(BigInt(1000000));

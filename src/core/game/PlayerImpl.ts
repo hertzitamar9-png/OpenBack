@@ -1528,23 +1528,21 @@ export class PlayerImpl implements Player {
       case UnitType.MANPAD:
       case UnitType.MilitaryBase:
       case UnitType.TankMine: {
-        if (this.mg.owner(targetTile) !== this) return false;
         const stackTarget = this.nearestOwnedStackableTile(
           unitType,
           targetTile,
         );
-        return (
-          stackTarget ?? this.landBasedStructureSpawn(targetTile, validTiles)
-        );
+        if (stackTarget !== null) return stackTarget;
+        if (this.mg.owner(targetTile) !== this) return false;
+        return this.landBasedStructureSpawn(targetTile, validTiles);
       }
       case UnitType.Runway: {
-        if (this.mg.owner(targetTile) !== this) return false;
         // Snap to a nearby existing runway so clicking on or near one stacks
         // it (increases its level) instead of forcing a pixel-perfect click.
         const stackTarget = this.nearestOwnedRunwayTile(targetTile);
-        return (
-          stackTarget ?? this.landBasedStructureSpawn(targetTile, validTiles)
-        );
+        if (stackTarget !== null) return stackTarget;
+        if (this.mg.owner(targetTile) !== this) return false;
+        return this.landBasedStructureSpawn(targetTile, validTiles);
       }
       default:
         assertNever(unitType);

@@ -22,6 +22,7 @@ import { GameMode, HumansVsNations, RankedType } from "../../core/game/Game";
 import { GameRecord, GameRecordSchema } from "../../core/Schemas";
 import { generateID, replacer } from "../../core/Util";
 import { ServerEnv } from "../ServerEnv";
+import { requireDurableAuthStorage } from "./AuthPersistence";
 import { ensureKeys, getPrivateKey, getPublicJwk } from "./keys";
 
 // ---------------------------------------------------------------------------
@@ -159,6 +160,7 @@ let playerGames: StoredPlayerGame[] = [];
 // Parsed once at startup. Purchases validate item names/prices against this.
 const cosmetics = CosmeticsSchema.parse(cosmeticsJson);
 const databaseUrl = process.env.DATABASE_URL;
+requireDurableAuthStorage(ServerEnv.env(), databaseUrl);
 const database = databaseUrl
   ? new Pool({
       connectionString: databaseUrl,
@@ -484,10 +486,10 @@ async function signToken(user: StoredUser): Promise<{
   return { jwt, expiresIn: JWT_EXPIRES_S };
 }
 
-function newSession(user: StoredUser): string {
+async function newSession(user: StoredUser): Promise<string> {
   const id = crypto.randomBytes(32).toString("base64url");
   sessions.set(id, { persistentId: user.persistentId, createdAt: Date.now() });
-  persist();
+  await persistImmediately();
   return id;
 }
 
@@ -1058,7 +1060,7 @@ export function authRouter(): express.Router {
       user = createEmailUser(email);
     }
     if (oldSession) sessions.delete(oldSession);
-    const sessionId = newSession(user);
+    const sessionId = await newSession(user);
     setSessionCookie(res, sessionId);
     const { jwt, expiresIn } = await signToken(user);
     res.json({ jwt, expiresIn });
@@ -1071,7 +1073,7 @@ export function authRouter(): express.Router {
     let user = userFromSession(req);
     if (!user) {
       user = findOrCreateUser({});
-      const sessionId = newSession(user);
+      const sessionId = await newSession(user);
       setSessionCookie(res, sessionId);
     } else {
       const sessionId = getCookie(req, SESSION_COOKIE);
@@ -2115,7 +2117,7 @@ export function authRouter(): express.Router {
         googleSub: payload.sub,
         email: payload.email,
       });
-      const sessionId = newSession(user);
+      const sessionId = await newSession(user);
       setSessionCookie(res, sessionId);
       res.redirect("/");
     } catch (e) {

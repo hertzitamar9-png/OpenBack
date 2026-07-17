@@ -1154,6 +1154,7 @@
     "teams_title": "Teams"
   },
   "news": {
+    "load_failed": "Release notes are temporarily unavailable.",
     "title": "Release Notes"
   },
   "news_box": {

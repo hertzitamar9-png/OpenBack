@@ -26,6 +26,7 @@
   "news": {
     "full_changelog": "ראה את פרטי הגרסה המלאים",
     "github_link": "בגיטהאב",
+    "load_failed": "פרטי הגרסה אינם זמינים כרגע.",
     "title": "פרטי הגרסה"
   },
   "help_modal": {
@@ -180,10 +181,13 @@
   "public_lobby": {
     "join": "הצטרף למשחק הבא",
     "waiting": "שחקנים מחכים",
+    "players_per_team": "של {num}",
     "teams_Duos": "זוגות (קבוצות של 2)",
     "teams_Trios": "שלישיות (קבוצות של 3)",
     "teams_Quads": "רביעיות (קבוצות של 4)",
-    "teams": "{num} קבוצות"
+    "teams": "{num} קבוצות",
+    "teams_hvn": "שחקנים נגד אומות",
+    "teams_hvn_detailed": "{num} שחקנים נגד {num} אומות"
   },
   "username": {
     "enter_username": "הזן את שם המשתמש שלך",
@@ -207,7 +211,11 @@
     "player": "שחקן",
     "players": "שחקנים",
     "waiting": "מחכה לשחקנים...",
-    "start": "התחל משחק"
+    "start": "התחל משחק",
+    "teams_Duos": "זוגות (קבוצות של 2)",
+    "teams_Humans Vs Nations": "שחקנים נגד אומות",
+    "teams_Quads": "רביעיות (קבוצות של 4)",
+    "teams_Trios": "שלישיות (קבוצות של 3)"
   },
   "team_colors": {
     "red": "אדום",
@@ -233,6 +241,11 @@
   "game_mode": {
     "ffa": "כולם נגד כולם",
     "teams": "קבוצות"
+  },
+  "mode_selector": {
+    "teams_count": "{teamCount} קבוצות",
+    "teams_of": "{teamCount} קבוצות של {playersPerTeam}",
+    "teams_title": "קבוצות"
   },
   "select_lang": {
     "title": "בחר שפה"

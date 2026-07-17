@@ -16,6 +16,30 @@ export class NewsModal extends BaseModal {
 
   private initialized: boolean = false;
 
+  private async loadMarkdown(): Promise<string> {
+    const primaryUrl = assetUrl("changelog.md");
+    const urls =
+      primaryUrl === "/changelog.md"
+        ? [primaryUrl]
+        : [primaryUrl, "/changelog.md"];
+
+    for (const url of urls) {
+      try {
+        const response = await fetch(url);
+        const contentType = response.headers.get("content-type") ?? "";
+        if (!response.ok || contentType.includes("text/html")) continue;
+
+        const markdown = await response.text();
+        if (/^\s*<!doctype html|^\s*<html\b/i.test(markdown)) continue;
+        return normalizeNewsMarkdown(markdown);
+      } catch {
+        // Try the stable same-origin URL if the cache-busted CDN asset fails.
+      }
+    }
+
+    return translateText("news.load_failed");
+  }
+
   protected renderHeaderSlot() {
     return modalHeader({
       title: translateText("news.title"),
@@ -44,11 +68,7 @@ export class NewsModal extends BaseModal {
   protected onOpen(): void {
     if (!this.initialized) {
       this.initialized = true;
-      fetch(assetUrl("changelog.md"))
-        .then((response) => (response.ok ? response.text() : "Failed to load"))
-        .then((markdown) => normalizeNewsMarkdown(markdown))
-        .then((markdown) => (this.markdown = markdown))
-        .catch(() => (this.markdown = "Failed to load"));
+      void this.loadMarkdown().then((markdown) => (this.markdown = markdown));
     }
   }
 }

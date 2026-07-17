@@ -178,8 +178,6 @@ export interface GhostPreviewData {
   ownerID: number; // Player's smallID (for color)
   /** Tile position of existing structure being upgraded (null if fresh build). */
   upgradeTargetTile: number | null;
-  /** Existing stackable structure tile currently snapped under the cursor. */
-  snapTargetTile: number | null;
   /** Range radius in tiles for the placement circle (0 = no circle). */
   rangeRadius: number;
   /** True if placing here would carry a penalty (e.g. nuking an ally → traitor). */

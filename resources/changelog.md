@@ -1,3 +1,28 @@
+## OpenBack v0.33.34 - Unified Stacking Preview
+
+- Made the green stacking preview for runways, MANPADs, military bases, and tank mines use the exact same highlight and cursor-ghost rendering path as existing city, factory, and structure upgrades.
+- Removed the separate snapped-unit visual path so added units now match the established placement feedback exactly.
+- Matched regular structure snapping distance and border behavior, so hovering close enough to an owned stack automatically selects it even when the cursor is just outside owned territory.
+
+Contributed by **frootz jhklphy**.
+
+## OpenBack v0.33.33 - Durable Player Accounts
+
+- Protected accounts, sessions, profiles, clans, friends, messages, rankings, and match history from disappearing during Render deploys or service restarts.
+- Production now requires durable PostgreSQL storage and refuses to start with the temporary `/tmp` fallback that Render deletes.
+- Added a clear startup error for a missing database connection so a bad deployment cannot silently replace persistent player data with an empty temporary store.
+- Account creation and sign-in now wait for the session to reach durable storage before reporting success.
+
+Contributed by **frootz jhklphy**.
+
+## OpenBack v0.33.32 - Clear Hebrew Match Options
+
+- Translated and clarified every Hebrew team-format choice, including duos, trios, quads, and Humans vs Nations.
+- Kept Release Notes readable when a cached or missing CDN asset returns the app shell, with an automatic same-origin fallback instead of displaying raw HTML.
+- Published the changelog at a stable public URL as well as its cache-busted asset URL for reliable in-game loading.
+
+Contributed by **frootz jhklphy**.
+
 ## OpenBack v0.33.31 - Social Team Matchmaking
 
 - Added separate Ranked and With Friends choices for 2v2, 3v3, and 4v4, including real solo teammate matching and the existing invite-code party flow.

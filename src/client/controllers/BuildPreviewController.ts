@@ -145,15 +145,13 @@ export class BuildPreviewController implements Controller {
             ghost.rangeRadius > 0;
           const radiusFollowsCursor = !(
             (ghost.canUpgrade && ghost.upgradeTargetTile !== null) ||
-            ghost.snapTargetTile !== null ||
             anchoredToSnappedRunway ||
             anchoredVehicleRange
           );
           this.view.updateGhostPreview({
             ...ghost,
-            ...(ghost.snapTargetTile === null
-              ? { tileX: w.x - 0.5, tileY: w.y - 0.5 }
-              : {}),
+            tileX: w.x - 0.5,
+            tileY: w.y - 0.5,
             ...(radiusFollowsCursor
               ? { radiusTileX: w.x - 0.5, radiusTileY: w.y - 0.5 }
               : {}),
@@ -455,7 +453,7 @@ export class BuildPreviewController implements Controller {
 
     const u = this.ghostUnit.buildableUnit;
 
-    const snapTargetTile =
+    const stackTargetTile =
       STACKABLE_OPENBACK_TYPES.has(u.type) &&
       u.canBuild !== false &&
       myPlayer
@@ -473,7 +471,11 @@ export class BuildPreviewController implements Controller {
     let upgradeTargetTile: number | null = null;
     if (u.canUpgrade !== false) {
       upgradeTargetTile = this.game.unit(u.canUpgrade)?.tile() ?? null;
+    } else if (stackTargetTile !== null) {
+      // Reuse the established upgrade preview for added stackable units.
+      upgradeTargetTile = stackTargetTile;
     }
+    const canUpgrade = u.canUpgrade !== false || stackTargetTile !== null;
 
     // Range circle: SAM placement preview shows targetable radius; nuke
     // previews show the outer blast radius at the target tile.
@@ -618,12 +620,12 @@ export class BuildPreviewController implements Controller {
     const cost = u.cost;
     return {
       ghostType: u.type,
-      tileX: this.game.x(snapTargetTile ?? tileRef),
-      tileY: this.game.y(snapTargetTile ?? tileRef),
+      tileX: this.game.x(tileRef),
+      tileY: this.game.y(tileRef),
       radiusTileX,
       radiusTileY,
       canBuild: u.canBuild !== false,
-      canUpgrade: u.canUpgrade !== false,
+      canUpgrade,
       cost: Number(cost),
       showCost: this.userSettings.cursorCostLabel(),
       canAfford: myPlayer.gold() >= cost,
@@ -631,7 +633,6 @@ export class BuildPreviewController implements Controller {
       overlappingRailroads: u.overlappingRailroads,
       ownerID: myPlayer.smallID(),
       upgradeTargetTile,
-      snapTargetTile,
       rangeRadius,
       rangeWarning: targetingAlly,
     };
