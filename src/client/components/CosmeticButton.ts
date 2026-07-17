@@ -1,5 +1,6 @@
 import { html, LitElement, nothing, TemplateResult } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import { assetUrl } from "../../core/AssetUrls";
 import {
   Flag,
   Pack,
@@ -165,15 +166,16 @@ export class CosmeticButton extends LitElement {
     }
 
     const c = this.resolved.cosmetic as Flag;
+    const flagUrl = assetUrl(c.url);
     return html`<img
-      src=${c.url}
+      src=${flagUrl}
       alt=${c.name}
       class="w-full h-full object-fill pointer-events-none"
       draggable="false"
       loading="lazy"
       @error=${(e: Event) => {
         const img = e.currentTarget as HTMLImageElement;
-        const fallback = "/flags/xx.svg";
+        const fallback = assetUrl("flags/xx.svg");
         if (img.src && !img.src.endsWith(fallback)) {
           img.src = fallback;
         }

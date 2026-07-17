@@ -225,7 +225,7 @@ export async function resolveFlagUrl(
     const key = flagRef.slice("flag:".length);
     const cosmetics = await fetchCosmetics();
     const flagData = cosmetics?.flags?.[key];
-    return flagData?.url;
+    return flagData ? assetUrl(flagData.url) : undefined;
   }
   if (flagRef.startsWith("country:")) {
     const code = flagRef.slice("country:".length);

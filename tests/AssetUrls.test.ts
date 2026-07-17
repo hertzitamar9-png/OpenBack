@@ -10,6 +10,14 @@ describe("AssetUrls", () => {
     ).toBe("/_assets/images/Favicon.hash.svg");
   });
 
+  test("resolves leading-slash cosmetic paths through the asset manifest", () => {
+    expect(
+      buildAssetUrl("/flags/NATO.svg", {
+        "flags/NATO.svg": "/_assets/flags/NATO.hash.svg",
+      }),
+    ).toBe("/_assets/flags/NATO.hash.svg");
+  });
+
   test("falls back to the unversioned path when manifest has no match", () => {
     expect(buildAssetUrl("images/unknown.svg", {})).toBe("/images/unknown.svg");
   });

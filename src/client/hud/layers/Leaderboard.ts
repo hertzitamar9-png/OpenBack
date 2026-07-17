@@ -242,7 +242,7 @@ export class Leaderboard extends LitElement implements Controller {
     }
     return html`
       <div
-        class="max-h-[35vh] overflow-y-auto text-white text-xs md:text-xs lg:text-sm md:max-h-[50vh] mt-2 ${this
+        class="max-h-[7.5rem] overflow-y-auto text-white text-xs md:text-xs lg:text-sm mt-2 ${this
           .visible
           ? ""
           : "hidden"}"

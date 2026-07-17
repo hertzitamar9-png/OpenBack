@@ -161,10 +161,20 @@ if (!document.getElementById(STYLE_ID)) {
     .rarity-legendary { animation: rarity-legendary-flare 2.4s ease-in-out infinite; }
     .rarity-mythic { animation: rarity-mythic-aurora 1.9s ease-in-out infinite; }
     .rarity-ultra { animation: rarity-ultra-spectrum 1.35s linear infinite; }
-    @keyframes legendary-pulse {
+    @keyframes rarity-legendary-hover {
       0%   { box-shadow: 0 0 15px rgba(251,146,60,0.8), 0 0 30px rgba(251,146,60,0.4); }
       50%  { box-shadow: 0 0 25px rgba(251,146,60,0.9), 0 0 45px rgba(251,146,60,0.5); }
       100% { box-shadow: 0 0 15px rgba(251,146,60,0.8), 0 0 30px rgba(251,146,60,0.4); }
+    }
+    @keyframes rarity-mythic-hover {
+      0%, 100% { box-shadow: -9px 0 28px rgba(236,72,153,0.72), 9px 0 25px rgba(34,211,238,0.48); }
+      50% { box-shadow: 11px -5px 42px rgba(34,211,238,0.95), -11px 6px 36px rgba(217,70,239,0.88); }
+    }
+    @keyframes rarity-ultra-hover {
+      0% { box-shadow: -13px 0 44px rgba(244,63,94,0.95), 13px 0 42px rgba(34,211,238,0.9); }
+      33% { box-shadow: 0 -13px 52px rgba(250,204,21,1), 0 13px 48px rgba(168,85,247,0.95); }
+      66% { box-shadow: 13px 0 54px rgba(34,211,238,1), -13px 0 50px rgba(236,72,153,1); }
+      100% { box-shadow: -13px 0 44px rgba(244,63,94,0.95), 13px 0 42px rgba(34,211,238,0.9); }
     }
     @keyframes legendary-shimmer {
       0%   { left: -60%; }
@@ -190,14 +200,35 @@ if (!document.getElementById(STYLE_ID)) {
       0%, 100% { opacity: 0; transform: scale(0.5) rotate(0deg); }
       35%, 58% { opacity: 1; transform: scale(1.0) rotate(-20deg); }
     }
-    .legendary-hovered {
-      animation: legendary-pulse 1.4s ease-in-out infinite;
+    .rarity-legendary.rarity-premium-hovered {
+      animation: rarity-legendary-hover 1.4s ease-in-out infinite;
     }
-    .legendary-shimmer.active {
+    .rarity-mythic.rarity-premium-hovered {
+      animation: rarity-mythic-hover 1.05s ease-in-out infinite;
+    }
+    .rarity-ultra.rarity-premium-hovered {
+      animation: rarity-ultra-hover 0.72s linear infinite;
+    }
+    .legendary-shimmer.rarity-epic.active {
       animation: legendary-shimmer 0.8s ease-in-out;
     }
-    .legendary-border-sweep {
+    .legendary-shimmer.rarity-legendary.active {
+      animation: legendary-shimmer 0.65s ease-out;
+    }
+    .legendary-shimmer.rarity-mythic.active {
+      animation: legendary-shimmer 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .legendary-shimmer.rarity-ultra.active {
+      animation: legendary-shimmer 0.45s linear 2;
+    }
+    .legendary-border-sweep.rarity-legendary {
       animation: legendary-border-sweep 8s linear infinite;
+    }
+    .legendary-border-sweep.rarity-mythic {
+      animation: legendary-border-sweep 4s linear infinite reverse;
+    }
+    .legendary-border-sweep.rarity-ultra {
+      animation: legendary-border-sweep 1.5s linear infinite;
     }
     .legendary-sparkle-0 { animation: sparkle-twinkle-0 1.6s ease-in-out infinite; }
     .legendary-sparkle-1 { animation: sparkle-twinkle-1 1.9s ease-in-out infinite 0.3s; }
@@ -342,7 +373,7 @@ export class CosmeticContainer extends LitElement {
 
     if (this.selected) {
       this.style.boxShadow = `0 0 18px ${cfg.glow}`;
-    } else if (!this.classList.contains("legendary-hovered")) {
+    } else if (!this.classList.contains("rarity-premium-hovered")) {
       this.style.boxShadow = "";
     }
   }
@@ -353,7 +384,7 @@ export class CosmeticContainer extends LitElement {
     // Shimmer sweep — epic and legendary
     if (this._hasGlint) {
       const shimmer = document.createElement("div");
-      shimmer.className = "legendary-shimmer";
+      shimmer.className = `legendary-shimmer rarity-${this.rarity}`;
       shimmer.style.cssText = `
         pointer-events: none;
         position: absolute;
@@ -382,7 +413,7 @@ export class CosmeticContainer extends LitElement {
       display: none;
     `;
     const sweepInner = document.createElement("div");
-    sweepInner.className = "legendary-border-sweep";
+    sweepInner.className = `legendary-border-sweep rarity-${this.rarity}`;
     const sc =
       (rarityConfig[this.rarity] ?? fallback).borderSweepColor ?? "255,200,80";
     sweepInner.style.cssText = `
@@ -421,7 +452,7 @@ export class CosmeticContainer extends LitElement {
     ];
     this._sparkles = corners.map((pos, i) => {
       const el = document.createElement("div");
-      el.className = `legendary-sparkle-${i}`;
+      el.className = `legendary-sparkle-${i} rarity-${this.rarity}`;
       el.textContent = "✦";
       const sparkleColor =
         (rarityConfig[this.rarity] ?? fallback).sparkleColor ?? "255,220,100";
@@ -483,7 +514,7 @@ export class CosmeticContainer extends LitElement {
     if (this._isLegendary) {
       this.style.transform = `scale(${this._hoverScale})`;
       this.style.zIndex = "10";
-      this.classList.add("legendary-hovered");
+      this.classList.add("rarity-premium-hovered");
       this._sparkles.forEach((s) => (s.style.display = "block"));
       CosmeticContainer._ensureBackdrop().style.background = `rgba(0,0,0,${this._backdropOpacity})`;
     }
@@ -505,7 +536,7 @@ export class CosmeticContainer extends LitElement {
     if (this._isLegendary) {
       this.style.transform = "";
       this.style.zIndex = "0";
-      this.classList.remove("legendary-hovered");
+      this.classList.remove("rarity-premium-hovered");
       this._sparkles.forEach((s) => (s.style.display = "none"));
       if (CosmeticContainer._backdrop) {
         CosmeticContainer._backdrop.style.background = "rgba(0,0,0,0)";

@@ -1,3 +1,19 @@
+## OpenBack v0.33.51 - Compact Player Board and Reliable Cosmetics
+
+- Restored the desktop build bar to its original single-row layout.
+- Made the upper player leaderboard compact enough to show two player rows at a time, with scrolling for everyone else.
+- Fixed collectible shop flags that failed to load from production's hashed asset paths.
+- Gave Legendary, Mythic, and Ultra cosmetics separate hover, shimmer, border, and glow timing instead of sharing the same premium animation.
+
+Contributed by **frootz jhklphy**.
+
+## OpenBack v0.33.50 - Portable Multiplayer Hosting
+
+- Added a production single-port gateway so OpenBack's website, accounts, matchmaking, social features, game workers, and WebSockets can run together on modern hosted runtimes.
+- Added direct Deno Deploy build support while preserving the existing Render deployment and database behavior.
+
+Contributed by **frootz jhklphy**.
+
 ## OpenBack v0.33.49 - Minimum Ranked Win Gain
 
 - Guarantee at least 10 OB for every ranked victory, including heavily favored wins.
