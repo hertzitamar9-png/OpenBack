@@ -223,7 +223,7 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
   private displayUnitCount(player: PlayerView, type: UnitType, icon: string) {
     return !this.game.config().isUnitDisabled(type)
       ? html`<div
-          class="flex items-center justify-center gap-0.5 lg:gap-1 p-0.5 lg:p-1 border rounded-md border-gray-500 text-[10px] lg:text-xs w-9 lg:w-12 h-6 lg:h-7"
+          class="flex items-center justify-center gap-0.5 lg:gap-1 p-0.5 lg:p-1 border rounded-md border-gray-500 text-[10px] lg:text-xs w-full h-6 lg:h-7"
           translate="no"
         >
           <img
@@ -385,7 +385,7 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
                 >`}
             ${this.renderPlayerNameIcons(player)} ${allianceHtml ?? ""}
           </div>
-          <div class="flex flex-wrap gap-0.5 lg:gap-1 items-center mt-0.5">
+          <div class="grid grid-cols-7 gap-0.5 lg:gap-1 items-center mt-0.5">
             ${this.displayUnitCount(player, UnitType.City, cityIcon)}
             ${this.displayUnitCount(player, UnitType.Factory, factoryIcon)}
             ${this.displayUnitCount(player, UnitType.Port, portIcon)}
