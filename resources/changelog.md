@@ -1,3 +1,11 @@
+## OpenBack v0.33.47 - High-Stakes OB Upsets
+
+- Cap the OB a winner can earn from one ranked game at 500, reserved for major wins against strong opponents.
+- Let OB losses grow with the favorite's advantage instead of using the old small K-factor cap: a 500 OB favorite losing to 100 OB drops about 50, while a 10,000 OB favorite can drop about 1,000.
+- Keep underdog losses and expected favorite wins small through the opponent-strength expectation formula.
+
+Contributed by **frootz jhklphy**.
+
 ## OpenBack v0.33.46 - Nation-Count Reward Validation
 
 - Apply the same nation-count requirement to multiplayer and single-player rewards.

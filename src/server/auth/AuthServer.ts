@@ -580,23 +580,8 @@ export function areFriends(a: string, b: string): boolean {
   );
 }
 
-// Chess.com / FIDE-style dynamic K-factor: new accounts converge fast, settled
-// players are stable, and top players barely move (so ratings mean something).
-function eloKFactor(user: StoredUser): number {
-  const elo = user.elo ?? DEFAULT_OB;
-  const games = (user.rankedWins ?? 0) + (user.rankedLosses ?? 0);
-  if (games < 30) return 40; // provisional / placement
-  if (elo >= 2400) return 10; // master tier
-  if (elo >= 2100) return 20; // expert tier
-  return 32; // established
-}
-
-// Applies an OB update after a ranked 1v1 result and persists it. This is the
-// same math chess rating systems use: the reward scales with opponent strength—
-// upsetting a much higher-rated player earns (and costs them) a lot, while
-// beating someone far below you barely moves the needle. Each side uses its own
-// dynamic K-factor so a veteran's rating isn't swung by a newcomer's placement.
-// Players are identified by persistentId (what the game server has on hand).
+// Ranked OB keeps the chess-style expected-score curve, caps gains at 500, and
+// lets a heavily favored loser drop in proportion to the rating mismatch.
 function awardObProgress(
   user: StoredUser,
   previousOb: number,
@@ -630,15 +615,30 @@ function awardObProgress(
   user.obMilestones = [...claimedMilestones].sort((a, b) => a - b);
 }
 
-export function calculateObChange(
-  rating: number,
-  opponentRating: number,
-  kFactor: number,
-  won: boolean,
+function expectedObScore(rating: number, opponentRating: number): number {
+  return 1 / (1 + 10 ** ((opponentRating - rating) / 400));
+}
+
+export function calculateObGain(
+  winnerRating: number,
+  loserRating: number,
 ): number {
-  const expected = 1 / (1 + 10 ** ((opponentRating - rating) / 400));
-  const score = won ? 1 : 0;
-  return Math.max(1, Math.round(Math.abs(kFactor * (score - expected))));
+  const upsetStrength = 1 - expectedObScore(winnerRating, loserRating);
+  const opponentQuality = Math.min(1, Math.max(0.1, loserRating / 1000));
+  return Math.max(
+    1,
+    Math.min(500, Math.round(500 * upsetStrength * opponentQuality)),
+  );
+}
+
+export function calculateObLoss(
+  loserRating: number,
+  winnerRating: number,
+): number {
+  const expectedToWin = expectedObScore(loserRating, winnerRating);
+  const favoriteGap = Math.max(0, loserRating - winnerRating);
+  const ratingAtRisk = 10 + favoriteGap / 10;
+  return Math.max(1, Math.round(ratingAtRisk * expectedToWin));
 }
 
 export function recordRankedResult(
@@ -650,10 +650,8 @@ export function recordRankedResult(
   if (!winner || !loser) return false;
   const rw = winner.elo ?? DEFAULT_OB;
   const rl = loser.elo ?? DEFAULT_OB;
-  const kw = eloKFactor(winner);
-  const kl = eloKFactor(loser);
-  const gain = calculateObChange(rw, rl, kw, true);
-  const drop = calculateObChange(rl, rw, kl, false);
+  const gain = calculateObGain(rw, rl);
+  const drop = calculateObLoss(rl, rw);
   winner.elo = rw + gain;
   loser.elo = Math.max(0, rl - drop);
   awardObProgress(winner, rw, winner.elo);
@@ -665,9 +663,7 @@ export function recordRankedResult(
   return true;
 }
 
-// Team ranked uses the average opponent rating for the expected score, then
-// updates every participant with their own K-factor. This keeps 2v2â€“4v4
-// results fair without multiplying the points simply because a team is larger.
+// Team ranked compares each participant with the opposing team's average OB.
 export function recordRankedTeamResult(
   winnerPersistentIds: string[],
   loserPersistentIds: string[],
@@ -690,20 +686,14 @@ export function recordRankedTeamResult(
     loserUsers.length;
   for (const winner of winnerUsers) {
     const rating = winner.elo ?? DEFAULT_OB;
-    winner.elo =
-      rating +
-      calculateObChange(rating, loserAverage, eloKFactor(winner), true);
+    winner.elo = rating + calculateObGain(rating, loserAverage);
     awardObProgress(winner, rating, winner.elo);
     winner.peakElo = Math.max(winner.peakElo ?? winner.elo, winner.elo);
     winner.rankedWins = (winner.rankedWins ?? 0) + 1;
   }
   for (const loser of loserUsers) {
     const rating = loser.elo ?? DEFAULT_OB;
-    loser.elo = Math.max(
-      0,
-      rating -
-        calculateObChange(rating, winnerAverage, eloKFactor(loser), false),
-    );
+    loser.elo = Math.max(0, rating - calculateObLoss(rating, winnerAverage));
     loser.peakElo = Math.max(loser.peakElo ?? loser.elo, loser.elo);
     loser.rankedLosses = (loser.rankedLosses ?? 0) + 1;
   }

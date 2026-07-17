@@ -17,12 +17,14 @@ process.env.API_KEY = "auth-account-test-key";
 
 let server: http.Server;
 let origin: string;
-let calculateObChange: typeof import("../../src/server/auth/AuthServer").calculateObChange;
+let calculateObGain: typeof import("../../src/server/auth/AuthServer").calculateObGain;
+let calculateObLoss: typeof import("../../src/server/auth/AuthServer").calculateObLoss;
 let recordRankedResult: typeof import("../../src/server/auth/AuthServer").recordRankedResult;
 
 beforeAll(async () => {
   const auth = await import("../../src/server/auth/AuthServer");
-  calculateObChange = auth.calculateObChange;
+  calculateObGain = auth.calculateObGain;
+  calculateObLoss = auth.calculateObLoss;
   recordRankedResult = auth.recordRankedResult;
   const app = express();
   app.use(express.json());
@@ -54,10 +56,12 @@ async function postJson(pathname: string, body: unknown, cookie?: string) {
 
 describe("email account lifecycle", () => {
   test("calculates OB changes from both players' ratings", () => {
-    expect(calculateObChange(100, 100, 40, true)).toBe(20);
-    expect(calculateObChange(10_000, 0, 40, true)).toBe(1);
-    expect(calculateObChange(0, 10_000, 40, true)).toBe(40);
-    expect(calculateObChange(10_000, 0, 40, false)).toBe(40);
+    expect(calculateObGain(100, 100)).toBe(25);
+    expect(calculateObGain(10_000, 100)).toBe(1);
+    expect(calculateObGain(100, 10_000)).toBe(500);
+    expect(calculateObLoss(500, 100)).toBe(45);
+    expect(calculateObLoss(10_000, 100)).toBe(1000);
+    expect(calculateObLoss(100, 10_000)).toBe(1);
   });
 
   test("claims an anonymous profile when login email is not registered", async () => {
