@@ -1033,10 +1033,21 @@ export class Config {
   }
 
   openBackSnapRadius(unitType?: UnitType): number {
-    // All units (custom OpenBack units included) snap from a short distance so
-    // placing/building feels tight and precise. Distinct from structureMinDist,
-    // which governs the minimum spacing between separate structures.
-    return 8;
+    // The custom OpenBack units (the player's own units) snap from a tighter
+    // distance (10) so placing them feels precise; all other (legacy) units
+    // keep the wider 15 snap. Distinct from structureMinDist, which governs the
+    // minimum spacing between separate structures.
+    const customUnits = new Set<UnitType>([
+      UnitType.Tank,
+      UnitType.TankMine,
+      UnitType.MilitaryBase,
+      UnitType.Warship,
+      UnitType.MANPAD,
+    ]);
+    if (unitType !== undefined && customUnits.has(unitType)) {
+      return 10;
+    }
+    return 15;
   }
 
   openBackVehicleSnapRadius(): number {
