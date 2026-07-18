@@ -1033,9 +1033,10 @@ export class Config {
   }
 
   openBackSnapRadius(unitType?: UnitType): number {
-    // All units (including the custom OpenBack units) snap at the same
-    // distance as cities/legacy structures.
-    return this.structureMinDist();
+    // All units (custom OpenBack units included) snap from a short distance so
+    // placing/building feels tight and precise. Distinct from structureMinDist,
+    // which governs the minimum spacing between separate structures.
+    return 8;
   }
 
   openBackVehicleSnapRadius(): number {

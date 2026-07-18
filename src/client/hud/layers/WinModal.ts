@@ -18,7 +18,7 @@ import { SendWinnerEvent } from "../../Transport";
 import { GameView } from "../../view";
 
 const WIN_MODAL_DISMISSED_KEY = "openback-win-modal-dismissed";
-const DEATH_VIDEO_SEEN_KEY = "openback-death-video-seen";
+const DEATH_VIDEO_SEEN_KEY = "openback-death-video-seen-v2";
 
 @customElement("win-modal")
 export class WinModal extends LitElement implements Controller {
@@ -243,6 +243,8 @@ export class WinModal extends LitElement implements Controller {
     ) {
       // Transition alive -> dead: handle exactly once per death.
       this.wasAlive = false;
+      // A death is never a win — make sure a prior win didn't leave isWin set.
+      this.isWin = false;
       // First death ever (across sessions) shows the tutorial video; every
       // later death shows the logo. Persisted so reloads/new games are counted.
       const seenVideo = localStorage.getItem(DEATH_VIDEO_SEEN_KEY) === "true";

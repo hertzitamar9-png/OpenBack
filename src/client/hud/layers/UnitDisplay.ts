@@ -346,7 +346,7 @@ export class UnitDisplay extends LitElement implements Controller {
           title=${translateText("unit_type." + structureKey)}
           class="${this.canBuild(unitType)
             ? ""
-            : "opacity-40"} w-14 h-14 shrink-0 snap-start border rounded-lg flex flex-col items-center justify-center gap-0.5 cursor-pointer overflow-hidden
+            : "opacity-40"} w-16 h-16 shrink-0 snap-start border rounded-lg flex flex-col items-center justify-center gap-0.5 cursor-pointer overflow-hidden px-0.5
              ${selected
             ? "border-cyan-400 bg-cyan-500/20 ring-2 ring-cyan-400"
             : "border-white/20 bg-slate-800/80 hover:bg-slate-700/80"}"
@@ -403,7 +403,7 @@ export class UnitDisplay extends LitElement implements Controller {
             />
           </div>
           <div
-            class="max-w-full text-center text-[10px] leading-tight font-semibold text-white/90 truncate px-0.5"
+            class="w-full text-center text-[9px] leading-tight font-semibold text-white/90 break-words"
           >
             ${translateText("unit_type." + structureKey)}
           </div>
