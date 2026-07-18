@@ -428,7 +428,7 @@ export class MapPlaylist {
     const worldRoll = random();
     const strategicObjectives = worldRoll < 0.2;
     const naturalDisasters = worldRoll >= 0.2 && worldRoll < 0.32;
-    const fogOfWar = worldRoll >= 0.32 && worldRoll < 0.44;
+    const fogOfWar = false;
 
     return {
       donateGold: false,
