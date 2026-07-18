@@ -18,7 +18,6 @@ import { SendWinnerEvent } from "../../Transport";
 import { GameView } from "../../view";
 
 const WIN_MODAL_DISMISSED_KEY = "openback-win-modal-dismissed";
-const DEATH_VIDEO_SEEN_KEY = "openback-death-video-seen-v3";
 
 @customElement("win-modal")
 export class WinModal extends LitElement implements Controller {
@@ -27,6 +26,12 @@ export class WinModal extends LitElement implements Controller {
 
   private showLogoOnDeath = false;
   private wasAlive = true;
+  // Deaths in the current game session. The first death of a session shows the
+  // tutorial video (helpful for everyone, including returning players whose
+  // browser history predates this build); every later death shows the logo.
+  // Session-scoped on purpose so it is identical for all players and not
+  // polluted by deaths from previous visits.
+  private deathCountThisSession = 0;
 
   @state()
   isVisible = false;
@@ -223,7 +228,11 @@ export class WinModal extends LitElement implements Controller {
     window.location.href = "/?requeue";
   }
 
-  init() {}
+  init() {
+    // Begin each game with a fresh death count so the first death of the new
+    // game shows the tutorial video regardless of prior sessions.
+    this.deathCountThisSession = 0;
+  }
 
   tick() {
     const myPlayer = this.game.myPlayer();
@@ -245,13 +254,11 @@ export class WinModal extends LitElement implements Controller {
       this.wasAlive = false;
       // A death is never a win — make sure a prior win didn't leave isWin set.
       this.isWin = false;
-      // First death ever (across sessions) shows the tutorial video; every
-      // later death shows the logo. Persisted so reloads/new games are counted.
-      const seenVideo = localStorage.getItem(DEATH_VIDEO_SEEN_KEY) === "true";
-      this.showLogoOnDeath = seenVideo;
-      if (!seenVideo) {
-        localStorage.setItem(DEATH_VIDEO_SEEN_KEY, "true");
-      }
+      // First death of this session shows the tutorial video; later deaths
+      // show the logo. Session-scoped so it's the same for every player and
+      // isn't affected by how many times they've died in the past.
+      this.deathCountThisSession++;
+      this.showLogoOnDeath = this.deathCountThisSession >= 2;
       this._title = translateText("win_modal.died");
       this.show(true);
     }
