@@ -1,4 +1,3 @@
-import { GameEnv } from "../core/configuration/Config";
 import { getPlayToken } from "./Auth";
 import { ClientEnv } from "./ClientEnv";
 import { showInGameConfirm } from "./InGameModal";
@@ -54,7 +53,7 @@ class OpenBackSocialClient {
       return;
     }
     const base =
-      ClientEnv.env() === GameEnv.Dev
+      window.location.hostname === "localhost"
         ? ClientEnv.jwtIssuer()
         : window.location.origin;
     const endpoint = new URL("/social", base);
