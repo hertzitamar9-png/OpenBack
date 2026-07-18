@@ -4,6 +4,7 @@ import { z } from "zod";
 import { TokenPayload, TokenPayloadSchema } from "../core/ApiSchemas";
 import { base64urlToUuid } from "../core/Base64";
 import { getApiBase, getAudience } from "./Api";
+import { ClientEnv } from "./ClientEnv";
 import { crazyGamesSDK } from "./CrazyGamesSDK";
 import { generateCryptoRandomUUID } from "./Utils";
 
@@ -222,7 +223,7 @@ export async function userAuth(
     // SPA shares its origin, so iss/aud should equal the auth origin. If they
     // drift (e.g. behind a proxy) we only warn instead of forcing a logout,
     // since the server still validates tokens on every game join.
-    const expected = getApiBase();
+    const expected = ClientEnv.jwtIssuer();
     if (iss && iss !== expected) {
       console.warn(`JWT iss "${iss}" != expected "${expected}"`);
     }
