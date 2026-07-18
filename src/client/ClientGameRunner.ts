@@ -665,6 +665,19 @@ export class ClientGameRunner {
   private lastTickReceiveTime: number = 0;
   private currentTickDelay: number | undefined = undefined;
 
+  // Coalescing: incoming worker game-updates are buffered and applied in a
+  // single RAF-driven flush instead of running the full update+render pipeline
+  // once per message. Under heavy catch-up (e.g. reconnect resync of hundreds
+  // of turns) the worker can deliver many updates in a single macrotask, and
+  // running gameView.update + webglBuilder.update + renderer.tick per message
+  // floods the main thread and drops frames / crashes the tab.
+  private pendingUpdates: GameUpdateViewData[] = [];
+  private flushRafId: number | null = null;
+  // Maximum simulation updates applied per animation frame. Beyond this we
+  // fast-forward state by applying the remaining updates but they are still
+  // bounded so a single frame cannot run unbounded work.
+  private static readonly MAX_UPDATES_PER_FLUSH = 8;
+
   constructor(
     private lobby: LobbyConfig,
     private clientID: ClientID | undefined,
@@ -788,9 +801,12 @@ export class ClientGameRunner {
       gu.updates[GameUpdateType.Hash].forEach((hu: HashUpdate) => {
         this.eventBus.emit(new SendHashEvent(hu.tick, hu.hash));
       });
-      this.gameView.update(gu);
-      this.webglBuilder?.update(this.gameView);
-      this.renderer.tick();
+
+      // Buffer the update and coalesce rendering into a single RAF flush.
+      // Hash events and win handling are processed immediately (they are
+      // cheap and must not be lost), but the heavy update+render pipeline
+      // runs at most once per frame regardless of how many updates arrived.
+      this.pendingUpdates.push(gu);
 
       // Emit tick metrics event for performance overlay
       this.eventBus.emit(
@@ -803,6 +819,8 @@ export class ClientGameRunner {
       if (gu.updates[GameUpdateType.Win].length > 0) {
         this.saveGame(gu.updates[GameUpdateType.Win][0]);
       }
+
+      this.flushRafId ??= requestAnimationFrame(() => this.flushUpdates());
     });
 
     const onconnect = () => {
@@ -933,6 +951,36 @@ export class ClientGameRunner {
     this.transport.rejoinGame(0);
   }
 
+  // Apply all buffered worker updates to the simulation view, then run the
+  // heavy WebGL update + render exactly once for the frame. This collapses
+  // many rapid updates (resync storms) into a single draw call per RAF.
+  private flushUpdates(): void {
+    this.flushRafId = null;
+    if (!this.isActive) {
+      this.pendingUpdates.length = 0;
+      return;
+    }
+    const updates = this.pendingUpdates;
+    this.pendingUpdates = [];
+
+    const count = Math.min(
+      updates.length,
+      ClientGameRunner.MAX_UPDATES_PER_FLUSH,
+    );
+    for (let i = 0; i < count; i++) {
+      this.gameView.update(updates[i]);
+    }
+    // If more updates arrived than we applied this frame, fast-forward the
+    // remaining ones without rendering so state stays current, then let the
+    // next RAF flush (re-scheduled on arrival) catch up.
+    for (let i = count; i < updates.length; i++) {
+      this.gameView.update(updates[i]);
+    }
+
+    this.webglBuilder?.update(this.gameView);
+    this.renderer.tick();
+  }
+
   public stop() {
     this.soundManager.dispose();
     this.graphicsListenerAbort?.abort();
@@ -940,6 +988,11 @@ export class ClientGameRunner {
     if (!this.isActive) return;
 
     this.isActive = false;
+    if (this.flushRafId !== null) {
+      cancelAnimationFrame(this.flushRafId);
+      this.flushRafId = null;
+    }
+    this.pendingUpdates.length = 0;
     this.worker.cleanup();
     this.transport.leaveGame();
     if (this.connectionCheckInterval) {

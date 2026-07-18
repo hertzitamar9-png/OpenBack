@@ -114,6 +114,11 @@ export class PlayerImpl implements Player {
   private _expiredAlliances: Alliance[] = [];
 
   private targets_: Target[] = [];
+  // Cache for targets(): rebuilt only when a target is added or an expired one
+  // is pruned, not on every call (nation AI queries allies' targets each cycle).
+  private cachedTargets: Player[] | null = null;
+  private cachedTargetsVersion = -1;
+  private targetsVersion = 0;
 
   private outgoingEmojis_: EmojiMessage[] = [];
   private outgoingQuickChats_ = new Map<number, Tick>();
@@ -121,6 +126,14 @@ export class PlayerImpl implements Player {
   private sentDonations: Donation[] = [];
 
   private relations = new Map<Player, number>();
+  // Cache for allRelationsSorted(): a fresh sorted array is only rebuilt when
+  // relations actually change membership or coarse classification (see
+  // relationsVersion), not on every decay tick. This avoids re-sorting the
+  // full relation set for every nation on every attack cycle.
+  private cachedRelationsSorted: { player: Player; relation: number }[] | null =
+    null;
+  private cachedRelationsVersion = -1;
+  private relationsVersion = 0;
 
   private lastDeleteUnitTick: Tick = -1;
   private lastEmbargoAllTick: Tick = -1;
@@ -807,13 +820,31 @@ export class PlayerImpl implements Player {
   }
 
   allRelationsSorted(): { player: Player; relation: Relation }[] {
-    return Array.from(this.relations, ([k, v]) => ({ player: k, relation: v }))
+    if (
+      this.cachedRelationsSorted !== null &&
+      this.cachedRelationsVersion === this.relationsVersion
+    ) {
+      // Re-filter on isAlive() and re-map to Relation each call (cheap); the
+      // expensive sort only re-runs when relations actually change.
+      return this.cachedRelationsSorted
+        .filter((r) => r.player.isAlive())
+        .map((r) => ({
+          player: r.player,
+          relation: this.relationFromValue(r.relation),
+        }));
+    }
+    const sorted = Array.from(this.relations, ([k, v]) => ({
+      player: k,
+      relation: v,
+    }))
       .filter((r) => r.player.isAlive())
-      .sort((a, b) => a.relation - b.relation)
-      .map((r) => ({
-        player: r.player,
-        relation: this.relationFromValue(r.relation),
-      }));
+      .sort((a, b) => a.relation - b.relation);
+    this.cachedRelationsSorted = sorted;
+    this.cachedRelationsVersion = this.relationsVersion;
+    return sorted.map((r) => ({
+      player: r.player,
+      relation: this.relationFromValue(r.relation),
+    }));
   }
 
   updateRelation(other: Player, delta: number): void {
@@ -822,7 +853,14 @@ export class PlayerImpl implements Player {
     }
     const relation = this.relations.get(other) ?? 0;
     const newRelation = within(relation + delta, -100, 100);
+    // Only bump the cache version when the membership or the coarse relation
+    // classification of this pair changes — pure within-range decay that
+    // doesn't cross a boundary leaves the sorted snapshot valid.
+    const changedClass =
+      this.relationFromValue(relation) !== this.relationFromValue(newRelation);
+    const added = !this.relations.has(other);
     this.relations.set(other, newRelation);
+    if (added || changedClass) this.relationsVersion++;
   }
 
   decayRelations() {
@@ -832,8 +870,12 @@ export class PlayerImpl implements Player {
       const nr = r + sign * delta;
       if (Math.abs(nr) < delta * 2) {
         this.relations.delete(p);
+        this.relationsVersion++;
       } else {
+        const changedClass =
+          this.relationFromValue(r) !== this.relationFromValue(nr);
         this.relations.set(p, nr);
+        if (changedClass) this.relationsVersion++;
       }
     }
   }
@@ -856,6 +898,7 @@ export class PlayerImpl implements Player {
   target(other: Player): void {
     this.pruneTargets();
     this.targets_.push({ tick: this.mg.ticks(), target: other });
+    this.targetsVersion++;
     this.mg.target(this, other);
   }
 
@@ -863,14 +906,26 @@ export class PlayerImpl implements Player {
     const cutoff = this.mg.ticks() - this.mg.config().targetDuration();
     // Entries are appended in roughly increasing tick order, so drop expired
     // ones from the front; scan the rest to catch any stragglers.
+    let removed = false;
     while (this.targets_.length > 0 && this.targets_[0].tick < cutoff) {
       this.targets_.shift();
+      removed = true;
     }
+    if (removed) this.targetsVersion++;
   }
 
   targets(): Player[] {
     this.pruneTargets();
-    return this.targets_.map((t) => t.target);
+    if (
+      this.cachedTargets !== null &&
+      this.cachedTargetsVersion === this.targetsVersion
+    ) {
+      return this.cachedTargets;
+    }
+    const t = this.targets_.map((t2) => t2.target);
+    this.cachedTargets = t;
+    this.cachedTargetsVersion = this.targetsVersion;
+    return t;
   }
 
   transitiveTargets(): Player[] {

@@ -658,6 +658,7 @@ export class GameView implements GameMap {
         continue;
       }
       if (!state.isActive) {
+        if (state.visibleToLocal !== true) this._unitsDirty = true;
         state.visibleToLocal = true;
         continue;
       }

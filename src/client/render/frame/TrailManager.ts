@@ -22,6 +22,10 @@ interface UnitTrail {
 export class TrailManager {
   private readonly trailState: Uint8Array;
   private readonly unitTrails = new Map<number, UnitTrail>();
+  // Reverse index: tileRef -> set of unit ids that currently own that tile.
+  // Lets us find overlapping survivors in O(overlap) instead of scanning every
+  // surviving trail when a unit dies (was O(liveTrails * deadTiles)).
+  private readonly tileToUnits = new Map<number, Set<number>>();
   private readonly mapW: number;
 
   private _dirtyRowMin = Infinity;
@@ -50,6 +54,7 @@ export class TrailManager {
 
   reset(): void {
     this.unitTrails.clear();
+    this.tileToUnits.clear();
     this.trailState.fill(0);
     this._dirtyRowMin = Infinity;
     this._dirtyRowMax = -1;
@@ -80,11 +85,11 @@ export class TrailManager {
         : unit.pos;
       if (trail.lastPosStamped === -1) {
         // First sighting — just stamp the current head
-        this.stamp(head, trail.ownerID);
+        this.stamp(head, trail.ownerID, id);
         trail.tiles.add(head);
         trail.lastPosStamped = head;
       } else if (trail.lastPosStamped !== head) {
-        this.bresenham(trail.lastPosStamped, head, trail);
+        this.bresenham(trail.lastPosStamped, head, trail, id);
         trail.lastPosStamped = head;
       }
     }
@@ -97,25 +102,51 @@ export class TrailManager {
     for (const [id, trail] of this.unitTrails) {
       if (units.has(id) && tracked.has(id)) continue;
       const deadTiles = trail.tiles;
-      for (const ref of deadTiles) this.stamp(ref, 0);
-      this.unitTrails.delete(id);
-      // Repaint any tiles that overlap surviving trails
-      for (const other of this.unitTrails.values()) {
-        for (const ref of deadTiles) {
-          if (other.tiles.has(ref)) this.stamp(ref, other.ownerID);
+      for (const ref of deadTiles) {
+        // Repaint only if a surviving unit also owns this tile; otherwise clear.
+        const owners = this.tileToUnits.get(ref);
+        if (owners !== undefined) {
+          owners.delete(id);
+          if (owners.size > 0) {
+            // Pick any surviving owner (last write wins; fine for trails).
+            const survivor = owners.values().next().value as number;
+            const survivorTrail = this.unitTrails.get(survivor);
+            if (survivorTrail !== undefined) {
+              this.stamp(ref, survivorTrail.ownerID);
+            }
+          } else {
+            this.tileToUnits.delete(ref);
+            this.stamp(ref, 0);
+          }
+        } else {
+          this.stamp(ref, 0);
         }
       }
+      this.unitTrails.delete(id);
     }
   }
 
-  private stamp(ref: number, ownerID: number): void {
+  private stamp(ref: number, ownerID: number, unitId?: number): void {
     this.trailState[ref] = ownerID;
+    if (unitId !== undefined) {
+      let owners = this.tileToUnits.get(ref);
+      if (owners === undefined) {
+        owners = new Set<number>();
+        this.tileToUnits.set(ref, owners);
+      }
+      owners.add(unitId);
+    }
     const row = (ref / this.mapW) | 0;
     if (row < this._dirtyRowMin) this._dirtyRowMin = row;
     if (row > this._dirtyRowMax) this._dirtyRowMax = row;
   }
 
-  private bresenham(from: number, to: number, trail: UnitTrail): void {
+  private bresenham(
+    from: number,
+    to: number,
+    trail: UnitTrail,
+    unitId: number,
+  ): void {
     const w = this.mapW;
     let x0 = from % w;
     let y0 = (from - x0) / w;
@@ -129,7 +160,7 @@ export class TrailManager {
     for (;;) {
       const ref = y0 * w + x0;
       trail.tiles.add(ref);
-      this.stamp(ref, trail.ownerID);
+      this.stamp(ref, trail.ownerID, unitId);
       if (x0 === x1 && y0 === y1) break;
       const e2 = 2 * err;
       if (e2 >= dy) {

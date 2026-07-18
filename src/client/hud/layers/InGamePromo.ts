@@ -25,6 +25,14 @@ export class InGamePromo extends LitElement implements Controller {
 
   init() {}
 
+  disconnectedCallback(): void {
+    super.disconnectedCallback?.();
+    if (this.adCheckInterval) {
+      clearInterval(this.adCheckInterval);
+      this.adCheckInterval = null;
+    }
+  }
+
   tick() {
     if (!this.game.inSpawnPhase()) {
       if (!this.bottomRailDestroyed) {
