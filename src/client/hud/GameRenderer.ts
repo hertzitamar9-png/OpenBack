@@ -327,6 +327,7 @@ export function createRenderer(
 
 export class GameRenderer {
   private layerTickState = new Map<Controller, { lastTickAtMs: number }>();
+  private readonly listenerAbort = new AbortController();
 
   constructor(
     public transformHandler: TransformHandler,
@@ -341,8 +342,10 @@ export class GameRenderer {
 
     this.layers.forEach((l) => l.init?.());
 
-    window.addEventListener("resize", () =>
-      this.transformHandler.updateCanvasBoundingRect(),
+    window.addEventListener(
+      "resize",
+      () => this.transformHandler.updateCanvasBoundingRect(),
+      { signal: this.listenerAbort.signal },
     );
 
     //show whole map on startup
@@ -371,5 +374,11 @@ export class GameRenderer {
 
       layer.tick();
     }
+  }
+
+  dispose(): void {
+    this.listenerAbort.abort();
+    for (const layer of this.layers) layer.dispose?.();
+    this.layerTickState.clear();
   }
 }

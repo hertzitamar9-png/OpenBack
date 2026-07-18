@@ -1,7 +1,6 @@
 # Render Blueprint for OpenBack
 # Builds the existing multi-stage Dockerfile (nginx + supervisord + node server).
-# Add the custom domain openback.infy.click in the Render dashboard and point
-# its DNS at openback-cbe3.onrender.com (CNAME host: openback).
+# Production identity: the public game is served from openback.servegame.com.
 
 services:
   - type: web
@@ -15,6 +14,12 @@ services:
         sync: false
       - key: DOMAIN
         value: openback.servegame.com
+      - key: PUBLIC_ORIGIN
+        value: https://openback.servegame.com
+      - key: AUTH_ORIGIN
+        value: https://openback.servegame.com
+      - key: SHARE_ORIGIN
+        value: https://openback.servegame.com
       - key: SUBDOMAIN
         value: main
       - key: GAME_ENV

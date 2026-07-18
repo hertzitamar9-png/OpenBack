@@ -16,7 +16,7 @@ import "./AccountModal";
 import { getUserMe, invalidateUserMe, setLastUserMe } from "./Api";
 import { reauthAfterCrazyGamesChange, userAuth } from "./Auth";
 import "./ClanModal";
-import { joinLobby, type JoinLobbyResult } from "./ClientGameRunner";
+import type { JoinLobbyResult } from "./ClientGameRunner";
 import { getPlayerCosmeticsRefs } from "./Cosmetics";
 import { updateCrazyGamesNavButton } from "./CrazyGamesAccountButton";
 import { crazyGamesSDK } from "./CrazyGamesSDK";
@@ -919,12 +919,20 @@ class Client {
     if (lobby.source !== "public") {
       this.updateJoinUrlForShare(lobby.gameID);
     }
-    const auth = await userAuth();
+    // Load the game engine only when a match is actually being joined. Keep
+    // the home screen light, and overlap engine loading with auth/cosmetics so
+    // this does not add join latency.
+    const [auth, { joinLobby }, cosmetics, turnstileToken] = await Promise.all([
+      userAuth(),
+      import("./ClientGameRunner"),
+      getPlayerCosmeticsRefs(),
+      this.getTurnstileToken(lobby),
+    ]);
     const playerRole = auth !== false ? (auth.claims.role ?? null) : null;
     const newLobbyHandle = joinLobby(this.eventBus, {
       gameID: lobby.gameID,
-      cosmetics: await getPlayerCosmeticsRefs(),
-      turnstileToken: await this.getTurnstileToken(lobby),
+      cosmetics,
+      turnstileToken,
       playerName: this.usernameInput?.getUsername() ?? genAnonUsername(),
       playerClanTag: this.usernameInput?.getClanTag() ?? null,
       clanTagCheck: this.usernameInput?.getClanCheck(),

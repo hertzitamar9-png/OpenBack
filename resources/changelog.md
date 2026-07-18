@@ -1,3 +1,14 @@
+## OpenBack v0.33.54 - Smooth Long Matches and New Domain
+
+- Removed the always-running 1 ms input poll and synchronized held controls with the display refresh rate, preserving responsive controls while sharply reducing idle CPU work.
+- Added complete per-match cleanup for input, window, renderer, and game-event listeners so repeated matches no longer stack hidden work.
+- Bounded reconnect and catch-up processing across frames instead of allowing large turn bursts to freeze a single frame.
+- Made large natural disasters scan each affected map tile only once, preventing continent and world events from causing duplicate full-map work and memory spikes.
+- Reduced the initial home-screen JavaScript payload by loading the match engine and renderer only when a game is joined, while loading auth, cosmetics, and the engine in parallel.
+- Moved OpenBack's canonical identity, account endpoints, invite links, robots, and sitemap to **openback.servegame.com**, including protection against stale generated Render hostnames.
+
+Contributed by **frootz jhklphy**.
+
 ## OpenBack v0.33.53 - Clearer Combat HUD and Living Disasters
 
 - Restored the compact, non-scrolling build bar and the cleaner player unit overview while keeping every OpenBack unit available.

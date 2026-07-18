@@ -107,6 +107,7 @@ export function joinLobby(
   eventBus: EventBus,
   lobbyConfig: LobbyConfig,
 ): JoinLobbyResult {
+  const gameEventBus = eventBus.scoped();
   // Mutable clientID state — assigned by server (multiplayer) or derived from gameStartInfo (singleplayer)
   let clientID: ClientID | undefined;
 
@@ -121,7 +122,7 @@ export function joinLobby(
   themeProvider.reset(); // fresh colour allocators for this game
   startGame(lobbyConfig.gameID, lobbyConfig.gameStartInfo?.config ?? {});
 
-  const transport = new Transport(lobbyConfig, eventBus);
+  const transport = new Transport(lobbyConfig, gameEventBus);
 
   let currentGameRunner: ClientGameRunner | null = null;
 
@@ -140,7 +141,7 @@ export function joinLobby(
     if (message.type === "lobby_info") {
       // Server tells us our assigned clientID
       clientID = message.myClientID;
-      eventBus.emit(new LobbyInfoEvent(message.lobby, message.myClientID));
+      gameEventBus.emit(new LobbyInfoEvent(message.lobby, message.myClientID));
       return;
     }
     if (message.type === "prestart") {
@@ -169,7 +170,7 @@ export function joinLobby(
       createClientGame(
         lobbyConfig,
         clientID,
-        eventBus,
+        gameEventBus,
         transport,
         userSettings,
         terrainLoad,
@@ -247,6 +248,7 @@ export function joinLobby(
       } else {
         transport.leaveGame();
       }
+      gameEventBus.dispose();
       return true;
     },
     prestart: prestartPromise,
@@ -378,7 +380,7 @@ function mountWebGLFrameLoop(
   // animated chevron pass at the target tile. The renderer needs the target's
   // tile x/y and the warship's owner smallID (so the chevrons use the right
   // color).
-  eventBus.on(MoveWarshipIntentEvent, (e) => {
+  const unsubscribeMoveIndicator = eventBus.on(MoveWarshipIntentEvent, (e) => {
     const tile = e.tile;
     const tx = gameView.x(tile);
     const ty = gameView.y(tile);
@@ -409,6 +411,7 @@ function mountWebGLFrameLoop(
       rafId = null;
     }
     resizeObs.disconnect();
+    unsubscribeMoveIndicator();
   };
 
   const builder = new WebGLFrameBuilder(view);
@@ -620,6 +623,7 @@ async function createClientGame(
     const disposeRenderer = (): void => {
       if (rendererDisposed) return;
       rendererDisposed = true;
+      gameRenderer.dispose();
       stopFrameLoop();
       view.dispose();
       glCanvas.remove();
@@ -673,9 +677,9 @@ export class ClientGameRunner {
   // floods the main thread and drops frames / crashes the tab.
   private pendingUpdates: GameUpdateViewData[] = [];
   private flushRafId: number | null = null;
-  // Maximum simulation updates applied per animation frame. Beyond this we
-  // fast-forward state by applying the remaining updates but they are still
-  // bounded so a single frame cannot run unbounded work.
+  private readonly eventListenerAbort = new AbortController();
+  // Maximum simulation updates applied per animation frame. Extra updates stay
+  // queued for later frames so reconnect bursts cannot monopolize one frame.
   private static readonly MAX_UPDATES_PER_FLUSH = 8;
 
   constructor(
@@ -756,28 +760,42 @@ export class ClientGameRunner {
       );
     }, 20000);
 
-    this.eventBus.on(MouseUpEvent, this.inputEvent.bind(this));
-    this.eventBus.on(MouseMoveEvent, this.onMouseMove.bind(this));
-    this.eventBus.on(AutoUpgradeEvent, this.autoUpgradeEvent.bind(this));
+    const listenerOptions = { signal: this.eventListenerAbort.signal };
+    this.eventBus.on(MouseUpEvent, this.inputEvent.bind(this), listenerOptions);
+    this.eventBus.on(
+      MouseMoveEvent,
+      this.onMouseMove.bind(this),
+      listenerOptions,
+    );
+    this.eventBus.on(
+      AutoUpgradeEvent,
+      this.autoUpgradeEvent.bind(this),
+      listenerOptions,
+    );
     this.eventBus.on(
       DoBoatAttackEvent,
       this.doBoatAttackUnderCursor.bind(this),
+      listenerOptions,
     );
     this.eventBus.on(
       DoGroundAttackEvent,
       this.doGroundAttackUnderCursor.bind(this),
+      listenerOptions,
     );
     this.eventBus.on(
       DoRetaliateAttackEvent,
       this.doRetaliateAttackMostRecent.bind(this),
+      listenerOptions,
     );
     this.eventBus.on(
       DoRequestAllianceEvent,
       this.doRequestAllianceUnderCursor.bind(this),
+      listenerOptions,
     );
     this.eventBus.on(
       DoBreakAllianceEvent,
       this.doBreakAllianceUnderCursor.bind(this),
+      listenerOptions,
     );
 
     this.renderer.initialize();
@@ -960,29 +978,26 @@ export class ClientGameRunner {
       this.pendingUpdates.length = 0;
       return;
     }
-    const updates = this.pendingUpdates;
-    this.pendingUpdates = [];
-
     const count = Math.min(
-      updates.length,
+      this.pendingUpdates.length,
       ClientGameRunner.MAX_UPDATES_PER_FLUSH,
     );
     for (let i = 0; i < count; i++) {
-      this.gameView.update(updates[i]);
+      this.gameView.update(this.pendingUpdates[i]);
     }
-    // If more updates arrived than we applied this frame, fast-forward the
-    // remaining ones without rendering so state stays current, then let the
-    // next RAF flush (re-scheduled on arrival) catch up.
-    for (let i = count; i < updates.length; i++) {
-      this.gameView.update(updates[i]);
-    }
+    this.pendingUpdates = this.pendingUpdates.slice(count);
 
     this.webglBuilder?.update(this.gameView);
     this.renderer.tick();
+    if (this.pendingUpdates.length > 0) {
+      this.flushRafId = requestAnimationFrame(() => this.flushUpdates());
+    }
   }
 
   public stop() {
     this.soundManager.dispose();
+    this.eventListenerAbort.abort();
+    this.input.dispose();
     this.graphicsListenerAbort?.abort();
     this.disposeRenderer?.();
     if (!this.isActive) return;

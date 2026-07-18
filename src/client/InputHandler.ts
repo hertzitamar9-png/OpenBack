@@ -219,7 +219,11 @@ export class InputHandler {
   private suppressNextTap: boolean = false;
   private readonly LONG_PRESS_MS = 800;
 
-  private moveInterval: NodeJS.Timeout | null = null;
+  private movementRafId: number | null = null;
+  private lastMovementFrameTime: number | null = null;
+  private readonly listenerAbort = new AbortController();
+  private unitSelectionListener: ((event: UnitSelectionEvent) => void) | null =
+    null;
   private activeKeys = new Set<string>();
   private keybinds: Record<string, string> = {};
   private coordinateGridEnabled = false;
@@ -241,7 +245,7 @@ export class InputHandler {
     this.keybinds = this.userSettings.keybinds(Platform.isMac);
 
     // Listen for warship selection to change cursor
-    this.eventBus.on(UnitSelectionEvent, (e) => {
+    this.unitSelectionListener = (e) => {
       if (e.isSelected && (e.units ?? []).length > 0) {
         // Multi-selection active
         this.multiSelectionActive = true;
@@ -257,11 +261,21 @@ export class InputHandler {
           this.canvas.style.cursor = "";
         }
       }
+    };
+    this.eventBus.on(UnitSelectionEvent, this.unitSelectionListener, {
+      signal: this.listenerAbort.signal,
     });
 
-    this.canvas.addEventListener("pointerdown", (e) => this.onPointerDown(e));
-    window.addEventListener("pointerup", (e) => this.onPointerUp(e));
-    window.addEventListener("pointercancel", (e) => this.onPointerUp(e));
+    const signal = this.listenerAbort.signal;
+    this.canvas.addEventListener("pointerdown", (e) => this.onPointerDown(e), {
+      signal,
+    });
+    window.addEventListener("pointerup", (e) => this.onPointerUp(e), {
+      signal,
+    });
+    window.addEventListener("pointercancel", (e) => this.onPointerUp(e), {
+      signal,
+    });
     this.canvas.addEventListener(
       "wheel",
       (e) => {
@@ -269,43 +283,66 @@ export class InputHandler {
         this.onShiftScroll(e);
         e.preventDefault();
       },
-      { passive: false },
+      { passive: false, signal },
     );
-    window.addEventListener("pointermove", this.onPointerMove.bind(this));
-    this.canvas.addEventListener("contextmenu", (e) => this.onContextMenu(e));
-    window.addEventListener("mousemove", (e) => {
-      if (e.movementX || e.movementY) {
-        this.eventBus.emit(new MouseMoveEvent(e.clientX, e.clientY));
-      }
+    window.addEventListener("pointermove", this.onPointerMove.bind(this), {
+      signal,
     });
+    this.canvas.addEventListener("contextmenu", (e) => this.onContextMenu(e), {
+      signal,
+    });
+    window.addEventListener(
+      "mousemove",
+      (e) => {
+        if (e.movementX || e.movementY) {
+          this.eventBus.emit(new MouseMoveEvent(e.clientX, e.clientY));
+        }
+      },
+      { signal },
+    );
     // Clear all tracked keys when the window loses focus so keys that had
     // their keyup swallowed by the browser (e.g. cmd+zoom) don't stay stuck.
     // Also release the hold-to-view state and any active pointer/drag state
     // so the alternate view and drags aren't left latched when focus returns.
-    window.addEventListener("blur", () => {
-      this.activeKeys.clear();
-      if (this.alternateView) {
-        this.alternateView = false;
-        this.eventBus.emit(new AlternateViewEvent(false));
-      }
-      this.pointerDown = false;
-      this.pointers.clear();
-      if (this.longPressTimer !== null) {
-        clearTimeout(this.longPressTimer);
-        this.longPressTimer = null;
-      }
-      this.longPressActive = false;
-      this.suppressNextTap = false;
-      if (this.selectionBoxActive || this.multiSelectionActive) {
-        this.selectionBoxActive = false;
-        this.multiSelectionActive = false;
-        this.eventBus.emit(new WarshipSelectionBoxCancelEvent());
-      }
-      this.canvas.style.cursor = "";
-    });
+    window.addEventListener(
+      "blur",
+      () => {
+        this.activeKeys.clear();
+        if (this.alternateView) {
+          this.alternateView = false;
+          this.eventBus.emit(new AlternateViewEvent(false));
+        }
+        this.pointerDown = false;
+        this.pointers.clear();
+        if (this.longPressTimer !== null) {
+          clearTimeout(this.longPressTimer);
+          this.longPressTimer = null;
+        }
+        this.longPressActive = false;
+        this.suppressNextTap = false;
+        if (this.selectionBoxActive || this.multiSelectionActive) {
+          this.selectionBoxActive = false;
+          this.multiSelectionActive = false;
+          this.eventBus.emit(new WarshipSelectionBoxCancelEvent());
+        }
+        this.canvas.style.cursor = "";
+      },
+      { signal },
+    );
     this.pointers.clear();
 
-    this.moveInterval = setInterval(() => {
+    const updateHeldInput = (now: number) => {
+      // Drive held-key movement at the display refresh rate. Scheduling first
+      // keeps the loop alive while Shift temporarily suppresses movement.
+      this.movementRafId = requestAnimationFrame(updateHeldInput);
+      const frameScale =
+        this.lastMovementFrameTime === null
+          ? 1
+          : Math.min(
+              2,
+              Math.max(0.25, (now - this.lastMovementFrameTime) / (1000 / 60)),
+            );
+      this.lastMovementFrameTime = now;
       let deltaX = 0;
       let deltaY = 0;
 
@@ -318,22 +355,22 @@ export class InputHandler {
         this.activeKeys.has(this.keybinds.moveUp) ||
         this.activeKeys.has("ArrowUp")
       )
-        deltaY += this.PAN_SPEED;
+        deltaY += this.PAN_SPEED * frameScale;
       if (
         this.activeKeys.has(this.keybinds.moveDown) ||
         this.activeKeys.has("ArrowDown")
       )
-        deltaY -= this.PAN_SPEED;
+        deltaY -= this.PAN_SPEED * frameScale;
       if (
         this.activeKeys.has(this.keybinds.moveLeft) ||
         this.activeKeys.has("ArrowLeft")
       )
-        deltaX += this.PAN_SPEED;
+        deltaX += this.PAN_SPEED * frameScale;
       if (
         this.activeKeys.has(this.keybinds.moveRight) ||
         this.activeKeys.has("ArrowRight")
       )
-        deltaX -= this.PAN_SPEED;
+        deltaX -= this.PAN_SPEED * frameScale;
 
       if (deltaX || deltaY) {
         this.eventBus.emit(new DragEvent(deltaX, deltaY));
@@ -347,243 +384,273 @@ export class InputHandler {
         this.activeKeys.has("Minus") ||
         this.activeKeys.has("NumpadSubtract")
       ) {
-        this.eventBus.emit(new ZoomEvent(cx, cy, this.ZOOM_SPEED));
+        this.eventBus.emit(new ZoomEvent(cx, cy, this.ZOOM_SPEED * frameScale));
       }
       if (
         this.activeKeys.has(this.keybinds.zoomIn) ||
         this.activeKeys.has("Equal") ||
         this.activeKeys.has("NumpadAdd")
       ) {
-        this.eventBus.emit(new ZoomEvent(cx, cy, -this.ZOOM_SPEED));
-      }
-    }, 1);
-
-    window.addEventListener("keydown", (e) => {
-      const isTextInput = this.isTextInputTarget(e.target);
-      if (isTextInput && e.code !== "Escape") {
-        return;
-      }
-
-      if (this.keybindMatchesEvent(e, this.keybinds.toggleView)) {
-        e.preventDefault();
-        if (!this.alternateView) {
-          this.alternateView = true;
-          this.eventBus.emit(new AlternateViewEvent(true));
-        }
-      }
-
-      if (
-        this.keybindMatchesEvent(e, this.keybinds.coordinateGrid) &&
-        !e.repeat
-      ) {
-        e.preventDefault();
-        this.coordinateGridEnabled = !this.coordinateGridEnabled;
         this.eventBus.emit(
-          new ToggleCoordinateGridEvent(this.coordinateGridEnabled),
+          new ZoomEvent(cx, cy, -this.ZOOM_SPEED * frameScale),
         );
       }
+    };
+    this.movementRafId = requestAnimationFrame(updateHeldInput);
 
-      if (e.code === "Escape") {
-        e.preventDefault();
-        this.eventBus.emit(new CloseViewEvent());
-        this.setGhostStructure(null);
-        if (this.selectionBoxActive || this.multiSelectionActive) {
-          this.selectionBoxActive = false;
-          this.multiSelectionActive = false;
-          this.eventBus.emit(new WarshipSelectionBoxCancelEvent());
+    window.addEventListener(
+      "keydown",
+      (e) => {
+        const isTextInput = this.isTextInputTarget(e.target);
+        if (isTextInput && e.code !== "Escape") {
+          return;
         }
-      }
 
-      if (
-        (e.code === "Enter" || e.code === "NumpadEnter") &&
-        this.uiState.ghostStructure !== null
-      ) {
-        e.preventDefault();
-        this.eventBus.emit(new ConfirmGhostStructureEvent());
-      }
-
-      // Don't track zoom keys when a meta/ctrl modifier is held — that means
-      // the browser is handling its own zoom (cmd+/cmd-) and the keyup will
-      // never fire, which would leave the key stuck in activeKeys forever.
-      // Also covers numpad zoom shortcuts (Ctrl+NumpadAdd/NumpadSubtract).
-      const isBrowserZoomCombo =
-        (e.metaKey || e.ctrlKey) &&
-        (e.code === "Minus" ||
-          e.code === "Equal" ||
-          e.code === "NumpadAdd" ||
-          e.code === "NumpadSubtract");
-
-      if (
-        !isBrowserZoomCombo &&
-        [
-          this.keybinds.moveUp,
-          this.keybinds.moveDown,
-          this.keybinds.moveLeft,
-          this.keybinds.moveRight,
-          this.keybinds.zoomOut,
-          this.keybinds.zoomIn,
-          "ArrowUp",
-          "ArrowLeft",
-          "ArrowDown",
-          "ArrowRight",
-          "Minus",
-          "Equal",
-          "NumpadAdd",
-          "NumpadSubtract",
-          this.keybinds.attackRatioDown,
-          this.keybinds.attackRatioUp,
-          this.keybinds.centerCamera,
-          "ControlLeft",
-          "ControlRight",
-          this.keybinds.shiftKey,
-          this.keybinds.emojiMenuModifier,
-          this.keybinds.buildMenuModifier,
-        ].includes(e.code)
-      ) {
-        this.activeKeys.add(e.code);
-      }
-
-      // Shift = warship box selection mode.
-      // If a ghost structure is active, discard it first.
-      if (e.code === this.keybinds.shiftKey) {
-        if (this.uiState.ghostStructure !== null) {
-          this.setGhostStructure(null);
-        }
-        this.canvas.style.cursor = "crosshair";
-      }
-    });
-    window.addEventListener("keyup", (e) => {
-      const isTextInput = this.isTextInputTarget(e.target);
-      if (isTextInput && !this.activeKeys.has(e.code)) {
-        return;
-      }
-
-      // When the meta (cmd) or ctrl key is released, any keys that were held
-      // simultaneously will have had their keyup swallowed by the browser
-      // (e.g. cmd+Plus for browser zoom). Clear zoom-related keys to
-      // prevent them staying stuck in activeKeys.
-      if (
-        e.code === "MetaLeft" ||
-        e.code === "MetaRight" ||
-        e.code === "ControlLeft" ||
-        e.code === "ControlRight"
-      ) {
-        this.activeKeys.delete("Minus");
-        this.activeKeys.delete("Equal");
-        this.activeKeys.delete("NumpadAdd");
-        this.activeKeys.delete("NumpadSubtract");
-        this.activeKeys.delete(this.keybinds.zoomIn);
-        this.activeKeys.delete(this.keybinds.zoomOut);
-      }
-
-      if (this.keybindMatchesEvent(e, this.keybinds.toggleView)) {
-        e.preventDefault();
-        this.alternateView = false;
-        this.eventBus.emit(new AlternateViewEvent(false));
-      }
-
-      const resetKey = this.keybinds.resetGfx ?? "KeyR";
-      if (e.code === resetKey && this.isAltKeyHeld(e)) {
-        e.preventDefault();
-        this.eventBus.emit(new RefreshGraphicsEvent());
-      }
-
-      if (this.keybindMatchesEvent(e, this.keybinds.boatAttack)) {
-        e.preventDefault();
-        this.eventBus.emit(new DoBoatAttackEvent());
-      }
-
-      if (this.keybindMatchesEvent(e, this.keybinds.groundAttack)) {
-        e.preventDefault();
-        this.eventBus.emit(new DoGroundAttackEvent());
-      }
-
-      if (this.keybindMatchesEvent(e, this.keybinds.retaliateAttack)) {
-        e.preventDefault();
-        this.eventBus.emit(new DoRetaliateAttackEvent());
-      }
-
-      if (this.keybindMatchesEvent(e, this.keybinds.attackRatioDown)) {
-        e.preventDefault();
-        const increment = this.userSettings.attackRatioIncrement();
-        this.eventBus.emit(new AttackRatioEvent(-increment));
-      }
-
-      if (this.keybindMatchesEvent(e, this.keybinds.attackRatioUp)) {
-        e.preventDefault();
-        const increment = this.userSettings.attackRatioIncrement();
-        this.eventBus.emit(new AttackRatioEvent(increment));
-      }
-
-      if (this.keybindMatchesEvent(e, this.keybinds.centerCamera)) {
-        e.preventDefault();
-        this.eventBus.emit(new CenterCameraEvent());
-      }
-
-      if (e.code === this.keybinds.selectAllWarships) {
-        e.preventDefault();
-        this.eventBus.emit(new SelectAllWarshipsEvent());
-      }
-
-      // Two-phase build keybind matching: exact code match first, then digit/Numpad alias.
-      if (this.canUseBuildKeybinds()) {
-        const matchedBuild = this.resolveBuildKeybind(e.code, e.shiftKey);
-        if (matchedBuild !== null) {
+        if (this.keybindMatchesEvent(e, this.keybinds.toggleView)) {
           e.preventDefault();
-          this.setGhostStructure(matchedBuild);
+          if (!this.alternateView) {
+            this.alternateView = true;
+            this.eventBus.emit(new AlternateViewEvent(true));
+          }
         }
-      }
 
-      if (this.keybindMatchesEvent(e, this.keybinds.requestAlliance)) {
-        e.preventDefault();
-        this.eventBus.emit(new DoRequestAllianceEvent());
-      }
+        if (
+          this.keybindMatchesEvent(e, this.keybinds.coordinateGrid) &&
+          !e.repeat
+        ) {
+          e.preventDefault();
+          this.coordinateGridEnabled = !this.coordinateGridEnabled;
+          this.eventBus.emit(
+            new ToggleCoordinateGridEvent(this.coordinateGridEnabled),
+          );
+        }
 
-      if (this.keybindMatchesEvent(e, this.keybinds.breakAlliance)) {
-        e.preventDefault();
-        this.eventBus.emit(new DoBreakAllianceEvent());
-      }
+        if (e.code === "Escape") {
+          e.preventDefault();
+          this.eventBus.emit(new CloseViewEvent());
+          this.setGhostStructure(null);
+          if (this.selectionBoxActive || this.multiSelectionActive) {
+            this.selectionBoxActive = false;
+            this.multiSelectionActive = false;
+            this.eventBus.emit(new WarshipSelectionBoxCancelEvent());
+          }
+        }
 
-      if (this.keybindMatchesEvent(e, this.keybinds.swapDirection)) {
-        e.preventDefault();
-        const nextDirection = !this.uiState.rocketDirectionUp;
-        this.eventBus.emit(new SwapRocketDirectionEvent(nextDirection));
-      }
+        if (
+          (e.code === "Enter" || e.code === "NumpadEnter") &&
+          this.uiState.ghostStructure !== null
+        ) {
+          e.preventDefault();
+          this.eventBus.emit(new ConfirmGhostStructureEvent());
+        }
 
-      if (!e.repeat && this.keybindMatchesEvent(e, this.keybinds.pauseGame)) {
-        e.preventDefault();
-        this.eventBus.emit(new TogglePauseIntentEvent());
-      }
-      if (!e.repeat && this.keybindMatchesEvent(e, this.keybinds.gameSpeedUp)) {
-        e.preventDefault();
-        this.eventBus.emit(new GameSpeedUpIntentEvent());
-      }
-      if (
-        !e.repeat &&
-        this.keybindMatchesEvent(e, this.keybinds.gameSpeedDown)
-      ) {
-        e.preventDefault();
-        this.eventBus.emit(new GameSpeedDownIntentEvent());
-      }
+        // Don't track zoom keys when a meta/ctrl modifier is held — that means
+        // the browser is handling its own zoom (cmd+/cmd-) and the keyup will
+        // never fire, which would leave the key stuck in activeKeys forever.
+        // Also covers numpad zoom shortcuts (Ctrl+NumpadAdd/NumpadSubtract).
+        const isBrowserZoomCombo =
+          (e.metaKey || e.ctrlKey) &&
+          (e.code === "Minus" ||
+            e.code === "Equal" ||
+            e.code === "NumpadAdd" ||
+            e.code === "NumpadSubtract");
 
-      // Shift-D to toggle performance overlay
-      if (e.code === "KeyD" && e.shiftKey) {
-        e.preventDefault();
-        console.log("TogglePerformanceOverlayEvent");
-        this.eventBus.emit(new TogglePerformanceOverlayEvent());
-      }
+        if (
+          !isBrowserZoomCombo &&
+          [
+            this.keybinds.moveUp,
+            this.keybinds.moveDown,
+            this.keybinds.moveLeft,
+            this.keybinds.moveRight,
+            this.keybinds.zoomOut,
+            this.keybinds.zoomIn,
+            "ArrowUp",
+            "ArrowLeft",
+            "ArrowDown",
+            "ArrowRight",
+            "Minus",
+            "Equal",
+            "NumpadAdd",
+            "NumpadSubtract",
+            this.keybinds.attackRatioDown,
+            this.keybinds.attackRatioUp,
+            this.keybinds.centerCamera,
+            "ControlLeft",
+            "ControlRight",
+            this.keybinds.shiftKey,
+            this.keybinds.emojiMenuModifier,
+            this.keybinds.buildMenuModifier,
+          ].includes(e.code)
+        ) {
+          this.activeKeys.add(e.code);
+        }
 
-      this.activeKeys.delete(e.code);
+        // Shift = warship box selection mode.
+        // If a ghost structure is active, discard it first.
+        if (e.code === this.keybinds.shiftKey) {
+          if (this.uiState.ghostStructure !== null) {
+            this.setGhostStructure(null);
+          }
+          this.canvas.style.cursor = "crosshair";
+        }
+      },
+      { signal },
+    );
+    window.addEventListener(
+      "keyup",
+      (e) => {
+        const isTextInput = this.isTextInputTarget(e.target);
+        if (isTextInput && !this.activeKeys.has(e.code)) {
+          return;
+        }
 
-      // Reset crosshair when Shift is released (unless selection box or multi-selection still active)
-      if (
-        e.code === this.keybinds.shiftKey &&
-        !this.selectionBoxActive &&
-        !this.multiSelectionActive
-      ) {
-        this.canvas.style.cursor = "";
-      }
-    });
+        // When the meta (cmd) or ctrl key is released, any keys that were held
+        // simultaneously will have had their keyup swallowed by the browser
+        // (e.g. cmd+Plus for browser zoom). Clear zoom-related keys to
+        // prevent them staying stuck in activeKeys.
+        if (
+          e.code === "MetaLeft" ||
+          e.code === "MetaRight" ||
+          e.code === "ControlLeft" ||
+          e.code === "ControlRight"
+        ) {
+          this.activeKeys.delete("Minus");
+          this.activeKeys.delete("Equal");
+          this.activeKeys.delete("NumpadAdd");
+          this.activeKeys.delete("NumpadSubtract");
+          this.activeKeys.delete(this.keybinds.zoomIn);
+          this.activeKeys.delete(this.keybinds.zoomOut);
+        }
+
+        if (this.keybindMatchesEvent(e, this.keybinds.toggleView)) {
+          e.preventDefault();
+          this.alternateView = false;
+          this.eventBus.emit(new AlternateViewEvent(false));
+        }
+
+        const resetKey = this.keybinds.resetGfx ?? "KeyR";
+        if (e.code === resetKey && this.isAltKeyHeld(e)) {
+          e.preventDefault();
+          this.eventBus.emit(new RefreshGraphicsEvent());
+        }
+
+        if (this.keybindMatchesEvent(e, this.keybinds.boatAttack)) {
+          e.preventDefault();
+          this.eventBus.emit(new DoBoatAttackEvent());
+        }
+
+        if (this.keybindMatchesEvent(e, this.keybinds.groundAttack)) {
+          e.preventDefault();
+          this.eventBus.emit(new DoGroundAttackEvent());
+        }
+
+        if (this.keybindMatchesEvent(e, this.keybinds.retaliateAttack)) {
+          e.preventDefault();
+          this.eventBus.emit(new DoRetaliateAttackEvent());
+        }
+
+        if (this.keybindMatchesEvent(e, this.keybinds.attackRatioDown)) {
+          e.preventDefault();
+          const increment = this.userSettings.attackRatioIncrement();
+          this.eventBus.emit(new AttackRatioEvent(-increment));
+        }
+
+        if (this.keybindMatchesEvent(e, this.keybinds.attackRatioUp)) {
+          e.preventDefault();
+          const increment = this.userSettings.attackRatioIncrement();
+          this.eventBus.emit(new AttackRatioEvent(increment));
+        }
+
+        if (this.keybindMatchesEvent(e, this.keybinds.centerCamera)) {
+          e.preventDefault();
+          this.eventBus.emit(new CenterCameraEvent());
+        }
+
+        if (e.code === this.keybinds.selectAllWarships) {
+          e.preventDefault();
+          this.eventBus.emit(new SelectAllWarshipsEvent());
+        }
+
+        // Two-phase build keybind matching: exact code match first, then digit/Numpad alias.
+        if (this.canUseBuildKeybinds()) {
+          const matchedBuild = this.resolveBuildKeybind(e.code, e.shiftKey);
+          if (matchedBuild !== null) {
+            e.preventDefault();
+            this.setGhostStructure(matchedBuild);
+          }
+        }
+
+        if (this.keybindMatchesEvent(e, this.keybinds.requestAlliance)) {
+          e.preventDefault();
+          this.eventBus.emit(new DoRequestAllianceEvent());
+        }
+
+        if (this.keybindMatchesEvent(e, this.keybinds.breakAlliance)) {
+          e.preventDefault();
+          this.eventBus.emit(new DoBreakAllianceEvent());
+        }
+
+        if (this.keybindMatchesEvent(e, this.keybinds.swapDirection)) {
+          e.preventDefault();
+          const nextDirection = !this.uiState.rocketDirectionUp;
+          this.eventBus.emit(new SwapRocketDirectionEvent(nextDirection));
+        }
+
+        if (!e.repeat && this.keybindMatchesEvent(e, this.keybinds.pauseGame)) {
+          e.preventDefault();
+          this.eventBus.emit(new TogglePauseIntentEvent());
+        }
+        if (
+          !e.repeat &&
+          this.keybindMatchesEvent(e, this.keybinds.gameSpeedUp)
+        ) {
+          e.preventDefault();
+          this.eventBus.emit(new GameSpeedUpIntentEvent());
+        }
+        if (
+          !e.repeat &&
+          this.keybindMatchesEvent(e, this.keybinds.gameSpeedDown)
+        ) {
+          e.preventDefault();
+          this.eventBus.emit(new GameSpeedDownIntentEvent());
+        }
+
+        // Shift-D to toggle performance overlay
+        if (e.code === "KeyD" && e.shiftKey) {
+          e.preventDefault();
+          console.log("TogglePerformanceOverlayEvent");
+          this.eventBus.emit(new TogglePerformanceOverlayEvent());
+        }
+
+        this.activeKeys.delete(e.code);
+
+        // Reset crosshair when Shift is released (unless selection box or multi-selection still active)
+        if (
+          e.code === this.keybinds.shiftKey &&
+          !this.selectionBoxActive &&
+          !this.multiSelectionActive
+        ) {
+          this.canvas.style.cursor = "";
+        }
+      },
+      { signal },
+    );
+  }
+
+  dispose(): void {
+    this.listenerAbort.abort();
+    if (this.movementRafId !== null) {
+      cancelAnimationFrame(this.movementRafId);
+      this.movementRafId = null;
+    }
+    this.lastMovementFrameTime = null;
+    if (this.longPressTimer !== null) {
+      clearTimeout(this.longPressTimer);
+      this.longPressTimer = null;
+    }
+    this.activeKeys.clear();
+    this.pointers.clear();
+    this.unitSelectionListener = null;
   }
 
   private onPointerDown(event: PointerEvent) {
@@ -993,10 +1060,7 @@ export class InputHandler {
   }
 
   destroy() {
-    if (this.moveInterval !== null) {
-      clearInterval(this.moveInterval);
-    }
-    this.activeKeys.clear();
+    this.dispose();
   }
 
   private isAltKeyHeld(event: KeyboardEvent): boolean {

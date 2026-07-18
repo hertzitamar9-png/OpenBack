@@ -17,6 +17,7 @@ const JwksSchema = z.object({
 });
 
 export class ServerEnv {
+  private static readonly brandedOrigin = "https://openback.servegame.com";
   private static readonly gameEnv: GameEnv = parseGameEnv(process.env.GAME_ENV);
   private static publicKey: JWK | null = null;
 
@@ -62,7 +63,7 @@ export class ServerEnv {
   static jwtAudience(): string {
     return ServerEnv.authOrigin();
   }
-  // The raw DOMAIN (e.g. openback-cbe3.onrender.com), used to build origins.
+  // The raw DOMAIN (e.g. openback.servegame.com), used to build origins.
   // Strips any protocol prefix so callers that wrap it in https:// don't
   // produce doubled schemes like https://https://example.com.
   static jwtAudienceRaw(): string {
@@ -76,9 +77,22 @@ export class ServerEnv {
   // self-contained, so auth is served from the game server's own origin rather
   // than a separate api. subdomain like OpenFront.
   static authOrigin(): string {
-    if (process.env.AUTH_ORIGIN) return process.env.AUTH_ORIGIN;
-    if (ServerEnv.gameEnv === GameEnv.Dev) return "http://localhost:9000";
-    return `https://${ServerEnv.jwtAudienceRaw()}`;
+    const explicit = process.env.PUBLIC_ORIGIN ?? process.env.AUTH_ORIGIN;
+    if (explicit) return explicit.replace(/\/+$/, "");
+    const domain = process.env.DOMAIN?.replace(/^https?:\/\//, "").replace(
+      /\/+$/,
+      "",
+    );
+    if (!domain || domain === "localhost") return "http://localhost:9000";
+    // Render may retain its generated hostname in an older service-level env
+    // even after a custom subdomain is attached. Never leak that hostname into
+    // auth tokens, invite links, canonical tags, robots, or sitemaps.
+    if (domain.endsWith(".onrender.com")) return ServerEnv.brandedOrigin;
+    return `https://${domain}`;
+  }
+
+  static canonicalHostname(): string {
+    return new URL(ServerEnv.authOrigin()).host;
   }
   // Where the Worker can reach the Master's auth routes internally (no egress).
   static internalAuthBase(): string {
@@ -103,7 +117,7 @@ export class ServerEnv {
     // Default to the site origin so asset URLs are absolute. The game worker
     // is inlined as a same-origin Blob and cannot resolve root-relative URLs,
     // so it needs a full origin to fetch map binaries/manifests.
-    return `https://${ServerEnv.jwtAudienceRaw()}`;
+    return ServerEnv.authOrigin();
   }
   static shareOrigin(): string {
     return process.env.SHARE_ORIGIN ?? process.env.VITE_SHARE_ORIGIN ?? "";

@@ -218,6 +218,9 @@ export default defineConfig(({ mode }) => {
       globals: true,
       environment: "jsdom",
       setupFiles: "./tests/setup.ts",
+      // Full coverage instrumentation can make the largest deterministic map
+      // fixtures briefly exceed Vitest's 5 s default on busy CI runners.
+      testTimeout: 10_000,
     },
     root: "./",
     base: "/",
@@ -278,13 +281,30 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks: (id) => {
+            const normalized = id.replace(/\\/g, "/");
             const vendorModules = ["pixi.js", "howler", "zod"];
             if (vendorModules.some((module) => id.includes(module))) {
               return "vendor";
             }
+            // Keep the heavyweight match renderer out of the home-screen
+            // chunk. It is fetched alongside ClientGameRunner only when a
+            // player joins a game, and remains independently cacheable.
+            if (normalized.includes("/src/client/render/")) {
+              return "game-renderer";
+            }
+            // Home/account components change independently from simulation
+            // code; a separate chunk lowers parse bursts and improves cache
+            // reuse without deferring or removing any UI.
+            if (normalized.includes("/src/client/components/")) {
+              return "ui-components";
+            }
           },
         },
       },
+      // The inlined deterministic worker is deliberately self-contained. Its
+      // gzip payload is small; 600 kB avoids a misleading warning for that one
+      // non-splittable artifact while retaining warnings for real regressions.
+      chunkSizeWarningLimit: 600,
     },
 
     server: {

@@ -411,30 +411,62 @@ export class WorldMechanicsExecution implements Execution {
       affected.set(unit.owner(), (affected.get(unit.owner()) ?? 0) + 1);
     }
 
-    // Scan only the affected circles. The old implementation walked every
-    // tile owned by every player, causing a large one-frame hitch on World.
-    const affectedTiles = new Set<TileRef>();
+    // Scan the exact union of all affected circles one row at a time. Large
+    // continent/world events used to revisit most map tiles for every impact
+    // center and allocate a huge Set to deduplicate them, producing a severe
+    // GC + simulation hitch. Merged row intervals visit every affected tile
+    // exactly once with only two tiny fixed-size scratch arrays.
+    const starts = new Int32Array(centers.length);
+    const ends = new Int32Array(centers.length);
+    let minY = this.game.height() - 1;
+    let maxY = 0;
     for (const center of centers) {
-      const cx = this.game.x(center.tile);
       const cy = this.game.y(center.tile);
-      const r = center.radius;
-      for (
-        let y = Math.max(0, cy - r);
-        y <= Math.min(this.game.height() - 1, cy + r);
-        y++
-      ) {
-        for (
-          let x = Math.max(0, cx - r);
-          x <= Math.min(this.game.width() - 1, cx + r);
-          x++
-        ) {
-          if ((x - cx) ** 2 + (y - cy) ** 2 > r * r) continue;
+      minY = Math.min(minY, Math.max(0, cy - center.radius));
+      maxY = Math.max(
+        maxY,
+        Math.min(this.game.height() - 1, cy + center.radius),
+      );
+    }
+    for (let y = minY; y <= maxY; y++) {
+      let intervalCount = 0;
+      for (const center of centers) {
+        const cx = this.game.x(center.tile);
+        const dy = y - this.game.y(center.tile);
+        const radiusSquared = center.radius * center.radius;
+        if (dy * dy > radiusSquared) continue;
+        const halfWidth = Math.floor(Math.sqrt(radiusSquared - dy * dy));
+        const start = Math.max(0, cx - halfWidth);
+        const end = Math.min(this.game.width() - 1, cx + halfWidth);
+        let insertAt = intervalCount;
+        while (insertAt > 0 && starts[insertAt - 1] > start) {
+          starts[insertAt] = starts[insertAt - 1];
+          ends[insertAt] = ends[insertAt - 1];
+          insertAt--;
+        }
+        starts[insertAt] = start;
+        ends[insertAt] = end;
+        intervalCount++;
+      }
+      if (intervalCount === 0) continue;
+      let mergedStart = starts[0];
+      let mergedEnd = ends[0];
+      for (let i = 1; i <= intervalCount; i++) {
+        if (i < intervalCount && starts[i] <= mergedEnd + 1) {
+          mergedEnd = Math.max(mergedEnd, ends[i]);
+          continue;
+        }
+        for (let x = mergedStart; x <= mergedEnd; x++) {
           const tile = this.game.ref(x, y);
-          if (!affectedTiles.add(tile) || !this.game.hasOwner(tile)) continue;
+          if (!this.game.hasOwner(tile)) continue;
           const owner = this.game.owner(tile);
           if (!owner.isPlayer()) continue;
           const player = this.game.player(owner.id());
           affected.set(player, (affected.get(player) ?? 0) + 1);
+        }
+        if (i < intervalCount) {
+          mergedStart = starts[i];
+          mergedEnd = ends[i];
         }
       }
     }

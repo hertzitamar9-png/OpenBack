@@ -63,19 +63,20 @@ describe("ServerEnv.jwtAudience", () => {
   test("falls back to DOMAIN-based origin when AUTH_ORIGIN unset and DOMAIN set", () => {
     vi.stubEnv("AUTH_ORIGIN", "");
     vi.stubEnv("DOMAIN", "myapp.com");
-    // In dev env the fallback is http://localhost:9000
+    expect(ServerEnv.jwtAudience()).toBe("https://myapp.com");
+  });
+
+  test("uses localhost only when no public domain is configured", () => {
+    vi.stubEnv("AUTH_ORIGIN", "");
+    vi.stubEnv("DOMAIN", "");
     expect(ServerEnv.jwtAudience()).toBe("http://localhost:9000");
   });
 
-  test("throws when DOMAIN unset and AUTH_ORIGIN unset in prod", () => {
-    // GAME_ENV is always "dev" during tests (Vite define), so authOrigin
-    // returns http://localhost:9000 without checking DOMAIN.  In prod the
-    // fallback would call jwtAudienceRaw() which throws.
-    // This test verifies the prod path by removing the dev override.
+  test("does not expose Render's generated hostname as the public origin", () => {
+    vi.stubEnv("PUBLIC_ORIGIN", "");
     vi.stubEnv("AUTH_ORIGIN", "");
-    vi.stubEnv("DOMAIN", "");
-    // dev mode always returns http://localhost:9000
-    expect(ServerEnv.jwtAudience()).toBe("http://localhost:9000");
+    vi.stubEnv("DOMAIN", "openback-cbe3.onrender.com");
+    expect(ServerEnv.jwtAudience()).toBe("https://openback.servegame.com");
   });
 });
 
@@ -93,6 +94,20 @@ describe("ServerEnv.jwtIssuer", () => {
     vi.stubEnv("AUTH_ORIGIN", "https://custom-auth.com");
     vi.stubEnv("DOMAIN", "other.com");
     expect(ServerEnv.jwtIssuer()).toBe("https://custom-auth.com");
+  });
+});
+
+describe("ServerEnv.cdnBase", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  test("uses the branded origin when a stale Render hostname is configured", () => {
+    vi.stubEnv("CDN_BASE", "");
+    vi.stubEnv("PUBLIC_ORIGIN", "");
+    vi.stubEnv("AUTH_ORIGIN", "");
+    vi.stubEnv("DOMAIN", "openback-cbe3.onrender.com");
+    expect(ServerEnv.cdnBase()).toBe("https://openback.servegame.com");
   });
 });
 

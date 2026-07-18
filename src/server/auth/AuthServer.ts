@@ -286,9 +286,7 @@ const persistenceReady = loadPersisted();
 
 // ---- Origin & Google config -----------------------------------------------
 export function authOrigin(): string {
-  if (process.env.AUTH_ORIGIN) return process.env.AUTH_ORIGIN;
-  if (ServerEnv.env() === GameEnv.Dev) return "http://localhost:9000";
-  return `https://${ServerEnv.jwtAudienceRaw()}`;
+  return ServerEnv.authOrigin();
 }
 
 export function googleEnabled(): boolean {

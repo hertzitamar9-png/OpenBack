@@ -24,4 +24,7 @@ export interface Controller {
 
   /** Optional throttle on tick frequency, in milliseconds. */
   getTickIntervalMs?: () => number;
+
+  /** Release listeners, timers, and other per-game resources. */
+  dispose?: () => void;
 }
