@@ -274,14 +274,16 @@ export class WorldMechanicsExecution implements Execution {
     // Moving disasters use one animated path but damage each sampled segment.
     const visualCenters =
       kind === "earthquake" || kind === "wildfire"
-        ? impactCenters
+        ? impactCenters.slice(0, 4)
         : impactCenters.slice(0, 1);
     for (const center of visualCenters) {
       this.game.addUpdate({
         type: GameUpdateType.WorldEvent,
         kind,
         tile: center.tile,
-        radius: center.radius,
+        // Damage keeps the full configured scope, while the animation stays
+        // local enough to remain detailed and avoid full-map translucent quads.
+        radius: Math.min(center.radius, Math.round(radius * 1.5)),
         durationTicks,
         pathEnd:
           center.tile === tile &&

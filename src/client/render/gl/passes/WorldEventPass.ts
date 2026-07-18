@@ -19,6 +19,7 @@ uniform float uAngle;
 out vec4 outColor;
 float ring(float d,float r,float w){return 1.0-smoothstep(w,w+0.035,abs(d-r));}
 float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float band(float x,float width){return 1.0-smoothstep(width,width+0.035,abs(x));}
 void main(){
   float d=length(vP); if(d>1.0) discard;
   float ca=cos(uAngle),sa=sin(uAngle);
@@ -31,16 +32,33 @@ void main(){
     alpha=cracks*(1.0-d)*0.8+shock*0.7+smoothstep(0.78,0.96,dust)*(1.0-d)*0.28;
     color=mix(vec3(0.38,0.22,0.10),vec3(1.0,0.78,0.28),shock);
   }else if(uKind==1){
-    float wall=1.0-smoothstep(0.045,0.15,abs(q.x));
-    float foam=0.55+0.45*sin(q.y*34.0+uTime*28.0);
-    float wake=exp(-max(0.0,-q.x)*4.0)*(q.x<0.0?1.0:0.0);
-    alpha=(wall*(0.72+foam*0.28)+wake*0.35)*(1.0-smoothstep(0.72,1.0,d));
-    color=mix(vec3(0.02,0.28,0.52),vec3(0.72,0.95,1.0),wall*foam);
+    // A directional wall of water with a curling white crest, layered body,
+    // foam breaks and trailing ripples. The whole shape advances along pathEnd.
+    float curl=0.075*sin(q.y*10.0+uTime*18.0)+0.025*sin(q.y*31.0-uTime*23.0);
+    float front=q.x-curl;
+    float crest=band(front,0.045);
+    float face=(1.0-smoothstep(-0.02,0.20,front))*smoothstep(-0.58,-0.08,front);
+    float ripple1=band(front+0.29+0.025*sin(q.y*17.0),0.025);
+    float ripple2=band(front+0.48+0.018*sin(q.y*23.0),0.018);
+    float broken=0.55+0.45*smoothstep(0.18,0.82,hash(floor(vec2(q.y*42.0,uTime*15.0))));
+    float foam=(crest*broken+ripple1*0.42+ripple2*0.25)*(1.0-smoothstep(0.72,0.96,abs(q.y)));
+    alpha=(face*0.62+foam)*(1.0-smoothstep(0.78,1.0,d));
+    color=mix(vec3(0.015,0.24,0.52),vec3(0.82,0.98,1.0),clamp(foam+crest*0.5,0.0,1.0));
   }else if(uKind==2){
-    float spiral=1.0-smoothstep(0.035,0.095,abs(sin(a*3.0-d*17.0-uTime*13.0)));
-    float debris=step(0.82,hash(floor((vP+uTime*vec2(1.1,-0.8))*19.0)))*(1.0-d);
-    alpha=spiral*(1.0-d)*0.78+ring(d,0.25+0.05*sin(uTime*8.0),0.05)+debris*0.7;
-    color=mix(vec3(0.35,0.42,0.39),vec3(0.9,0.97,0.94),spiral);
+    // Top-down tornado: a dense eye, rotating funnel bands, broad wind arcs
+    // and fast debris. It reads as moving air rather than a static grey icon.
+    float spin=a*4.0-d*19.0-uTime*31.0;
+    float funnel=1.0-smoothstep(0.05,0.16,abs(sin(spin)));
+    float wind1=ring(d,0.34+0.035*sin(uTime*9.0),0.035);
+    float wind2=ring(d,0.58+0.025*cos(uTime*7.0),0.026);
+    float wind3=ring(d,0.79,0.018);
+    float arcMask=smoothstep(-0.3,0.75,sin(a*3.0-uTime*24.0+d*8.0));
+    float eye=1.0-smoothstep(0.04,0.19,d);
+    vec2 debrisCell=floor(vec2(a*15.0/6.28318,d*13.0-uTime*8.0));
+    float debris=step(0.77,hash(debrisCell))*smoothstep(0.18,0.35,d)*(1.0-d);
+    float air=(wind1+wind2*0.72+wind3*0.48)*arcMask;
+    alpha=(funnel*(1.0-d)*0.68+air+eye*0.72+debris*0.8)*(1.0-smoothstep(0.9,1.0,d));
+    color=mix(vec3(0.27,0.34,0.36),vec3(0.88,0.97,1.0),clamp(air+funnel*0.65,0.0,1.0));
   }else if(uKind==3){
     float n=hash(floor((vP+uTime*vec2(0.2,-1.8))*18.0));
     float flame=smoothstep(0.38,0.9,n)*(1.0-d)*(0.65+0.35*sin((vP.y-uTime)*31.0));
@@ -104,6 +122,11 @@ export class WorldEventPass {
   add(events: WorldEventFx[]): void {
     const now = performance.now();
     for (const event of events) this.events.push({ ...event, start: now });
+    // Prevent a continent/world event burst from creating permanent overdraw
+    // if several updates arrive together after a slow frame or reconnect.
+    if (this.events.length > 24) {
+      this.events.splice(0, this.events.length - 24);
+    }
   }
 
   draw(camera: Float32Array): void {

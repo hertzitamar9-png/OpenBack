@@ -644,14 +644,6 @@ export class GameView implements GameMap {
     const fogEnabled = wm?.fogOfWar ?? false;
     for (const [, state] of this._unitStates) {
       if (state.unitType === UnitType.TransportShip) continue; // handled above
-      // Disaster impacts (rendered as Shell bursts) are world events and must
-      // stay visible through fog, otherwise disasters look like they only hit
-      // the local player's own territory.
-      if (state.unitType === UnitType.Shell) {
-        if (state.visibleToLocal !== true) this._unitsDirty = true;
-        state.visibleToLocal = true;
-        continue;
-      }
       if (!fogEnabled || localSmallID === undefined) {
         if (state.visibleToLocal !== true) this._unitsDirty = true;
         state.visibleToLocal = true;
@@ -893,11 +885,11 @@ export class GameView implements GameMap {
         pathEnd: event.pathEnd,
       });
 
-      // Feed disaster impacts into the established animated explosion atlas.
-      // Several deterministic points make large disasters read across their
-      // affected area without adding a permanent per-frame particle cost.
-      const bursts =
-        event.kind === "meteor" ? 8 : event.kind === "drought" ? 2 : 5;
+      // Only meteors use the explosion atlas. Other disasters have dedicated
+      // wave, wind, crack, fire, and dust animation in WorldEventPass; fake
+      // Shell deaths made them appear as dozens of unrelated circular blobs,
+      // especially when fog kept those Shell effects visible worldwide.
+      const bursts = event.kind === "meteor" ? 8 : 0;
       for (let i = 0; i < bursts; i++) {
         const angle =
           ((event.tile * 0.37 + i) % bursts) * ((Math.PI * 2) / bursts);

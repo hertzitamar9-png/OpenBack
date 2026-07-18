@@ -54,6 +54,7 @@ export class UnitDisplay extends LitElement implements Controller {
   private _tankMine = 0;
   private allDisabled = false;
   private _hoveredUnit: PlayerBuildableUnitType | null = null;
+  private buildablesRequestInFlight = false;
 
   createRenderRoot() {
     return this;
@@ -129,9 +130,17 @@ export class UnitDisplay extends LitElement implements Controller {
   tick() {
     const player = this.game?.myPlayer();
     if (!player) return;
-    player.buildables(undefined, BuildMenus.types).then((buildables) => {
-      this.playerBuildables = buildables;
-    });
+    if (!this.buildablesRequestInFlight) {
+      this.buildablesRequestInFlight = true;
+      player
+        .buildables(undefined, BuildMenus.types)
+        .then((buildables) => {
+          this.playerBuildables = buildables;
+        })
+        .finally(() => {
+          this.buildablesRequestInFlight = false;
+        });
+    }
     this._cities = player.totalUnitLevels(UnitType.City);
     this._missileSilo = player.totalUnitLevels(UnitType.MissileSilo);
     this._port = player.totalUnitLevels(UnitType.Port);
@@ -162,9 +171,9 @@ export class UnitDisplay extends LitElement implements Controller {
     }
 
     return html`
-      <div class="border-t border-white/10 px-2 py-1 w-full bg-black/40">
+      <div class="border-t border-white/10 px-1 py-0.5 w-full">
         <div
-          class="flex gap-1.5 w-full overflow-x-auto pb-1 snap-x snap-mandatory"
+          class="grid grid-cols-8 sm:grid-cols-[repeat(16,minmax(0,1fr))] gap-px w-full"
         >
           ${this.renderUnitItem(
             cityIcon,
@@ -303,7 +312,7 @@ export class UnitDisplay extends LitElement implements Controller {
 
     return html`
       <div
-        class="flex flex-col items-stretch relative shrink-0 snap-start"
+        class="flex flex-col items-stretch min-w-0 relative"
         @mouseenter=${() => {
           this._hoveredUnit = unitType;
           this.requestUpdate();
@@ -346,10 +355,9 @@ export class UnitDisplay extends LitElement implements Controller {
           title=${translateText("unit_type." + structureKey)}
           class="${this.canBuild(unitType)
             ? ""
-            : "opacity-40"} w-14 h-16 shrink-0 snap-start border rounded-lg flex flex-col items-center justify-center gap-0.5 cursor-pointer overflow-hidden px-0.5
-             ${selected
-            ? "border-cyan-400 bg-cyan-500/20 ring-2 ring-cyan-400"
-            : "border-white/20 bg-slate-800/80 hover:bg-slate-700/80"}"
+            : "opacity-40"} min-w-0 h-9 border border-slate-500 rounded-sm px-px py-px flex flex-col items-center justify-center cursor-pointer
+             ${selected ? "hover:bg-gray-400/10" : "hover:bg-gray-800"}
+             text-white ${selected ? "bg-slate-400/20" : ""}"
           @click=${() => {
             if (selected) {
               this.uiState.ghostStructure = null;
@@ -392,26 +400,18 @@ export class UnitDisplay extends LitElement implements Controller {
           @mouseleave=${() =>
             this.eventBus?.emit(new ToggleStructureEvent(null))}
         >
-          <div class="flex items-center justify-center gap-1">
-            <span class="text-[9px] text-gray-400 leading-none"
-              >${displayHotkey}</span
-            >
-            <img
-              src=${icon}
-              alt=${structureKey}
-              class="size-6 object-contain"
-            />
+          <div class="flex items-center justify-center gap-0.5 h-5">
+            <span class="text-[8px] text-gray-400">${displayHotkey}</span>
+            <img src=${icon} alt=${structureKey} class="align-middle size-4" />
+            ${number !== null
+              ? html`<span class="text-[9px]">${renderNumber(number)}</span>`
+              : null}
           </div>
           <div
-            class="w-full text-center text-[9px] leading-tight font-semibold text-white/90 break-words"
+            class="w-full truncate text-center text-[8px] leading-3 font-semibold text-white/90"
           >
             ${translateText("unit_type." + structureKey)}
           </div>
-          ${number !== null
-            ? html`<div class="text-[9px] text-gray-300 leading-none">
-                ${renderNumber(number)}
-              </div>`
-            : null}
         </div>
       </div>
     `;

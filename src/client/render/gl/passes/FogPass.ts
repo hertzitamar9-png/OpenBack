@@ -19,18 +19,17 @@ float mine(vec2 p) {
 }
 void main() {
   if (uLocalOwner == 0u) discard;
-  float r = 18.0;
   float reveal = mine(vWorldPos);
-  reveal = max(reveal, 0.25 * (
-    mine(vWorldPos + vec2(r,0.0)) + mine(vWorldPos - vec2(r,0.0)) +
-    mine(vWorldPos + vec2(0.0,r)) + mine(vWorldPos - vec2(0.0,r))));
   for(int i=0;i<8;i++) {
     if(i<uRadarCount) {
       float d = distance(vWorldPos,uRadar[i].xy);
       reveal = max(reveal, 1.0-smoothstep(uRadar[i].z-5.0,uRadar[i].z+7.0,d));
     }
   }
-  if (reveal > 0.92) discard;
+  // Reveal the territory itself, not four offset copies of every owned patch.
+  // The old long-distance samples turned small disconnected holdings into a
+  // field of circular holes around the player.
+  if (reveal > 0.5) discard;
 
   // Two inexpensive moving wave fields make the unexplored area read as
   // rolling cloud banks rather than a flat grey screen.
@@ -40,8 +39,7 @@ void main() {
   cloud += 0.18*sin(p.y*0.071 - p.x*0.019 - uTime*0.31);
   cloud += 0.09*sin((p.x+p.y)*0.115 + uTime*0.41);
   cloud = smoothstep(0.12,0.88,cloud);
-  float edge = 1.0-smoothstep(0.08,0.82,reveal);
-  float alpha = mix(0.48,0.78,cloud)*edge;
+  float alpha = mix(0.48,0.78,cloud);
   vec3 shadow = vec3(0.055,0.085,0.12);
   vec3 mist = vec3(0.38,0.47,0.55);
   outColor = vec4(mix(shadow,mist,cloud),alpha);

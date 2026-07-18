@@ -111,7 +111,7 @@ export class GPURenderer {
   private bloomPass: FalloutBloomPass;
   private pointLightPass: PointLightPass;
   private falloutLightPass: FalloutLightPass;
-  private fogPass: FogPass;
+  private fogPass: FogPass | null = null;
   private lightmapPass: LightmapPass;
   private nightCompositePass: NightCompositePass;
   private structurePass: StructurePass;
@@ -125,7 +125,7 @@ export class GPURenderer {
   private railroadPass: RailroadPass;
   private barPass: BarPass;
   private worldTextPass: WorldTextPass;
-  private worldEventPass: WorldEventPass;
+  private worldEventPass: WorldEventPass | null = null;
   private selectionBoxPass: SelectionBoxPass;
   private moveIndicatorPass: MoveIndicatorPass;
   private nukeTrajectoryPass: NukeTrajectoryPass;
@@ -310,14 +310,13 @@ export class GPURenderer {
 
     // Create shared textures except borderTex
     this.res = createGPUResources(gl, mapW, mapH, this.paletteTex, null!);
-    this.fogPass = new FogPass(
-      gl,
-      this.res.tileTex,
-      mapW,
-      mapH,
-      config.worldMechanics().fogOfWar,
-    );
-    this.worldEventPass = new WorldEventPass(gl, mapW, config.msPerTick());
+    const mechanics = config.worldMechanics();
+    if (mechanics.fogOfWar) {
+      this.fogPass = new FogPass(gl, this.res.tileTex, mapW, mapH, true);
+    }
+    if (mechanics.naturalDisasters) {
+      this.worldEventPass = new WorldEventPass(gl, mapW, config.msPerTick());
+    }
 
     // --- Border compute (needs tileTex) ---
     this.borderPass = new BorderComputePass(
@@ -906,13 +905,13 @@ export class GPURenderer {
   }
 
   applyWorldEvents(events: WorldEventFx[]): void {
-    this.worldEventPass.add(events);
+    this.worldEventPass?.add(events);
   }
 
   updateFogReveals(
     reveals: Array<{ x: number; y: number; radius: number }>,
   ): void {
-    this.fogPass.setRadarReveals(reveals);
+    this.fogPass?.setRadarReveals(reveals);
   }
 
   updateAttackRings(rings: AttackRingInput[]): void {
@@ -991,7 +990,7 @@ export class GPURenderer {
   setLocalPlayerID(id: number): void {
     if (id === this.localPlayerID) return;
     this.localPlayerID = id;
-    this.fogPass.setLocalOwner(id);
+    this.fogPass?.setLocalOwner(id);
     this.friendlyOwnersInitialized = false;
     this.samRadiusPass.setLocalPlayer(id);
     this.structurePass.setLocalPlayer(id);
@@ -1249,10 +1248,13 @@ export class GPURenderer {
     this.worldTextPass.tick(zoom);
     this.worldTextPass.draw(cam, zoom);
 
-    this.worldEventPass.draw(cam);
-
     // Last so fog also conceals distant units, structures, routes and labels.
-    this.fogPass.draw(cam);
+    this.fogPass?.draw(cam);
+
+    // Natural disasters are global warnings: their wave, wind, fire, and
+    // impact silhouettes remain visible above fog without exposing units or
+    // territory underneath them.
+    this.worldEventPass?.draw(cam);
 
     gl.disable(gl.BLEND);
   }
@@ -1272,7 +1274,7 @@ export class GPURenderer {
     this.bloomPass.dispose();
     this.pointLightPass.dispose();
     this.falloutLightPass.dispose();
-    this.fogPass.dispose();
+    this.fogPass?.dispose();
     this.lightmapPass.dispose();
     this.nightCompositePass.dispose();
     this.heatManager.dispose();
@@ -1290,7 +1292,7 @@ export class GPURenderer {
     this.namePass.dispose();
     this.fxPass.dispose();
     this.worldTextPass.dispose();
-    this.worldEventPass.dispose();
+    this.worldEventPass?.dispose();
     this.selectionBoxPass.dispose();
     this.moveIndicatorPass.dispose();
     this.nukeTrajectoryPass.dispose();

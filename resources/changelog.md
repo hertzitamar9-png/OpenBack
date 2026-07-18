@@ -1,3 +1,13 @@
+## OpenBack v0.33.53 - Clearer Combat HUD and Living Disasters
+
+- Restored the compact, non-scrolling build bar and the cleaner player unit overview while keeping every OpenBack unit available.
+- Matched runway, aircraft, MANPAD, military base, tank, and tank-mine snapping to the regular OpenFront structure interaction distance.
+- Removed duplicated fog reveal blobs so fog follows the player's real territory instead of creating offset copies around it.
+- Rebuilt tsunami visuals as a moving layered wave with foam and trailing ripples, and tornado visuals as rotating funnel bands, wind arcs, and debris.
+- Removed fake disaster shell clusters, limited extreme-event overdraw, and deferred fog/disaster shader setup until those modifiers are actually enabled for a smoother match start.
+
+Contributed by **frootz jhklphy**.
+
 ## OpenBack v0.33.52 - Deno Runtime Compatibility
 
 - Made the complete OpenBack server, project aliases, and JSON resources compatible with Deno Deploy's Node runtime so website, accounts, matchmaking, game workers, and WebSockets can deploy together.

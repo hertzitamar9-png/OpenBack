@@ -1033,16 +1033,14 @@ export class Config {
   }
 
   openBackSnapRadius(_unitType?: UnitType): number {
-    // All units — including the custom OpenBack units — share the regular game
-    // snap distance (8). No special-casing: the added units snap exactly like
-    // the base game units. Distinct from structureMinDist, which governs the
-    // minimum spacing between separate structures.
-    return 8;
+    // Use the same interaction radius as the base game's structures. Added
+    // units therefore stack and select with exactly the regular game feel.
+    return this.structureMinDist();
   }
 
   openBackVehicleSnapRadius(): number {
-    // Restored to the regular game's vehicle-stacking snap distance.
-    return 3;
+    // Parking a plane or tank uses the same base-game structure radius too.
+    return this.structureMinDist();
   }
 
   defaultNukeTargetableRange(): number {
