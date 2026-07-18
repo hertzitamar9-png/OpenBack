@@ -980,10 +980,18 @@ export class GameServer {
         });
         return;
       }
+      // Cap the resync window so a (re)joining client never receives the full
+      // multi-thousand-turn history (which would freeze the tab on parse). The
+      // authoritative state is in the worker snapshot; old intents aren't needed.
+      const MAX_RESYNC_TURNS = 120;
+      const resyncStart = Math.max(
+        lastTurn,
+        this.turns.length - MAX_RESYNC_TURNS,
+      );
       ws.send(
         JSON.stringify({
           type: "start",
-          turns: this.turns.slice(lastTurn),
+          turns: this.turns.slice(resyncStart),
           gameStartInfo: this.startInfoFor(client.clientID),
           lobbyCreatedAt: this.createdAt,
           myClientID: client.clientID,

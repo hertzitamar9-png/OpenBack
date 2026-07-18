@@ -182,6 +182,21 @@ export class WorldMechanicsExecution implements Execution {
             : kind === "earthquake"
               ? 100
               : 90;
+    // Scope: most disasters are local, but some escalate to a continent-wide or
+    // world-wide event so entire regions (or the whole map) get hit at once.
+    const roll = this.random.nextInt(0, 100);
+    const scope: "local" | "continent" | "world" =
+      roll < 6 ? "world" : roll < 20 ? "continent" : "local";
+    let scopeRadius = radius;
+    if (scope === "continent") {
+      scopeRadius = Math.round(
+        Math.min(this.game.width(), this.game.height()) * 0.18,
+      );
+    } else if (scope === "world") {
+      scopeRadius = Math.round(
+        Math.max(this.game.width(), this.game.height()) * 0.55,
+      );
+    }
     let pathEnd: TileRef | undefined;
     if (kind === "tornado" || kind === "wildfire") {
       const x = Math.max(
@@ -217,7 +232,7 @@ export class WorldMechanicsExecution implements Execution {
     }
 
     const impactCenters: Array<{ tile: TileRef; radius: number }> = [
-      { tile, radius },
+      { tile, radius: scopeRadius },
     ];
     if (pathEnd !== undefined) {
       const steps = kind === "tornado" ? 6 : kind === "tsunami" ? 4 : 3;
@@ -235,6 +250,21 @@ export class WorldMechanicsExecution implements Execution {
           impactCenters.push({
             tile: patch,
             radius: Math.round(radius * 0.65),
+          });
+        }
+      }
+    }
+
+    // Continent/world disasters hit several regions at once so the whole map
+    // (or a large area) is affected, not just one spot.
+    if (scope === "continent" || scope === "world") {
+      const extra = scope === "world" ? 8 : 2;
+      for (let i = 0; i < extra; i++) {
+        const t = this.pickDisasterTile(kind === "tsunami");
+        if (t !== null) {
+          impactCenters.push({
+            tile: t,
+            radius: scopeRadius,
           });
         }
       }

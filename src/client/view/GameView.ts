@@ -777,12 +777,17 @@ export class GameView implements GameMap {
     // Keep rings over enemy/fog tiles (genuine outgoing-attack indicators).
     if (this._myPlayer) {
       const myId = this._myPlayer.smallID();
-      const kept: typeof f.attackRings = [];
-      for (const r of f.attackRings) {
+      // Filter in place (reuse the same array) to avoid allocating on the
+      // per-tick render hot path.
+      let w = 0;
+      for (let i = 0; i < f.attackRings.length; i++) {
+        const r = f.attackRings[i];
         const tile = r.y * this._map.width() + r.x;
-        if (this._map.ownerID(tile) !== myId) kept.push(r);
+        if (this._map.ownerID(tile) !== myId) {
+          f.attackRings[w++] = r;
+        }
       }
-      f.attackRings = kept;
+      f.attackRings.length = w;
     }
     f.fogReveals.length = 0;
     for (const [id, objective] of this._strategicObjectives) {

@@ -826,15 +826,16 @@ export class PlayerImpl implements Player {
   }
 
   decayRelations() {
-    this.relations.forEach((r: number, p: Player) => {
+    const delta = 0.05;
+    for (const [p, r] of this.relations) {
       const sign = -1 * Math.sign(r);
-      const delta = 0.05;
-      r += sign * delta;
-      if (Math.abs(r) < delta * 2) {
-        r = 0;
+      const nr = r + sign * delta;
+      if (Math.abs(nr) < delta * 2) {
+        this.relations.delete(p);
+      } else {
+        this.relations.set(p, nr);
       }
-      this.relations.set(p, r);
-    });
+    }
   }
 
   canTarget(other: Player): boolean {
@@ -853,16 +854,23 @@ export class PlayerImpl implements Player {
   }
 
   target(other: Player): void {
+    this.pruneTargets();
     this.targets_.push({ tick: this.mg.ticks(), target: other });
     this.mg.target(this, other);
   }
 
+  private pruneTargets(): void {
+    const cutoff = this.mg.ticks() - this.mg.config().targetDuration();
+    // Entries are appended in roughly increasing tick order, so drop expired
+    // ones from the front; scan the rest to catch any stragglers.
+    while (this.targets_.length > 0 && this.targets_[0].tick < cutoff) {
+      this.targets_.shift();
+    }
+  }
+
   targets(): Player[] {
-    return this.targets_
-      .filter(
-        (t) => this.mg.ticks() - t.tick < this.mg.config().targetDuration(),
-      )
-      .map((t) => t.target);
+    this.pruneTargets();
+    return this.targets_.map((t) => t.target);
   }
 
   transitiveTargets(): Player[] {
