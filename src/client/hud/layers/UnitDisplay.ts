@@ -162,8 +162,10 @@ export class UnitDisplay extends LitElement implements Controller {
     }
 
     return html`
-      <div class="border-t border-white/10 px-1.5 py-1.5 w-full bg-black/30">
-        <div class="flex gap-1.5 w-full overflow-x-auto pb-1.5 snap-x">
+      <div class="border-t border-white/10 px-2 py-1 w-full bg-black/40">
+        <div
+          class="flex gap-2 w-full overflow-x-auto pb-1 snap-x snap-mandatory"
+        >
           ${this.renderUnitItem(
             cityIcon,
             this._cities,
@@ -301,7 +303,7 @@ export class UnitDisplay extends LitElement implements Controller {
 
     return html`
       <div
-        class="flex flex-col items-stretch min-w-0 relative"
+        class="flex flex-col items-stretch relative shrink-0 snap-start"
         @mouseenter=${() => {
           this._hoveredUnit = unitType;
           this.requestUpdate();
@@ -344,10 +346,10 @@ export class UnitDisplay extends LitElement implements Controller {
           title=${translateText("unit_type." + structureKey)}
           class="${this.canBuild(unitType)
             ? ""
-            : "opacity-40"} h-16 w-20 shrink-0 snap-start border rounded-md px-1 py-1 flex flex-col items-center justify-between cursor-pointer
+            : "opacity-40"} w-14 h-14 shrink-0 snap-start border rounded-lg flex flex-col items-center justify-center gap-0.5 cursor-pointer overflow-hidden
              ${selected
-            ? "border-cyan-400 bg-cyan-500/15 ring-1 ring-cyan-400/50"
-            : "border-white/15 bg-slate-800/70 hover:bg-slate-700/70"}"
+            ? "border-cyan-400 bg-cyan-500/20 ring-2 ring-cyan-400"
+            : "border-white/20 bg-slate-800/80 hover:bg-slate-700/80"}"
           @click=${() => {
             if (selected) {
               this.uiState.ghostStructure = null;
@@ -390,18 +392,26 @@ export class UnitDisplay extends LitElement implements Controller {
           @mouseleave=${() =>
             this.eventBus?.emit(new ToggleStructureEvent(null))}
         >
-          <div class="flex items-center justify-center gap-0.5 h-6">
-            <span class="text-[9px] text-gray-400">${displayHotkey}</span>
-            <img src=${icon} alt=${structureKey} class="align-middle size-5" />
-            ${number !== null
-              ? html`<span class="text-[10px]">${renderNumber(number)}</span>`
-              : null}
+          <div class="flex items-center justify-center gap-1">
+            <span class="text-[9px] text-gray-400 leading-none"
+              >${displayHotkey}</span
+            >
+            <img
+              src=${icon}
+              alt=${structureKey}
+              class="size-6 object-contain"
+            />
           </div>
           <div
-            class="w-full text-center text-[9px] leading-tight font-semibold text-white/90"
+            class="max-w-full text-center text-[10px] leading-tight font-semibold text-white/90 truncate px-0.5"
           >
             ${translateText("unit_type." + structureKey)}
           </div>
+          ${number !== null
+            ? html`<div class="text-[9px] text-gray-300 leading-none">
+                ${renderNumber(number)}
+              </div>`
+            : null}
         </div>
       </div>
     `;

@@ -764,6 +764,18 @@ export class GameView implements GameMap {
           f.attackRings,
         )
       : ((f.attackRings.length = 0), f.attackRings);
+    // Don't draw attack rings on the local player's own territory — they just
+    // clutter the spawn area with bright circles around your starting land.
+    // Keep rings over enemy/fog tiles (genuine outgoing-attack indicators).
+    if (this._myPlayer) {
+      const myId = this._myPlayer.smallID();
+      const kept: typeof f.attackRings = [];
+      for (const r of f.attackRings) {
+        const tile = r.y * this._map.width() + r.x;
+        if (this._map.ownerID(tile) !== myId) kept.push(r);
+      }
+      f.attackRings = kept;
+    }
     f.fogReveals.length = 0;
     for (const [id, objective] of this._strategicObjectives) {
       const tile = objective.tile;
