@@ -68,7 +68,7 @@ describe("PlaneExecution", () => {
   });
 
   test("uses the legacy structure snap distance for runway and aircraft placement", () => {
-    const nearby = game.ref(17, 5);
+    const nearby = game.ref(8, 5);
     attacker.conquer(nearby);
     expect(attacker.buildableUnits(nearby, [UnitType.Runway])[0].canBuild).toBe(
       game.ref(5, 5),

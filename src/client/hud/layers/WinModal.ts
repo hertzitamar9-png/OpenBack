@@ -18,7 +18,7 @@ import { SendWinnerEvent } from "../../Transport";
 import { GameView } from "../../view";
 
 const WIN_MODAL_DISMISSED_KEY = "openback-win-modal-dismissed";
-const DEATH_VIDEO_SEEN_KEY = "openback-death-video-seen-v2";
+const DEATH_VIDEO_SEEN_KEY = "openback-death-video-seen-v3";
 
 @customElement("win-modal")
 export class WinModal extends LitElement implements Controller {
