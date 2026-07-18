@@ -1,3 +1,11 @@
+## OpenBack v0.33.55 - Ten-Minute Giant-Map Stability
+
+- Profiled a complete ten-minute Grand Earth match with 400 bots and more than 600 active players to catch late-game stalls and memory growth under real simulation load.
+- Restricted territory deletion-index rebuilds to the affected 1,024-tile insertion span instead of rescanning a player's complete conquest history, removing the largest avoidable giant-map CPU hotspot without changing tile order or game rules.
+- Kept every client update burst below one 60 FPS frame budget throughout the profiled match, with no renderer, texture, effect, or simulation-quality reductions.
+
+Contributed by **frootz jhklphy**.
+
 ## OpenBack v0.33.54 - Smooth Long Matches and New Domain
 
 - Removed the always-running 1 ms input poll and synchronized held controls with the display refresh rate, preserving responsive controls while sharply reducing idle CPU work.

@@ -6,6 +6,13 @@
  * preserves native Set iteration semantics, which keeps deterministic games
  * and existing replays stable.
  */
+interface TileChunk {
+  bits: Uint32Array;
+  orderIndexes?: Uint32Array;
+  firstOrderIndex: number;
+  lastOrderIndex: number;
+}
+
 export class ChunkedTileSet implements Set<number> {
   private static readonly CHUNK_SHIFT = 10;
   private static readonly CHUNK_SIZE = 1 << ChunkedTileSet.CHUNK_SHIFT;
@@ -14,17 +21,12 @@ export class ChunkedTileSet implements Set<number> {
     ChunkedTileSet.CHUNK_SIZE >> ChunkedTileSet.WORD_SHIFT;
   private static readonly DELETED = 0xffffffff;
 
-  private readonly chunks = new Map<
-    number,
-    { bits: Uint32Array; orderIndexes?: Uint32Array }
-  >();
+  private readonly chunks = new Map<number, TileChunk>();
   private order = new Uint32Array(64);
   private orderLength = 0;
   private size_ = 0;
   private lastChunkID = -1;
-  private lastChunk:
-    | { bits: Uint32Array; orderIndexes?: Uint32Array }
-    | undefined;
+  private lastChunk: TileChunk | undefined;
 
   get size(): number {
     return this.size_;
@@ -37,6 +39,8 @@ export class ChunkedTileSet implements Set<number> {
     if (chunk === undefined) {
       chunk = {
         bits: new Uint32Array(ChunkedTileSet.WORDS_PER_CHUNK),
+        firstOrderIndex: -1,
+        lastOrderIndex: -1,
       };
       this.chunks.set(chunkID, chunk);
     }
@@ -54,6 +58,10 @@ export class ChunkedTileSet implements Set<number> {
       if (chunk.orderIndexes !== undefined) {
         chunk.orderIndexes[offset] = this.orderLength + 1;
       }
+      if (chunk.firstOrderIndex === -1) {
+        chunk.firstOrderIndex = this.orderLength;
+      }
+      chunk.lastOrderIndex = this.orderLength;
       this.orderLength++;
       this.size_++;
     }
@@ -167,6 +175,10 @@ export class ChunkedTileSet implements Set<number> {
       2 ** Math.ceil(Math.log2(this.size_ + 1)),
     );
     const next = new Uint32Array(nextCapacity);
+    for (const chunk of this.chunks.values()) {
+      chunk.firstOrderIndex = -1;
+      chunk.lastOrderIndex = -1;
+    }
     let write = 0;
     for (let read = 0; read < this.orderLength; read++) {
       const value = this.order[read];
@@ -174,6 +186,8 @@ export class ChunkedTileSet implements Set<number> {
       next[write] = value;
       const chunk = this.chunks.get(value >> ChunkedTileSet.CHUNK_SHIFT)!;
       const offset = value & (ChunkedTileSet.CHUNK_SIZE - 1);
+      if (chunk.firstOrderIndex === -1) chunk.firstOrderIndex = write;
+      chunk.lastOrderIndex = write;
       if (chunk.orderIndexes !== undefined) {
         chunk.orderIndexes[offset] = write + 1;
       }
@@ -187,16 +201,21 @@ export class ChunkedTileSet implements Set<number> {
    * Most territory chunks are only ever gained, not lost. Allocate the large
    * reverse-index table only when a deletion actually needs it.
    */
-  private ensureOrderIndexes(
-    chunkID: number,
-    chunk: { bits: Uint32Array; orderIndexes?: Uint32Array },
-  ): Uint32Array {
+  private ensureOrderIndexes(chunkID: number, chunk: TileChunk): Uint32Array {
     if (chunk.orderIndexes !== undefined) return chunk.orderIndexes;
     const indexes = new Uint32Array(ChunkedTileSet.CHUNK_SIZE);
     const min = chunkID << ChunkedTileSet.CHUNK_SHIFT;
     const max = min + ChunkedTileSet.CHUNK_SIZE;
     const bits = chunk.bits;
-    for (let i = 0; i < this.orderLength; i++) {
+    // A player's insertion history can contain millions of tiles on giant
+    // maps, while one chunk only covers 1,024 tile references. Restrict the
+    // one-time reverse-index scan to the insertion span in which this chunk
+    // actually appeared instead of walking the player's entire history.
+    for (
+      let i = Math.max(0, chunk.firstOrderIndex);
+      i <= chunk.lastOrderIndex && i < this.orderLength;
+      i++
+    ) {
       const value = this.order[i];
       if (value === ChunkedTileSet.DELETED || value < min || value >= max) {
         continue;

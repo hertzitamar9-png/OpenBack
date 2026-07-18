@@ -70,4 +70,28 @@ describe("ChunkedTileSet", () => {
     expect(tiles.size).toBe(4);
     expect(tiles.has(33)).toBe(false);
   });
+
+  it("preserves insertion order when chunk spans are interleaved and compacted", () => {
+    const tiles = new ChunkedTileSet();
+    const expected = new Set<number>();
+
+    for (let i = 0; i < 1_500; i++) {
+      const value = (i % 3) * 4096 + i;
+      tiles.add(value);
+      expected.add(value);
+    }
+
+    for (const value of Array.from(expected).slice(0, 1_050)) {
+      expect(tiles.delete(value)).toBe(expected.delete(value));
+    }
+
+    for (let i = 0; i < 300; i++) {
+      const value = 20_000 + i * 17;
+      tiles.add(value);
+      expected.add(value);
+    }
+
+    expect(Array.from(tiles)).toEqual(Array.from(expected));
+    expect(tiles.size).toBe(expected.size);
+  });
 });
