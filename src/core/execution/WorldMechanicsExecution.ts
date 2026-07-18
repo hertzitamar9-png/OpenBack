@@ -293,9 +293,9 @@ export class WorldMechanicsExecution implements Execution {
     const alive = this.game
       .players()
       .filter((player) => player.isAlive() && player.numTilesOwned() > 0);
-    const humans = alive.filter((player) => player.clientID() !== null);
-    const pool =
-      humans.length > 0 && this.random.nextInt(0, 100) < 45 ? humans : alive;
+    // Target any alive player (human, bot, or nation) uniformly so disasters
+    // don't cluster on the lone human in a bot-filled lobby.
+    const pool = alive;
     if (pool.length > 0) {
       const start = this.random.nextInt(0, pool.length);
       for (let offset = 0; offset < pool.length; offset++) {
