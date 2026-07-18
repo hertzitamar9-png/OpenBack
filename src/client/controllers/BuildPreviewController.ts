@@ -663,6 +663,12 @@ export class BuildPreviewController implements Controller {
       return;
     }
     const tile = this.transformHandler.screenToWorldCoordinates(e.x, e.y);
+    if (!this.game.isValidCoord(tile.x, tile.y)) {
+      // Click landed outside the map (e.g. over the HUD chrome or just past an
+      // edge). Bounds-check before resolving a tile ref — otherwise game.ref()
+      // throws "Invalid coordinates" and the whole click handler crashes.
+      return;
+    }
     if (this.ghostUnit.buildableUnit.canUpgrade !== false) {
       this.eventBus.emit(
         new SendUpgradeStructureIntentEvent(
