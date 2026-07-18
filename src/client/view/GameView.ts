@@ -644,6 +644,14 @@ export class GameView implements GameMap {
     const fogEnabled = wm?.fogOfWar ?? false;
     for (const [, state] of this._unitStates) {
       if (state.unitType === UnitType.TransportShip) continue; // handled above
+      // Disaster impacts (rendered as Shell bursts) are world events and must
+      // stay visible through fog, otherwise disasters look like they only hit
+      // the local player's own territory.
+      if (state.unitType === UnitType.Shell) {
+        if (state.visibleToLocal !== true) this._unitsDirty = true;
+        state.visibleToLocal = true;
+        continue;
+      }
       if (!fogEnabled || localSmallID === undefined) {
         if (state.visibleToLocal !== true) this._unitsDirty = true;
         state.visibleToLocal = true;
