@@ -13,7 +13,7 @@ interface PurchaseConfig {
   currency?: string;
 }
 
-type PurchaseStep = "intro" | "email" | "checkout";
+type PurchaseStep = "intro" | "account" | "email" | "checkout";
 
 declare global {
   interface Window {
@@ -69,7 +69,9 @@ export class PurchaseModal extends BaseModal {
         : "multiplayer";
     const requestedStep = args?.step;
     this.step =
-      requestedStep === "checkout" || requestedStep === "email"
+      requestedStep === "checkout" ||
+      requestedStep === "email" ||
+      requestedStep === "account"
         ? requestedStep
         : "intro";
     this.email = typeof args?.email === "string" ? args.email.trim() : "";
@@ -104,8 +106,20 @@ export class PurchaseModal extends BaseModal {
 
   private beginPurchase() {
     this.error = "";
-    this.step = "email";
+    this.step = this.userMe ? "email" : "account";
     this.email = this.userMe ? (this.userMe.user.email ?? "") : "";
+  }
+
+  private openAccount(mode: "login" | "signup") {
+    this.close();
+    (
+      document.querySelector("account-modal") as {
+        open: (args?: Record<string, unknown>) => void;
+      } | null
+    )?.open({
+      authMode: mode,
+      returnToPurchase: true,
+    });
   }
 
   private handleEmailInput(event: Event) {
@@ -312,8 +326,46 @@ export class PurchaseModal extends BaseModal {
           @click=${this.beginPurchase}
           class="w-full rounded-xl bg-malibu-blue px-5 py-4 font-black uppercase tracking-wider text-white"
         >
-          ${this.userMe ? "Buy Lifetime Access" : "Sign Up / Log In"}
+          Buy Lifetime Access
         </button>
+        <button
+          @click=${() => this.close()}
+          class="w-full rounded-xl border border-white/15 px-5 py-3 text-sm font-bold text-white/80 hover:bg-white/5"
+        >
+          Cancel
+        </button>
+      </div>
+    `;
+  }
+
+  private renderAccountStep() {
+    return html`
+      <div
+        class="space-y-5 rounded-2xl border border-malibu-blue/30 bg-malibu-blue/10 p-5 text-center"
+      >
+        <div>
+          <h3 class="text-xl font-black uppercase tracking-wide">
+            Log In / Sign Up Before Buying
+          </h3>
+          <p class="mt-2 text-sm leading-6 text-white/60">
+            Lifetime Access belongs to your verified OpenBack email account.
+            Choose whether you already have an account.
+          </p>
+        </div>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <button
+            @click=${() => this.openAccount("login")}
+            class="rounded-xl bg-malibu-blue px-5 py-4 font-black uppercase tracking-wider text-white"
+          >
+            Log In
+          </button>
+          <button
+            @click=${() => this.openAccount("signup")}
+            class="rounded-xl border border-malibu-blue/60 bg-malibu-blue/15 px-5 py-4 font-black uppercase tracking-wider text-white hover:bg-malibu-blue/25"
+          >
+            Sign Up
+          </button>
+        </div>
         <button
           @click=${() => this.close()}
           class="w-full rounded-xl border border-white/15 px-5 py-3 text-sm font-bold text-white/80 hover:bg-white/5"
@@ -397,11 +449,11 @@ export class PurchaseModal extends BaseModal {
   protected renderBody() {
     return html`<div class="space-y-6 p-6 sm:p-8">
       <div class="text-center">
-        <div
-          class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-malibu-blue/50 bg-malibu-blue/10 text-xl font-black text-aquarius"
-        >
-          OB
-        </div>
+        <img
+          src="/images/OpenBackCircleLogo.png"
+          alt="OpenBack"
+          class="mx-auto mb-4 h-20 w-20 rounded-full object-contain"
+        />
         <h2 class="text-3xl font-black uppercase tracking-wide">
           Unlock OpenBack Forever
         </h2>
@@ -425,9 +477,11 @@ export class PurchaseModal extends BaseModal {
           </p>`
         : this.step === "intro"
           ? this.renderIntro()
-          : this.step === "email"
-            ? this.renderEmailStep()
-            : this.renderCheckout()}
+          : this.step === "account"
+            ? this.renderAccountStep()
+            : this.step === "email"
+              ? this.renderEmailStep()
+              : this.renderCheckout()}
       ${this.error
         ? html`<p class="text-center text-sm font-bold text-red-400">
             ${this.error}

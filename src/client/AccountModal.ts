@@ -739,11 +739,11 @@ export class AccountModal extends BaseModal {
             ${translateText("account_modal.back_to_account_choice")}
           </button>
           <div class="mb-8 text-center">
-            <div
-              class="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-malibu-blue/25 bg-malibu-blue/10 text-2xl font-black text-malibu-blue"
-            >
-              OB
-            </div>
+            <img
+              src="/images/OpenBackCircleLogo.png"
+              alt="OpenBack"
+              class="mx-auto mb-5 h-16 w-16 rounded-full object-contain"
+            />
             <h2 class="text-2xl font-black text-white">
               ${translateText(
                 isSignup
@@ -878,11 +878,11 @@ export class AccountModal extends BaseModal {
         class="flex min-h-full items-start justify-center px-6 pb-8 pt-[16vh]"
       >
         <div class="w-full max-w-2xl text-center">
-          <div
-            class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-malibu-blue/25 bg-malibu-blue/10 text-2xl font-black text-malibu-blue"
-          >
-            OB
-          </div>
+          <img
+            src="/images/OpenBackCircleLogo.png"
+            alt="OpenBack"
+            class="mx-auto mb-5 h-20 w-20 rounded-full object-contain"
+          />
           <h2 class="text-3xl font-black text-white">
             ${translateText("account_modal.auth_choice_title")}
           </h2>

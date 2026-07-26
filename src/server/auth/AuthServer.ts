@@ -277,6 +277,7 @@ async function writePersisted(data: PersistShape): Promise<void> {
       [JSON.stringify(data)],
     );
   } else {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
     fs.writeFileSync(DATA_FILE, JSON.stringify(data));
   }
 }

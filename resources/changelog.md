@@ -1,3 +1,12 @@
+## OpenBack v0.33.60 - Clear Purchase Sign-In
+
+- Changed every locked-feature prompt to show a clear Buy Lifetime Access action first instead of replacing Buy with account wording.
+- Added a dedicated Log In / Sign Up Before Buying screen with separate Log In, Sign Up, Back, and Cancel choices before the verified account and PayPal steps.
+- Replaced the plain text OB blocks throughout the purchase and email-account flow with the official circular OpenBack logo.
+- Fixed local account storage initialization so first-time authentication no longer fails when the data directory has not been created yet.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.33.59 - Guided Lifetime Checkout
 
 - Kept the home screen and free Solo play free of purchase prompts; the Lifetime Access window now opens only when a player selects Multiplayer, Ranked, parties, invite links, or a Frootz map.
