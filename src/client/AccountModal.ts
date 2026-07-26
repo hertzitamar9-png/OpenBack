@@ -69,6 +69,7 @@ export class AccountModal extends BaseModal {
   private statsTree: PlayerStatsTree | null = null;
   // Preserves the Games tab's accumulated list + cursor across tab switches.
   private gameHistoryCache: PlayerGameHistoryCache | null = null;
+  private returnToPurchase = false;
 
   constructor() {
     super();
@@ -1103,12 +1104,33 @@ export class AccountModal extends BaseModal {
         cancelable: true,
       }),
     );
+    if (
+      this.returnToPurchase &&
+      userMe.user.email?.toLowerCase() === this.email.trim().toLowerCase()
+    ) {
+      const email = userMe.user.email;
+      this.returnToPurchase = false;
+      this.close();
+      document.dispatchEvent(
+        new CustomEvent("openPurchaseCheckout", {
+          detail: { email },
+        }),
+      );
+    }
   }
 
-  protected onOpen(): void {
+  protected onOpen(args?: Record<string, unknown>): void {
     document.body.classList.add("account-flow-open");
     this.isLoadingUser = true;
-    this.authMode = null;
+    const requestedMode =
+      args?.authMode === "signup" || args?.authMode === "login"
+        ? args.authMode
+        : null;
+    const requestedEmail =
+      typeof args?.email === "string" ? args.email.trim() : "";
+    this.authMode = requestedMode;
+    this.email = requestedEmail;
+    this.returnToPurchase = args?.returnToPurchase === true;
     this.authSuggestedAction = null;
     this.codeSent = false;
     this.code = "";

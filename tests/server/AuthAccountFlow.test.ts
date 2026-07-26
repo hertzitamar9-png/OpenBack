@@ -55,6 +55,76 @@ async function postJson(pathname: string, body: unknown, cookie?: string) {
 }
 
 describe("email account lifecycle", () => {
+  test("reports whether a purchase email already has an account", async () => {
+    const email = `purchase-status-${Date.now()}@example.com`;
+    const before = await postJson("/purchase/account-status", { email });
+    expect(before.status).toBe(200);
+    await expect(before.json()).resolves.toEqual({ exists: false });
+
+    const codeResponse = await postJson("/auth/request-code", {
+      email,
+      mode: "signup",
+    });
+    const { devCode } = (await codeResponse.json()) as { devCode: string };
+    const verified = await postJson("/auth/verify-code", {
+      email,
+      code: devCode,
+      mode: "signup",
+    });
+    expect(verified.status).toBe(200);
+
+    const after = await postJson("/purchase/account-status", {
+      email: email.toUpperCase(),
+    });
+    expect(after.status).toBe(200);
+    await expect(after.json()).resolves.toEqual({ exists: true });
+  });
+
+  test("grants the owner email complimentary lifetime access", async () => {
+    const email = "hertzitamar9@gmail.com";
+    const codeResponse = await postJson("/auth/request-code", {
+      email,
+      mode: "signup",
+    });
+    const codeBody = (await codeResponse.json()) as {
+      devCode?: string;
+      error?: string;
+    };
+
+    let jwt: string;
+    if (codeBody.devCode) {
+      const verified = await postJson("/auth/verify-code", {
+        email,
+        code: codeBody.devCode,
+        mode: "signup",
+      });
+      jwt = ((await verified.json()) as { jwt: string }).jwt;
+    } else {
+      const loginCodeResponse = await postJson("/auth/request-code", {
+        email,
+        mode: "login",
+      });
+      const loginCode = (await loginCodeResponse.json()) as {
+        devCode: string;
+      };
+      const verified = await postJson("/auth/verify-code", {
+        email,
+        code: loginCode.devCode,
+        mode: "login",
+      });
+      jwt = ((await verified.json()) as { jwt: string }).jwt;
+    }
+
+    const me = await fetch(`${origin}/users/@me`, {
+      headers: { Authorization: `Bearer ${jwt}` },
+    });
+    expect(me.status).toBe(200);
+    await expect(me.json()).resolves.toMatchObject({
+      user: { email },
+      player: { lifetimeAccess: true },
+    });
+  });
+
   test("requires an email account before starting checkout", async () => {
     const refresh = await fetch(`${origin}/auth/refresh`, { method: "POST" });
     const { jwt } = (await refresh.json()) as { jwt: string };

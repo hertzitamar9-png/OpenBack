@@ -182,6 +182,12 @@ let friendRequests: StoredFriendRequest[] = [];
 let conversations: StoredConversation[] = [];
 let playerGames: StoredPlayerGame[] = [];
 let purchases: StoredPurchase[] = [];
+const complimentaryLifetimeEmails = new Set(
+  (process.env.OPENBACK_COMPLIMENTARY_EMAILS ?? "hertzitamar9@gmail.com")
+    .split(",")
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean),
+);
 // Parsed once at startup. Purchases validate item names/prices against this.
 const cosmetics = CosmeticsSchema.parse(cosmeticsJson);
 const databaseUrl = process.env.DATABASE_URL;
@@ -329,6 +335,9 @@ function getCookie(req: express.Request, name: string): string | undefined {
 }
 
 function userMeFor(user: StoredUser): UserMeResponse {
+  if (user.email && complimentaryLifetimeEmails.has(user.email.toLowerCase())) {
+    user.lifetimeAccess = true;
+  }
   const clans = [...clansByTag.values()].flatMap((clan) => {
     const member = clan.members.find((m) => m.publicId === user.publicId);
     return member
@@ -761,6 +770,9 @@ const RequestCodeSchema = z.object({
   email: z.string().email(),
   mode: z.enum(["signup", "login"]),
 });
+const PurchaseEmailSchema = z.object({
+  email: z.string().email(),
+});
 const VerifyCodeSchema = RequestCodeSchema.extend({
   code: z
     .string()
@@ -1168,6 +1180,16 @@ export function authRouter(): express.Router {
       console.error("[purchase] PayPal create failed", error);
       res.status(502).json({ error: "payment_provider_error" });
     }
+  });
+
+  router.post("/purchase/account-status", async (req, res) => {
+    const parsed = PurchaseEmailSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "invalid_email" });
+      return;
+    }
+    const email = parsed.data.email.trim().toLowerCase();
+    res.json({ exists: usersByEmail.has(email) });
   });
 
   router.post("/purchase/paypal/capture", async (req, res) => {

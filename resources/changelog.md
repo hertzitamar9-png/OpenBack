@@ -1,3 +1,13 @@
+## OpenBack v0.33.59 - Guided Lifetime Checkout
+
+- Kept the home screen and free Solo play free of purchase prompts; the Lifetime Access window now opens only when a player selects Multiplayer, Ranked, parties, invite links, or a Frootz map.
+- Added a clear one-time unlock explanation with Buy or Sign Up / Log In and Cancel actions before any payment provider loads.
+- Added purchase-email verification that detects existing OpenBack accounts, routes new emails through secure sign-up, routes registered emails through secure login, and continues directly to PayPal checkout afterward.
+- Bound every successful purchase to the verified OpenBack email account so access follows the owner across devices.
+- Granted **hertzitamar9@gmail.com** complimentary Lifetime Access whenever that email account is securely authenticated.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.33.58 - Email Account Ownership
 
 - Changed Lifetime Access to belong directly to the signed-in OpenBack email account instead of requiring a separate post-purchase verification code.
