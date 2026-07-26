@@ -1,3 +1,15 @@
+## OpenBack v0.33.56 - Lifetime Access
+
+- Kept Solo play free and available without creating or signing into an OpenBack account.
+- Added a clean one-time Lifetime Access purchase for Multiplayer, Ranked, and every map in the Frootz category.
+- Added server-verified PayPal checkout so browser messages, copied links, and edited client code cannot grant paid access.
+- Added six-digit purchase-email verification with expiring, single-use codes instead of permanent shareable game keys.
+- Added purchase restoration through the existing email login flow, allowing the owner to use a new device while preserving their profile and progress.
+- Added server enforcement for hosted games and ranked matchmaking, plus locked-map indicators throughout featured, search, favorites, and category views.
+- Added signed PayPal refund and reversal handling so official-service access remains synchronized with payment state.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.33.55 - Ten-Minute Giant-Map Stability
 
 - Profiled a complete ten-minute Grand Earth match with 400 bots and more than 600 active players to catch late-game stalls and memory growth under real simulation load.

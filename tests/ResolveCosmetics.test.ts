@@ -22,6 +22,7 @@ function makeUserMe(flares: string[] = []): UserMeResponse {
       flares,
       achievements: { singleplayerMap: [] },
       friends: [],
+      lifetimeAccess: false,
       subscription: null,
     },
   } as UserMeResponse;

@@ -69,6 +69,8 @@ interface StoredUser {
   currencySoft?: number;
   currencyHard?: number;
   flares?: string[];
+  lifetimeAccess?: boolean;
+  lifetimePurchasedAt?: string;
 }
 interface Session {
   persistentId: string;
@@ -82,6 +84,7 @@ interface PendingCode {
 }
 
 type EmailAuthMode = "signup" | "login";
+type EmailCodePurpose = EmailAuthMode | "purchase";
 
 type ClanRole = "leader" | "officer" | "member";
 interface StoredClanMember {
@@ -144,6 +147,21 @@ interface PersistShape {
   friendRequests?: StoredFriendRequest[];
   conversations?: StoredConversation[];
   playerGames?: StoredPlayerGame[];
+  purchases?: StoredPurchase[];
+}
+interface StoredPurchase {
+  captureId: string;
+  orderId: string;
+  purchaserPersistentId: string;
+  payerEmail: string;
+  amount: string;
+  currency: string;
+  status: "pending_verification" | "granted";
+  codeHash?: string;
+  codeExpiresAt?: number;
+  attempts: number;
+  createdAt: string;
+  grantedPersistentId?: string;
 }
 interface StoredPlayerGame extends PublicPlayerGame {
   publicId: string;
@@ -167,6 +185,7 @@ let friendships: StoredFriendship[] = [];
 let friendRequests: StoredFriendRequest[] = [];
 let conversations: StoredConversation[] = [];
 let playerGames: StoredPlayerGame[] = [];
+let purchases: StoredPurchase[] = [];
 // Parsed once at startup. Purchases validate item names/prices against this.
 const cosmetics = CosmeticsSchema.parse(cosmeticsJson);
 const databaseUrl = process.env.DATABASE_URL;
@@ -189,6 +208,7 @@ function hydrate(raw: PersistShape) {
   friendRequests = raw.friendRequests ?? [];
   conversations = raw.conversations ?? [];
   playerGames = raw.playerGames ?? [];
+  purchases = raw.purchases ?? [];
   for (const u of raw.users ?? []) {
     usersByEmail.set(u.email?.toLowerCase() ?? u.persistentId, u);
     usersByPid.set(u.persistentId, u);
@@ -241,6 +261,7 @@ function persistenceSnapshot(): PersistShape {
     friendRequests,
     conversations,
     playerGames,
+    purchases,
   };
 }
 
@@ -362,6 +383,7 @@ function userMeFor(user: StoredUser): UserMeResponse {
         .map((friendship) =>
           friendship.a === user.publicId ? friendship.b : friendship.a,
         ),
+      lifetimeAccess: user.lifetimeAccess === true,
       subscription: null,
     },
   });
@@ -559,6 +581,7 @@ export async function resolveRankedPlayer(token: string): Promise<{
   persistentId: string;
   displayName: string;
   elo: number;
+  lifetimeAccess: boolean;
 } | null> {
   const user = await userFromToken(token);
   if (!user) return null;
@@ -567,6 +590,7 @@ export async function resolveRankedPlayer(token: string): Promise<{
     persistentId: user.persistentId,
     displayName: usernameFor(user),
     elo: user.elo ?? DEFAULT_OB,
+    lifetimeAccess: user.lifetimeAccess === true,
   };
 }
 
@@ -751,9 +775,14 @@ const VerifyCodeSchema = RequestCodeSchema.extend({
 export async function sendCodeEmail(
   email: string,
   code: string,
-  mode: EmailAuthMode = "login",
+  mode: EmailCodePurpose = "login",
 ): Promise<string | null> {
-  const action = mode === "signup" ? "sign-up" : "login";
+  const action =
+    mode === "signup"
+      ? "sign-up"
+      : mode === "purchase"
+        ? "purchase verification"
+        : "login";
   const brevoApiKey = process.env.BREVO_API_KEY;
   const brevoSenderEmail = process.env.BREVO_SENDER_EMAIL;
   if (brevoApiKey && brevoSenderEmail) {
@@ -948,6 +977,99 @@ function historyCursor(game: StoredPlayerGame): string {
   );
 }
 
+// ---- Lifetime access ------------------------------------------------------
+// PayPal is deliberately handled on the server. The browser never receives
+// the client secret and a client-side "payment succeeded" message can never
+// grant access by itself.
+const PurchaseIdSchema = z.object({
+  orderId: z.string().trim().min(8).max(128),
+});
+const VerifyPurchaseSchema = PurchaseIdSchema.extend({
+  code: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/),
+});
+
+function lifetimePrice(): { amount: string; currency: string } | null {
+  const amount = process.env.OPENBACK_LIFETIME_PRICE?.trim();
+  const currency = (
+    process.env.OPENBACK_LIFETIME_CURRENCY ?? "USD"
+  ).toUpperCase();
+  if (!amount || !/^\d{1,6}\.\d{2}$/.test(amount)) return null;
+  if (!/^[A-Z]{3}$/.test(currency)) return null;
+  return { amount, currency };
+}
+
+function paypalBaseUrl(): string {
+  return process.env.PAYPAL_ENV === "live"
+    ? "https://api-m.paypal.com"
+    : "https://api-m.sandbox.paypal.com";
+}
+
+function purchaseEnabled(): boolean {
+  return Boolean(
+    process.env.PAYPAL_CLIENT_ID &&
+    process.env.PAYPAL_CLIENT_SECRET &&
+    lifetimePrice(),
+  );
+}
+
+async function paypalAccessToken(): Promise<string> {
+  const id = process.env.PAYPAL_CLIENT_ID;
+  const secret = process.env.PAYPAL_CLIENT_SECRET;
+  if (!id || !secret) throw new Error("paypal_not_configured");
+  const response = await fetch(`${paypalBaseUrl()}/v1/oauth2/token`, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${Buffer.from(`${id}:${secret}`).toString("base64")}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: "grant_type=client_credentials",
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!response.ok) throw new Error(`paypal_oauth_${response.status}`);
+  const body = (await response.json()) as { access_token?: string };
+  if (!body.access_token) throw new Error("paypal_missing_access_token");
+  return body.access_token;
+}
+
+async function paypalRequest(
+  path: string,
+  init: { method: "POST"; body?: unknown; requestId: string },
+): Promise<Response> {
+  const token = await paypalAccessToken();
+  return fetch(`${paypalBaseUrl()}${path}`, {
+    method: init.method,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      "PayPal-Request-Id": init.requestId,
+      Prefer: "return=representation",
+    },
+    body: init.body === undefined ? undefined : JSON.stringify(init.body),
+    signal: AbortSignal.timeout(20_000),
+  });
+}
+
+function purchaseCodeHash(captureId: string, code: string): string {
+  return crypto
+    .createHash("sha256")
+    .update(`${captureId}:${code}`)
+    .digest("hex");
+}
+
+async function issuePurchaseCode(
+  purchase: StoredPurchase,
+): Promise<string | null> {
+  const code = String(crypto.randomInt(100000, 1000000));
+  purchase.codeHash = purchaseCodeHash(purchase.captureId, code);
+  purchase.codeExpiresAt = Date.now() + CODE_TTL_MS;
+  purchase.attempts = 0;
+  await persistImmediately();
+  return sendCodeEmail(purchase.payerEmail, code, "purchase");
+}
+
 // ---- Routes ---------------------------------------------------------------
 export function authRouter(): express.Router {
   const router = express.Router();
@@ -964,6 +1086,297 @@ export function authRouter(): express.Router {
   router.get("/.well-known/jwks.json", async (_req, res) => {
     await ensureKeys();
     res.json({ keys: [getPublicJwk()] });
+  });
+
+  router.get("/purchase/config", (_req, res) => {
+    const price = lifetimePrice();
+    res.json({
+      enabled: purchaseEnabled(),
+      clientId: purchaseEnabled() ? process.env.PAYPAL_CLIENT_ID : undefined,
+      amount: price?.amount,
+      currency: price?.currency,
+    });
+  });
+
+  router.post("/purchase/paypal/webhook", async (req, res) => {
+    const webhookId = process.env.PAYPAL_WEBHOOK_ID;
+    if (!webhookId || !purchaseEnabled()) {
+      res.status(503).json({ error: "webhook_not_configured" });
+      return;
+    }
+    try {
+      const verification = await paypalRequest(
+        "/v1/notifications/verify-webhook-signature",
+        {
+          method: "POST",
+          requestId: `openback-webhook-${crypto.randomUUID()}`,
+          body: {
+            auth_algo: req.header("paypal-auth-algo"),
+            cert_url: req.header("paypal-cert-url"),
+            transmission_id: req.header("paypal-transmission-id"),
+            transmission_sig: req.header("paypal-transmission-sig"),
+            transmission_time: req.header("paypal-transmission-time"),
+            webhook_id: webhookId,
+            webhook_event: req.body,
+          },
+        },
+      );
+      const verified = (await verification.json()) as {
+        verification_status?: string;
+      };
+      if (!verification.ok || verified.verification_status !== "SUCCESS") {
+        res.status(401).json({ error: "invalid_webhook_signature" });
+        return;
+      }
+      const eventType = String(req.body?.event_type ?? "");
+      if (
+        [
+          "PAYMENT.CAPTURE.REFUNDED",
+          "PAYMENT.CAPTURE.REVERSED",
+          "PAYMENT.CAPTURE.DENIED",
+        ].includes(eventType)
+      ) {
+        const captureId = String(
+          req.body?.resource?.supplementary_data?.related_ids?.capture_id ??
+            req.body?.resource?.id ??
+            "",
+        );
+        const purchase = purchases.find((p) => p.captureId === captureId);
+        const owner = purchase?.grantedPersistentId
+          ? usersByPid.get(purchase.grantedPersistentId)
+          : undefined;
+        if (purchase && owner) {
+          owner.lifetimeAccess = false;
+          await persistImmediately();
+        }
+      }
+      res.json({ ok: true });
+    } catch (error) {
+      console.error("[purchase] webhook verification failed", error);
+      res.status(502).json({ error: "webhook_verification_failed" });
+    }
+  });
+
+  router.post("/purchase/paypal/order", async (req, res) => {
+    const user = await userFromBearer(req);
+    const price = lifetimePrice();
+    if (!user) {
+      res.status(401).json({ error: "unauthorized" });
+      return;
+    }
+    if (user.lifetimeAccess) {
+      res.json({ alreadyOwned: true });
+      return;
+    }
+    if (!purchaseEnabled() || !price) {
+      res.status(503).json({ error: "purchase_unavailable" });
+      return;
+    }
+    try {
+      const response = await paypalRequest("/v2/checkout/orders", {
+        method: "POST",
+        requestId: `openback-create-${crypto.randomUUID()}`,
+        body: {
+          intent: "CAPTURE",
+          purchase_units: [
+            {
+              custom_id: user.persistentId,
+              description: "OpenBack Lifetime Access",
+              amount: {
+                currency_code: price.currency,
+                value: price.amount,
+              },
+            },
+          ],
+        },
+      });
+      const body = (await response.json()) as { id?: string };
+      if (!response.ok || !body.id) {
+        console.error("[purchase] PayPal create failed", response.status, body);
+        res.status(502).json({ error: "payment_provider_error" });
+        return;
+      }
+      res.json({ orderId: body.id });
+    } catch (error) {
+      console.error("[purchase] PayPal create failed", error);
+      res.status(502).json({ error: "payment_provider_error" });
+    }
+  });
+
+  router.post("/purchase/paypal/capture", async (req, res) => {
+    const user = await userFromBearer(req);
+    const parsed = PurchaseIdSchema.safeParse(req.body);
+    const price = lifetimePrice();
+    if (!user) {
+      res.status(401).json({ error: "unauthorized" });
+      return;
+    }
+    if (!parsed.success || !purchaseEnabled() || !price) {
+      res.status(400).json({ error: "invalid_purchase" });
+      return;
+    }
+    const existing = purchases.find((p) => p.orderId === parsed.data.orderId);
+    if (existing) {
+      if (existing.purchaserPersistentId !== user.persistentId) {
+        res.status(403).json({ error: "purchase_owner_mismatch" });
+        return;
+      }
+      res.json({
+        purchaseId: existing.orderId,
+        emailHint: existing.payerEmail.replace(/^(.{2}).*(@.*)$/, "$1***$2"),
+        verificationRequired: existing.status !== "granted",
+      });
+      return;
+    }
+    try {
+      const response = await paypalRequest(
+        `/v2/checkout/orders/${encodeURIComponent(parsed.data.orderId)}/capture`,
+        {
+          method: "POST",
+          requestId: `openback-capture-${parsed.data.orderId}`,
+        },
+      );
+      const body = (await response.json()) as any;
+      const unit = body.purchase_units?.[0];
+      const capture = unit?.payments?.captures?.[0];
+      const payerEmail = body.payer?.email_address?.trim().toLowerCase();
+      if (
+        !response.ok ||
+        body.status !== "COMPLETED" ||
+        unit?.custom_id !== user.persistentId ||
+        capture?.status !== "COMPLETED" ||
+        capture?.amount?.value !== price.amount ||
+        capture?.amount?.currency_code !== price.currency ||
+        typeof capture?.id !== "string" ||
+        !payerEmail ||
+        !z.string().email().safeParse(payerEmail).success
+      ) {
+        console.error("[purchase] invalid PayPal capture", response.status);
+        res.status(409).json({ error: "payment_not_verified" });
+        return;
+      }
+      const purchase: StoredPurchase = {
+        captureId: capture.id,
+        orderId: parsed.data.orderId,
+        purchaserPersistentId: user.persistentId,
+        payerEmail,
+        amount: price.amount,
+        currency: price.currency,
+        status: "pending_verification",
+        attempts: 0,
+        createdAt: new Date().toISOString(),
+      };
+      purchases.push(purchase);
+      const devCode = await issuePurchaseCode(purchase);
+      res.json({
+        purchaseId: purchase.orderId,
+        emailHint: payerEmail.replace(/^(.{2}).*(@.*)$/, "$1***$2"),
+        verificationRequired: true,
+        devCode: devCode ?? undefined,
+      });
+    } catch (error) {
+      console.error("[purchase] PayPal capture failed", error);
+      res.status(502).json({ error: "payment_provider_error" });
+    }
+  });
+
+  router.post("/purchase/resend-code", async (req, res) => {
+    const user = await userFromBearer(req);
+    const parsed = PurchaseIdSchema.safeParse(req.body);
+    const purchase = parsed.success
+      ? purchases.find((p) => p.orderId === parsed.data.orderId)
+      : undefined;
+    if (
+      !user ||
+      !purchase ||
+      purchase.purchaserPersistentId !== user.persistentId ||
+      purchase.status !== "pending_verification"
+    ) {
+      res.status(404).json({ error: "purchase_not_found" });
+      return;
+    }
+    try {
+      const devCode = await issuePurchaseCode(purchase);
+      res.json({ ok: true, devCode: devCode ?? undefined });
+    } catch {
+      res.status(503).json({ error: "email_delivery_failed" });
+    }
+  });
+
+  router.post("/purchase/verify", async (req, res) => {
+    const purchaser = await userFromBearer(req);
+    const parsed = VerifyPurchaseSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "invalid_fields" });
+      return;
+    }
+    const purchase = purchases.find((p) => p.orderId === parsed.data.orderId);
+    if (
+      !purchaser ||
+      !purchase ||
+      purchase.purchaserPersistentId !== purchaser.persistentId
+    ) {
+      res.status(404).json({ error: "purchase_not_found" });
+      return;
+    }
+    if (purchase.status === "granted") {
+      const owner = purchase.grantedPersistentId
+        ? usersByPid.get(purchase.grantedPersistentId)
+        : undefined;
+      if (!owner) {
+        res.status(409).json({ error: "purchase_owner_missing" });
+        return;
+      }
+      const sessionId = await newSession(owner);
+      setSessionCookie(res, sessionId);
+      const auth = await signToken(owner);
+      res.json({ ...auth, userMe: userMeFor(owner) });
+      return;
+    }
+    if (
+      !purchase.codeHash ||
+      !purchase.codeExpiresAt ||
+      purchase.codeExpiresAt < Date.now()
+    ) {
+      res.status(400).json({ error: "code_expired" });
+      return;
+    }
+    if (purchase.attempts >= 5) {
+      res.status(429).json({ error: "too_many_attempts" });
+      return;
+    }
+    if (
+      purchase.codeHash !==
+      purchaseCodeHash(purchase.captureId, parsed.data.code)
+    ) {
+      purchase.attempts++;
+      persist();
+      res.status(401).json({ error: "invalid_code" });
+      return;
+    }
+
+    let owner = usersByEmail.get(purchase.payerEmail);
+    if (!owner) {
+      owner = purchaser;
+      usersByEmail.delete(owner.email?.toLowerCase() ?? owner.persistentId);
+      owner.email = purchase.payerEmail;
+      usersByEmail.set(purchase.payerEmail, owner);
+    } else if (owner !== purchaser && !purchaser.email) {
+      deleteUser(purchaser);
+    }
+    owner.lifetimeAccess = true;
+    owner.lifetimePurchasedAt = new Date().toISOString();
+    purchase.status = "granted";
+    purchase.grantedPersistentId = owner.persistentId;
+    purchase.codeHash = undefined;
+    purchase.codeExpiresAt = undefined;
+    const oldSession = getCookie(req, SESSION_COOKIE);
+    if (oldSession) sessions.delete(oldSession);
+    const sessionId = await newSession(owner);
+    setSessionCookie(res, sessionId);
+    await persistImmediately();
+    const auth = await signToken(owner);
+    res.json({ ...auth, userMe: userMeFor(owner) });
   });
 
   router.post("/game/:id", async (req, res) => {

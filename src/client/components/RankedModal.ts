@@ -4,6 +4,7 @@ import { UserMeResponse } from "../../core/ApiSchemas";
 import { getUserMe, hasLinkedAccount } from "../Api";
 import { userAuth } from "../Auth";
 import { crazyGamesSDK } from "../CrazyGamesSDK";
+import { requireLifetimeAccess } from "../LifetimeAccess";
 import { translateText } from "../Utils";
 import { BaseModal } from "./BaseModal";
 import { modalHeader } from "./ui/ModalHeader";
@@ -75,6 +76,10 @@ export class RankedModal extends BaseModal {
     try {
       const userMe = await getUserMe();
       this.userMeResponse = userMe;
+      if (!(await requireLifetimeAccess("ranked"))) {
+        this.close();
+        return;
+      }
       this.crazyGamesSignedIn =
         crazyGamesSDK.isOnCrazyGames() &&
         (await crazyGamesSDK.getUserProfile()) !== null;
@@ -180,6 +185,7 @@ export class RankedModal extends BaseModal {
   }
 
   private async handleRanked(teamSize: 1 | 2 | 3 | 4 = 1, withFriends = false) {
+    if (!(await requireLifetimeAccess("ranked"))) return;
     if ((await userAuth()) === false) {
       this.close();
       window.showPage?.("page-account");

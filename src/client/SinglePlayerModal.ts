@@ -11,6 +11,7 @@ import {
   GameMode,
   GameType,
   UnitType,
+  maps,
 } from "../core/game/Game";
 import { TeamCountConfig } from "../core/Schemas";
 import { generateID } from "../core/Util";
@@ -24,6 +25,7 @@ import { modalHeader } from "./components/ui/ModalHeader";
 import { getPlayerCosmetics } from "./Cosmetics";
 import { crazyGamesSDK } from "./CrazyGamesSDK";
 import { showInGameAlert } from "./InGameModal";
+import { requireLifetimeAccess } from "./LifetimeAccess";
 import { JoinLobbyEvent } from "./Main";
 import { UsernameInput } from "./UsernameInput";
 import {
@@ -717,6 +719,14 @@ export class SinglePlayerModal extends BaseModal {
   }
 
   private async startGame() {
+    if (
+      maps
+        .find((map) => map.type === this.selectedMap)
+        ?.categories.includes("frootz") &&
+      !(await requireLifetimeAccess("frootz"))
+    ) {
+      return;
+    }
     // Validate and clamp maxTimer setting before starting
     let finalMaxTimerValue: number | undefined = undefined;
     if (this.maxTimer) {

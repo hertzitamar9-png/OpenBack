@@ -126,6 +126,7 @@ export const UserMeResponseSchema = z.object({
       )
       .optional(),
     friends: z.array(z.string()),
+    lifetimeAccess: z.boolean(),
     subscription: z
       .object({
         tier: z.string(),

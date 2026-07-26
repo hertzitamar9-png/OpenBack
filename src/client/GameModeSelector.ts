@@ -13,6 +13,7 @@ import { PublicGameInfo, PublicGames } from "../core/Schemas";
 import "./components/IOSAddToHomeScreenBanner";
 import { HostLobbyModal } from "./HostLobbyModal";
 import { JoinLobbyModal } from "./JoinLobbyModal";
+import { requireLifetimeAccess } from "./LifetimeAccess";
 import { PublicLobbySocket } from "./LobbySocket";
 import { JoinLobbyEvent } from "./Main";
 import { SinglePlayerModal } from "./SinglePlayerModal";
@@ -243,8 +244,9 @@ export class GameModeSelector extends LitElement {
     return this.renderLobbyCard(lobby, this.getLobbyTitle(lobby));
   }
 
-  private openRankedMenu = () => {
+  private openRankedMenu = async () => {
     if (!this.validateUsername()) return;
+    if (!(await requireLifetimeAccess("ranked"))) return;
     window.showPage?.("page-ranked");
   };
 
@@ -255,13 +257,15 @@ export class GameModeSelector extends LitElement {
     )?.open();
   };
 
-  private openHostLobby = () => {
+  private openHostLobby = async () => {
     if (!this.validateUsername()) return;
+    if (!(await requireLifetimeAccess("multiplayer"))) return;
     (document.querySelector("host-lobby-modal") as HostLobbyModal)?.open();
   };
 
-  private openJoinLobby = () => {
+  private openJoinLobby = async () => {
     if (!this.validateUsername()) return;
+    if (!(await requireLifetimeAccess("multiplayer"))) return;
     (document.querySelector("join-lobby-modal") as JoinLobbyModal)?.open();
   };
 
@@ -403,8 +407,9 @@ export class GameModeSelector extends LitElement {
     `;
   }
 
-  private validateAndJoin(lobby: PublicGameInfo) {
+  private async validateAndJoin(lobby: PublicGameInfo) {
     if (!this.validateUsername()) return;
+    if (!(await requireLifetimeAccess("multiplayer"))) return;
 
     this.dispatchEvent(
       new CustomEvent("join-lobby", {

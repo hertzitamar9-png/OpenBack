@@ -38,12 +38,14 @@ import "./LangSelector";
 import { LangSelector } from "./LangSelector";
 import { initLayout } from "./Layout";
 import "./LeaderboardModal";
+import { requireLifetimeAccess } from "./LifetimeAccess";
 import "./Matchmaking";
 import { MatchmakingModal } from "./Matchmaking";
 import { modalRouter } from "./ModalRouter";
 import { initNavigation } from "./Navigation";
 import "./NewsModal";
 import "./PatternInput";
+import "./PurchaseModal";
 import "./SinglePlayerModal";
 import { socialClient } from "./SocialClient";
 import { StoreModal } from "./Store";
@@ -900,6 +902,18 @@ class Client {
     const lobby = event.detail;
     this.mostRecentJoinEvent = event.timeStamp;
     if (this.usernameInput && !this.usernameInput.canPlay()) {
+      return;
+    }
+    // Direct invite URLs, social invitations, and other internal join events
+    // must pass the same gate as the visible multiplayer buttons. Locally
+    // created Solo games and replay viewing remain free.
+    if (
+      !lobby.gameStartInfo &&
+      !lobby.gameRecord &&
+      !(await requireLifetimeAccess(
+        lobby.source === "matchmaking" ? "ranked" : "multiplayer",
+      ))
+    ) {
       return;
     }
 
