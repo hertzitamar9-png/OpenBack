@@ -55,6 +55,23 @@ async function postJson(pathname: string, body: unknown, cookie?: string) {
 }
 
 describe("email account lifecycle", () => {
+  test("requires an email account before starting checkout", async () => {
+    const refresh = await fetch(`${origin}/auth/refresh`, { method: "POST" });
+    const { jwt } = (await refresh.json()) as { jwt: string };
+    const response = await fetch(`${origin}/purchase/paypal/order`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${jwt}`,
+      },
+      body: "{}",
+    });
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      error: "email_account_required",
+    });
+  });
+
   test("calculates OB changes from both players' ratings", () => {
     expect(calculateObGain(100, 100)).toBe(50);
     expect(calculateObGain(10_000, 100)).toBe(10);

@@ -84,7 +84,6 @@ interface PendingCode {
 }
 
 type EmailAuthMode = "signup" | "login";
-type EmailCodePurpose = EmailAuthMode | "purchase";
 
 type ClanRole = "leader" | "officer" | "member";
 interface StoredClanMember {
@@ -156,10 +155,7 @@ interface StoredPurchase {
   payerEmail: string;
   amount: string;
   currency: string;
-  status: "pending_verification" | "granted";
-  codeHash?: string;
-  codeExpiresAt?: number;
-  attempts: number;
+  status: "granted";
   createdAt: string;
   grantedPersistentId?: string;
 }
@@ -775,14 +771,9 @@ const VerifyCodeSchema = RequestCodeSchema.extend({
 export async function sendCodeEmail(
   email: string,
   code: string,
-  mode: EmailCodePurpose = "login",
+  mode: EmailAuthMode = "login",
 ): Promise<string | null> {
-  const action =
-    mode === "signup"
-      ? "sign-up"
-      : mode === "purchase"
-        ? "purchase verification"
-        : "login";
+  const action = mode === "signup" ? "sign-up" : "login";
   const brevoApiKey = process.env.BREVO_API_KEY;
   const brevoSenderEmail = process.env.BREVO_SENDER_EMAIL;
   if (brevoApiKey && brevoSenderEmail) {
@@ -984,12 +975,6 @@ function historyCursor(game: StoredPlayerGame): string {
 const PurchaseIdSchema = z.object({
   orderId: z.string().trim().min(8).max(128),
 });
-const VerifyPurchaseSchema = PurchaseIdSchema.extend({
-  code: z
-    .string()
-    .trim()
-    .regex(/^\d{6}$/),
-});
 
 function lifetimePrice(): { amount: string; currency: string } | null {
   const amount = process.env.OPENBACK_LIFETIME_PRICE?.trim();
@@ -1050,24 +1035,6 @@ async function paypalRequest(
     body: init.body === undefined ? undefined : JSON.stringify(init.body),
     signal: AbortSignal.timeout(20_000),
   });
-}
-
-function purchaseCodeHash(captureId: string, code: string): string {
-  return crypto
-    .createHash("sha256")
-    .update(`${captureId}:${code}`)
-    .digest("hex");
-}
-
-async function issuePurchaseCode(
-  purchase: StoredPurchase,
-): Promise<string | null> {
-  const code = String(crypto.randomInt(100000, 1000000));
-  purchase.codeHash = purchaseCodeHash(purchase.captureId, code);
-  purchase.codeExpiresAt = Date.now() + CODE_TTL_MS;
-  purchase.attempts = 0;
-  await persistImmediately();
-  return sendCodeEmail(purchase.payerEmail, code, "purchase");
 }
 
 // ---- Routes ---------------------------------------------------------------
@@ -1160,8 +1127,8 @@ export function authRouter(): express.Router {
   router.post("/purchase/paypal/order", async (req, res) => {
     const user = await userFromBearer(req);
     const price = lifetimePrice();
-    if (!user) {
-      res.status(401).json({ error: "unauthorized" });
+    if (!user?.email) {
+      res.status(401).json({ error: "email_account_required" });
       return;
     }
     if (user.lifetimeAccess) {
@@ -1207,8 +1174,8 @@ export function authRouter(): express.Router {
     const user = await userFromBearer(req);
     const parsed = PurchaseIdSchema.safeParse(req.body);
     const price = lifetimePrice();
-    if (!user) {
-      res.status(401).json({ error: "unauthorized" });
+    if (!user?.email) {
+      res.status(401).json({ error: "email_account_required" });
       return;
     }
     if (!parsed.success || !purchaseEnabled() || !price) {
@@ -1221,11 +1188,12 @@ export function authRouter(): express.Router {
         res.status(403).json({ error: "purchase_owner_mismatch" });
         return;
       }
-      res.json({
-        purchaseId: existing.orderId,
-        emailHint: existing.payerEmail.replace(/^(.{2}).*(@.*)$/, "$1***$2"),
-        verificationRequired: existing.status !== "granted",
-      });
+      if (!user.lifetimeAccess) {
+        user.lifetimeAccess = true;
+        user.lifetimePurchasedAt = existing.createdAt;
+        await persistImmediately();
+      }
+      res.json({ userMe: userMeFor(user) });
       return;
     }
     try {
@@ -1262,121 +1230,19 @@ export function authRouter(): express.Router {
         payerEmail,
         amount: price.amount,
         currency: price.currency,
-        status: "pending_verification",
-        attempts: 0,
+        status: "granted",
         createdAt: new Date().toISOString(),
+        grantedPersistentId: user.persistentId,
       };
       purchases.push(purchase);
-      const devCode = await issuePurchaseCode(purchase);
-      res.json({
-        purchaseId: purchase.orderId,
-        emailHint: payerEmail.replace(/^(.{2}).*(@.*)$/, "$1***$2"),
-        verificationRequired: true,
-        devCode: devCode ?? undefined,
-      });
+      user.lifetimeAccess = true;
+      user.lifetimePurchasedAt = purchase.createdAt;
+      await persistImmediately();
+      res.json({ userMe: userMeFor(user) });
     } catch (error) {
       console.error("[purchase] PayPal capture failed", error);
       res.status(502).json({ error: "payment_provider_error" });
     }
-  });
-
-  router.post("/purchase/resend-code", async (req, res) => {
-    const user = await userFromBearer(req);
-    const parsed = PurchaseIdSchema.safeParse(req.body);
-    const purchase = parsed.success
-      ? purchases.find((p) => p.orderId === parsed.data.orderId)
-      : undefined;
-    if (
-      !user ||
-      !purchase ||
-      purchase.purchaserPersistentId !== user.persistentId ||
-      purchase.status !== "pending_verification"
-    ) {
-      res.status(404).json({ error: "purchase_not_found" });
-      return;
-    }
-    try {
-      const devCode = await issuePurchaseCode(purchase);
-      res.json({ ok: true, devCode: devCode ?? undefined });
-    } catch {
-      res.status(503).json({ error: "email_delivery_failed" });
-    }
-  });
-
-  router.post("/purchase/verify", async (req, res) => {
-    const purchaser = await userFromBearer(req);
-    const parsed = VerifyPurchaseSchema.safeParse(req.body);
-    if (!parsed.success) {
-      res.status(400).json({ error: "invalid_fields" });
-      return;
-    }
-    const purchase = purchases.find((p) => p.orderId === parsed.data.orderId);
-    if (
-      !purchaser ||
-      !purchase ||
-      purchase.purchaserPersistentId !== purchaser.persistentId
-    ) {
-      res.status(404).json({ error: "purchase_not_found" });
-      return;
-    }
-    if (purchase.status === "granted") {
-      const owner = purchase.grantedPersistentId
-        ? usersByPid.get(purchase.grantedPersistentId)
-        : undefined;
-      if (!owner) {
-        res.status(409).json({ error: "purchase_owner_missing" });
-        return;
-      }
-      const sessionId = await newSession(owner);
-      setSessionCookie(res, sessionId);
-      const auth = await signToken(owner);
-      res.json({ ...auth, userMe: userMeFor(owner) });
-      return;
-    }
-    if (
-      !purchase.codeHash ||
-      !purchase.codeExpiresAt ||
-      purchase.codeExpiresAt < Date.now()
-    ) {
-      res.status(400).json({ error: "code_expired" });
-      return;
-    }
-    if (purchase.attempts >= 5) {
-      res.status(429).json({ error: "too_many_attempts" });
-      return;
-    }
-    if (
-      purchase.codeHash !==
-      purchaseCodeHash(purchase.captureId, parsed.data.code)
-    ) {
-      purchase.attempts++;
-      persist();
-      res.status(401).json({ error: "invalid_code" });
-      return;
-    }
-
-    let owner = usersByEmail.get(purchase.payerEmail);
-    if (!owner) {
-      owner = purchaser;
-      usersByEmail.delete(owner.email?.toLowerCase() ?? owner.persistentId);
-      owner.email = purchase.payerEmail;
-      usersByEmail.set(purchase.payerEmail, owner);
-    } else if (owner !== purchaser && !purchaser.email) {
-      deleteUser(purchaser);
-    }
-    owner.lifetimeAccess = true;
-    owner.lifetimePurchasedAt = new Date().toISOString();
-    purchase.status = "granted";
-    purchase.grantedPersistentId = owner.persistentId;
-    purchase.codeHash = undefined;
-    purchase.codeExpiresAt = undefined;
-    const oldSession = getCookie(req, SESSION_COOKIE);
-    if (oldSession) sessions.delete(oldSession);
-    const sessionId = await newSession(owner);
-    setSessionCookie(res, sessionId);
-    await persistImmediately();
-    const auth = await signToken(owner);
-    res.json({ ...auth, userMe: userMeFor(owner) });
   });
 
   router.post("/game/:id", async (req, res) => {

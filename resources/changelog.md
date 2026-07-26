@@ -1,3 +1,12 @@
+## OpenBack v0.33.58 - Email Account Ownership
+
+- Changed Lifetime Access to belong directly to the signed-in OpenBack email account instead of requiring a separate post-purchase verification code.
+- Players who open a paid feature while signed out are now asked to sign in or create an account before PayPal checkout appears.
+- Successful PayPal capture now unlocks Multiplayer, Ranked, parties, invite links, and Frootz maps immediately.
+- Signing into the same OpenBack email account on another device automatically restores Lifetime Access and all saved account progress.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.33.57 - Service Requests
 
 - Added a Service Request contact beside the footer links so players can email OpenBack support when a purchase was completed but access was not received or another account problem needs help.

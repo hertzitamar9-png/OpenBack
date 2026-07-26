@@ -16,11 +16,6 @@ let __jwt: string | null = null;
 let __refreshPromise: Promise<void> | null = null;
 let __expiresAt: number = 0;
 
-export function acceptServerAuth(jwt: string, expiresIn: number): void {
-  __jwt = jwt;
-  __expiresAt = Date.now() + expiresIn * 1000;
-}
-
 export function googleLogin() {
   const redirectUri = encodeURIComponent(window.location.href);
   window.location.href = `${getApiBase()}/auth/google?state=${redirectUri}`;

@@ -1,8 +1,8 @@
 import { html } from "lit";
 import { customElement, query, state } from "lit/decorators.js";
-import type { UserMeResponse } from "../core/ApiSchemas";
-import { getApiBase, invalidateUserMe, setLastUserMe } from "./Api";
-import { acceptServerAuth, userAuth } from "./Auth";
+import { UserMeResponse, UserMeResponseSchema } from "../core/ApiSchemas";
+import { getApiBase, getUserMe, invalidateUserMe, setLastUserMe } from "./Api";
+import { userAuth } from "./Auth";
 import { BaseModal } from "./components/BaseModal";
 import { modalHeader } from "./components/ui/ModalHeader";
 
@@ -26,12 +26,9 @@ declare global {
 @customElement("purchase-modal")
 export class PurchaseModal extends BaseModal {
   @state() private config: PurchaseConfig | null = null;
+  @state() private userMe: UserMeResponse | false = false;
   @state() private loading = true;
   @state() private error = "";
-  @state() private purchaseId = "";
-  @state() private emailHint = "";
-  @state() private code = "";
-  @state() private verifying = false;
   @query("#paypal-buttons") private paypalContainer?: HTMLElement;
   private paypalRendered = false;
 
@@ -49,8 +46,8 @@ export class PurchaseModal extends BaseModal {
 
   protected onOpen(): void {
     this.error = "";
-    this.purchaseId = "";
-    this.code = "";
+    this.config = null;
+    this.userMe = false;
     this.loading = true;
     this.paypalRendered = false;
     void this.load();
@@ -58,6 +55,15 @@ export class PurchaseModal extends BaseModal {
 
   private async load() {
     try {
+      const userMe = await getUserMe();
+      this.userMe = userMe && userMe.user.email ? userMe : false;
+      if (!this.userMe) return;
+      if (this.userMe.player.lifetimeAccess) {
+        this.close();
+        this.showUnlockedMessage();
+        return;
+      }
+
       const response = await fetch(`${getApiBase()}/purchase/config`);
       this.config = (await response.json()) as PurchaseConfig;
       if (!this.config.enabled || !this.config.clientId) {
@@ -73,7 +79,7 @@ export class PurchaseModal extends BaseModal {
     } finally {
       this.loading = false;
       await this.updateComplete;
-      if (!this.error) await this.renderPayPal();
+      if (this.userMe && !this.error) await this.renderPayPal();
     }
   }
 
@@ -120,8 +126,9 @@ export class PurchaseModal extends BaseModal {
         createOrder: async () => {
           const response = await this.authedPost("/purchase/paypal/order", {});
           const body = await response.json();
-          if (!response.ok || !body.orderId)
+          if (!response.ok || !body.orderId) {
             throw new Error(body.error ?? "payment_failed");
+          }
           return body.orderId;
         },
         onApprove: async (data: { orderID: string }) => {
@@ -129,13 +136,19 @@ export class PurchaseModal extends BaseModal {
             orderId: data.orderID,
           });
           const body = await response.json();
-          if (!response.ok) {
+          const parsed = UserMeResponseSchema.safeParse(body.userMe);
+          if (!response.ok || !parsed.success) {
             this.error = "The payment could not be verified.";
             return;
           }
-          this.purchaseId = body.purchaseId;
-          this.emailHint = body.emailHint;
-          this.code = body.devCode ?? "";
+          invalidateUserMe();
+          this.userMe = parsed.data;
+          setLastUserMe(parsed.data);
+          document.dispatchEvent(
+            new CustomEvent("userMeResponse", { detail: parsed.data }),
+          );
+          this.close();
+          this.showUnlockedMessage();
         },
         onError: () => {
           this.error = "PayPal could not complete the purchase.";
@@ -147,65 +160,19 @@ export class PurchaseModal extends BaseModal {
       .render(this.paypalContainer);
   }
 
-  private onCodeInput(event: InputEvent) {
-    this.code = (event.target as HTMLInputElement).value
-      .replace(/\D/g, "")
-      .slice(0, 6);
+  private showUnlockedMessage() {
+    window.dispatchEvent(
+      new CustomEvent("show-message", {
+        detail: {
+          message: "OpenBack Lifetime Access unlocked for your email account.",
+          color: "green",
+          duration: 4000,
+        },
+      }),
+    );
   }
 
-  private async verify() {
-    if (this.code.length !== 6 || this.verifying) return;
-    this.verifying = true;
-    this.error = "";
-    try {
-      const response = await this.authedPost("/purchase/verify", {
-        orderId: this.purchaseId,
-        code: this.code,
-      });
-      const body = await response.json();
-      if (!response.ok) {
-        this.error =
-          body.error === "code_expired"
-            ? "That code expired. Request a new one."
-            : "That verification code is not correct.";
-        return;
-      }
-      acceptServerAuth(body.jwt, body.expiresIn);
-      invalidateUserMe();
-      const userMe = body.userMe as UserMeResponse;
-      setLastUserMe(userMe);
-      document.dispatchEvent(
-        new CustomEvent("userMeResponse", { detail: userMe }),
-      );
-      this.close();
-      window.dispatchEvent(
-        new CustomEvent("show-message", {
-          detail: {
-            message: "OpenBack Lifetime Access unlocked.",
-            color: "green",
-            duration: 4000,
-          },
-        }),
-      );
-    } finally {
-      this.verifying = false;
-    }
-  }
-
-  private async resend() {
-    const response = await this.authedPost("/purchase/resend-code", {
-      orderId: this.purchaseId,
-    });
-    const body = await response.json();
-    if (response.ok) {
-      this.code = body.devCode ?? "";
-      this.error = "";
-    } else {
-      this.error = "A new code could not be sent.";
-    }
-  }
-
-  private restore() {
+  private openAccount() {
     this.close();
     (
       document.querySelector("account-modal") as {
@@ -215,45 +182,6 @@ export class PurchaseModal extends BaseModal {
   }
 
   protected renderBody() {
-    if (this.purchaseId) {
-      return html`<div class="p-6 sm:p-8 space-y-5 text-center">
-        <div
-          class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-malibu-blue/20 text-2xl"
-        >
-          ✓
-        </div>
-        <h2 class="text-2xl font-black uppercase tracking-wide">
-          Verify your purchase
-        </h2>
-        <p class="text-white/60">
-          We sent a one-time code to
-          <b class="text-white">${this.emailHint}</b>. This code expires and
-          cannot be reused as a game key.
-        </p>
-        <input
-          inputmode="numeric"
-          autocomplete="one-time-code"
-          maxlength="6"
-          .value=${this.code}
-          @input=${this.onCodeInput}
-          class="mx-auto block w-64 rounded-xl border border-white/20 bg-black/40 px-5 py-4 text-center text-3xl font-black tracking-[0.5em] text-white outline-none focus:border-malibu-blue"
-          aria-label="Six digit verification code"
-        />
-        ${this.error
-          ? html`<p class="text-sm font-bold text-red-400">${this.error}</p>`
-          : null}
-        <button
-          @click=${this.verify}
-          ?disabled=${this.code.length !== 6 || this.verifying}
-          class="w-full rounded-xl bg-malibu-blue px-5 py-4 font-black uppercase tracking-wider text-white disabled:opacity-40"
-        >
-          ${this.verifying ? "Verifying…" : "Unlock OpenBack"}
-        </button>
-        <button @click=${this.resend} class="text-sm text-aquarius">
-          Send a new code
-        </button>
-      </div>`;
-    }
     return html`<div class="p-6 sm:p-8 space-y-6">
       <div class="text-center">
         <div
@@ -264,7 +192,9 @@ export class PurchaseModal extends BaseModal {
         <h2 class="text-3xl font-black uppercase tracking-wide">
           Unlock OpenBack Forever
         </h2>
-        <p class="mt-2 text-white/60">One payment. No subscription.</p>
+        <p class="mt-2 text-white/60">
+          One payment. No subscription. Access stays with your email account.
+        </p>
       </div>
       <div class="grid grid-cols-3 gap-3 text-center">
         ${["Multiplayer", "Ranked", "Frootz Maps"].map(
@@ -276,29 +206,51 @@ export class PurchaseModal extends BaseModal {
             </div>`,
         )}
       </div>
-      ${this.config?.amount
-        ? html`<div class="text-center text-2xl font-black">
-            ${this.config.amount} ${this.config.currency}
-            <span class="block text-xs font-normal text-white/40"
-              >one-time payment</span
-            >
-          </div>`
-        : null}
       ${this.loading
-        ? html`<p class="text-center text-white/50">
-            Loading secure checkout…
-          </p>`
-        : html`<div id="paypal-buttons"></div>`}
+        ? html`<p class="text-center text-white/50">Checking your account…</p>`
+        : !this.userMe
+          ? html`<div
+              class="space-y-4 rounded-2xl border border-malibu-blue/30 bg-malibu-blue/10 p-5 text-center"
+            >
+              <h3 class="text-lg font-black uppercase tracking-wide">
+                Sign in before purchasing
+              </h3>
+              <p class="text-sm text-white/60">
+                Your purchase is saved to your OpenBack email account, so it
+                automatically works when you sign in on another device.
+              </p>
+              <button
+                @click=${this.openAccount}
+                class="w-full rounded-xl bg-malibu-blue px-5 py-4 font-black uppercase tracking-wider text-white"
+              >
+                Sign In / Sign Up
+              </button>
+            </div>`
+          : html`
+              <div class="text-center">
+                <p class="text-sm text-white/50">Purchasing for</p>
+                <p class="font-bold text-white">${this.userMe.user.email}</p>
+              </div>
+              ${this.config?.amount
+                ? html`<div class="text-center text-2xl font-black">
+                    ${this.config.amount} ${this.config.currency}
+                    <span class="block text-xs font-normal text-white/40"
+                      >one-time payment</span
+                    >
+                  </div>`
+                : null}
+              <div id="paypal-buttons"></div>
+            `}
       ${this.error
         ? html`<p class="text-center text-sm font-bold text-red-400">
             ${this.error}
           </p>`
         : null}
       <button
-        @click=${this.restore}
+        @click=${this.openAccount}
         class="w-full rounded-xl border border-white/15 px-5 py-3 text-sm font-bold text-white/80 hover:bg-white/5"
       >
-        Already purchased? Restore with email
+        Already purchased? Sign in with the purchase email
       </button>
     </div>`;
   }
