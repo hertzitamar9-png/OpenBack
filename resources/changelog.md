@@ -1,3 +1,10 @@
+## OpenBack v0.33.57 - Service Requests
+
+- Added a Service Request contact beside the footer links so players can email OpenBack support when a purchase was completed but access was not received or another account problem needs help.
+- Pre-filled support emails with the information needed to investigate while warning players never to send passwords or verification codes.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.33.56 - Lifetime Access
 
 - Kept Solo play free and available without creating or signing into an OpenBack account.

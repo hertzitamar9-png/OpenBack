@@ -36,7 +36,7 @@ export class Footer extends LitElement {
           ></lang-selector>
         </div>
         <div
-          class="text-xs mt-1 lg:mt-2 flex items-center justify-center gap-4 px-4"
+          class="text-xs mt-1 lg:mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 px-4"
         >
           <button
             type="button"
@@ -65,6 +65,11 @@ export class Footer extends LitElement {
             data-page="page-privacy"
             data-i18n="main.privacy_policy"
           ></button>
+          <a
+            href="mailto:openback.servegame@gmail.com?subject=OpenBack%20Service%20Request&body=Please%20describe%20what%20happened%2C%20the%20email%20used%20for%20the%20purchase%2C%20and%20any%20payment%20reference%20you%20have.%0A%0ANever%20send%20your%20password%20or%20verification%20code."
+            class="hover:text-white transition-colors"
+            data-i18n="main.service_request"
+          ></a>
         </div>
       </footer>
     `;
