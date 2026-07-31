@@ -220,7 +220,7 @@ export default defineConfig(({ mode }) => {
       setupFiles: "./tests/setup.ts",
       // Full coverage instrumentation can make the largest deterministic map
       // fixtures briefly exceed Vitest's 5 s default on busy CI runners.
-      testTimeout: 10_000,
+      testTimeout: 20_000,
     },
     root: "./",
     base: "/",

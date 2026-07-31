@@ -42,16 +42,14 @@ export class Footer extends LitElement {
             type="button"
             class="nav-menu-item hover:text-white transition-colors cursor-pointer"
             data-page="page-tutorials"
-          >
-            Tutorials
-          </button>
+            data-i18n="main.tutorials"
+          ></button>
           <button
             type="button"
             class="nav-menu-item hover:text-white transition-colors cursor-pointer"
             data-page="page-blog"
-          >
-            Blog
-          </button>
+            data-i18n="main.blog"
+          ></button>
           <button
             type="button"
             class="nav-menu-item hover:text-white transition-colors cursor-pointer"

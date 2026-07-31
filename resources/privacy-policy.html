@@ -206,8 +206,18 @@
         A publisher must not present a modified copy as an official or
         unmodified OpenBack release, and must not include assets or services for
         which they do not have permission. Full license details are in
-        <a href="/terms-of-service.html">Source and Terms</a> and the source
-        tree's license and notice files.
+        <a
+          href="/terms-of-service.html"
+          target="_top"
+          onclick="
+            if (window.parent !== window && window.parent.showPage) {
+              event.preventDefault();
+              window.parent.showPage('page-terms');
+            }
+          "
+          >Source and Terms</a
+        >
+        and the source tree's license and notice files.
       </p>
     </main>
   </body>

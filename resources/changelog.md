@@ -1,3 +1,11 @@
+## OpenBack v0.33.65 - Reliable Legal Navigation
+
+- Fixed Privacy’s Source and Terms link opening inside the wrong page and leaving footer navigation stuck on mismatched content.
+- Made every embedded legal page restore its correct document whenever it is opened, including after an unexpected internal or external navigation.
+- Kept external source links from replacing OpenBack’s legal-page interface and restored translated Tutorial and Blog footer labels.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.33.64 - Focused Home and Legal Pages
 
 - Removed the complete rotating warning and announcement strip from the home screen.
