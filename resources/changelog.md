@@ -1,3 +1,9 @@
+## OpenBack v0.33.63 - Unobstructed Home Screen
+
+- Removed the Firefox performance warning banner from the OpenBack home screen.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.33.62 - Cleaner Main Navigation
 
 - Removed Tutorials, Blog, Terms of Service, and Privacy Policy from the desktop header and mobile menu because these links already remain available in the page footer.

@@ -1,12 +1,5 @@
 [
   {
-    "id": "firefox-performance-issues-2026",
-    "title": "Firefox Performance Issues",
-    "descriptionTranslationKey": "news_box.firefox_warning",
-    "url": null,
-    "type": "warning"
-  },
-  {
     "id": "openback-source-licenses-2026",
     "title": "Source and licenses included",
     "description": "OpenBack preserves contributor notices and provides its AGPL source and Creative Commons license files.",
