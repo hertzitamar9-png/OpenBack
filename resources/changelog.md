@@ -1,3 +1,10 @@
+## OpenBack v0.33.70 - Owner Infinite Gold
+
+- Granted unlimited in-game gold costs exclusively to the verified OpenBack account registered as `hertzitamar9@gmail.com` across solo and online matches.
+- Kept the account email private: other clients receive only the deterministic gameplay entitlement required to keep multiplayer synchronized.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.33.69 - Matching Legal Typography
 
 - Matched the Privacy Policy and Source and Terms header typography to OpenBack's Tutorials and Blog headers, including the same system font, weight, size, and wide uppercase spacing.

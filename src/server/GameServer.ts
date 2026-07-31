@@ -893,6 +893,12 @@ export class GameServer {
 
     const friendsFor = this.buildFriendsLookup();
 
+    // Account identity remains server-side. Only ephemeral client IDs needed
+    // by the deterministic simulation are shared with game participants.
+    this.gameConfig.infiniteGoldClientIDs = this.activeClients
+      .filter((client) => client.infiniteGold)
+      .map((client) => client.clientID);
+
     const result = GameStartInfoSchema.safeParse({
       gameID: this.id,
       lobbyCreatedAt: this.createdAt,

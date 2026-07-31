@@ -121,7 +121,7 @@ describe("email account lifecycle", () => {
     expect(me.status).toBe(200);
     await expect(me.json()).resolves.toMatchObject({
       user: { email },
-      player: { lifetimeAccess: true },
+      player: { lifetimeAccess: true, infiniteGold: true },
     });
   });
 

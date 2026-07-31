@@ -785,6 +785,11 @@ export class SinglePlayerModal extends BaseModal {
             maxTimerValue: finalMaxTimerValue,
             bots: this.bots,
             infiniteGold: this.infiniteGold,
+            infiniteGoldClientIDs:
+              this.userMeResponse !== false &&
+              (this.userMeResponse.player.infiniteGold ?? false)
+                ? [clientID]
+                : undefined,
             donateGold: this.gameMode === GameMode.Team,
             donateTroops: this.gameMode === GameMode.Team,
             infiniteTroops: this.infiniteTroops,

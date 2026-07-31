@@ -188,6 +188,7 @@ const complimentaryLifetimeEmails = new Set(
     .map((email) => email.trim().toLowerCase())
     .filter(Boolean),
 );
+const OWNER_INFINITE_GOLD_EMAIL = "hertzitamar9@gmail.com";
 // Parsed once at startup. Purchases validate item names/prices against this.
 const cosmetics = CosmeticsSchema.parse(cosmeticsJson);
 const databaseUrl = process.env.DATABASE_URL;
@@ -371,6 +372,7 @@ function userMeFor(user: StoredUser): UserMeResponse {
     player: {
       publicId: user.publicId,
       adfree: false,
+      infiniteGold: user.email?.toLowerCase() === OWNER_INFINITE_GOLD_EMAIL,
       flares: user.flares ?? [],
       achievements: { singleplayerMap: [] },
       leaderboard:

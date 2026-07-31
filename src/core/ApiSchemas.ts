@@ -127,6 +127,7 @@ export const UserMeResponseSchema = z.object({
       .optional(),
     friends: z.array(z.string()),
     lifetimeAccess: z.boolean(),
+    infiniteGold: z.boolean().optional(),
     subscription: z
       .object({
         tier: z.string(),

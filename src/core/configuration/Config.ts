@@ -549,6 +549,17 @@ export class Config {
 
   private hasInfiniteGoldFor(player: Player | PlayerView): boolean {
     if (this.infiniteGold()) return true;
+    const controllerClientIDs =
+      player instanceof PlayerView
+        ? (player.static.controllerClientIDs ?? [])
+        : player.controllerClientIDs();
+    if (
+      controllerClientIDs.some((clientID) =>
+        this._gameConfig.infiniteGoldClientIDs?.includes(clientID),
+      )
+    ) {
+      return true;
+    }
     const hc = this._gameConfig.hostCheats;
     return (hc?.infiniteGold ?? false) && player.isLobbyCreator();
   }

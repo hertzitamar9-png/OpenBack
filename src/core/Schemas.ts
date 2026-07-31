@@ -315,6 +315,9 @@ export const GameConfigSchema = z.object({
     .or(z.enum(["default", "disabled"])),
   bots: z.number().int().min(0).max(400),
   infiniteGold: z.boolean(),
+  // Server-issued per-match entitlement. Contains ephemeral client IDs only;
+  // account emails never enter the deterministic game payload.
+  infiniteGoldClientIDs: z.array(z.string()).max(20).optional(),
   infiniteTroops: z.boolean(),
   instantBuild: z.boolean(),
   disableNavMesh: z.boolean().optional(),

@@ -396,6 +396,7 @@ export async function startWorker() {
         let publicId: string | undefined;
         let friends: string[] = [];
         let ownedClanTags: string[] = [];
+        let infiniteGold = false;
 
         const allowedFlares = ServerEnv.allowedFlares();
         if (claims === null) {
@@ -418,6 +419,7 @@ export async function startWorker() {
           flares = result.response.player.flares;
           publicId = result.response.player.publicId;
           friends = result.response.player.friends;
+          infiniteGold = result.response.player.infiniteGold ?? false;
           ownedClanTags = result.response.player.clans?.map((c) => c.tag) ?? [];
           const targetGame = gm.game(clientMsg.gameID);
           if (
@@ -519,6 +521,7 @@ export async function startWorker() {
           cosmeticResult.cosmetics,
           publicId,
           friends,
+          infiniteGold,
         );
 
         const joinResult = gm.joinClient(client, clientMsg.gameID);
