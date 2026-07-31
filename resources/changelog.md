@@ -1,3 +1,11 @@
+## OpenBack v0.33.71 - Fictional Flags and Color Wraps
+
+- Added all 150 directly listed, reuse-licensed flags from Wikimedia Commons' Fictional flags category to the shop, with per-item creator and license credits preserved.
+- Added 100 original OpenBack territory wrap skins made as clean standalone color designs with no cars, product mockups, or redistributed stock-vector files.
+- Kept the expanded catalog lightweight by using optimized Wikimedia previews and compact native SVG wrap textures.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.33.70 - Owner Infinite Gold
 
 - Granted unlimited in-game gold costs exclusively to the verified OpenBack account registered as `hertzitamar9@gmail.com` across solo and online matches.

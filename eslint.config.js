@@ -34,6 +34,7 @@ export default [
             "eslint.config.js",
             "scripts/sync-assets.mjs",
             "scripts/generate-icon-atlas.mjs",
+            "scripts/import-fictional-shop-cosmetics.mjs",
           ],
         },
         tsconfigRootDir: import.meta.dirname,
