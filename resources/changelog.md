@@ -1,3 +1,10 @@
+## OpenBack v0.33.62 - Cleaner Main Navigation
+
+- Removed Tutorials, Blog, Terms of Service, and Privacy Policy from the desktop header and mobile menu because these links already remain available in the page footer.
+- Kept the main navigation focused on playing, news, player features, settings, and account access.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.33.61 - Reliable Account Images
 
 - Fixed the OpenBack logo failing to load on the account-choice, email verification, and Lifetime Access screens in production.

@@ -68,26 +68,6 @@ export class DesktopNavBar extends LitElement {
           data-page="page-play"
           data-i18n="main.play"
         ></button>
-        <button
-          class="nav-menu-item text-white/70 hover:text-malibu-blue font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue"
-          data-page="page-tutorials"
-          data-i18n="main.tutorials"
-        ></button>
-        <button
-          class="nav-menu-item text-white/70 hover:text-malibu-blue font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue"
-          data-page="page-blog"
-          data-i18n="main.blog"
-        ></button>
-        <button
-          class="nav-menu-item text-white/70 hover:text-malibu-blue font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue"
-          data-page="page-terms"
-          data-i18n="main.terms_of_service"
-        ></button>
-        <button
-          class="nav-menu-item text-white/70 hover:text-malibu-blue font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue"
-          data-page="page-privacy"
-          data-i18n="main.privacy_policy"
-        ></button>
         <!-- Desktop Navigation Menu Items -->
         <div class="relative">
           <button
