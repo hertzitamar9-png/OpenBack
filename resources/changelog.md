@@ -1,3 +1,10 @@
+## OpenBack v0.33.74 - Updated OpenBack Emblem
+
+- Replaced the previous OB emblem across the game, account screens, browser icons, installable-app icons, and shared-link previews with the updated circular design.
+- Kept every logo variant sharp and correctly sized for its placement.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.33.73 - Player-Focused News
 
 - Rebuilt News as a concise history of features, balance changes, visual improvements, and fixes that matter to players.
