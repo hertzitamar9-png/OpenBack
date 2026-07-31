@@ -20,22 +20,38 @@
           radial-gradient(circle at 50% 0%, #13233b 0, transparent 42%), #080d17;
       }
       body {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 28px 20px 56px;
+        margin: 0;
+        padding: 0 0 56px;
         line-height: 1.65;
+      }
+      .page-header {
+        min-height: 76px;
+        padding: 0 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        background: #080b0f;
+        border-top: 2px solid rgba(255, 255, 255, 0.12);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .page-title {
+        color: #f7f7f8;
+        font-size: 25px;
+        font-weight: 900;
+        line-height: 1;
+        letter-spacing: 0.035em;
       }
       .back-button {
         width: 42px;
         height: 42px;
-        margin-bottom: 16px;
+        flex: 0 0 42px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         color: #d8e2ea;
         background: #0b111d;
         border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 12px;
+        border-radius: 50%;
         cursor: pointer;
         transition:
           border-color 150ms ease,
@@ -54,21 +70,16 @@
         height: 21px;
       }
       main {
+        max-width: 900px;
+        margin: 28px auto 0;
         padding: 34px 38px 40px;
         background: rgba(11, 17, 29, 0.96);
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 18px;
         box-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
       }
-      h1,
       h2 {
         color: #36b8ff;
-      }
-      h1 {
-        margin: 0 0 24px;
-        font-size: clamp(1.8rem, 4vw, 2.6rem);
-        line-height: 1.1;
-        letter-spacing: -0.03em;
       }
       h2 {
         margin: 30px 0 10px;
@@ -92,10 +103,16 @@
         border-radius: 0 10px 10px 0;
       }
       @media (max-width: 600px) {
-        body {
-          padding: 18px 12px 40px;
+        .page-header {
+          min-height: 66px;
+          padding: 0 14px;
+          gap: 13px;
+        }
+        .page-title {
+          font-size: 20px;
         }
         main {
+          margin: 16px 12px 0;
           padding: 25px 20px 30px;
           border-radius: 14px;
         }
@@ -103,34 +120,36 @@
     </style>
   </head>
   <body>
-    <a
-      class="back-button"
-      href="/"
-      aria-label="Back"
-      title="Back"
-      onclick="
-        event.preventDefault();
-        if (window.parent !== window && window.parent.showPage) {
-          window.parent.showPage('page-play');
-        } else {
-          window.location.href = '/';
-        }
-      "
-    >
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        aria-hidden="true"
+    <header class="page-header">
+      <a
+        class="back-button"
+        href="/"
+        aria-label="Back"
+        title="Back"
+        onclick="
+          event.preventDefault();
+          if (window.parent !== window && window.parent.showPage) {
+            window.parent.showPage('page-play');
+          } else {
+            window.location.href = '/';
+          }
+        "
       >
-        <path d="m15 18-6-6 6-6" />
-      </svg>
-    </a>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="m15 18-6-6 6-6" />
+        </svg>
+      </a>
+      <div class="page-title">SOURCE AND TERMS</div>
+    </header>
     <main>
-      <h1>OpenBack source and terms</h1>
       <p class="note">
         OpenBack is an unofficial renamed build of the open-source OpenFront
         project. It is provided without warranty and is not endorsed by

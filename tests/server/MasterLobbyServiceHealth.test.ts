@@ -48,6 +48,30 @@ function startAllWorkers(
   return workers;
 }
 
+describe("MasterLobbyService lobby report validation", () => {
+  it("keeps valid lobbies when one report entry is malformed", () => {
+    const service = createService(1);
+    const [{ w }] = startAllWorkers(service, 1);
+
+    w.emit("message", {
+      type: "lobbyList",
+      lobbies: [
+        { gameID: "bad", numClients: 0 },
+        { gameID: "good", numClients: 1, publicGameType: "ffa" },
+      ],
+    });
+
+    (service as any).broadcastLobbies();
+    const broadcast = ((w as any).send as ReturnType<typeof vi.fn>).mock.calls
+      .map((call) => call[0])
+      .find((message) => message.type === "lobbiesBroadcast");
+
+    expect(broadcast).toBeDefined();
+    expect(broadcast.publicGames.games.ffa).toHaveLength(1);
+    expect(broadcast.publicGames.games.ffa[0].gameID).toBe("good");
+  });
+});
+
 describe("MasterLobbyService.isHealthy", () => {
   it("unhealthy before any workers register", () => {
     const service = createService(4);

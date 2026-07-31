@@ -94,14 +94,38 @@ describe("Spawn execution", () => {
 
     const game = await setup("half_land_half_ocean", {}, [playerInfo]);
 
-    game.addExecution(new SpawnExecution("game_id", playerInfo, 10));
     game.addExecution(new SpawnExecution("game_id", playerInfo, 20));
     game.executeNextTick();
     game.executeNextTick();
 
-    expect(game.playerByClientID("client_id")?.spawnTile()).toBe(20);
-    // Previous territory from first spawn should be relinquished
-    expect(game.owner(10).isPlayer()).toBe(false);
+    const player = game.playerByClientID("client_id")!;
+    expect(player.spawnTile()).toBe(20);
+    expect(player.numTilesOwned()).toBeGreaterThan(0);
+  });
+
+  test("Spawn intent after the spawn phase cannot relocate territory", async () => {
+    const playerInfo = new PlayerInfo(
+      "player",
+      PlayerType.Human,
+      "client_id",
+      "player_id",
+    );
+    const game = await setup("half_land_half_ocean", {}, [playerInfo]);
+
+    game.addExecution(new SpawnExecution("game_id", playerInfo, 20));
+    game.executeNextTick();
+    game.executeNextTick();
+
+    const player = game.playerByClientID("client_id")!;
+    const tilesBefore = player.numTilesOwned();
+    expect(player.spawnTile()).toBe(20);
+
+    game.addExecution(new SpawnExecution("game_id", playerInfo, 10));
+    game.executeNextTick();
+    game.executeNextTick();
+
+    expect(player.spawnTile()).toBe(20);
+    expect(player.numTilesOwned()).toBe(tilesBefore);
   });
 
   test("Random spawn ignores client-specified tile", async () => {

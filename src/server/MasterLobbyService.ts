@@ -1,6 +1,10 @@
 import { Worker } from "node:cluster";
 import winston from "winston";
-import { PublicGameInfo, PublicGameType } from "../core/Schemas";
+import {
+  PublicGameInfo,
+  PublicGameInfoSchema,
+  PublicGameType,
+} from "../core/Schemas";
 import { generateID } from "../core/Util";
 import {
   MasterCreateGame,
@@ -46,10 +50,23 @@ export class MasterLobbyService {
           this.handleWorkerReady(msg.workerId);
           break;
         case "lobbyList":
-          this.workerLobbies.set(workerId, msg.lobbies);
+          this.workerLobbies.set(workerId, this.validLobbies(msg.lobbies));
           break;
       }
     });
+  }
+
+  private validLobbies(lobbies: unknown[]): PublicGameInfo[] {
+    const valid: PublicGameInfo[] = [];
+    for (const lobby of lobbies) {
+      const result = PublicGameInfoSchema.safeParse(lobby);
+      if (result.success) {
+        valid.push(result.data);
+      } else {
+        this.log.error("Dropping invalid lobby in worker report:", lobby);
+      }
+    }
+    return valid;
   }
 
   removeWorker(workerId: number) {

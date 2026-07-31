@@ -1,4 +1,4 @@
-import { html, LitElement, TemplateResult } from "lit";
+import { html, LitElement, nothing, TemplateResult } from "lit";
 import { property, query, state } from "lit/decorators.js";
 import { modalRouter } from "../ModalRouter";
 import "./baseComponents/Modal";
@@ -115,8 +115,13 @@ export abstract class BaseModal extends LitElement {
   render(): TemplateResult {
     const cfg = this.modalConfig();
     const tabs = cfg.tabs ?? [];
-    const body = this.renderBody(this.activeTab);
-    const headerSlot = this.renderHeaderSlot();
+    // Keep the lightweight shell mounted for open(), but do not render every
+    // closed modal's potentially expensive body on the home screen.
+    const shouldRenderContent = this.inline || this.isModalOpen;
+    const body = shouldRenderContent
+      ? this.renderBody(this.activeTab)
+      : nothing;
+    const headerSlot = shouldRenderContent ? this.renderHeaderSlot() : null;
 
     return html`
       <o-modal

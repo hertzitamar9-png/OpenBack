@@ -47,6 +47,14 @@ export class SpawnExecution implements Execution {
       player = this.mg.addPlayer(this.playerInfo);
     }
 
+    // Once the game is underway, an already-spawned player must never be able
+    // to use another spawn intent to relinquish and relocate their territory.
+    // Keeping this a deterministic no-op prevents spawn-teleport exploits in
+    // both local and authoritative multiplayer simulations.
+    if (!this.mg.inSpawnPhase() && player.hasSpawned()) {
+      return;
+    }
+
     // Security: If random spawn is enabled, prevent players from re-rolling their spawn location
     if (this.mg.config().isRandomSpawn() && player.hasSpawned()) {
       return;

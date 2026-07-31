@@ -1,3 +1,13 @@
+## OpenBack v0.33.67 - Current Stable Core and Unified Legal Pages
+
+- Updated OpenBack with the applicable gameplay and server safeguards from the latest published OpenFront v0.32.18 release while preserving OpenBack's aircraft, tanks, maps, accounts, matchmaking, and Lifetime Access systems.
+- Blocked post-start spawn intents from relocating an established nation and strengthened map-reference validation against malformed simulation input.
+- Prevented private matchmaking games and malformed worker entries from corrupting the public lobby list.
+- Reduced home-screen startup work by delaying closed modal contents until players open them.
+- Rebuilt Privacy Policy and Source and Terms with the same full-width header, circular back arrow, title placement, colors, and spacing used by OpenBack's other pages.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.33.66 - Consistent Legal Back Navigation
 
 - Removed the stale visible “Return to OpenBack” navigation by forcing the Terms and Privacy pages to load their current arrow-only versions.

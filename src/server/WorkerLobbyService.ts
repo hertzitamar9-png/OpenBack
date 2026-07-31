@@ -101,6 +101,9 @@ export class WorkerLobbyService {
     const lobbies = this.gm
       .publicLobbies()
       .map((g) => g.gameInfo())
+      // Ranked and private matchmaking games are intentionally absent from
+      // the public lobby broadcast even though their underlying game is public.
+      .filter((gi) => gi.publicGameType !== undefined)
       .map((gi) => {
         return {
           gameID: gi.gameID,
