@@ -1,6 +1,7 @@
 import { html } from "lit";
 import { customElement, query, state } from "lit/decorators.js";
 import { UserMeResponse, UserMeResponseSchema } from "../core/ApiSchemas";
+import { assetUrl } from "../core/AssetUrls";
 import { getApiBase, getUserMe, invalidateUserMe, setLastUserMe } from "./Api";
 import { userAuth } from "./Auth";
 import { BaseModal } from "./components/BaseModal";
@@ -450,7 +451,7 @@ export class PurchaseModal extends BaseModal {
     return html`<div class="space-y-6 p-6 sm:p-8">
       <div class="text-center">
         <img
-          src="/images/OpenBackCircleLogo.png"
+          src=${assetUrl("images/OpenBackMark512.png")}
           alt="OpenBack"
           class="mx-auto mb-4 h-20 w-20 rounded-full object-contain"
         />

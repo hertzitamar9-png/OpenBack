@@ -2,6 +2,7 @@ import { html, TemplateResult } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { ClientEnv } from "src/client/ClientEnv";
 import { PlayerStatsTree, UserMeResponse } from "../core/ApiSchemas";
+import { assetUrl } from "../core/AssetUrls";
 import { Cosmetics } from "../core/CosmeticSchemas";
 import {
   fetchPlayerById,
@@ -740,7 +741,7 @@ export class AccountModal extends BaseModal {
           </button>
           <div class="mb-8 text-center">
             <img
-              src="/images/OpenBackCircleLogo.png"
+              src=${assetUrl("images/OpenBackMark512.png")}
               alt="OpenBack"
               class="mx-auto mb-5 h-16 w-16 rounded-full object-contain"
             />
@@ -879,7 +880,7 @@ export class AccountModal extends BaseModal {
       >
         <div class="w-full max-w-2xl text-center">
           <img
-            src="/images/OpenBackCircleLogo.png"
+            src=${assetUrl("images/OpenBackMark512.png")}
             alt="OpenBack"
             class="mx-auto mb-5 h-20 w-20 rounded-full object-contain"
           />

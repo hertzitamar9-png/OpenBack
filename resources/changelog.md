@@ -1,3 +1,10 @@
+## OpenBack v0.33.61 - Reliable Account Images
+
+- Fixed the OpenBack logo failing to load on the account-choice, email verification, and Lifetime Access screens in production.
+- Routed these images through OpenBack's versioned asset system so they remain available with hosted asset storage and future deployments.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.33.60 - Clear Purchase Sign-In
 
 - Changed every locked-feature prompt to show a clear Buy Lifetime Access action first instead of replacing Buy with account wording.
