@@ -11,6 +11,11 @@ const REVALIDATE_ROOT_FILES = new Set([
   "/news.json",
 ]);
 const REVALIDATE_CACHE_CONTROL = "public, max-age=0, must-revalidate";
+const NO_STORE_ROOT_FILES = new Set([
+  "/privacy-policy.html",
+  "/terms-of-service.html",
+]);
+const NO_STORE_CACHE_CONTROL = "no-store";
 
 function stripQueryString(urlPath: string): string {
   return urlPath.split("?", 1)[0];
@@ -24,6 +29,10 @@ export function getStaticAssetCacheControl(
   }
 
   const normalizedPath = stripQueryString(urlPath);
+  if (NO_STORE_ROOT_FILES.has(normalizedPath)) {
+    return NO_STORE_CACHE_CONTROL;
+  }
+
   if (
     normalizedPath.startsWith("/assets/") ||
     normalizedPath.startsWith("/_assets/")

@@ -33,4 +33,11 @@ describe("StaticAssetCache", () => {
       "public, max-age=0, must-revalidate",
     );
   });
+
+  test("never stores navigable legal documents", () => {
+    expect(getStaticAssetCacheControl("/privacy-policy.html")).toBe("no-store");
+    expect(getStaticAssetCacheControl("/terms-of-service.html?v=current")).toBe(
+      "no-store",
+    );
+  });
 });

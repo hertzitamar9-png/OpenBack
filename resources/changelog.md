@@ -1,3 +1,10 @@
+## OpenBack v0.33.66 - Consistent Legal Back Navigation
+
+- Removed the stale visible “Return to OpenBack” navigation by forcing the Terms and Privacy pages to load their current arrow-only versions.
+- Prevented browsers and hosting proxies from storing outdated legal-page HTML, so future navigation fixes appear immediately.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.33.65 - Reliable Legal Navigation
 
 - Fixed Privacy’s Source and Terms link opening inside the wrong page and leaving footer navigation stuck on mismatched content.
