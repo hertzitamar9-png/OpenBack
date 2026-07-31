@@ -19,7 +19,7 @@ import {
 } from "../game/Game";
 import { TileRef } from "../game/GameMap";
 import { UserSettings } from "../game/UserSettings";
-import { GameConfig, TeamCountConfig } from "../Schemas";
+import { ClientID, GameConfig, TeamCountConfig } from "../Schemas";
 import { NukeType } from "../StatsSchemas";
 import { assertNever, sigmoid, toInt, within } from "../Util";
 
@@ -249,6 +249,12 @@ export class Config {
   }
   infiniteGold(): boolean {
     return this._gameConfig.infiniteGold;
+  }
+  hasPrivateInfiniteGold(clientID: ClientID | undefined): boolean {
+    return (
+      clientID !== undefined &&
+      (this._gameConfig.infiniteGoldClientIDs?.includes(clientID) ?? false)
+    );
   }
   donateGold(): boolean {
     return this._gameConfig.donateGold;
@@ -555,7 +561,7 @@ export class Config {
         : player.controllerClientIDs();
     if (
       controllerClientIDs.some((clientID) =>
-        this._gameConfig.infiniteGoldClientIDs?.includes(clientID),
+        this.hasPrivateInfiniteGold(clientID),
       )
     ) {
       return true;

@@ -32,5 +32,7 @@ describe("owner account infinite gold", () => {
     expect(
       game.unitInfo(UnitType.City).cost(game, game.player(regularInfo.id)),
     ).toBe(125_000n);
+    expect(game.config().hasPrivateInfiniteGold("owner001")).toBe(true);
+    expect(game.config().hasPrivateInfiniteGold("regular1")).toBe(false);
   });
 });

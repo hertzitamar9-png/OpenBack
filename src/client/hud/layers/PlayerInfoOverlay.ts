@@ -275,6 +275,9 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
 
   private renderPlayerInfo(player: PlayerView) {
     const myPlayer = this.game.myPlayer();
+    const showPrivateInfiniteGold =
+      player === myPlayer &&
+      this.game.config().hasPrivateInfiniteGold(this.game.myClientID());
     const isFriendly = myPlayer?.isFriendly(player);
     const isAllied = myPlayer?.isAlliedWith(player);
     let allianceHtml: TemplateResult | null = null;
@@ -322,7 +325,11 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
               translate="no"
             >
               <img src=${goldCoinIcon} width="13" height="13" />
-              <span class="px-0.5">${renderNumber(player.gold())}</span>
+              <span class="px-0.5"
+                >${showPrivateInfiniteGold
+                  ? "∞"
+                  : renderNumber(player.gold())}</span
+              >
             </div>
             <div
               class="flex flex-1 flex-col items-center justify-center text-xs font-bold ${attackingTroops >

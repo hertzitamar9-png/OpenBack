@@ -187,6 +187,12 @@ export class ControlPanel extends LitElement implements Controller {
     }, 2000);
   }
 
+  private renderOwnGold(): string {
+    return this.game.config().hasPrivateInfiniteGold(this.game.myClientID())
+      ? "∞"
+      : renderNumber(this._gold);
+  }
+
   private trackOutgoingAttacks(player: PlayerView) {
     const currentTick = this.game.ticks();
     for (const attack of player.outgoingAttacks()) {
@@ -507,7 +513,7 @@ export class ControlPanel extends LitElement implements Controller {
               )
             : ""}
           <img src=${goldCoinIcon} width="13" height="13" class="shrink-0" />
-          <span class="tabular-nums">${renderNumber(this._gold)}</span>
+          <span class="tabular-nums">${this.renderOwnGold()}</span>
         </div>
       </div>
       <!-- Row 2: attack ratio | slider -->
@@ -562,7 +568,7 @@ export class ControlPanel extends LitElement implements Controller {
               )
             : ""}
           <img src=${goldCoinIcon} width="13" height="13" />
-          <span class="px-0.5">${renderNumber(this._gold)}</span>
+          <span class="px-0.5">${this.renderOwnGold()}</span>
         </div>
         <!-- Troop bar -->
         <div class="w-[40%] shrink-0 flex items-center">

@@ -82,6 +82,9 @@ export class Leaderboard extends LitElement implements Controller {
   private updateLeaderboard() {
     if (this.game === null) throw new Error("Not initialized");
     const myPlayer = this.game.myPlayer();
+    const showPrivateInfiniteGold = this.game
+      .config()
+      .hasPrivateInfiniteGold(this.game.myClientID());
 
     let sorted = this.game.playerViews();
 
@@ -121,7 +124,10 @@ export class Leaderboard extends LitElement implements Controller {
         score: formatPercentage(
           player.numTilesOwned() / numTilesWithoutFallout,
         ),
-        gold: renderNumber(player.gold()),
+        gold:
+          showPrivateInfiniteGold && player === myPlayer
+            ? "∞"
+            : renderNumber(player.gold()),
         maxTroops: renderTroops(maxTroops),
         isMyPlayer: player === myPlayer,
         isOnSameTeam:
@@ -152,7 +158,7 @@ export class Leaderboard extends LitElement implements Controller {
           score: formatPercentage(
             myPlayer.numTilesOwned() / this.game.numLandTiles(),
           ),
-          gold: renderNumber(myPlayer.gold()),
+          gold: showPrivateInfiniteGold ? "∞" : renderNumber(myPlayer.gold()),
           maxTroops: renderTroops(myPlayerMaxTroops),
           isMyPlayer: true,
           isOnSameTeam: true,
