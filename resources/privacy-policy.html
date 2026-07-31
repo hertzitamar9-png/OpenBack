@@ -8,104 +8,207 @@
       :root {
         color-scheme: dark;
         font-family: Inter, Arial, sans-serif;
-        background: #101216;
+        background: #080d17;
         color: #d8e2ea;
       }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        min-height: 100%;
+        background:
+          radial-gradient(circle at 50% 0%, #13233b 0, transparent 42%), #080d17;
+      }
       body {
-        max-width: 760px;
+        max-width: 900px;
         margin: 0 auto;
-        padding: 48px 24px;
+        padding: 28px 20px 56px;
         line-height: 1.65;
+      }
+      .back-button {
+        width: 42px;
+        height: 42px;
+        margin-bottom: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #d8e2ea;
+        background: #0b111d;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 12px;
+        cursor: pointer;
+        transition:
+          border-color 150ms ease,
+          color 150ms ease,
+          background 150ms ease;
+      }
+      .back-button:hover,
+      .back-button:focus-visible {
+        color: #36b8ff;
+        background: #101a2b;
+        border-color: rgba(54, 184, 255, 0.55);
+        outline: none;
+      }
+      .back-button svg {
+        width: 21px;
+        height: 21px;
+      }
+      main {
+        padding: 34px 38px 40px;
+        background: rgba(11, 17, 29, 0.96);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 18px;
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
       }
       h1,
       h2 {
         color: #36b8ff;
+      }
+      h1 {
+        margin: 0 0 24px;
+        font-size: clamp(1.8rem, 4vw, 2.6rem);
+        line-height: 1.1;
+        letter-spacing: -0.03em;
+      }
+      h2 {
+        margin: 30px 0 10px;
+        padding-top: 24px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        font-size: 1.1rem;
+      }
+      p {
+        margin: 0 0 16px;
+      }
+      ul {
+        margin: 0 0 18px;
+        padding-left: 22px;
+      }
+      li + li {
+        margin-top: 8px;
       }
       a {
         color: #78ceff;
       }
       .note {
         border-left: 3px solid #36b8ff;
-        padding: 12px 16px;
+        padding: 14px 16px;
         background: #181c22;
+        border-radius: 0 10px 10px 0;
+      }
+      @media (max-width: 600px) {
+        body {
+          padding: 18px 12px 40px;
+        }
+        main {
+          padding: 25px 20px 30px;
+          border-radius: 14px;
+        }
       }
     </style>
   </head>
   <body>
-    <h1>OpenBack privacy notice</h1>
-    <p class="note">
-      OpenBack uses only the data needed to operate saved accounts, multiplayer,
-      ranked play, clans, and player-selected public profiles. OpenBack is not
-      the OpenFront hosted service and is not operated by OpenFront Inc.
-    </p>
-    <h2>Data OpenBack stores</h2>
-    <p>
-      When you create an account, OpenBack stores your verified email address,
-      account and session identifiers, public player ID, in-game name, public
-      description, banner color, selected flag and cosmetic, ranked rating and
-      results, wallet and owned cosmetics, and clan membership. Verification
-      codes are temporary and expire. The browser also stores local game and
-      display preferences needed to run the game.
-    </p>
-    <h2>How the data is used</h2>
-    <p>
-      Private email and session information is used for authentication and is
-      not included in public player profiles. The name, description, banner,
-      flag, cosmetic, rank, public player ID, and clan information you choose
-      are public identity fields and may be shown to other players in rankings,
-      clans, friends, and game history. OpenBack does not include the upstream
-      advertising or analytics boot scripts.
-    </p>
-    <h2>Your account choices</h2>
-    <p>
-      Logging out removes the session from that browser while preserving the
-      saved account. Deleting an account removes its account profile, login,
-      rating, wallet, cosmetic, and clan data from OpenBack's account storage.
-      Deletion is permanent and the removed account cannot be restored by
-      logging in.
-    </p>
-    <h2>Requirements for a published copy</h2>
-    <p>
-      Anyone publishing a build based on this source is responsible for their
-      own accurate privacy notice and must comply with every license that covers
-      the code and assets they use. A distributed or network-accessible copy
-      must include all of the following, as applicable:
-    </p>
-    <ul>
-      <li>
-        the GNU AGPL v3 license, applicable copyright notices, warranty
-        disclaimer, and visible legal notices;
-      </li>
-      <li>
-        a prominent notice that the copy was modified, including relevant
-        modification dates;
-      </li>
-      <li>
-        the complete corresponding source for the exact version offered to
-        users, available at no charge through the network interface as required
-        by AGPL v3;
-      </li>
-      <li>
-        the visible attribution
-        <strong>OpenBack modifications by frootz jhklphy</strong> and the
-        preserved <strong>© OpenFront and Contributors</strong> notice;
-      </li>
-      <li>
-        all applicable asset credits and license notices, including the Creative
-        Commons BY-SA terms for covered assets; and
-      </li>
-      <li>
-        an accurate privacy policy describing the operator, data collected,
-        storage, sharing, retention, and user deletion process for that copy.
-      </li>
-    </ul>
-    <p>
-      A publisher must not present a modified copy as an official or unmodified
-      OpenBack release, and must not include assets or services for which they
-      do not have permission. Full license details are in
-      <a href="/terms-of-service.html">Source and Terms</a> and the source
-      tree's license and notice files.
-    </p>
-    <p><a href="/">Return to OpenBack</a></p>
+    <a
+      class="back-button"
+      href="/"
+      aria-label="Back"
+      title="Back"
+      onclick="
+        event.preventDefault();
+        if (window.parent !== window && window.parent.showPage) {
+          window.parent.showPage('page-play');
+        } else {
+          window.location.href = '/';
+        }
+      "
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="m15 18-6-6 6-6" />
+      </svg>
+    </a>
+    <main>
+      <h1>OpenBack privacy notice</h1>
+      <p class="note">
+        OpenBack uses only the data needed to operate saved accounts,
+        multiplayer, ranked play, clans, and player-selected public profiles.
+        OpenBack is not the OpenFront hosted service and is not operated by
+        OpenFront Inc.
+      </p>
+      <h2>Data OpenBack stores</h2>
+      <p>
+        When you create an account, OpenBack stores your verified email address,
+        account and session identifiers, public player ID, in-game name, public
+        description, banner color, selected flag and cosmetic, ranked rating and
+        results, wallet and owned cosmetics, and clan membership. Verification
+        codes are temporary and expire. The browser also stores local game and
+        display preferences needed to run the game.
+      </p>
+      <h2>How the data is used</h2>
+      <p>
+        Private email and session information is used for authentication and is
+        not included in public player profiles. The name, description, banner,
+        flag, cosmetic, rank, public player ID, and clan information you choose
+        are public identity fields and may be shown to other players in
+        rankings, clans, friends, and game history. OpenBack does not include
+        the upstream advertising or analytics boot scripts.
+      </p>
+      <h2>Your account choices</h2>
+      <p>
+        Logging out removes the session from that browser while preserving the
+        saved account. Deleting an account removes its account profile, login,
+        rating, wallet, cosmetic, and clan data from OpenBack's account storage.
+        Deletion is permanent and the removed account cannot be restored by
+        logging in.
+      </p>
+      <h2>Requirements for a published copy</h2>
+      <p>
+        Anyone publishing a build based on this source is responsible for their
+        own accurate privacy notice and must comply with every license that
+        covers the code and assets they use. A distributed or network-accessible
+        copy must include all of the following, as applicable:
+      </p>
+      <ul>
+        <li>
+          the GNU AGPL v3 license, applicable copyright notices, warranty
+          disclaimer, and visible legal notices;
+        </li>
+        <li>
+          a prominent notice that the copy was modified, including relevant
+          modification dates;
+        </li>
+        <li>
+          the complete corresponding source for the exact version offered to
+          users, available at no charge through the network interface as
+          required by AGPL v3;
+        </li>
+        <li>
+          the visible attribution
+          <strong>OpenBack modifications by frootz jhklphy</strong> and the
+          preserved <strong>© OpenFront and Contributors</strong> notice;
+        </li>
+        <li>
+          all applicable asset credits and license notices, including the
+          Creative Commons BY-SA terms for covered assets; and
+        </li>
+        <li>
+          an accurate privacy policy describing the operator, data collected,
+          storage, sharing, retention, and user deletion process for that copy.
+        </li>
+      </ul>
+      <p>
+        A publisher must not present a modified copy as an official or
+        unmodified OpenBack release, and must not include assets or services for
+        which they do not have permission. Full license details are in
+        <a href="/terms-of-service.html">Source and Terms</a> and the source
+        tree's license and notice files.
+      </p>
+    </main>
   </body>
 </html>

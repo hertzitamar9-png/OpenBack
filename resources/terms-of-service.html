@@ -8,18 +8,76 @@
       :root {
         color-scheme: dark;
         font-family: Inter, Arial, sans-serif;
-        background: #101216;
+        background: #080d17;
         color: #d8e2ea;
       }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        min-height: 100%;
+        background:
+          radial-gradient(circle at 50% 0%, #13233b 0, transparent 42%), #080d17;
+      }
       body {
-        max-width: 760px;
+        max-width: 900px;
         margin: 0 auto;
-        padding: 48px 24px;
+        padding: 28px 20px 56px;
         line-height: 1.65;
+      }
+      .back-button {
+        width: 42px;
+        height: 42px;
+        margin-bottom: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #d8e2ea;
+        background: #0b111d;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 12px;
+        cursor: pointer;
+        transition:
+          border-color 150ms ease,
+          color 150ms ease,
+          background 150ms ease;
+      }
+      .back-button:hover,
+      .back-button:focus-visible {
+        color: #36b8ff;
+        background: #101a2b;
+        border-color: rgba(54, 184, 255, 0.55);
+        outline: none;
+      }
+      .back-button svg {
+        width: 21px;
+        height: 21px;
+      }
+      main {
+        padding: 34px 38px 40px;
+        background: rgba(11, 17, 29, 0.96);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 18px;
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
       }
       h1,
       h2 {
         color: #36b8ff;
+      }
+      h1 {
+        margin: 0 0 24px;
+        font-size: clamp(1.8rem, 4vw, 2.6rem);
+        line-height: 1.1;
+        letter-spacing: -0.03em;
+      }
+      h2 {
+        margin: 30px 0 10px;
+        padding-top: 24px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        font-size: 1.1rem;
+      }
+      p {
+        margin: 0 0 16px;
       }
       a {
         color: #78ceff;
@@ -29,52 +87,89 @@
       }
       .note {
         border-left: 3px solid #36b8ff;
-        padding: 12px 16px;
+        padding: 14px 16px;
         background: #181c22;
+        border-radius: 0 10px 10px 0;
+      }
+      @media (max-width: 600px) {
+        body {
+          padding: 18px 12px 40px;
+        }
+        main {
+          padding: 25px 20px 30px;
+          border-radius: 14px;
+        }
       }
     </style>
   </head>
   <body>
-    <h1>OpenBack source and terms</h1>
-    <p class="note">
-      OpenBack is an unofficial renamed build of the open-source OpenFront
-      project. It is provided without warranty and is not endorsed by OpenFront
-      Inc.
-    </p>
-    <h2>Licenses</h2>
-    <p>
-      The program code is licensed under the GNU Affero General Public License
-      v3.0, including the upstream additional attribution terms. Assets included
-      under <code>resources/</code> are provided under their stated Creative
-      Commons and individual license terms. The required
-      <strong>© OpenFront and Contributors</strong> notices remain visible in
-      the game.
-    </p>
-    <h2>Source availability</h2>
-    <p>
-      The complete corresponding source is this project tree. A network
-      deployment must make the source for its deployed version available to its
-      users as required by the AGPL.
-    </p>
-    <h2>OpenBack contributor attribution</h2>
-    <p>
-      OpenBack-authored modifications carry the additional attribution notice
-      <strong>OpenBack modifications by frootz jhklphy</strong>. A copy using
-      those modifications must preserve that notice alongside the existing
-      upstream copyright and contributor notices, must mark its own changes, and
-      must not claim to be an official or unmodified OpenBack release. See
-      <code>OPENBACK-NOTICE.md</code> for the precise notice.
-    </p>
-    <h2>Upstream</h2>
-    <p>
-      Project history, licensing details, and contributor credits are included
-      in <code>LICENSE</code>, <code>LICENSE-ASSETS</code>,
-      <code>LICENSING.md</code>, and <code>CREDITS.md</code>. The upstream
-      repository is
-      <a href="https://github.com/openfrontio/OpenFrontIO"
-        >openfrontio/OpenFrontIO</a
-      >.
-    </p>
-    <p><a href="/">Return to OpenBack</a></p>
+    <a
+      class="back-button"
+      href="/"
+      aria-label="Back"
+      title="Back"
+      onclick="
+        event.preventDefault();
+        if (window.parent !== window && window.parent.showPage) {
+          window.parent.showPage('page-play');
+        } else {
+          window.location.href = '/';
+        }
+      "
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="m15 18-6-6 6-6" />
+      </svg>
+    </a>
+    <main>
+      <h1>OpenBack source and terms</h1>
+      <p class="note">
+        OpenBack is an unofficial renamed build of the open-source OpenFront
+        project. It is provided without warranty and is not endorsed by
+        OpenFront Inc.
+      </p>
+      <h2>Licenses</h2>
+      <p>
+        The program code is licensed under the GNU Affero General Public License
+        v3.0, including the upstream additional attribution terms. Assets
+        included under <code>resources/</code> are provided under their stated
+        Creative Commons and individual license terms. The required
+        <strong>© OpenFront and Contributors</strong> notices remain visible in
+        the game.
+      </p>
+      <h2>Source availability</h2>
+      <p>
+        The complete corresponding source is this project tree. A network
+        deployment must make the source for its deployed version available to
+        its users as required by the AGPL.
+      </p>
+      <h2>OpenBack contributor attribution</h2>
+      <p>
+        OpenBack-authored modifications carry the additional attribution notice
+        <strong>OpenBack modifications by frootz jhklphy</strong>. A copy using
+        those modifications must preserve that notice alongside the existing
+        upstream copyright and contributor notices, must mark its own changes,
+        and must not claim to be an official or unmodified OpenBack release. See
+        <code>OPENBACK-NOTICE.md</code> for the precise notice.
+      </p>
+      <h2>Upstream</h2>
+      <p>
+        Project history, licensing details, and contributor credits are included
+        in <code>LICENSE</code>, <code>LICENSE-ASSETS</code>,
+        <code>LICENSING.md</code>, and <code>CREDITS.md</code>. The upstream
+        repository is
+        <a href="https://github.com/openfrontio/OpenFrontIO"
+          >openfrontio/OpenFrontIO</a
+        >.
+      </p>
+    </main>
   </body>
 </html>

@@ -1,3 +1,11 @@
+## OpenBack v0.33.64 - Focused Home and Legal Pages
+
+- Removed the complete rotating warning and announcement strip from the home screen.
+- Replaced the visible “Return to OpenBack” links on the Terms and Privacy pages with the same compact back-arrow interaction used throughout OpenBack.
+- Restyled both legal pages into clean, responsive OpenBack panels with consistent spacing, borders, typography, and mobile layout.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.33.63 - Unobstructed Home Screen
 
 - Removed the Firefox performance warning banner from the OpenBack home screen.
