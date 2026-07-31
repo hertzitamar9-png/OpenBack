@@ -1,3 +1,10 @@
+## OpenBack v0.33.68 - Gmail Service Requests
+
+- Changed the Service Request button to open Gmail's browser compose screen directly instead of the computer's default mail application.
+- Addressed support messages only to `openback.servegame@gmail.com` while preserving the prepared subject, troubleshooting prompt, and verification-code safety reminder.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.33.67 - Current Stable Core and Unified Legal Pages
 
 - Updated OpenBack with the applicable gameplay and server safeguards from the latest published OpenFront v0.32.18 release while preserving OpenBack's aircraft, tanks, maps, accounts, matchmaking, and Lifetime Access systems.
