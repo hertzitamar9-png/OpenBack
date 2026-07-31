@@ -1,3 +1,9 @@
+## OpenBack v0.33.69 - Matching Legal Typography
+
+- Matched the Privacy Policy and Source and Terms header typography to OpenBack's Tutorials and Blog headers, including the same system font, weight, size, and wide uppercase spacing.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.33.68 - Gmail Service Requests
 
 - Changed the Service Request button to open Gmail's browser compose screen directly instead of the computer's default mail application.
