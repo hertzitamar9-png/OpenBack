@@ -47,9 +47,9 @@ export class FriendInvitePanel extends LitElement {
   render() {
     if (!this.invite) return nothing;
     return html`
-      <section class="rounded-xl border border-cyan-500/25 bg-slate-950/45 p-4">
+      <section class="rounded-xl border border-white/10 bg-surface p-4">
         <h3
-          class="mb-3 text-sm font-black uppercase tracking-widest text-cyan-300"
+          class="mb-3 text-sm font-black uppercase tracking-widest text-aquarius"
         >
           ${this.title || translateText("friends.invite_friends")}
         </h3>
@@ -66,7 +66,7 @@ export class FriendInvitePanel extends LitElement {
                   ${this.friends.map(
                     (friend) => html`
                       <div
-                        class="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 p-2"
+                        class="flex items-center gap-2 rounded-lg border border-white/10 bg-black/20 p-2"
                       >
                         <span
                           class="min-w-0 flex-1 truncate text-sm text-white"
@@ -74,7 +74,7 @@ export class FriendInvitePanel extends LitElement {
                           ${friend.displayName ?? friend.publicId}
                         </span>
                         <button
-                          class="rounded-md bg-cyan-700 px-3 py-1.5 text-xs font-bold uppercase text-white hover:bg-cyan-600 disabled:opacity-40"
+                          class="rounded-lg bg-malibu-blue px-3 py-1.5 text-xs font-bold uppercase text-white transition-colors hover:bg-aquarius disabled:opacity-40"
                           ?disabled=${this.pending.has(friend.publicId)}
                           @click=${() => void this.inviteFriend(friend)}
                         >

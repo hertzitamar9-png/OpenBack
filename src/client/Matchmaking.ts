@@ -4,15 +4,21 @@ import { ClientEnv } from "src/client/ClientEnv";
 import { UserMeResponse } from "../core/ApiSchemas";
 import { getLastUserMe, getUserMe, hasLinkedAccount } from "./Api";
 import { getPlayToken } from "./Auth";
+import "./components/baseComponents/Button";
 import { BaseModal } from "./components/BaseModal";
 import "./components/Difficulties";
 import "./components/FriendInvitePanel";
 import { modalHeader } from "./components/ui/ModalHeader";
 import { crazyGamesSDK } from "./CrazyGamesSDK";
 import { JoinLobbyEvent } from "./Main";
+import {
+  rankedMatchmakingFlow,
+  RankedTeamSize,
+  shouldCreateRankedParty,
+  shouldJoinRankedQueue,
+} from "./RankedMatchmakingFlow";
 import { showToast, translateText } from "./Utils";
 
-type RankedTeamSize = 1 | 2 | 3 | 4;
 interface PartyMember {
   publicId: string;
   displayName: string;
@@ -92,7 +98,10 @@ export class MatchmakingModal extends BaseModal {
       );
     }
     if (this.teamSize > 1 && this.withFriends && this.party === null) {
-      return this.renderPartyEntry();
+      return this.renderLoadingSpinner(
+        translateText("matchmaking_modal.creating_party"),
+        "blue",
+      );
     }
     if (
       this.teamSize > 1 &&
@@ -115,52 +124,31 @@ export class MatchmakingModal extends BaseModal {
     }
   }
 
-  private renderPartyEntry() {
-    return html`
-      <div class="grid w-full max-w-xl gap-4 sm:grid-cols-2">
-        <button
-          class="rounded-xl bg-cyan-700 px-5 py-5 font-black uppercase tracking-wider text-white hover:bg-cyan-600"
-          @click=${() => this.sendPartyMessage("party_create")}
-        >
-          ${translateText("matchmaking_modal.create_party")}
-        </button>
-        <div class="flex gap-2 rounded-xl bg-slate-900/70 p-3">
-          <input
-            class="min-w-0 flex-1 rounded-lg bg-slate-950 px-3 text-center font-bold uppercase text-white outline-none ring-cyan-500 focus:ring-2"
-            maxlength="6"
-            .value=${this.joinCode}
-            placeholder=${translateText("matchmaking_modal.party_code")}
-            @input=${(event: InputEvent) => {
-              this.joinCode = (event.target as HTMLInputElement).value
-                .replace(/[^a-zA-Z0-9]/g, "")
-                .toUpperCase();
-            }}
-          />
-          <button
-            class="rounded-lg bg-cyan-700 px-4 font-bold uppercase text-white hover:bg-cyan-600 disabled:opacity-40"
-            ?disabled=${this.joinCode.length !== 6}
-            @click=${() => this.sendPartyMessage("party_join")}
-          >
-            ${translateText("matchmaking_modal.join_party")}
-          </button>
-        </div>
-      </div>
-    `;
-  }
-
   private renderPartyLobby() {
     const party = this.party!;
     const isLeader = party.leaderPublicId === this.myPublicId;
     return html`
-      <div class="w-full max-w-xl space-y-4">
+      <div class="w-full max-w-2xl space-y-4">
+        <div
+          class="rounded-2xl border border-malibu-blue/30 bg-malibu-blue/10 px-5 py-4 text-center"
+        >
+          <p class="font-bold text-white">
+            ${translateText("matchmaking_modal.friend_party_ready")}
+          </p>
+          <p class="mt-1 text-sm text-white/60">
+            ${translateText("matchmaking_modal.friend_party_requirement", {
+              count: party.teamSize,
+            })}
+          </p>
+        </div>
         <button
-          class="mx-auto block rounded-xl border border-cyan-500/60 bg-slate-950 px-6 py-3 text-center"
+          class="mx-auto block rounded-xl border border-white/10 bg-surface px-6 py-3 text-center transition-all hover:brightness-110"
           @click=${() => void this.copyPartyCode()}
         >
           <span class="block text-xs uppercase tracking-widest text-white/60"
             >${translateText("matchmaking_modal.party_code")}</span
           >
-          <span class="text-2xl font-black tracking-[0.25em] text-cyan-300"
+          <span class="text-2xl font-black tracking-[0.25em] text-aquarius"
             >${party.code}</span
           >
         </button>
@@ -169,7 +157,7 @@ export class MatchmakingModal extends BaseModal {
             const member = party.members[index];
             return html`
               <div
-                class="rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3"
+                class="rounded-xl border border-white/10 bg-surface px-4 py-3"
               >
                 <div class="font-bold text-white">
                   ${member?.displayName ??
@@ -181,7 +169,7 @@ export class MatchmakingModal extends BaseModal {
                         elo: member.elo,
                       })}
                       ${member.publicId === party.leaderPublicId
-                        ? ` Â· ${translateText("matchmaking_modal.party_leader")}`
+                        ? ` · ${translateText("matchmaking_modal.party_leader")}`
                         : ""}
                     </div>`
                   : ""}
@@ -198,28 +186,32 @@ export class MatchmakingModal extends BaseModal {
           }}
         ></friend-invite-panel>
         ${isLeader ? this.renderRankedSettings() : ""}
-        <button
-          class="w-full rounded-xl bg-green-600 px-5 py-4 font-black uppercase tracking-widest text-white hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-40"
-          ?disabled=${!isLeader || party.members.length !== party.teamSize}
+        <o-button
+          variant="primary"
+          size="lg"
+          width="block"
+          .disable=${!isLeader || party.members.length !== party.teamSize}
           @click=${() => this.sendPartyMessage("party_queue")}
-        >
-          ${isLeader
+          .title=${isLeader
             ? party.members.length === party.teamSize
               ? translateText("matchmaking_modal.find_team_match")
               : translateText("matchmaking_modal.party_not_full")
             : translateText("matchmaking_modal.waiting_for_leader")}
-        </button>
+        >
+        </o-button>
       </div>
     `;
   }
 
   private renderRankedSettings() {
     return html`
-      <div class="grid gap-3 rounded-xl bg-slate-900/70 p-4 sm:grid-cols-2">
+      <div
+        class="grid gap-3 rounded-xl border border-white/10 bg-surface p-4 sm:grid-cols-2"
+      >
         <label class="space-y-1 text-xs font-bold uppercase text-white/65">
           ${translateText("matchmaking_modal.bots")}
           <select
-            class="w-full rounded-lg bg-slate-950 px-3 py-2 text-white"
+            class="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-white"
             .value=${String(this.bots)}
             @change=${(event: Event) =>
               (this.bots = Number((event.target as HTMLSelectElement).value))}
@@ -232,7 +224,7 @@ export class MatchmakingModal extends BaseModal {
         <label class="space-y-1 text-xs font-bold uppercase text-white/65">
           ${translateText("matchmaking_modal.nations")}
           <select
-            class="w-full rounded-lg bg-slate-950 px-3 py-2 text-white"
+            class="w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-white"
             .value=${String(this.nations)}
             @change=${(event: Event) => {
               const value = (event.target as HTMLSelectElement).value;
@@ -272,7 +264,12 @@ export class MatchmakingModal extends BaseModal {
     socket.onopen = async () => {
       console.log("Connected to matchmaking server");
       if (!this.isModalOpen || socket.readyState !== WebSocket.OPEN) return;
-      if (this.teamSize === 1 || !this.withFriends) {
+      const flow = rankedMatchmakingFlow({
+        teamSize: this.teamSize,
+        withFriends: this.withFriends,
+        partyCode: this.joinCode,
+      });
+      if (shouldJoinRankedQueue(flow)) {
         socket.send(
           JSON.stringify({
             type: "join",
@@ -282,8 +279,10 @@ export class MatchmakingModal extends BaseModal {
             nations: this.nations,
           }),
         );
-      } else if (this.joinCode.length === 6) {
+      } else if (flow.partyCode.length === 6) {
         this.sendPartyMessage("party_join");
+      } else if (shouldCreateRankedParty(flow)) {
+        this.sendPartyMessage("party_create");
       }
       this.connected = true;
       this.requestUpdate();
@@ -319,17 +318,11 @@ export class MatchmakingModal extends BaseModal {
   }
 
   protected async onOpen(args?: Record<string, unknown>): Promise<void> {
-    this.teamSize =
-      args?.teamSize === 2 || args?.teamSize === 3 || args?.teamSize === 4
-        ? args.teamSize
-        : 1;
-    this.withFriends =
-      args?.withFriends === true || typeof args?.partyCode === "string";
+    const flow = rankedMatchmakingFlow(args);
+    this.teamSize = flow.teamSize;
+    this.withFriends = flow.withFriends;
     this.party = null;
-    this.joinCode =
-      typeof args?.partyCode === "string"
-        ? args.partyCode.trim().toUpperCase()
-        : "";
+    this.joinCode = flow.partyCode;
     const userMe = await getUserMe();
     // Early return if modal was closed during async operation
     if (!this.isModalOpen) {

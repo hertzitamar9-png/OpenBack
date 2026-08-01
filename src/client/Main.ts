@@ -46,6 +46,10 @@ import { initNavigation } from "./Navigation";
 import "./NewsModal";
 import "./PatternInput";
 import "./PurchaseModal";
+import {
+  rankedMatchmakingFlow,
+  RankedMatchmakingOpenDetail,
+} from "./RankedMatchmakingFlow";
 import "./SinglePlayerModal";
 import { socialClient } from "./SocialClient";
 import { StoreModal } from "./Store";
@@ -271,14 +275,7 @@ declare global {
     "kick-player": CustomEvent;
     toggle_game_start_timer: CustomEvent;
     "join-changed": CustomEvent;
-    "open-matchmaking": CustomEvent<
-      | {
-          teamSize?: 1 | 2 | 3 | 4;
-          partyCode?: string;
-          withFriends?: boolean;
-        }
-      | undefined
-    >;
+    "open-matchmaking": CustomEvent<RankedMatchmakingOpenDetail | undefined>;
     userMeResponse: CustomEvent<UserMeResponse | false>;
     "leave-lobby": CustomEvent;
     "update-game-config": CustomEvent;
@@ -1099,14 +1096,9 @@ class Client {
   }
 
   private handleOpenMatchmaking(
-    event: CustomEvent<
-      { teamSize?: 1 | 2 | 3 | 4; partyCode?: string } | undefined
-    >,
+    event: CustomEvent<RankedMatchmakingOpenDetail | undefined>,
   ) {
-    this.matchmakingModal?.open({
-      teamSize: event.detail?.teamSize ?? 1,
-      partyCode: event.detail?.partyCode,
-    });
+    this.matchmakingModal?.open({ ...rankedMatchmakingFlow(event.detail) });
   }
 
   private handleKickPlayer(event: CustomEvent) {

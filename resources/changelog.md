@@ -1,3 +1,11 @@
+## OpenBack v0.33.75 - Ranked Friend Parties
+
+- Fixed Ranked with Friends so it opens a real friend-party lobby instead of entering team matchmaking immediately.
+- Added direct friend selection and kept ranked matchmaking locked until every party slot is filled.
+- Restyled ranked choices, party controls, and invitations to match the rest of OpenBack.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.33.74 - Updated OpenBack Emblem
 
 - Replaced the previous OB emblem across the game, account screens, browser icons, installable-app icons, and shared-link previews with the updated circular design.

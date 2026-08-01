@@ -7,6 +7,7 @@ import { crazyGamesSDK } from "../CrazyGamesSDK";
 import { requireLifetimeAccess } from "../LifetimeAccess";
 import { translateText } from "../Utils";
 import { BaseModal } from "./BaseModal";
+import "./baseComponents/Button";
 import { modalHeader } from "./ui/ModalHeader";
 
 @customElement("ranked-modal")
@@ -107,7 +108,7 @@ export class RankedModal extends BaseModal {
 
   protected renderBody() {
     return html`
-      <div class="custom-scrollbar p-6">
+      <div class="custom-scrollbar p-4 sm:p-6">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           ${this.renderCard(
             translateText("mode_selector.ranked_1v1_title"),
@@ -137,26 +138,33 @@ export class RankedModal extends BaseModal {
   private renderTeamCard(title: string, teamSize: 2 | 3 | 4) {
     return html`
       <div
-        class="flex min-h-32 flex-col items-center justify-center gap-3 rounded-2xl bg-surface p-5"
+        class="flex min-h-44 flex-col gap-4 rounded-2xl border border-white/10 bg-surface p-5 shadow-lg"
       >
-        <h3
-          class="text-lg sm:text-xl font-bold text-white uppercase tracking-widest leading-tight"
-        >
-          ${title}
-        </h3>
+        <div class="text-center">
+          <h3
+            class="text-lg sm:text-xl font-bold text-white uppercase tracking-widest leading-tight"
+          >
+            ${title}
+          </h3>
+          <p class="mt-1 text-xs leading-relaxed text-white/55">
+            ${translateText("matchmaking_modal.team_choice_description")}
+          </p>
+        </div>
         <div class="grid w-full grid-cols-2 gap-2">
-          <button
-            class="rounded-lg bg-blue-600 px-3 py-2 text-xs font-black uppercase tracking-wider text-white transition-colors hover:bg-blue-500"
+          <o-button
+            variant="primary"
+            size="md"
+            width="block"
+            .title=${translateText("matchmaking_modal.ranked_solo")}
             @click=${() => this.handleRanked(teamSize, false)}
-          >
-            ${translateText("matchmaking_modal.ranked_solo")}
-          </button>
-          <button
-            class="rounded-lg bg-cyan-700 px-3 py-2 text-xs font-black uppercase tracking-wider text-white transition-colors hover:bg-cyan-600"
+          ></o-button>
+          <o-button
+            variant="secondary"
+            size="md"
+            width="block"
+            .title=${translateText("matchmaking_modal.ranked_with_friends")}
             @click=${() => this.handleRanked(teamSize, true)}
-          >
-            ${translateText("matchmaking_modal.ranked_with_friends")}
-          </button>
+          ></o-button>
         </div>
       </div>
     `;
@@ -164,9 +172,8 @@ export class RankedModal extends BaseModal {
 
   private renderCard(title: string, subtitle: string, onClick: () => void) {
     return html`
-      <button
-        @click=${onClick}
-        class="flex flex-col w-full h-28 sm:h-32 rounded-2xl bg-surface border-0 transition-transform hover:scale-[1.02] active:scale-[0.98] p-6 items-center justify-center gap-3"
+      <div
+        class="flex min-h-44 flex-col items-center justify-center gap-4 rounded-2xl border border-white/10 bg-surface p-5 shadow-lg"
       >
         <div class="flex flex-col items-center gap-1 text-center">
           <h3
@@ -180,7 +187,14 @@ export class RankedModal extends BaseModal {
             ${subtitle}
           </p>
         </div>
-      </button>
+        <o-button
+          variant="primary"
+          size="md"
+          width="block"
+          .title=${translateText("matchmaking_modal.find_1v1_match")}
+          @click=${onClick}
+        ></o-button>
+      </div>
     `;
   }
 
