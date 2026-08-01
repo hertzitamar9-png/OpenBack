@@ -255,6 +255,11 @@ export class GameServer {
     if (gameConfig.playerTeams !== undefined) {
       this.gameConfig.playerTeams = gameConfig.playerTeams;
     }
+    if (gameConfig.teamAssignmentMode !== undefined) {
+      this.gameConfig.teamAssignmentMode = gameConfig.teamAssignmentMode;
+      if (gameConfig.teamAssignmentMode === "balanced")
+        this.selectedTeams.clear();
+    }
     if (gameConfig.goldMultiplier !== undefined) {
       this.gameConfig.goldMultiplier = gameConfig.goldMultiplier ?? undefined;
     }
@@ -271,6 +276,9 @@ export class GameServer {
     }
     if (gameConfig.allowedPublicIds !== undefined) {
       this.gameConfig.allowedPublicIds = gameConfig.allowedPublicIds;
+    }
+    if (gameConfig.blockedPublicIds !== undefined) {
+      this.gameConfig.blockedPublicIds = gameConfig.blockedPublicIds;
     }
     if (gameConfig.waterNukes !== undefined) {
       this.gameConfig.waterNukes = gameConfig.waterNukes ?? undefined;
@@ -354,7 +362,19 @@ export class GameServer {
         if (this.gameConfig.gameMode !== GameMode.Team) {
           return { status: 409, error: "team selection requires a team game" };
         }
+        const assignmentMode = this.gameConfig.teamAssignmentMode ?? "self";
+        if (assignmentMode === "balanced" && !actor.isAdmin) {
+          return { status: 403, error: "teams are automatically balanced" };
+        }
         if (
+          assignmentMode === "host" &&
+          !actor.isLobbyCreator &&
+          !actor.isAdmin
+        ) {
+          return { status: 403, error: "only the lobby creator assigns teams" };
+        }
+        if (
+          assignmentMode === "self" &&
           stamped.targetClientID !== actor.clientID &&
           !actor.isLobbyCreator &&
           !actor.isAdmin
@@ -415,6 +435,15 @@ export class GameServer {
         }
         if (this.hasStarted()) {
           return { status: 409, error: "game already started" };
+        }
+        if (
+          this.gameConfig.gameMode === GameMode.Team &&
+          this.gameConfig.teamAssignmentMode === "host" &&
+          this.activeClients.some(
+            (client) => !this.selectedTeams.has(client.clientID),
+          )
+        ) {
+          return { status: 409, error: "assign every player to a team first" };
         }
         if (this.startsAt) {
           this.startsAt = undefined;
@@ -505,6 +534,15 @@ export class GameServer {
         !allowedPublicIds.includes(client.publicId))
     ) {
       this.log.warn("client not on allowlist, rejecting", {
+        clientID: client.clientID,
+      });
+      return "not_allowlisted";
+    }
+    if (
+      client.publicId !== undefined &&
+      this.gameConfig.blockedPublicIds?.includes(client.publicId)
+    ) {
+      this.log.warn("blocked player attempted to join", {
         clientID: client.clientID,
       });
       return "not_allowlisted";
@@ -1144,12 +1182,20 @@ export class GameServer {
   public gameInfo(viewer?: ClientID): GameInfo {
     const friendsFor = this.buildFriendsLookup();
     const hideClanTags = this.gameConfig.disableClanTags ?? false;
+    const visibleGameConfig =
+      viewer === this.lobbyCreatorID
+        ? this.gameConfig
+        : { ...this.gameConfig, blockedPublicIds: undefined };
     return {
       gameID: this.id,
       clients: this.activeClients.map((c) =>
         this.seesReal(viewer, c.clientID)
           ? {
               username: c.username,
+              publicId:
+                viewer === this.lobbyCreatorID || viewer === c.clientID
+                  ? c.publicId
+                  : undefined,
               clanTag: hideClanTags ? null : (c.clanTag ?? null),
               clientID: c.clientID,
               friends: friendsFor(c),
@@ -1157,13 +1203,14 @@ export class GameServer {
             }
           : {
               username: this.anonName(viewer, c.clientID),
+              publicId: viewer === this.lobbyCreatorID ? c.publicId : undefined,
               clanTag: null,
               clientID: c.clientID,
               selectedTeam: this.selectedTeams.get(c.clientID) ?? null,
             },
       ),
       lobbyCreatorClientID: this.lobbyCreatorID,
-      gameConfig: this.gameConfig,
+      gameConfig: visibleGameConfig,
       startsAt: this.startsAt,
       serverTime: Date.now(),
       publicGameType: this.publicGameType,
@@ -1178,6 +1225,18 @@ export class GameServer {
     friendsFor: (client: Client) => ClientID[] | undefined,
   ) {
     const size = this.gameConfig.worldMechanics?.sharedControlSize ?? 1;
+    const rankedTeams = this.gameConfig.rankedTeams;
+    if (rankedTeams?.length === 2 && size <= 1) {
+      const teamColors = [ColoredTeams.Red, ColoredTeams.Blue] as const;
+      for (let teamIndex = 0; teamIndex < rankedTeams.length; teamIndex++) {
+        const publicIds = new Set(rankedTeams[teamIndex]);
+        for (const client of this.activeClients) {
+          if (client.publicId && publicIds.has(client.publicId)) {
+            this.selectedTeams.set(client.clientID, teamColors[teamIndex]);
+          }
+        }
+      }
+    }
     if (size <= 1) {
       return this.activeClients.map((c) => ({
         username: c.username,
@@ -1221,7 +1280,6 @@ export class GameServer {
     // Ranked parties must remain intact regardless of which browser reaches
     // the game worker first. Resolve the matchmaking team's stable public IDs
     // to the live clients, in the exact team order supplied by the master.
-    const rankedTeams = this.gameConfig.rankedTeams;
     if (rankedTeams?.length === 2) {
       const byPublicId = new Map(
         this.activeClients

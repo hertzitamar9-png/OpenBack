@@ -68,6 +68,21 @@ function nextMessage(ws: WebSocket): Promise<Record<string, unknown>> {
   );
 }
 
+async function nextMessageOfType(
+  ws: WebSocket,
+  type: string,
+): Promise<Record<string, unknown>> {
+  return new Promise((resolve) => {
+    const listener = (data: WebSocket.RawData) => {
+      const message = JSON.parse(data.toString()) as Record<string, unknown>;
+      if (message.type !== type) return;
+      ws.off("message", listener);
+      resolve(message);
+    };
+    ws.on("message", listener);
+  });
+}
+
 async function connect(jwt: string): Promise<WebSocket> {
   const ws = new WebSocket(origin.replace("http", "ws") + "/social");
   await new Promise<void>((resolve) => ws.once("open", () => resolve()));
@@ -98,8 +113,8 @@ describe("SocialService", () => {
 
     const sender = await connect(a.jwt);
     const receiver = await connect(b.jwt);
-    const invitation = nextMessage(receiver);
-    const result = nextMessage(sender);
+    const invitation = nextMessageOfType(receiver, "invite");
+    const result = nextMessageOfType(sender, "invite_result");
     sender.send(
       JSON.stringify({
         type: "invite",
@@ -122,8 +137,8 @@ describe("SocialService", () => {
       delivered: true,
     });
 
-    const rankedInvitation = nextMessage(receiver);
-    const rankedResult = nextMessage(sender);
+    const rankedInvitation = nextMessageOfType(receiver, "invite");
+    const rankedResult = nextMessageOfType(sender, "invite_result");
     sender.send(
       JSON.stringify({
         type: "invite",
@@ -144,7 +159,14 @@ describe("SocialService", () => {
       type: "invite_result",
       delivered: true,
     });
-    sender.close();
-    receiver.close();
+    await Promise.all(
+      [sender, receiver].map(
+        (socket) =>
+          new Promise<void>((resolve) => {
+            socket.once("close", () => resolve());
+            socket.close();
+          }),
+      ),
+    );
   });
 });

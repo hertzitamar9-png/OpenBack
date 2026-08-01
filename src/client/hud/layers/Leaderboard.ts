@@ -5,7 +5,7 @@ import { renderTroops, showToast, translateText } from "../../../client/Utils";
 import { EventBus } from "../../../core/EventBus";
 import { PlayerType } from "../../../core/game/Game";
 import { Controller } from "../../Controller";
-import { sendFriendRequest } from "../../FriendsApi";
+import { blockPlayer, sendFriendRequest } from "../../FriendsApi";
 import { GoToPlayerEvent } from "../../TransformHandler";
 import { formatPercentage, renderNumber } from "../../Utils";
 import { GameView, PlayerView } from "../../view";
@@ -193,7 +193,7 @@ export class Leaderboard extends LitElement implements Controller {
       return;
     }
     const width = 220;
-    const height = 54;
+    const height = 104;
     this.contextMenu = {
       player,
       publicId,
@@ -232,6 +232,19 @@ export class Leaderboard extends LitElement implements Controller {
     } finally {
       this.friendRequestPending = false;
     }
+  }
+
+  private async blockContextPlayer(): Promise<void> {
+    const target = this.contextMenu;
+    this.contextMenu = null;
+    if (!target) return;
+    const result = await blockPlayer(target.publicId);
+    showToast(
+      translateText(
+        result === true ? "friends.player_blocked" : "friends.error_generic",
+      ),
+      result === true ? "green" : "red",
+    );
   }
 
   private async requestFriendForPlayer(
@@ -387,17 +400,29 @@ export class Leaderboard extends LitElement implements Controller {
                 this.contextMenu = null;
               }}
             >
-              <button
-                class="fixed min-w-[210px] rounded-lg border border-cyan-500/50 bg-slate-950 px-4 py-3 text-left font-bold text-white shadow-2xl hover:bg-slate-800"
+              <div
+                class="fixed min-w-[210px] overflow-hidden rounded-lg border border-cyan-500/50 bg-slate-950 shadow-2xl"
                 style="left:${this.contextMenu.x}px; top:${this.contextMenu
                   .y}px"
                 @pointerdown=${(event: Event) => event.stopPropagation()}
-                @click=${() => void this.requestFriend()}
               >
-                ${translateText("friends.send_to_player", {
-                  player: this.contextMenu.player.displayName(),
-                })}
-              </button>
+                <button
+                  class="block w-full px-4 py-3 text-left font-bold text-white hover:bg-slate-800"
+                  @click=${() => void this.requestFriend()}
+                >
+                  ${translateText("friends.send_to_player", {
+                    player: this.contextMenu.player.displayName(),
+                  })}
+                </button>
+                <button
+                  class="block w-full border-t border-white/10 px-4 py-3 text-left font-bold text-red-300 hover:bg-red-950/50"
+                  @click=${() => void this.blockContextPlayer()}
+                >
+                  ${translateText("friends.block_player", {
+                    player: this.contextMenu.player.displayName(),
+                  })}
+                </button>
+              </div>
             </div>
           `
         : ""}

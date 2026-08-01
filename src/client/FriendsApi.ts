@@ -1,4 +1,6 @@
 import {
+  type BlockedPlayersResponse,
+  BlockedPlayersResponseSchema,
   type FriendRequestsResponse,
   FriendRequestsResponseSchema,
   type FriendsListResponse,
@@ -28,6 +30,48 @@ export type FriendActionError =
   | "conflict"
   | "bad_request"
   | "request_failed";
+
+export async function fetchBlockedPlayers(): Promise<
+  BlockedPlayersResponse | false
+> {
+  try {
+    const res = await friendsFetch("/blocks");
+    if (!res.ok) return false;
+    const parsed = BlockedPlayersResponseSchema.safeParse(await res.json());
+    return parsed.success ? parsed.data : false;
+  } catch {
+    return false;
+  }
+}
+
+export async function blockPlayer(
+  publicId: string,
+): Promise<true | FriendActionError> {
+  try {
+    const res = await friendsFetch(`/blocks/${encodeURIComponent(publicId)}`, {
+      method: "POST",
+    });
+    if (res.status === 404) return "not_found";
+    if (!res.ok) return "request_failed";
+    return true;
+  } catch {
+    return "request_failed";
+  }
+}
+
+export async function unblockPlayer(
+  publicId: string,
+): Promise<true | FriendActionError> {
+  try {
+    const res = await friendsFetch(`/blocks/${encodeURIComponent(publicId)}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) return "request_failed";
+    return true;
+  } catch {
+    return "request_failed";
+  }
+}
 
 export async function fetchFriendRequests(): Promise<
   FriendRequestsResponse | false

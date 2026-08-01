@@ -70,6 +70,7 @@ import {
   isInIframe,
   translateText,
 } from "./Utils";
+import "./components/SocialInvitePopup";
 import { installSafariPinchZoomBlocker } from "./utilities/DisableSafariPinchZoom";
 
 import "./OpenBackContentModal";
@@ -732,6 +733,19 @@ class Client {
       customElements.whenDefined("join-lobby-modal"),
       customElements.whenDefined("host-lobby-modal"),
     ]);
+
+    const friendMatch = window.location.pathname.match(
+      /\/friend\/([A-Za-z0-9_-]{4,32})\/?$/,
+    );
+    if (friendMatch) {
+      await customElements.whenDefined("account-modal");
+      window.showPage?.("page-account");
+      const account = document.querySelector("account-modal") as HTMLElement & {
+        open(args?: Record<string, unknown>): void;
+      };
+      account?.open({ tab: "friends", friendId: friendMatch[1] });
+      return;
+    }
 
     // Check if CrazyGames SDK is enabled first (no hash needed in CrazyGames)
     if (crazyGamesSDK.isOnCrazyGames()) {

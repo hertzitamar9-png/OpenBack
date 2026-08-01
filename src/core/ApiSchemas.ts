@@ -177,6 +177,7 @@ export const PlayerProfileSchema = z.object({
   selectedFlag: z.string().max(80).optional(),
   selectedCosmetic: z.string().max(160).optional(),
   elo: z.number().optional(),
+  rank: z.number().int().positive().optional(),
   clanTag: RequiredClanTagSchema.optional(),
   stats: PlayerStatsTreeSchema,
 });
@@ -283,6 +284,8 @@ export const FriendEntrySchema = z.object({
   publicId: z.string(),
   displayName: z.string().optional(),
   createdAt: z.iso.datetime(),
+  online: z.boolean().optional(),
+  lastSeenAt: z.iso.datetime().optional(),
 });
 export type FriendEntry = z.infer<typeof FriendEntrySchema>;
 
@@ -307,6 +310,13 @@ export const SendFriendRequestResponseSchema = z.object({
 });
 export type SendFriendRequestResponse = z.infer<
   typeof SendFriendRequestResponseSchema
+>;
+
+export const BlockedPlayersResponseSchema = z.object({
+  results: FriendEntrySchema.array(),
+});
+export type BlockedPlayersResponse = z.infer<
+  typeof BlockedPlayersResponseSchema
 >;
 
 export const SocialChatMessageSchema = z.object({

@@ -37,10 +37,10 @@ export class FriendInvitePanel extends LitElement {
     this.pending = next;
     showToast(
       translateText(
-        delivered ? "friends.invite_delivered" : "friends.invite_offline",
+        delivered ? "friends.invite_delivered" : "friends.invite_saved",
         { player: friend.displayName ?? friend.publicId },
       ),
-      delivered ? "green" : "red",
+      "green",
     );
   }
 
@@ -71,7 +71,17 @@ export class FriendInvitePanel extends LitElement {
                         <span
                           class="min-w-0 flex-1 truncate text-sm text-white"
                         >
+                          <span
+                            class="mr-1 inline-block h-2 w-2 rounded-full ${friend.online
+                              ? "bg-green-400"
+                              : "bg-white/25"}"
+                          ></span>
                           ${friend.displayName ?? friend.publicId}
+                          <span class="block pl-3 text-[10px] text-white/35"
+                            >${friend.online
+                              ? translateText("friends.online_now")
+                              : translateText("friends.offline")}</span
+                          >
                         </span>
                         <button
                           class="rounded-lg bg-malibu-blue px-3 py-1.5 text-xs font-bold uppercase text-white transition-colors hover:bg-aquarius disabled:opacity-40"

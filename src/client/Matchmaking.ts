@@ -18,6 +18,7 @@ import {
   shouldCreateRankedParty,
   shouldJoinRankedQueue,
 } from "./RankedMatchmakingFlow";
+import { socialClient } from "./SocialClient";
 import { showToast, translateText } from "./Utils";
 
 interface PartyMember {
@@ -31,6 +32,7 @@ interface PartyState {
   leaderPublicId: string;
   queued: boolean;
   members: PartyMember[];
+  requiredMembers?: number;
 }
 
 @customElement("matchmaking-modal")
@@ -49,6 +51,8 @@ export class MatchmakingModal extends BaseModal {
   private elo: number | string = "...";
   private myPublicId = "";
   private playToken = "";
+  private partyMembers: string[] = [];
+  private invitedPartyCode = "";
 
   constructor() {
     super();
@@ -113,10 +117,18 @@ export class MatchmakingModal extends BaseModal {
       return this.renderPartyLobby();
     }
     if (this.gameID === null) {
-      return this.renderLoadingSpinner(
-        translateText("matchmaking_modal.searching"),
-        "green",
-      );
+      return html`<div class="flex w-full max-w-sm flex-col gap-4">
+        ${this.renderLoadingSpinner(
+          translateText("matchmaking_modal.searching"),
+          "green",
+        )}
+        <button
+          class="h-12 w-full rounded-lg bg-red-600 text-sm font-black uppercase tracking-wider text-white transition-colors hover:bg-red-500"
+          @click=${() => this.close()}
+        >
+          ${translateText("matchmaking_modal.cancel_search")}
+        </button>
+      </div>`;
     } else {
       return this.renderLoadingSpinner(
         translateText("matchmaking_modal.waiting_for_game"),
@@ -128,7 +140,9 @@ export class MatchmakingModal extends BaseModal {
   private renderPartyLobby() {
     const party = this.party!;
     const isLeader = party.leaderPublicId === this.myPublicId;
-    const canQueue = canQueueRankedFriendParty(party, this.myPublicId);
+    const canQueue =
+      canQueueRankedFriendParty(party, this.myPublicId) &&
+      party.members.length >= (party.requiredMembers ?? party.teamSize);
     return html`
       <div class="w-full max-w-2xl space-y-4">
         <div
@@ -299,6 +313,21 @@ export class MatchmakingModal extends BaseModal {
         this.gameCheckInterval = setInterval(() => this.checkGame(), 1000);
       } else if (data.type === "party_state") {
         this.party = data as PartyState;
+        if (
+          this.party.leaderPublicId === this.myPublicId &&
+          this.invitedPartyCode !== this.party.code &&
+          this.partyMembers.length > 1
+        ) {
+          this.invitedPartyCode = this.party.code;
+          for (const member of this.partyMembers) {
+            if (member === this.myPublicId) continue;
+            void socialClient.invite(member, {
+              kind: "ranked_party",
+              partyCode: this.party.code,
+              teamSize: this.party.teamSize,
+            });
+          }
+        }
       } else if (data.type === "error") {
         showToast(
           translateText(`matchmaking_modal.error_${data.error}`),
@@ -325,6 +354,8 @@ export class MatchmakingModal extends BaseModal {
     this.withFriends = flow.withFriends;
     this.party = null;
     this.joinCode = flow.partyCode;
+    this.partyMembers = flow.partyMembers;
+    this.invitedPartyCode = "";
     const userMe = await getUserMe();
     // Early return if modal was closed during async operation
     if (!this.isModalOpen) {
@@ -395,7 +426,9 @@ export class MatchmakingModal extends BaseModal {
   ): void {
     if (
       type === "party_queue" &&
-      !canQueueRankedFriendParty(this.party, this.myPublicId)
+      (!canQueueRankedFriendParty(this.party, this.myPublicId) ||
+        this.party!.members.length <
+          (this.party!.requiredMembers ?? this.party!.teamSize))
     ) {
       showToast(translateText("matchmaking_modal.error_party_not_full"), "red");
       return;
@@ -406,6 +439,10 @@ export class MatchmakingModal extends BaseModal {
         type,
         jwt: this.playToken,
         teamSize: this.teamSize,
+        partySize:
+          this.partyMembers.length > 1
+            ? this.partyMembers.length
+            : this.teamSize,
         code: this.joinCode,
         bots: this.bots,
         nations: this.nations,

@@ -689,6 +689,7 @@ export class Config {
 
   percentageTilesOwnedToWin(): number {
     if (this._gameConfig.gameMode === GameMode.Team) {
+      if (this._gameConfig.rankedType !== undefined) return 80;
       return 95;
     }
     return 80;

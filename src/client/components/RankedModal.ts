@@ -5,6 +5,7 @@ import { getUserMe, hasLinkedAccount } from "../Api";
 import { userAuth } from "../Auth";
 import { crazyGamesSDK } from "../CrazyGamesSDK";
 import { requireLifetimeAccess } from "../LifetimeAccess";
+import { socialClient, type GlobalPartyState } from "../SocialClient";
 import { translateText } from "../Utils";
 import { BaseModal } from "./BaseModal";
 import "./baseComponents/Button";
@@ -20,6 +21,10 @@ export class RankedModal extends BaseModal {
   // CrazyGames players authenticate through the SDK, not a linked
   // Discord/Google/email account, so track that separately for ranked.
   @state() private crazyGamesSignedIn = false;
+  @state() private party: GlobalPartyState | null = socialClient.getParty();
+  private readonly partyListener = (event: Event) => {
+    this.party = (event as CustomEvent<GlobalPartyState | null>).detail;
+  };
 
   // Eligible to see/play ranked: a linked account or a signed-in CrazyGames one.
   private isRankedEligible(): boolean {
@@ -37,6 +42,7 @@ export class RankedModal extends BaseModal {
       "userMeResponse",
       this.handleUserMeResponse as EventListener,
     );
+    document.addEventListener("social-party-changed", this.partyListener);
   }
 
   disconnectedCallback() {
@@ -44,6 +50,7 @@ export class RankedModal extends BaseModal {
       "userMeResponse",
       this.handleUserMeResponse as EventListener,
     );
+    document.removeEventListener("social-party-changed", this.partyListener);
     super.disconnectedCallback();
   }
 
@@ -210,9 +217,51 @@ export class RankedModal extends BaseModal {
       return;
     }
 
+    const activeParty = socialClient.getParty();
+    if (activeParty && activeParty.members.length > teamSize) {
+      this.errorMessage = translateText("matchmaking_modal.party_too_large", {
+        count: activeParty.members.length,
+        size: teamSize,
+      });
+      return;
+    }
+    if (activeParty && teamSize > 1 && !withFriends) {
+      this.errorMessage = translateText("matchmaking_modal.use_friend_party");
+      return;
+    }
+
+    if (withFriends) {
+      const party = activeParty;
+      if (!party || party.members.length < 2) {
+        this.errorMessage = translateText("matchmaking_modal.party_required");
+        return;
+      }
+      if (party.members.length > teamSize) {
+        this.errorMessage = translateText("matchmaking_modal.party_too_large", {
+          count: party.members.length,
+          size: teamSize,
+        });
+        return;
+      }
+      const myPublicId =
+        this.userMeResponse && this.userMeResponse.player.publicId;
+      if (party.leaderPublicId !== myPublicId) {
+        this.errorMessage = translateText(
+          "matchmaking_modal.party_leader_only",
+        );
+        return;
+      }
+    }
+
     document.dispatchEvent(
       new CustomEvent("open-matchmaking", {
-        detail: { teamSize, withFriends },
+        detail: {
+          teamSize,
+          withFriends,
+          partyMembers: withFriends
+            ? socialClient.getParty()?.members.map((member) => member.publicId)
+            : [],
+        },
       }),
     );
   }

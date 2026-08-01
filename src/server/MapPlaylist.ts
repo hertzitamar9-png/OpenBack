@@ -469,7 +469,9 @@ export class MapPlaylist {
         strategicObjectives,
         naturalDisasters,
         fogOfWar,
-        sharedControlSize: teamSize,
+        // Ranked teammates are allies controlling separate nations. Shared
+        // control remains an optional private-game mode, not ranked behavior.
+        sharedControlSize: 1,
       },
       publicGameModifiers: {
         isCompact,

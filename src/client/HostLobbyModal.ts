@@ -36,6 +36,7 @@ import "./components/LobbyPlayerView";
 import "./components/ToggleInputCard";
 import { modalHeader } from "./components/ui/ModalHeader";
 import { crazyGamesSDK } from "./CrazyGamesSDK";
+import { blockPlayer, fetchBlockedPlayers } from "./FriendsApi";
 import { showInGameConfirm } from "./InGameModal";
 import { JoinLobbyEvent } from "./Main";
 import { terrainMapFileLoader } from "./TerrainMapFileLoader";
@@ -62,6 +63,8 @@ export class HostLobbyModal extends BaseModal {
   @state() private defaultNationCount: number = 0;
   @state() private gameMode: GameMode = GameMode.FFA;
   @state() private teamCount: TeamCountConfig = 2;
+  @state() private teamAssignmentMode: "host" | "self" | "balanced" = "self";
+  @state() private blockedPublicIds: string[] = [];
 
   constructor() {
     super();
@@ -122,6 +125,8 @@ export class HostLobbyModal extends BaseModal {
   private userSettings = new UserSettings();
 
   private leaveLobbyOnClose = true;
+  private readonly blockedPlayersChanged = () =>
+    void this.refreshBlockedPlayers();
 
   private readonly handleLobbyInfo = (event: LobbyInfoEvent) => {
     const lobby = event.lobby;
@@ -535,14 +540,23 @@ export class HostLobbyModal extends BaseModal {
             .lobbyCreatorClientID=${this.lobbyCreatorClientID}
             .currentClientID=${this.lobbyCreatorClientID}
             .teamCount=${this.teamCount}
+            .teamAssignmentMode=${this.teamAssignmentMode}
             .nationCount=${this.nations}
             .onKickPlayer=${(clientID: string) => this.kickPlayer(clientID)}
+            .onBlockPlayer=${(client: ClientInfo) =>
+              void this.blockLobbyPlayer(client)}
             .onSelectTeam=${(clientID: string, team: string | null) =>
               this.selectPlayerTeam(clientID, team)}
             .onToggleNameReveal=${(clientID: string) =>
               this.toggleNameReveal(clientID)}
             .nameReveals=${this.nameReveals}
             .anonymizeNames=${this.anonymizeNames}
+            @team-assignment-mode-changed=${(
+              event: CustomEvent<{ mode: "host" | "self" | "balanced" }>,
+            ) => {
+              this.teamAssignmentMode = event.detail.mode;
+              void this.putGameConfig();
+            }}
           ></lobby-player-view>
           ${this.lobbyId
             ? html`
@@ -575,6 +589,11 @@ export class HostLobbyModal extends BaseModal {
 
   protected onOpen(): void {
     this.startLobbyUpdates();
+    document.addEventListener(
+      "social-friends-changed",
+      this.blockedPlayersChanged,
+    );
+    void this.refreshBlockedPlayers();
     // The server mints the game id, so we don't know it until createLobby
     // resolves. clientID is assigned by the server when we join the lobby.
 
@@ -651,6 +670,10 @@ export class HostLobbyModal extends BaseModal {
   protected onClose(): void {
     console.log("Closing host lobby modal");
     this.stopLobbyUpdates();
+    document.removeEventListener(
+      "social-friends-changed",
+      this.blockedPlayersChanged,
+    );
     if (this.leaveLobbyOnClose) {
       this.leaveLobby();
       this.updateHistory("/"); // Reset URL to base
@@ -674,6 +697,8 @@ export class HostLobbyModal extends BaseModal {
     this.defaultNationCount = 0;
     this.gameMode = GameMode.FFA;
     this.teamCount = 2;
+    this.teamAssignmentMode = "self";
+    this.blockedPublicIds = [];
     this.bots = 400;
     this.spawnImmunity = false;
     this.spawnImmunityDurationMinutes = undefined;
@@ -1240,6 +1265,8 @@ export class HostLobbyModal extends BaseModal {
               ? spawnImmunityTicks
               : null,
             playerTeams: this.teamCount,
+            teamAssignmentMode: this.teamAssignmentMode,
+            blockedPublicIds: this.blockedPublicIds,
             nations: sliderToNationsConfig(
               this.nations,
               this.defaultNationCount,
@@ -1334,6 +1361,23 @@ export class HostLobbyModal extends BaseModal {
         composed: true,
       }),
     );
+  }
+
+  private async blockLobbyPlayer(client: ClientInfo): Promise<void> {
+    if (!client.publicId || (await blockPlayer(client.publicId)) !== true)
+      return;
+    this.blockedPublicIds = [
+      ...new Set([...this.blockedPublicIds, client.publicId]),
+    ];
+    await this.putGameConfig();
+    this.kickPlayer(client.clientID);
+  }
+
+  private async refreshBlockedPlayers(): Promise<void> {
+    const result = await fetchBlockedPlayers();
+    if (!result) return;
+    this.blockedPublicIds = result.results.map((entry) => entry.publicId);
+    if (this.lobbyId) await this.putGameConfig();
   }
 
   private selectPlayerTeam(clientID: string, team: string | null) {

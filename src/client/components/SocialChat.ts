@@ -34,7 +34,22 @@ export class SocialChat extends LitElement {
   @state() private groupMembers = new Set<string>();
   @state() private showGroupCreator = false;
   @state() private busy = false;
-  private pollTimer: ReturnType<typeof setInterval> | null = null;
+  private readonly realtimeMessageListener = (event: Event) => {
+    const detail = (
+      event as CustomEvent<{
+        conversationId?: string;
+        message?: SocialChatMessage;
+      }>
+    ).detail;
+    if (!detail?.conversationId || !detail.message) return;
+    if (
+      detail.conversationId === this.selectedId &&
+      !this.messages.some((item) => item.id === detail.message!.id)
+    ) {
+      this.messages = [...this.messages, detail.message];
+    }
+    void this.loadConversations();
+  };
 
   private readonly openChatListener = (event: Event) => {
     const publicId = (event as CustomEvent<{ publicId?: string }>).detail
@@ -45,13 +60,19 @@ export class SocialChat extends LitElement {
   connectedCallback(): void {
     super.connectedCallback();
     document.addEventListener("open-friend-chat", this.openChatListener);
+    document.addEventListener(
+      "social-chat-message",
+      this.realtimeMessageListener,
+    );
     void this.loadConversations();
-    this.pollTimer = setInterval(() => void this.refreshMessages(), 4000);
   }
 
   disconnectedCallback(): void {
     document.removeEventListener("open-friend-chat", this.openChatListener);
-    if (this.pollTimer) clearInterval(this.pollTimer);
+    document.removeEventListener(
+      "social-chat-message",
+      this.realtimeMessageListener,
+    );
     super.disconnectedCallback();
   }
 
@@ -97,7 +118,9 @@ export class SocialChat extends LitElement {
         return;
       }
       this.messageText = "";
-      this.messages = [...this.messages, message];
+      if (!this.messages.some((item) => item.id === message.id)) {
+        this.messages = [...this.messages, message];
+      }
       await this.loadConversations();
     } finally {
       this.busy = false;

@@ -4,12 +4,14 @@ export interface RankedMatchmakingOpenDetail {
   teamSize?: RankedTeamSize;
   partyCode?: string;
   withFriends?: boolean;
+  partyMembers?: string[];
 }
 
 export interface RankedMatchmakingFlow {
   teamSize: RankedTeamSize;
   partyCode: string;
   withFriends: boolean;
+  partyMembers: string[];
 }
 
 export interface RankedPartyReadiness {
@@ -32,6 +34,9 @@ export function rankedMatchmakingFlow(
     partyCode,
     withFriends:
       teamSize > 1 && (detail?.withFriends === true || partyCode.length > 0),
+    partyMembers: Array.isArray(detail?.partyMembers)
+      ? detail.partyMembers.filter((id): id is string => typeof id === "string")
+      : [],
   };
 }
 
@@ -51,6 +56,7 @@ export function canQueueRankedFriendParty(
     party &&
     party.leaderPublicId === publicId &&
     party.members.length >= 2 &&
-    party.members.length === party.teamSize,
+    party.members.length >= 2 &&
+    party.members.length <= party.teamSize,
   );
 }

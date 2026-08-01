@@ -96,4 +96,36 @@ describe("GameServer team selection", () => {
       ).status,
     ).toBe(403);
   });
+
+  it("supports host-assigned team lobbies", () => {
+    game.updateGameConfig({ teamAssignmentMode: "host" });
+    expect(
+      game.handleIntent(
+        { type: "set_player_team", targetClientID: "player", team: "Blue" },
+        actor("player"),
+      ).status,
+    ).toBe(403);
+    expect(
+      game.handleIntent(
+        { type: "set_player_team", targetClientID: "player", team: "Blue" },
+        actor("owner", true),
+      ).status,
+    ).toBe(200);
+  });
+
+  it("locks manual selection in auto-balanced lobbies", () => {
+    game.updateGameConfig({ teamAssignmentMode: "balanced" });
+    expect(
+      game.handleIntent(
+        { type: "set_player_team", targetClientID: "player", team: "Blue" },
+        actor("player"),
+      ).status,
+    ).toBe(403);
+    expect(
+      game.handleIntent(
+        { type: "set_player_team", targetClientID: "player", team: "Blue" },
+        actor("owner", true),
+      ).status,
+    ).toBe(403);
+  });
 });

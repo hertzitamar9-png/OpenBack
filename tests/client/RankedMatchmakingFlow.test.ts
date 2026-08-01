@@ -14,6 +14,7 @@ describe("ranked matchmaking flow", () => {
       teamSize: 2,
       partyCode: "",
       withFriends: true,
+      partyMembers: [],
     });
     expect(shouldJoinRankedQueue(flow)).toBe(false);
     expect(shouldCreateRankedParty(flow)).toBe(true);
@@ -45,7 +46,7 @@ describe("ranked matchmaking flow", () => {
     expect(shouldJoinRankedQueue(flow)).toBe(true);
   });
 
-  it("requires a complete friend party led by the current player", () => {
+  it("requires a multi-player friend party led by the current player", () => {
     const party = {
       teamSize: 2 as const,
       leaderPublicId: "leader",

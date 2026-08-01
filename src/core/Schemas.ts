@@ -165,6 +165,7 @@ export const ClanTagSchema = z
 
 const ClientInfoSchema = z.object({
   clientID: z.string(),
+  publicId: z.string().optional(),
   username: UsernameSchema,
   clanTag: ClanTagSchema,
   friends: z.array(z.string()).optional(),
@@ -225,6 +226,7 @@ export class LobbyInfoEvent implements GameEvent {
 
 export interface ClientInfo {
   clientID: ClientID;
+  publicId?: string;
   username: string;
   clanTag: string | null;
   friends?: ClientID[];
@@ -339,12 +341,14 @@ export const GameConfigSchema = z.object({
   maxPlayers: z.number().optional(),
   // OFM: allowlist of publicIds allowed to join (admin-only, see create_game).
   allowedPublicIds: z.array(z.string()).max(200).optional(),
+  blockedPublicIds: z.array(z.string()).max(500).optional(),
   maxTimerValue: z.number().int().min(1).max(120).nullable().optional(), // In minutes
   customAllianceDuration: z.number().int().min(0).max(15).nullable().optional(), // In minutes; 0 disables alliances
   startDelay: z.number().int().min(0).max(600).nullable().optional(), // In seconds
   spawnImmunityDuration: z.number().int().min(0).nullable().optional(), // In ticks
   disabledUnits: z.enum(UnitType).array().optional(),
   playerTeams: TeamCountConfigSchema.optional(),
+  teamAssignmentMode: z.enum(["host", "self", "balanced"]).optional(),
   goldMultiplier: z.number().min(0.1).max(1000).nullable().optional(),
   startingGold: z.number().int().min(0).max(1000000000).nullable().optional(),
   hostCheats: z

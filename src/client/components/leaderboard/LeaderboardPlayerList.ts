@@ -6,7 +6,7 @@ import {
 } from "../../../core/ApiSchemas";
 import { RankedType } from "../../../core/game/Game";
 import { fetchPlayerById, fetchPlayerLeaderboard, getUserMe } from "../../Api";
-import { sendFriendRequest } from "../../FriendsApi";
+import { blockPlayer, sendFriendRequest } from "../../FriendsApi";
 import { showToast, translateText } from "../../Utils";
 
 @customElement("leaderboard-player-list")
@@ -366,6 +366,19 @@ export class LeaderboardPlayerList extends LitElement {
     if (profile) this.selectedProfile = profile;
   }
 
+  private async blockSelectedProfile(): Promise<void> {
+    const id = this.selectedProfile?.publicId;
+    if (!id) return;
+    const result = await blockPlayer(id);
+    showToast(
+      translateText(
+        result === true ? "friends.player_blocked" : "friends.error_generic",
+      ),
+      result === true ? "green" : "red",
+    );
+    if (result === true) this.selectedProfile = null;
+  }
+
   private renderProfileCard() {
     if (!this.profileLoading && !this.selectedProfile) return nothing;
     const profile = this.selectedProfile;
@@ -406,6 +419,9 @@ export class LeaderboardPlayerList extends LitElement {
                     ${profile?.elo !== undefined
                       ? html`<div>${profile.elo} OB</div>`
                       : ""}
+                    ${profile?.rank !== undefined
+                      ? html`<div>#${profile.rank}</div>`
+                      : ""}
                     ${profile?.selectedFlag
                       ? html`<div class="mt-1 text-xs text-white/70">
                           ${profile.selectedFlag}
@@ -435,6 +451,14 @@ export class LeaderboardPlayerList extends LitElement {
                   <span class="truncate font-mono text-xs text-white/35">
                     ${profile?.publicId}
                   </span>
+                  ${profile?.publicId && profile.publicId !== this.currentUserId
+                    ? html`<button
+                        class="rounded-lg border border-red-500/25 bg-red-950/30 px-5 py-2 text-xs font-black uppercase tracking-wider text-red-300 transition hover:bg-red-900/40"
+                        @click=${() => void this.blockSelectedProfile()}
+                      >
+                        ${translateText("friends.block")}
+                      </button>`
+                    : ""}
                   <button
                     class="rounded-lg border border-white/15 bg-white/5 px-5 py-2 text-xs font-black uppercase tracking-wider text-white transition hover:bg-white/10"
                     @click=${() => (this.selectedProfile = null)}

@@ -28,6 +28,8 @@ import { GameRecord, GameRecordSchema } from "../../core/Schemas";
 import { generateID, replacer } from "../../core/Util";
 import { getMapNationCount } from "../MapLandTiles";
 import { ServerEnv } from "../ServerEnv";
+import { publishSocialEvent } from "../SocialEvents";
+import { isPlayerOnline } from "../SocialPresence";
 import { requireDurableAuthStorage } from "./AuthPersistence";
 import {
   createPrivateJwk,
@@ -76,6 +78,8 @@ interface StoredUser {
   flares?: string[];
   lifetimeAccess?: boolean;
   lifetimePurchasedAt?: string;
+  lastSeenAt?: string;
+  blockedPublicIds?: string[];
 }
 interface Session {
   persistentId: string;
@@ -655,6 +659,22 @@ export function areFriends(a: string, b: string): boolean {
       (friendship.a === a && friendship.b === b) ||
       (friendship.a === b && friendship.b === a),
   );
+}
+
+export function areBlocked(a: string, b: string): boolean {
+  const first = userByPublicId(a);
+  const second = userByPublicId(b);
+  return Boolean(
+    (first?.blockedPublicIds?.includes(b) ?? false) ||
+    (second?.blockedPublicIds?.includes(a) ?? false),
+  );
+}
+
+export function markPlayerSeen(publicId: string): void {
+  const user = userByPublicId(publicId);
+  if (!user) return;
+  user.lastSeenAt = new Date().toISOString();
+  persist();
 }
 
 // Ranked OB keeps the chess-style expected-score curve, caps gains at 500, and
@@ -1626,11 +1646,16 @@ export function authRouter(): express.Router {
     res.json(userMeFor(user));
   });
 
-  const friendEntry = (publicId: string, createdAt: string) => ({
-    publicId,
-    displayName: userByPublicId(publicId)?.displayName,
-    createdAt,
-  });
+  const friendEntry = (publicId: string, createdAt: string) => {
+    const target = userByPublicId(publicId);
+    return {
+      publicId,
+      displayName: target ? usernameFor(target) : publicId,
+      createdAt,
+      online: isPlayerOnline(publicId),
+      lastSeenAt: target?.lastSeenAt,
+    };
+  };
 
   router.get("/friends", async (req, res) => {
     const user = await userFromBearer(req);
@@ -1654,7 +1679,13 @@ export function authRouter(): express.Router {
           friendship.createdAt,
         ),
       )
-      .sort((a, b) => a.publicId.localeCompare(b.publicId));
+      .sort(
+        (a, b) =>
+          Number(b.online) - Number(a.online) ||
+          (a.displayName ?? a.publicId).localeCompare(
+            b.displayName ?? b.publicId,
+          ),
+      );
     const start = (page - 1) * limit;
     res.json({
       results: all.slice(start, start + limit),
@@ -1696,6 +1727,10 @@ export function authRouter(): express.Router {
       res.status(404).json({ error: "not_found" });
       return;
     }
+    if (areBlocked(user.publicId, targetId)) {
+      res.status(403).json({ error: "blocked" });
+      return;
+    }
     if (areFriends(user.publicId, targetId)) {
       res.status(409).json({ error: "already_friends" });
       return;
@@ -1712,6 +1747,10 @@ export function authRouter(): express.Router {
         createdAt: new Date().toISOString(),
       });
       persist();
+      publishSocialEvent({
+        recipients: [user.publicId, targetId],
+        type: "friends_changed",
+      });
       res.json({ status: "accepted", requestedAt: reverse.createdAt });
       return;
     }
@@ -1729,6 +1768,10 @@ export function authRouter(): express.Router {
       createdAt: new Date().toISOString(),
     });
     persist();
+    publishSocialEvent({
+      recipients: [user.publicId, targetId],
+      type: "friends_changed",
+    });
     res.json({ status: "requested" });
   });
 
@@ -1755,6 +1798,10 @@ export function authRouter(): express.Router {
       });
     }
     persist();
+    publishSocialEvent({
+      recipients: [user.publicId, requesterId],
+      type: "friends_changed",
+    });
     res.json({ ok: true });
   });
 
@@ -1778,6 +1825,10 @@ export function authRouter(): express.Router {
       return;
     }
     persist();
+    publishSocialEvent({
+      recipients: [user.publicId, otherId],
+      type: "friends_changed",
+    });
     res.json({ ok: true });
   });
 
@@ -1801,6 +1852,81 @@ export function authRouter(): express.Router {
       return;
     }
     persist();
+    publishSocialEvent({
+      recipients: [user.publicId, otherId],
+      type: "friends_changed",
+    });
+    res.json({ ok: true });
+  });
+
+  router.get("/blocks", async (req, res) => {
+    const user = await userFromBearer(req);
+    if (!user?.email) {
+      res.status(401).json({ error: "unauthorized" });
+      return;
+    }
+    res.json({
+      results: (user.blockedPublicIds ?? []).map((id) =>
+        friendEntry(
+          id,
+          userByPublicId(id)?.lastSeenAt ?? new Date(0).toISOString(),
+        ),
+      ),
+    });
+  });
+
+  router.post("/blocks/:id", async (req, res) => {
+    const user = await userFromBearer(req);
+    const targetId = String(req.params.id);
+    if (!user?.email || targetId === user.publicId) {
+      res.status(400).json({ error: "bad_request" });
+      return;
+    }
+    if (!userByPublicId(targetId)) {
+      res.status(404).json({ error: "not_found" });
+      return;
+    }
+    if (!(user.blockedPublicIds ?? []).includes(targetId)) {
+      (user.blockedPublicIds ??= []).push(targetId);
+    }
+    friendships = friendships.filter(
+      (item) =>
+        !(
+          (item.a === user.publicId && item.b === targetId) ||
+          (item.a === targetId && item.b === user.publicId)
+        ),
+    );
+    friendRequests = friendRequests.filter(
+      (item) =>
+        !(
+          (item.from === user.publicId && item.to === targetId) ||
+          (item.from === targetId && item.to === user.publicId)
+        ),
+    );
+    await persistImmediately();
+    publishSocialEvent({
+      recipients: [user.publicId, targetId],
+      type: "blocks_changed",
+    });
+    publishSocialEvent({
+      recipients: [user.publicId, targetId],
+      type: "friends_changed",
+    });
+    res.json({ ok: true });
+  });
+
+  router.delete("/blocks/:id", async (req, res) => {
+    const user = await userFromBearer(req);
+    if (!user?.email) {
+      res.status(401).json({ error: "unauthorized" });
+      return;
+    }
+    const targetId = String(req.params.id);
+    user.blockedPublicIds = (user.blockedPublicIds ?? []).filter(
+      (id) => id !== targetId,
+    );
+    await persistImmediately();
+    publishSocialEvent({ recipients: [user.publicId], type: "blocks_changed" });
     res.json({ ok: true });
   });
 
@@ -1972,7 +2098,14 @@ export function authRouter(): express.Router {
     };
     conversation.messages.push(message);
     await persistImmediately();
-    res.status(201).json(chatMessageFor(message));
+    const publicMessage = chatMessageFor(message);
+    publishSocialEvent({
+      recipients: conversation.members,
+      type: "chat_message",
+      conversationId: conversation.id,
+      message: publicMessage,
+    });
+    res.status(201).json(publicMessage);
   });
 
   router.get("/clans/:tag/chat", async (req, res) => {
@@ -2009,7 +2142,14 @@ export function authRouter(): express.Router {
     };
     (clan.chatMessages ??= []).push(message);
     await persistImmediately();
-    res.status(201).json(chatMessageFor(message));
+    const publicMessage = chatMessageFor(message);
+    publishSocialEvent({
+      recipients: clan.members.map((member) => member.publicId),
+      type: "chat_message",
+      conversationId: `clan:${clan.tag}`,
+      message: publicMessage,
+    });
+    res.status(201).json(publicMessage);
   });
 
   // Public player profile by publicId. It intentionally contains only the
@@ -2023,6 +2163,10 @@ export function authRouter(): express.Router {
       res.status(404).json({ error: "not_found" });
       return;
     }
+    const rankedPosition = [...usersByPid.values()]
+      .filter((candidate) => candidate.elo !== undefined)
+      .sort((a, b) => (b.elo ?? 0) - (a.elo ?? 0))
+      .findIndex((candidate) => candidate.publicId === target.publicId);
     res.json(
       PlayerProfileSchema.parse({
         createdAt: new Date(target.createdAt).toISOString(),
@@ -2033,6 +2177,7 @@ export function authRouter(): express.Router {
         selectedFlag: target.selectedFlag,
         selectedCosmetic: target.selectedCosmetic,
         elo: target.elo,
+        rank: rankedPosition >= 0 ? rankedPosition + 1 : undefined,
         clanTag: clanTagFor(target) ?? undefined,
         stats: {},
       }),

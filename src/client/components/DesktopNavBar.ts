@@ -2,6 +2,7 @@ import { LitElement, html } from "lit";
 import { customElement } from "lit/decorators.js";
 import { assetUrl } from "../../core/AssetUrls";
 import { NavNotificationsController } from "./NavNotificationsController";
+import "./PartyStatus";
 
 @customElement("desktop-nav-bar")
 export class DesktopNavBar extends LitElement {
@@ -198,6 +199,7 @@ export class DesktopNavBar extends LitElement {
           >
           </span>
         </button>
+        <party-status></party-status>
       </nav>
     `;
   }

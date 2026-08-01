@@ -60,7 +60,7 @@ describe("ranked 1v1 playlist", () => {
     expect(config.randomSpawn).toBe(false);
   });
 
-  it("creates ordered shared-control team ranked rules", () => {
+  it("creates ordered separate-country team ranked rules", () => {
     const teams = [
       ["a", "b", "c", "d"],
       ["e", "f", "g", "h"],
@@ -76,7 +76,7 @@ describe("ranked 1v1 playlist", () => {
     expect(config.gameMode).toBe(GameMode.Team);
     expect(config.playerTeams).toBe(2);
     expect(config.maxPlayers).toBe(8);
-    expect(config.worldMechanics?.sharedControlSize).toBe(4);
+    expect(config.worldMechanics?.sharedControlSize).toBe(1);
     expect(config.rankedTeams).toEqual(teams);
     expect(config.allowedPublicIds).toEqual(teams.flat());
     expect(config.bots).toBe(200);

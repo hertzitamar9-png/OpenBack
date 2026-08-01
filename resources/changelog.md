@@ -1,3 +1,15 @@
+## OpenBack v0.33.78 - Instant Social Parties and Team Play
+
+- Added shareable friend links that open OpenBack directly to an add-friend confirmation.
+- Made friend requests, online status, party invitations, cancellations, and persistent friend and clan chat update live without refreshing.
+- Added 2-4 player parties beside Profile, five-second invitation popups, pending request controls, public friend profiles, last-online times, and account blocking.
+- Rebuilt team Ranked so party members accept before queueing, partial parties can receive matched teammates, searching can be canceled, and oversized parties cannot enter smaller modes.
+- Gave every Ranked teammate a separate allied country and changed team victory to 80% map control.
+- Added host-assigned, player-choice, and auto-balanced private-lobby team setup, including a host waitlist and direct team transfers.
+- Prevented blocked players from sending requests or invitations and from joining games hosted by the player who blocked them; hosts can block and remove a lobby member in one action.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.33.77 - Reliable Ranked Friend Parties
 
 - Matched every Ranked team-choice button to OpenBack's standard sizing and visual style.

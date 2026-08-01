@@ -71,6 +71,7 @@ export class AccountModal extends BaseModal {
   // Preserves the Games tab's accumulated list + cursor across tab switches.
   private gameHistoryCache: PlayerGameHistoryCache | null = null;
   private returnToPurchase = false;
+  @state() private pendingFriendId = "";
 
   constructor() {
     super();
@@ -198,6 +199,7 @@ export class AccountModal extends BaseModal {
         <friends-list
           .myPublicId=${myPublicId}
           .clanTag=${clanTag}
+          .pendingFriendId=${this.pendingFriendId}
         ></friends-list>
       </div>
     `;
@@ -1132,6 +1134,9 @@ export class AccountModal extends BaseModal {
     this.authMode = requestedMode;
     this.email = requestedEmail;
     this.returnToPurchase = args?.returnToPurchase === true;
+    this.pendingFriendId =
+      typeof args?.friendId === "string" ? args.friendId : "";
+    if (this.pendingFriendId) this.activeTab = "friends";
     this.authSuggestedAction = null;
     this.codeSent = false;
     this.code = "";

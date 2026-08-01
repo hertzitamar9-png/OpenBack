@@ -33,7 +33,10 @@ export class LobbyTeamView extends LitElement {
   @property({ type: String }) lobbyCreatorClientID: string = "";
   @property({ type: String }) currentClientID: string = "";
   @property({ attribute: "team-count" }) teamCount: TeamCountConfig = 2;
+  @property({ type: String }) teamAssignmentMode: "host" | "self" | "balanced" =
+    "self";
   @property({ type: Function }) onKickPlayer?: (clientID: string) => void;
+  @property({ type: Function }) onBlockPlayer?: (client: ClientInfo) => void;
   @property({ type: Function }) onToggleNameReveal?: (clientID: string) => void;
   @property({ type: Function }) onSelectTeam?: (
     clientID: string,
@@ -69,6 +72,7 @@ export class LobbyTeamView extends LitElement {
       changedProperties.has("gameMode") ||
       changedProperties.has("clients") ||
       changedProperties.has("teamCount") ||
+      changedProperties.has("teamAssignmentMode") ||
       changedProperties.has("nationCount") ||
       changedProperties.has("isPublicGame")
     ) {
@@ -95,6 +99,39 @@ export class LobbyTeamView extends LitElement {
               ? translateText("host_modal.nation_player")
               : translateText("host_modal.nation_players")}
           </div>
+          ${this.gameMode === GameMode.Team &&
+          this.currentClientID === this.lobbyCreatorClientID
+            ? html`<label
+                class="flex items-center gap-2 text-[11px] font-bold uppercase text-white/55"
+              >
+                ${translateText("host_modal.team_assignment_mode")}
+                <select
+                  class="rounded-lg border border-white/15 bg-gray-900 px-2 py-1.5 text-white"
+                  .value=${this.teamAssignmentMode}
+                  @change=${(event: Event) => {
+                    const mode = (event.currentTarget as HTMLSelectElement)
+                      .value as "host" | "self" | "balanced";
+                    this.dispatchEvent(
+                      new CustomEvent("team-assignment-mode-changed", {
+                        detail: { mode },
+                        bubbles: true,
+                        composed: true,
+                      }),
+                    );
+                  }}
+                >
+                  <option value="host">
+                    ${translateText("host_modal.team_assignment_host")}
+                  </option>
+                  <option value="self">
+                    ${translateText("host_modal.team_assignment_self")}
+                  </option>
+                  <option value="balanced">
+                    ${translateText("host_modal.team_assignment_balanced")}
+                  </option>
+                </select>
+              </label>`
+            : ""}
         </div>
         <div
           class="players-list block rounded-lg border border-white/10 bg-white/5 p-2"
@@ -112,6 +149,10 @@ export class LobbyTeamView extends LitElement {
   }
 
   private renderTeamMode() {
+    const waitingPlayers =
+      this.teamAssignmentMode === "host"
+        ? this.clients.filter((client) => !client.selectedTeam)
+        : this.clients;
     const active = this.teamPreview.filter(
       (t) => t.players.length > 0 || t.team === ColoredTeams.Nations,
     );
@@ -125,10 +166,14 @@ export class LobbyTeamView extends LitElement {
         class="w-full md:w-60 bg-gray-800 p-2 border border-gray-700 rounded-lg"
       >
         <div class="font-bold mb-1.5 text-gray-300 text-sm">
-          ${translateText("host_modal.players")}
+          ${translateText(
+            this.teamAssignmentMode === "host"
+              ? "host_modal.team_waitlist"
+              : "host_modal.players",
+          )}
         </div>
         ${repeat(
-          this.clients,
+          waitingPlayers,
           (c) => c.clientID ?? c.username,
           (client) => {
             const displayName = this.getClientDisplayName(client);
@@ -212,15 +257,25 @@ export class LobbyTeamView extends LitElement {
                 >(${translateText("host_modal.host_badge")})</span
               >`
             : this.onKickPlayer
-              ? html`<button
-                  class="remove-player-btn"
-                  @click=${() => this.onKickPlayer?.(client.clientID)}
-                  aria-label=${translateText("host_modal.remove_player", {
-                    username: displayName,
-                  })}
-                >
-                  ×
-                </button>`
+              ? html`<span class="ml-1 inline-flex items-center gap-1">
+                  <button
+                    class="remove-player-btn"
+                    @click=${() => this.onKickPlayer?.(client.clientID)}
+                    aria-label=${translateText("host_modal.remove_player", {
+                      username: displayName,
+                    })}
+                  >
+                    ×
+                  </button>
+                  ${this.onBlockPlayer && client.publicId
+                    ? html`<button
+                        class="rounded bg-red-950/50 px-1.5 py-0.5 text-[9px] font-bold uppercase text-red-300"
+                        @click=${() => this.onBlockPlayer?.(client)}
+                      >
+                        ${translateText("friends.block")}
+                      </button>`
+                    : ""}
+                </span>`
               : html``}
         </span>`;
       },
@@ -283,18 +338,26 @@ export class LobbyTeamView extends LitElement {
                           >(${translateText("host_modal.host_badge")})</span
                         >`
                       : this.onKickPlayer
-                        ? html`<button
-                            class="remove-player-btn ml-2"
-                            @click=${() => this.onKickPlayer?.(p.clientID)}
-                            aria-label=${translateText(
-                              "host_modal.remove_player",
-                              {
-                                username: displayName,
-                              },
-                            )}
-                          >
-                            ×
-                          </button>`
+                        ? html`<div class="ml-2 flex items-center gap-1">
+                            <button
+                              class="remove-player-btn"
+                              @click=${() => this.onKickPlayer?.(p.clientID)}
+                              aria-label=${translateText(
+                                "host_modal.remove_player",
+                                { username: displayName },
+                              )}
+                            >
+                              ×
+                            </button>
+                            ${this.onBlockPlayer && p.publicId
+                              ? html`<button
+                                  class="rounded bg-red-950/50 px-1.5 py-0.5 text-[9px] font-bold uppercase text-red-300 hover:bg-red-900/60"
+                                  @click=${() => this.onBlockPlayer?.(p)}
+                                >
+                                  ${translateText("friends.block")}
+                                </button>`
+                              : ""}
+                          </div>`
                         : html``}
                   </div>`;
                 },
@@ -308,6 +371,9 @@ export class LobbyTeamView extends LitElement {
     if (
       !this.onSelectTeam ||
       this.teamCount === HumansVsNations ||
+      this.teamAssignmentMode === "balanced" ||
+      (this.teamAssignmentMode === "host" &&
+        this.currentClientID !== this.lobbyCreatorClientID) ||
       (client.clientID !== this.currentClientID &&
         this.currentClientID !== this.lobbyCreatorClientID)
     ) {
@@ -410,6 +476,27 @@ export class LobbyTeamView extends LitElement {
           c.selectedTeam ?? null,
         ),
     );
+    if (this.teamAssignmentMode === "host") {
+      const buckets = new Map<Team, ClientInfo[]>(
+        teams.map((team) => [team, []]),
+      );
+      for (const client of this.clients) {
+        if (!client.selectedTeam) continue;
+        buckets.get(client.selectedTeam)?.push(client);
+      }
+      this.teamMaxSize = Math.max(
+        1,
+        Math.ceil(
+          (this.clients.length + this.effectiveNationCount) /
+            Math.max(1, teams.length),
+        ),
+      );
+      this.teamPreview = teams.map((team) => ({
+        team,
+        players: buckets.get(team) ?? [],
+      }));
+      return;
+    }
     const assignment = assignTeamsLobbyPreview(
       players,
       teams,

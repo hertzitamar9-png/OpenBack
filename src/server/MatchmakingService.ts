@@ -48,6 +48,7 @@ interface Party {
   members: RankedPlayer[];
   queued: boolean;
   preferences: RankedPreferences;
+  requiredMembers: number;
 }
 
 type RankedConfigFactory = (
@@ -147,7 +148,11 @@ export class MatchmakingService {
           this.send(ws, { type: "error", error: "invalid_team_size" });
           return;
         }
-        this.createParty(player, teamSize);
+        const requestedMembers =
+          typeof msg.partySize === "number" && Number.isInteger(msg.partySize)
+            ? Math.max(2, Math.min(teamSize, msg.partySize))
+            : teamSize;
+        this.createParty(player, teamSize, requestedMembers);
         break;
       }
       case "party_join":
@@ -186,6 +191,7 @@ export class MatchmakingService {
   private createParty(
     player: RankedPlayer,
     teamSize: Exclude<RankedTeamSize, 1>,
+    requiredMembers: number,
   ): void {
     this.removeByPublicId(player.publicId);
     let code = crypto.randomBytes(3).toString("hex").toUpperCase();
@@ -199,6 +205,7 @@ export class MatchmakingService {
       members: [player],
       queued: false,
       preferences: {},
+      requiredMembers,
     };
     this.parties.set(code, party);
     this.partyByPublicId.set(player.publicId, code);
@@ -243,7 +250,10 @@ export class MatchmakingService {
       });
       return;
     }
-    if (party.members.length !== party.teamSize) {
+    if (
+      party.members.length < party.requiredMembers ||
+      party.members.length > party.teamSize
+    ) {
       this.sendToPlayer(party, publicId, {
         type: "error",
         error: "party_not_full",
@@ -312,6 +322,10 @@ export class MatchmakingService {
       if (oldest === null || group.joinedAt < oldest.joinedAt) oldest = group;
     }
     if (!oldest) return null;
+
+    if (oldest.players.length > 1 && oldest.players.length < oldest.teamSize) {
+      return this.findPartialPartyMatch(oldest);
+    }
 
     const isCompleteTeam = oldest.players.length === oldest.teamSize;
     let closest: QueueGroup | null = null;
@@ -426,6 +440,52 @@ export class MatchmakingService {
       a: this.combineQueueGroups(teams[0], oldest),
       b: this.combineQueueGroups(teams[1], oldest),
       consumed,
+    };
+  }
+
+  private findPartialPartyMatch(oldest: QueueGroup): MatchSelection | null {
+    const compatible = this.queue.filter(
+      (group) =>
+        group !== oldest &&
+        group.teamSize === oldest.teamSize &&
+        this.samePreferences(group.preferences, oldest.preferences),
+    );
+    const fillCount = oldest.teamSize - oldest.players.length;
+    const fillers = compatible
+      .filter((group) => group.players.length === 1)
+      .sort(
+        (a, b) =>
+          Math.abs(this.averageElo(oldest) - this.averageElo(a)) -
+            Math.abs(this.averageElo(oldest) - this.averageElo(b)) ||
+          a.joinedAt - b.joinedAt,
+      )
+      .slice(0, fillCount);
+    if (fillers.length !== fillCount) return null;
+    const used = new Set(fillers);
+    const opponents = compatible.filter((group) => !used.has(group));
+    const fullParty = opponents
+      .filter((group) => group.players.length === oldest.teamSize)
+      .sort(
+        (a, b) =>
+          Math.abs(this.averageElo(oldest) - this.averageElo(a)) -
+          Math.abs(this.averageElo(oldest) - this.averageElo(b)),
+      )[0];
+    const opponentParts = fullParty
+      ? [fullParty]
+      : opponents
+          .filter((group) => group.players.length === 1)
+          .sort((a, b) => a.joinedAt - b.joinedAt)
+          .slice(0, oldest.teamSize);
+    if (
+      opponentParts.reduce((sum, group) => sum + group.players.length, 0) !==
+      oldest.teamSize
+    )
+      return null;
+    const aParts = [oldest, ...fillers];
+    return {
+      a: this.combineQueueGroups(aParts, oldest),
+      b: this.combineQueueGroups(opponentParts, oldest),
+      consumed: [...aParts, ...opponentParts],
     };
   }
 
@@ -587,6 +647,7 @@ export class MatchmakingService {
       teamSize: party.teamSize,
       leaderPublicId: party.leaderPublicId,
       queued: party.queued,
+      requiredMembers: party.requiredMembers,
       members: party.members.map(({ publicId, displayName, elo }) => ({
         publicId,
         displayName,
