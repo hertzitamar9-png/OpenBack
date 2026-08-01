@@ -1,3 +1,10 @@
+## OpenBack v0.33.79 - Social Request Alerts
+
+- Added a live pulsing Profile alert when an invitation popup goes unanswered, followed by a pulsing Friends tab that guides players to the saved request.
+- Made the alert clear immediately when the request is viewed, answered, declined, or canceled.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.33.78 - Instant Social Parties and Team Play
 
 - Added shareable friend links that open OpenBack directly to an add-friend confirmation.

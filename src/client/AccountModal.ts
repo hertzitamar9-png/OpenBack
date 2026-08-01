@@ -33,6 +33,7 @@ import "./components/SubscriptionPanel";
 import { modalHeader } from "./components/ui/ModalHeader";
 import { fetchCosmetics, SUBSCRIPTIONS_ENABLED } from "./Cosmetics";
 import { crazyGamesSDK, type CrazyGamesUser } from "./CrazyGamesSDK";
+import { socialAttention, type SocialAttentionStage } from "./SocialAttention";
 import { translateText } from "./Utils";
 
 @customElement("account-modal")
@@ -72,6 +73,29 @@ export class AccountModal extends BaseModal {
   private gameHistoryCache: PlayerGameHistoryCache | null = null;
   private returnToPurchase = false;
   @state() private pendingFriendId = "";
+  @state() private socialAttentionStage: SocialAttentionStage =
+    socialAttention.getStage();
+  private readonly socialAttentionListener = (event: Event) => {
+    this.socialAttentionStage = (
+      event as CustomEvent<SocialAttentionStage>
+    ).detail;
+  };
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    document.addEventListener(
+      "social-attention-changed",
+      this.socialAttentionListener,
+    );
+  }
+
+  disconnectedCallback(): void {
+    document.removeEventListener(
+      "social-attention-changed",
+      this.socialAttentionListener,
+    );
+    super.disconnectedCallback();
+  }
 
   constructor() {
     super();
@@ -151,7 +175,11 @@ export class AccountModal extends BaseModal {
         { key: "account", label: translateText("account_modal.tab_account") },
         { key: "stats", label: translateText("account_modal.tab_stats") },
         { key: "games", label: translateText("account_modal.tab_games") },
-        { key: "friends", label: translateText("account_modal.tab_friends") },
+        {
+          key: "friends",
+          label: translateText("account_modal.tab_friends"),
+          attention: this.socialAttentionStage === "friends",
+        },
       ],
     };
   }
@@ -1123,6 +1151,7 @@ export class AccountModal extends BaseModal {
   }
 
   protected onOpen(args?: Record<string, unknown>): void {
+    socialAttention.profileOpened();
     document.body.classList.add("account-flow-open");
     this.isLoadingUser = true;
     const requestedMode =
@@ -1178,6 +1207,10 @@ export class AccountModal extends BaseModal {
     this.dispatchEvent(
       new CustomEvent("close", { bubbles: true, composed: true }),
     );
+  }
+
+  protected onTabEnter(key: string): void {
+    if (key === "friends") socialAttention.friendsOpened();
   }
 
   private async handleLogout() {

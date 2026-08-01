@@ -1,11 +1,19 @@
 import { html, LitElement, TemplateResult } from "lit";
-import { customElement } from "lit/decorators.js";
+import { customElement, state } from "lit/decorators.js";
 import { assetUrl } from "../../core/AssetUrls";
+import { socialAttention, type SocialAttentionStage } from "../SocialAttention";
 import { NavNotificationsController } from "./NavNotificationsController";
 
 @customElement("mobile-nav-bar")
 export class MobileNavBar extends LitElement {
+  @state() private socialAttentionStage: SocialAttentionStage =
+    socialAttention.getStage();
   private _notifications = new NavNotificationsController(this);
+  private readonly socialAttentionListener = (event: Event) => {
+    this.socialAttentionStage = (
+      event as CustomEvent<SocialAttentionStage>
+    ).detail;
+  };
 
   createRenderRoot() {
     return this;
@@ -14,6 +22,10 @@ export class MobileNavBar extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     window.addEventListener("showPage", this._onShowPage);
+    document.addEventListener(
+      "social-attention-changed",
+      this.socialAttentionListener,
+    );
 
     const current = window.currentPageId;
     if (current) {
@@ -26,6 +38,10 @@ export class MobileNavBar extends LitElement {
   disconnectedCallback() {
     super.disconnectedCallback();
     window.removeEventListener("showPage", this._onShowPage);
+    document.removeEventListener(
+      "social-attention-changed",
+      this.socialAttentionListener,
+    );
   }
 
   private _onShowPage = (e: Event) => {
@@ -135,7 +151,10 @@ export class MobileNavBar extends LitElement {
         ></button>
         <button
           id="mobile-nav-account-button"
-          class="nav-menu-item block w-full text-left font-bold uppercase tracking-[0.05em] text-white/70 transition-all duration-200 cursor-pointer hover:text-blue-600 hover:translate-x-2.5 hover:drop-shadow-[0_0_20px_rgba(37,99,235,0.5)] [&.active]:text-blue-600 [&.active]:translate-x-2.5 [&.active]:drop-shadow-[0_0_20px_rgba(37,99,235,0.5)] text-[clamp(18px,2.8vh,32px)] py-[clamp(0.2rem,0.8vh,0.75rem)]"
+          class="nav-menu-item relative block w-full text-left font-bold uppercase tracking-[0.05em] text-white/70 transition-all duration-200 cursor-pointer hover:text-blue-600 hover:translate-x-2.5 hover:drop-shadow-[0_0_20px_rgba(37,99,235,0.5)] [&.active]:text-blue-600 [&.active]:translate-x-2.5 [&.active]:drop-shadow-[0_0_20px_rgba(37,99,235,0.5)] text-[clamp(18px,2.8vh,32px)] py-[clamp(0.2rem,0.8vh,0.75rem)] ${this
+            .socialAttentionStage === "profile"
+            ? "animate-pulse text-malibu-blue drop-shadow-[0_0_12px_rgba(14,165,233,0.9)]"
+            : ""}"
           data-page="page-account"
           data-i18n="main.account"
         ></button>

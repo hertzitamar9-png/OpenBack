@@ -2,7 +2,7 @@ import { LitElement, html } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { documentStylesSheet } from "./SharedStyles";
 
-export type OModalTab = { key: string; label: string };
+export type OModalTab = { key: string; label: string; attention?: boolean };
 
 @customElement("o-modal")
 export class OModal extends LitElement {
@@ -91,10 +91,17 @@ export class OModal extends LitElement {
               aria-selected=${active}
               class="px-4 py-3 text-sm font-bold uppercase tracking-wider transition-all relative cursor-pointer ${active
                 ? "text-aquarius"
-                : "text-white/40 hover:text-white/70"}"
+                : "text-white/40 hover:text-white/70"} ${tab.attention
+                ? "animate-pulse text-malibu-blue drop-shadow-[0_0_8px_rgba(14,165,233,0.85)]"
+                : ""}"
               @click=${() => this.handleTabClick(tab.key)}
             >
               ${tab.label}
+              ${tab.attention
+                ? html`<span
+                    class="absolute right-1 top-2 h-2 w-2 rounded-full bg-malibu-blue shadow-[0_0_10px_rgba(14,165,233,1)]"
+                  ></span>`
+                : ""}
               ${active
                 ? html`<div
                     class="absolute bottom-0 left-0 right-0 h-0.5 bg-malibu-blue"

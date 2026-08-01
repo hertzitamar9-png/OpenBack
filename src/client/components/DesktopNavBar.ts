@@ -1,12 +1,20 @@
 import { LitElement, html } from "lit";
-import { customElement } from "lit/decorators.js";
+import { customElement, state } from "lit/decorators.js";
 import { assetUrl } from "../../core/AssetUrls";
+import { socialAttention, type SocialAttentionStage } from "../SocialAttention";
 import { NavNotificationsController } from "./NavNotificationsController";
 import "./PartyStatus";
 
 @customElement("desktop-nav-bar")
 export class DesktopNavBar extends LitElement {
+  @state() private socialAttentionStage: SocialAttentionStage =
+    socialAttention.getStage();
   private _notifications = new NavNotificationsController(this);
+  private readonly socialAttentionListener = (event: Event) => {
+    this.socialAttentionStage = (
+      event as CustomEvent<SocialAttentionStage>
+    ).detail;
+  };
 
   createRenderRoot() {
     return this;
@@ -15,6 +23,10 @@ export class DesktopNavBar extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     window.addEventListener("showPage", this._onShowPage);
+    document.addEventListener(
+      "social-attention-changed",
+      this.socialAttentionListener,
+    );
 
     const current = window.currentPageId;
     if (current) {
@@ -28,6 +40,10 @@ export class DesktopNavBar extends LitElement {
   disconnectedCallback() {
     super.disconnectedCallback();
     window.removeEventListener("showPage", this._onShowPage);
+    document.removeEventListener(
+      "social-attention-changed",
+      this.socialAttentionListener,
+    );
   }
 
   private _onShowPage = (e: Event) => {
@@ -145,7 +161,10 @@ export class DesktopNavBar extends LitElement {
         </div>
         <button
           id="nav-account-button"
-          class="nav-menu-item relative h-10 rounded-full overflow-hidden flex items-center justify-center gap-2 px-3 bg-transparent border border-white/20 text-white/80 hover:text-white cursor-pointer transition-colors [&.active]:text-white"
+          class="nav-menu-item relative h-10 rounded-full overflow-visible flex items-center justify-center gap-2 px-3 bg-transparent border border-white/20 text-white/80 hover:text-white cursor-pointer transition-colors [&.active]:text-white ${this
+            .socialAttentionStage === "profile"
+            ? "animate-pulse border-malibu-blue text-white shadow-[0_0_16px_rgba(14,165,233,0.8)]"
+            : ""}"
           data-page="page-account"
           data-i18n-aria-label="main.account"
           data-i18n-title="main.account"
@@ -198,6 +217,11 @@ export class DesktopNavBar extends LitElement {
             data-i18n="main.sign_in"
           >
           </span>
+          ${this.socialAttentionStage === "profile"
+            ? html`<span
+                class="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-malibu-blue shadow-[0_0_10px_rgba(14,165,233,1)]"
+              ></span>`
+            : ""}
         </button>
         <party-status></party-status>
       </nav>

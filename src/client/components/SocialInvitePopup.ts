@@ -1,6 +1,7 @@
 import { html, LitElement } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { getLastUserMe } from "../Api";
+import { socialAttention } from "../SocialAttention";
 import { socialClient, type PendingSocialInvite } from "../SocialClient";
 import { translateText } from "../Utils";
 
@@ -15,6 +16,9 @@ export class SocialInvitePopup extends LitElement {
     const incoming = (
       (event as CustomEvent<PendingSocialInvite[]>).detail ?? []
     ).filter((item) => item.to === myId && !this.hiddenIds.has(item.id));
+    socialAttention.syncInvites(
+      (event as CustomEvent<PendingSocialInvite[]>).detail ?? [],
+    );
     if (this.invite && incoming.some((item) => item.id === this.invite!.id))
       return;
     this.show(incoming[0] ?? null);
@@ -39,6 +43,7 @@ export class SocialInvitePopup extends LitElement {
     this.timer = window.setTimeout(() => {
       this.hiddenIds.add(invite.id);
       this.invite = null;
+      socialAttention.deferInvite(invite.id);
     }, 5000);
   }
   private label(invite: PendingSocialInvite): string {
