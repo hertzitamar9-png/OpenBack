@@ -12,6 +12,12 @@ export interface RankedMatchmakingFlow {
   withFriends: boolean;
 }
 
+export interface RankedPartyReadiness {
+  teamSize: Exclude<RankedTeamSize, 1>;
+  leaderPublicId: string;
+  members: Array<{ publicId: string }>;
+}
+
 export function rankedMatchmakingFlow(
   detail?: RankedMatchmakingOpenDetail,
 ): RankedMatchmakingFlow {
@@ -35,4 +41,16 @@ export function shouldJoinRankedQueue(flow: RankedMatchmakingFlow): boolean {
 
 export function shouldCreateRankedParty(flow: RankedMatchmakingFlow): boolean {
   return flow.teamSize > 1 && flow.withFriends && flow.partyCode.length === 0;
+}
+
+export function canQueueRankedFriendParty(
+  party: RankedPartyReadiness | null,
+  publicId: string,
+): boolean {
+  return Boolean(
+    party &&
+    party.leaderPublicId === publicId &&
+    party.members.length >= 2 &&
+    party.members.length === party.teamSize,
+  );
 }

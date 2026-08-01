@@ -348,4 +348,43 @@ describe("MatchmakingService", () => {
     ]);
     expect(queue).toHaveLength(0);
   });
+
+  it("does not allow a non-friend to join a ranked friend party", () => {
+    const socket = () => ({
+      readyState: WebSocket.OPEN,
+      send: vi.fn(),
+      close: vi.fn(),
+    });
+    const service = new MatchmakingService(
+      { info: vi.fn() } as never,
+      undefined,
+      () => false,
+    );
+    const leader = {
+      publicId: "leader",
+      displayName: "Leader",
+      elo: 1000,
+      ws: socket(),
+    };
+    const stranger = {
+      publicId: "stranger",
+      displayName: "Stranger",
+      elo: 1000,
+      ws: socket(),
+    };
+    const internals = service as unknown as {
+      createParty: (player: typeof leader, teamSize: 2) => void;
+      joinParty: (player: typeof stranger, code: string) => void;
+      parties: Map<string, { members: Array<typeof leader> }>;
+    };
+
+    internals.createParty(leader, 2);
+    const code = [...internals.parties.keys()][0];
+    internals.joinParty(stranger, code);
+
+    expect(internals.parties.get(code)?.members).toHaveLength(1);
+    expect(stranger.ws.send).toHaveBeenCalledWith(
+      JSON.stringify({ type: "error", error: "party_friends_only" }),
+    );
+  });
 });

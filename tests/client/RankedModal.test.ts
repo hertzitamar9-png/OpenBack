@@ -16,8 +16,18 @@ describe("RankedModal", () => {
     document.body.append(modal);
     await modal.updateComplete;
 
-    const buttons = modal.querySelectorAll("o-button");
-    expect(buttons).toHaveLength(7);
+    const choiceButtons = modal.querySelectorAll<HTMLButtonElement>(
+      "button[data-ranked-choice]",
+    );
+    expect(choiceButtons).toHaveLength(6);
+    expect(
+      [...choiceButtons].every(
+        (button) =>
+          button.classList.contains("h-14") &&
+          button.classList.contains("rounded-lg") &&
+          button.classList.contains("text-sm"),
+      ),
+    ).toBe(true);
     expect(modal.textContent).toContain("matchmaking_modal.ranked_solo");
     expect(modal.textContent).toContain(
       "matchmaking_modal.ranked_with_friends",

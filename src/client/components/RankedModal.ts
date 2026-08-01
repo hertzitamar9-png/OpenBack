@@ -136,6 +136,10 @@ export class RankedModal extends BaseModal {
   }
 
   private renderTeamCard(title: string, teamSize: 2 | 3 | 4) {
+    const choiceButtonClass =
+      "flex h-14 w-full items-center justify-center rounded-lg px-3 " +
+      "text-center text-sm font-medium uppercase tracking-wider text-white " +
+      "transition-all duration-200 active:scale-[0.98]";
     return html`
       <div
         class="flex min-h-44 flex-col gap-4 rounded-2xl border border-white/10 bg-surface p-5 shadow-lg"
@@ -150,21 +154,21 @@ export class RankedModal extends BaseModal {
             ${translateText("matchmaking_modal.team_choice_description")}
           </p>
         </div>
-        <div class="grid w-full grid-cols-2 gap-2">
-          <o-button
-            variant="primary"
-            size="md"
-            width="block"
-            .title=${translateText("matchmaking_modal.ranked_solo")}
+        <div class="mt-auto grid w-full grid-cols-2 gap-3">
+          <button
+            data-ranked-choice="teammates"
+            class="${choiceButtonClass} bg-malibu-blue hover:bg-aquarius"
             @click=${() => this.handleRanked(teamSize, false)}
-          ></o-button>
-          <o-button
-            variant="secondary"
-            size="md"
-            width="block"
-            .title=${translateText("matchmaking_modal.ranked_with_friends")}
+          >
+            ${translateText("matchmaking_modal.ranked_solo")}
+          </button>
+          <button
+            data-ranked-choice="friends"
+            class="${choiceButtonClass} bg-gray-700 hover:bg-gray-600 hover:shadow-[var(--shadow-action-card-hover)]"
             @click=${() => this.handleRanked(teamSize, true)}
-          ></o-button>
+          >
+            ${translateText("matchmaking_modal.ranked_with_friends")}
+          </button>
         </div>
       </div>
     `;

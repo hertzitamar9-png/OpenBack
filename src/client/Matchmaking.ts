@@ -12,6 +12,7 @@ import { modalHeader } from "./components/ui/ModalHeader";
 import { crazyGamesSDK } from "./CrazyGamesSDK";
 import { JoinLobbyEvent } from "./Main";
 import {
+  canQueueRankedFriendParty,
   rankedMatchmakingFlow,
   RankedTeamSize,
   shouldCreateRankedParty,
@@ -127,6 +128,7 @@ export class MatchmakingModal extends BaseModal {
   private renderPartyLobby() {
     const party = this.party!;
     const isLeader = party.leaderPublicId === this.myPublicId;
+    const canQueue = canQueueRankedFriendParty(party, this.myPublicId);
     return html`
       <div class="w-full max-w-2xl space-y-4">
         <div
@@ -190,7 +192,7 @@ export class MatchmakingModal extends BaseModal {
           variant="primary"
           size="lg"
           width="block"
-          .disable=${!isLeader || party.members.length !== party.teamSize}
+          .disable=${!canQueue}
           @click=${() => this.sendPartyMessage("party_queue")}
           .title=${isLeader
             ? party.members.length === party.teamSize
@@ -391,6 +393,13 @@ export class MatchmakingModal extends BaseModal {
   private sendPartyMessage(
     type: "party_create" | "party_join" | "party_queue",
   ): void {
+    if (
+      type === "party_queue" &&
+      !canQueueRankedFriendParty(this.party, this.myPublicId)
+    ) {
+      showToast(translateText("matchmaking_modal.error_party_not_full"), "red");
+      return;
+    }
     if (this.socket?.readyState !== WebSocket.OPEN) return;
     this.socket.send(
       JSON.stringify({

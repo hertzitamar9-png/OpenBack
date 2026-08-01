@@ -5,6 +5,7 @@ import type { Logger } from "winston";
 import { WebSocket, WebSocketServer } from "ws";
 import type { GameConfig } from "../core/Schemas";
 import {
+  areFriends,
   recordRankedResult,
   recordRankedTeamResult,
   resolveRankedPlayer,
@@ -64,6 +65,10 @@ export class MatchmakingService {
   constructor(
     private readonly log: Logger,
     private readonly createRankedConfig?: RankedConfigFactory,
+    private readonly arePlayersFriends: (
+      a: string,
+      b: string,
+    ) => boolean = areFriends,
   ) {}
 
   attach(server: http.Server): void {
@@ -213,6 +218,13 @@ export class MatchmakingService {
     }
     if (party.members.length >= party.teamSize) {
       this.send(player.ws, { type: "error", error: "party_full" });
+      return;
+    }
+    if (!this.arePlayersFriends(party.leaderPublicId, player.publicId)) {
+      this.send(player.ws, {
+        type: "error",
+        error: "party_friends_only",
+      });
       return;
     }
     this.removeByPublicId(player.publicId);

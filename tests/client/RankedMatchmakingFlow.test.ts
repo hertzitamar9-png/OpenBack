@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  canQueueRankedFriendParty,
   rankedMatchmakingFlow,
   shouldCreateRankedParty,
   shouldJoinRankedQueue,
@@ -42,5 +43,18 @@ describe("ranked matchmaking flow", () => {
 
     expect(flow.withFriends).toBe(false);
     expect(shouldJoinRankedQueue(flow)).toBe(true);
+  });
+
+  it("requires a complete friend party led by the current player", () => {
+    const party = {
+      teamSize: 2 as const,
+      leaderPublicId: "leader",
+      members: [{ publicId: "leader" }],
+    };
+
+    expect(canQueueRankedFriendParty(party, "leader")).toBe(false);
+    party.members.push({ publicId: "friend" });
+    expect(canQueueRankedFriendParty(party, "leader")).toBe(true);
+    expect(canQueueRankedFriendParty(party, "friend")).toBe(false);
   });
 });

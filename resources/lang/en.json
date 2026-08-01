@@ -1122,6 +1122,7 @@
     "error_invalid_party_code": "Enter a valid party code.",
     "error_invalid_team_size": "That team size is not supported.",
     "error_party_already_queued": "That party is already searching.",
+    "error_party_friends_only": "Only confirmed friends can join this ranked party.",
     "error_party_full": "That party is full.",
     "error_party_leader_only": "Only the party leader can start matchmaking.",
     "error_party_not_found": "Party not found.",

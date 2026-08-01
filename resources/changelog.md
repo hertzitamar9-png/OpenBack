@@ -1,3 +1,10 @@
+## OpenBack v0.33.77 - Reliable Ranked Friend Parties
+
+- Matched every Ranked team-choice button to OpenBack's standard sizing and visual style.
+- Prevented incomplete friend parties from entering matchmaking and limited party membership to confirmed friends.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.33.76 - Restart-Safe Player Data
 
 - Made accounts, Lifetime Access purchases, profiles, ranked progress, cosmetics, clans, friends, chats, and completed match history survive normal server restarts.
