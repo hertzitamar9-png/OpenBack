@@ -29,7 +29,12 @@ import { generateID, replacer } from "../../core/Util";
 import { getMapNationCount } from "../MapLandTiles";
 import { ServerEnv } from "../ServerEnv";
 import { requireDurableAuthStorage } from "./AuthPersistence";
-import { ensureKeys, getPrivateKey, getPublicJwk } from "./keys";
+import {
+  createPrivateJwk,
+  ensureKeys,
+  getPrivateKey,
+  getPublicJwk,
+} from "./keys";
 
 // ---------------------------------------------------------------------------
 // Self-contained auth for OpenBack. OpenFront's auth lives in a closed-source
@@ -192,7 +197,9 @@ const OWNER_INFINITE_GOLD_EMAIL = "hertzitamar9@gmail.com";
 // Parsed once at startup. Purchases validate item names/prices against this.
 const cosmetics = CosmeticsSchema.parse(cosmeticsJson);
 const databaseUrl = process.env.DATABASE_URL;
-requireDurableAuthStorage(ServerEnv.env(), databaseUrl);
+const ephemeralHostedRuntime =
+  process.env.RENDER === "true" || Boolean(process.env.RENDER_SERVICE_ID);
+requireDurableAuthStorage(ServerEnv.env(), databaseUrl, ephemeralHostedRuntime);
 const database = databaseUrl
   ? new Pool({
       connectionString: databaseUrl,
@@ -239,6 +246,40 @@ async function loadPersisted() {
           started_at BIGINT NOT NULL
         )
       `);
+      await database.query(`
+        CREATE TABLE IF NOT EXISTS openback_secrets (
+          key TEXT PRIMARY KEY,
+          value JSONB NOT NULL,
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `);
+      // Keep the signing identity stable across restarts so stored sessions can
+      // refresh tokens without every player being unexpectedly logged out.
+      if (!process.env.AUTH_PRIVATE_JWK) {
+        const storedKey = await database.query<{
+          value: Record<string, unknown>;
+        }>("SELECT value FROM openback_secrets WHERE key = 'auth_private_jwk'");
+        let privateJwk = storedKey.rows[0]?.value;
+        if (!privateJwk) {
+          const generated = await createPrivateJwk();
+          await database.query(
+            `INSERT INTO openback_secrets (key, value, updated_at)
+             VALUES ('auth_private_jwk', $1::jsonb, NOW())
+             ON CONFLICT (key) DO NOTHING`,
+            [JSON.stringify(generated)],
+          );
+          const selected = await database.query<{
+            value: Record<string, unknown>;
+          }>(
+            "SELECT value FROM openback_secrets WHERE key = 'auth_private_jwk'",
+          );
+          privateJwk = selected.rows[0]?.value;
+        }
+        if (!privateJwk) {
+          throw new Error("failed to initialize persistent auth signing key");
+        }
+        process.env.AUTH_PRIVATE_JWK = JSON.stringify(privateJwk);
+      }
       const result = await database.query<{ data: PersistShape }>(
         "SELECT data FROM openback_state WHERE id = 1",
       );
@@ -308,6 +349,12 @@ async function persistImmediately(): Promise<void> {
   await queuePersistedSnapshot();
 }
 const persistenceReady = loadPersisted();
+
+export async function closeAuthPersistence(): Promise<void> {
+  await persistenceReady;
+  await persistImmediately();
+  await database?.end();
+}
 
 // ---- Origin & Google config -----------------------------------------------
 export function authOrigin(): string {
@@ -1062,6 +1109,21 @@ export function authRouter(): express.Router {
       next();
     } catch {
       res.status(503).json({ error: "persistent_storage_unavailable" });
+    }
+  });
+
+  router.get("/auth/health", async (_req, res) => {
+    if (!database) {
+      res.json({ status: "ok", persistence: "development-file" });
+      return;
+    }
+    try {
+      await database.query("SELECT 1");
+      await ensureKeys();
+      res.json({ status: "ok", persistence: "postgresql" });
+    } catch (error) {
+      console.error("[auth] persistent storage health check failed", error);
+      res.status(503).json({ status: "unavailable" });
     }
   });
 

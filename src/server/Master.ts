@@ -20,10 +20,11 @@ import { renderAppShell } from "./RenderHtml";
 import { ServerEnv } from "./ServerEnv";
 import { SocialService } from "./SocialService";
 import { applyStaticAssetCacheControl } from "./StaticAssetCache";
-import { authRouter } from "./auth/AuthServer";
+import { authRouter, closeAuthPersistence } from "./auth/AuthServer";
 
 const playlist = new MapPlaylist();
 let lobbyService: MasterLobbyService;
+let masterStopping = false;
 
 const app = express();
 const server = http.createServer(app);
@@ -184,6 +185,7 @@ export async function startMaster() {
 
   // Handle worker crashes
   cluster.on("exit", (worker, code, signal) => {
+    if (masterStopping) return;
     const workerId = (worker as any).process?.env?.WORKER_ID;
     if (workerId === undefined) {
       log.error(`worker crashed could not find id`);
@@ -214,6 +216,16 @@ export async function startMaster() {
   server.listen(PORT, () => {
     log.info(`Master HTTP server listening on port ${PORT}`);
   });
+}
+
+export async function stopMaster(): Promise<void> {
+  if (masterStopping) return;
+  masterStopping = true;
+  server.close();
+  for (const worker of Object.values(cluster.workers ?? {})) {
+    worker?.kill("SIGTERM");
+  }
+  await closeAuthPersistence();
 }
 
 app.get("/api/health", (_req, res) => {

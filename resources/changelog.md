@@ -1,3 +1,11 @@
+## OpenBack v0.33.76 - Restart-Safe Player Data
+
+- Made accounts, Lifetime Access purchases, profiles, ranked progress, cosmetics, clans, friends, chats, and completed match history survive normal server restarts.
+- Kept sign-in sessions stable when OpenBack restarts.
+- Saves pending permanent player-data changes before planned maintenance.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.33.75 - Ranked Friend Parties
 
 - Fixed Ranked with Friends so it opens a real friend-party lobby instead of entering team matchmaking immediately.

@@ -6,6 +6,15 @@ import { exportJWK, generateKeyPair, importJWK, JWK } from "jose";
 let privateKey: CryptoKey | null = null;
 let publicJwk: JWK | null = null;
 
+export async function createPrivateJwk(): Promise<JWK> {
+  const keyPair = await generateKeyPair("EdDSA", {
+    crv: "Ed25519",
+    extractable: true,
+  });
+  const privateJwk = await exportJWK(keyPair.privateKey);
+  return { ...privateJwk, alg: "EdDSA" };
+}
+
 export async function ensureKeys(): Promise<void> {
   if (privateKey && publicJwk) return;
   const envJwk = process.env.AUTH_PRIVATE_JWK;
@@ -18,15 +27,11 @@ export async function ensureKeys(): Promise<void> {
     delete safePublicJwk.d;
     publicJwk = { ...safePublicJwk, alg: "EdDSA", use: "sig" };
   } else {
-    const kp = await generateKeyPair("EdDSA", {
-      crv: "Ed25519",
-      extractable: true,
-    });
-    const privJwk = await exportJWK(kp.privateKey);
-    privJwk.alg = "EdDSA";
-    const pubJwk = await exportJWK(kp.publicKey);
-    privateKey = kp.privateKey as CryptoKey;
-    publicJwk = { ...pubJwk, alg: "EdDSA", use: "sig" };
+    const generatedPrivateJwk = await createPrivateJwk();
+    privateKey = (await importJWK(generatedPrivateJwk, "EdDSA")) as CryptoKey;
+    const safePublicJwk = { ...generatedPrivateJwk };
+    delete safePublicJwk.d;
+    publicJwk = { ...safePublicJwk, alg: "EdDSA", use: "sig" };
     // Do not print private key material into hosting logs.
     console.log("[auth] Generated an ephemeral Ed25519 signing key");
   }

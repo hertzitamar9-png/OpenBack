@@ -2,6 +2,15 @@
 # Builds the existing multi-stage Dockerfile (nginx + supervisord + node server).
 # Production identity: the public game is served from openback.servegame.com.
 
+databases:
+  - name: openback-postgres
+    databaseName: openback
+    user: openback
+    # Free Render Postgres expires after 30 days and has no backups. Permanent
+    # player accounts and purchases require a persistent production plan.
+    plan: basic-256mb
+    ipAllowList: []
+
 services:
   - type: web
     name: openback
@@ -23,7 +32,11 @@ services:
       - key: SUBDOMAIN
         value: main
       - key: GAME_ENV
-        value: dev
+        value: prod
+      - key: DATABASE_URL
+        fromDatabase:
+          name: openback-postgres
+          property: connectionString
       - key: NUM_WORKERS
         value: "1"
       - key: API_KEY
@@ -36,5 +49,6 @@ services:
         value: https://openback.servegame.com
       - key: COSMETICS_BASE_URL
         sync: false
-    healthCheckPath: /
+    # Do not mark a deployment healthy until permanent storage is reachable.
+    healthCheckPath: /auth/health
     autoDeploy: true

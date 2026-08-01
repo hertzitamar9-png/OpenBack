@@ -9,6 +9,15 @@ describe("requireDurableAuthStorage", () => {
     ).not.toThrow();
   });
 
+  test("rejects temporary storage on a hosted runtime even when mislabeled dev", () => {
+    expect(() =>
+      requireDurableAuthStorage(GameEnv.Dev, undefined, true),
+    ).toThrow(/DATABASE_URL is required/);
+    expect(() =>
+      requireDurableAuthStorage(GameEnv.Dev, "postgresql://db/openback", true),
+    ).not.toThrow();
+  });
+
   test.each([GameEnv.Preprod, GameEnv.Prod])(
     "rejects ephemeral storage in deployed environment %s",
     (gameEnv) => {
