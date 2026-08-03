@@ -39,11 +39,12 @@ export async function createGameRunner(
   mapLoader: GameMapLoader,
   callBack: (gu: GameUpdateViewData | ErrorUpdate) => void,
 ): Promise<GameRunner> {
-  const config = new Config(gameStart.config, null, false);
+  const config = new Config(gameStart.config, null, false, gameStart.listed);
   const gameMap = await loadGameMap(
     gameStart.config.gameMap,
     gameStart.config.gameMapSize,
     mapLoader,
+    false, // Worker never renders layers — skip image loading to save memory.
   );
   const random = new PseudoRandom(simpleHash(gameStart.gameID));
 
@@ -56,6 +57,7 @@ export async function createGameRunner(
       p.isLobbyCreator ?? false,
       p.clanTag,
       p.friends ?? [],
+      p.teamIndex ?? null,
       p.controllerClientIDs ?? [p.clientID],
       p.selectedTeam ?? null,
     );
@@ -80,7 +82,12 @@ export async function createGameRunner(
 
   const gr = new GameRunner(
     game,
-    new Executor(game, gameStart.gameID, clientID),
+    new Executor(
+      game,
+      gameStart.gameID,
+      clientID,
+      gameStart.tribes?.map((t) => t.name),
+    ),
     callBack,
     simpleHash(gameStart.gameID),
   );
@@ -155,9 +162,6 @@ export class GameRunner {
     );
     this.currTurn++;
 
-    // Executed turns are never read again by the simulation. Compact the
-    // consumed prefix periodically so an indefinitely-running multiplayer
-    // match does not retain hours of empty turn objects in every browser.
     if (this.currTurn >= GameRunner.TURN_COMPACTION_THRESHOLD) {
       this.turns.splice(0, this.currTurn);
       this.currTurn = 0;
@@ -218,6 +222,9 @@ export class GameRunner {
     const packedMotionPlans = this.game.drainPackedMotionPlans();
     const packedPlayerUpdates = this.game.drainPackedPlayerUpdates();
     const packedAttackUpdates = this.game.drainPackedAttackUpdates();
+    const nukeImpactTiles = this.game.drainNukeImpacts();
+    const packedNukeImpacts =
+      nukeImpactTiles.length > 0 ? new Uint32Array(nukeImpactTiles) : undefined;
 
     this.callBack({
       tick: this.game.ticks(),
@@ -225,6 +232,7 @@ export class GameRunner {
       ...(packedMotionPlans ? { packedMotionPlans } : {}),
       ...(packedPlayerUpdates ? { packedPlayerUpdates } : {}),
       ...(packedAttackUpdates ? { packedAttackUpdates } : {}),
+      ...(packedNukeImpacts ? { packedNukeImpacts } : {}),
       updates: updates,
       ...(viewDataChanged ? { playerNameViewData: this.playerViewData } : {}),
       tickExecutionDuration: tickExecutionDuration,
@@ -297,7 +305,9 @@ export class GameRunner {
       throw new Error(`player with id ${playerID} not found`);
     }
     return {
-      borderTiles: player.borderTiles(),
+      // Copy into a plain Set: this result crosses the worker boundary via
+      // structured clone, which TileSet does not survive.
+      borderTiles: new Set(player.borderTiles()),
     } as PlayerBorderTiles;
   }
 

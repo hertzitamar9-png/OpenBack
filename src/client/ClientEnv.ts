@@ -117,6 +117,10 @@ export class ClientEnv {
   static workerPath(gameID: GameID): string {
     return `w${ClientEnv.workerIndex(gameID)}`;
   }
+  static serverWsBase(): string {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    return `${protocol}//${window.location.host}`;
+  }
 }
 /**
  * Values that flow from server → client via index.html. Set on the server from
@@ -133,4 +137,14 @@ export interface ClientEnvValues {
   instanceId: string;
   gitCommit: string;
   shareOrigin: string;
+}
+
+export function deriveServerWsBase(
+  serverHost: string | undefined,
+  locationProtocol: string,
+  locationHost: string,
+): string {
+  if (serverHost) return `wss://${serverHost}`;
+  const protocol = locationProtocol === "https:" ? "wss:" : "ws:";
+  return `${protocol}//${locationHost}`;
 }

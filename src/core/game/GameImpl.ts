@@ -119,6 +119,8 @@ export class GameImpl implements Game {
   private _waterManager: WaterManager;
   private _sharedWaterCache: SharedWaterCache;
   private _teamGameSpawnAreas: TeamGameSpawnAreas | undefined;
+  /** Tiles affected by nuke blasts this tick, consumed by rendering/effects. */
+  private _nukeImpactQueue: TileRef[] = [];
 
   constructor(
     private _humans: PlayerInfo[],
@@ -297,8 +299,34 @@ export class GameImpl implements Game {
     return this._unitMap.get(id);
   }
 
-  units(...types: UnitType[]): Unit[] {
-    return Array.from(this._players.values()).flatMap((p) => p.units(...types));
+  queueNukeImpact(tile: TileRef): void {
+    this._nukeImpactQueue.push(tile);
+  }
+
+  drainNukeImpacts(): TileRef[] {
+    const tiles = this._nukeImpactQueue;
+    this._nukeImpactQueue = [];
+    return tiles;
+  }
+
+  units(): Unit[];
+  units(types: readonly UnitType[]): Unit[];
+  units(type: UnitType, type2?: UnitType, type3?: UnitType): Unit[];
+  units(
+    first?: UnitType | readonly UnitType[],
+    second?: UnitType,
+    third?: UnitType,
+  ): Unit[] {
+    const out: Unit[] = [];
+    for (const player of this._players.values()) {
+      const units = Array.isArray(first)
+        ? player.units(first)
+        : first === undefined
+          ? player.units()
+          : player.units(first as UnitType, second, third);
+      out.push(...units);
+    }
+    return out;
   }
 
   unitCount(type: UnitType): number {
@@ -698,6 +726,9 @@ export class GameImpl implements Game {
     if (!this.isLand(tile)) {
       throw Error(`cannot conquer water`);
     }
+    if (this.isImpassable(tile)) {
+      throw Error(`cannot conquer impassable terrain`);
+    }
     const previousOwnerID = this.mapState[tile] & GameImpl.OWNER_MASK;
     if (previousOwnerID !== 0) {
       const previousOwner = this._playersBySmallID[
@@ -874,7 +905,10 @@ export class GameImpl implements Game {
     });
   }
 
-  setWinner(winner: Player | Team, allPlayersStats: AllPlayersStats): void {
+  setWinner(
+    winner: Player | Team | null,
+    allPlayersStats: AllPlayersStats,
+  ): void {
     this._winner = winner;
     // OFM: snapshot final tiles for standings (bots skipped in recordFinalTiles).
     for (const player of this.players()) {
@@ -882,7 +916,7 @@ export class GameImpl implements Game {
     }
     this.addUpdate({
       type: GameUpdateType.Win,
-      winner: this.makeWinner(winner),
+      winner: winner === null ? undefined : this.makeWinner(winner),
       allPlayersStats,
     });
   }
@@ -1104,6 +1138,9 @@ export class GameImpl implements Game {
   isLand(ref: TileRef): boolean {
     return this._map.isLand(ref);
   }
+  isImpassable(ref: TileRef): boolean {
+    return this._map.isImpassable(ref);
+  }
   isOceanShore(ref: TileRef): boolean {
     return this._map.isOceanShore(ref);
   }
@@ -1232,6 +1269,9 @@ export class GameImpl implements Game {
   hasWaterComponent(tile: TileRef, component: number): boolean {
     return this._waterManager.hasWaterComponent(tile, component);
   }
+  getWaterComponentSize(tile: TileRef): number | null {
+    return this._waterManager.getWaterComponentSize(tile);
+  }
   sharedWaterComponents(player: Player): Set<number> | null {
     return this._sharedWaterCache.get(player);
   }
@@ -1291,6 +1331,13 @@ export class GameImpl implements Game {
 
     // OFM: per-kill log for standings (humans-only filtered in recordKill).
     this.stats().recordKill(conqueror, conquered, this.ticks());
+    this.stats().recordKilledBy(conquered, conqueror.clientID());
+    this.stats().recordDeathPosition(
+      conquered,
+      this.players().filter(
+        (player) => player !== conquered && player.type() !== PlayerType.Bot,
+      ).length + 1,
+    );
 
     this.addUpdate({
       type: GameUpdateType.ConquestEvent,

@@ -6,6 +6,7 @@ import { base64urlToUuid } from "../core/Base64";
 import { getApiBase, getAudience } from "./Api";
 import { ClientEnv } from "./ClientEnv";
 import { crazyGamesSDK } from "./CrazyGamesSDK";
+import { steamSDK } from "./SteamSDK";
 import { generateCryptoRandomUUID } from "./Utils";
 
 export type UserAuth = { jwt: string; claims: TokenPayload } | false;
@@ -134,6 +135,36 @@ export async function deleteAccount(): Promise<boolean> {
     return true;
   } catch (error) {
     console.error("Delete account failed", error);
+    return false;
+  }
+}
+
+// Link a Google account to the currently logged-in player. Unlike login this is
+// an authenticated request, so we fetch the Google authorize URL with the
+// Bearer token (a top-level navigation can't carry it) and then navigate to it.
+// Returns false if the user isn't logged in or the request fails.
+export async function linkGoogle(): Promise<boolean> {
+  const authHeader = await getAuthHeader();
+  if (authHeader === "") return false;
+  const redirectUri = encodeURIComponent(window.location.href);
+  try {
+    const response = await fetch(
+      `${getApiBase()}/auth/link/google?redirect_uri=${redirectUri}`,
+      {
+        headers: { Authorization: authHeader },
+        credentials: "include",
+      },
+    );
+    if (!response.ok) {
+      console.error("Failed to start Google link", response);
+      return false;
+    }
+    const { url } = await response.json();
+    if (typeof url !== "string") return false;
+    window.location.href = url;
+    return true;
+  } catch (e) {
+    console.error("Failed to start Google link", e);
     return false;
   }
 }
@@ -271,6 +302,14 @@ async function refreshJwt(): Promise<void> {
 }
 
 async function doRefreshJwt(): Promise<void> {
+  if (steamSDK.isOnSteam()) {
+    const ticket = await steamSDK.getTicket();
+    if (ticket) {
+      // On Steam, we exchange a Steam Web-API ticket for our session. No
+      // ticket (Steam unavailable) falls through to the guest flow below.
+      return doSteamLogin(ticket);
+    }
+  }
   if (crazyGamesSDK.isOnCrazyGames()) {
     const token = await crazyGamesSDK.getUserToken();
     if (token) {
@@ -327,6 +366,33 @@ async function doCrazyGamesLogin(token: string): Promise<void> {
     __jwt = jwt;
   } catch (e) {
     console.error("CrazyGames login failed", e);
+    __jwt = null;
+  }
+}
+
+// Exchange a Steam Web-API ticket for our session. Like CrazyGames, the
+// refresh cookie isn't usable from app://openfront (cross-site), so we
+// re-exchange a fresh ticket on expiry rather than hitting /auth/refresh.
+async function doSteamLogin(ticket: string): Promise<void> {
+  try {
+    console.log("Logging in with Steam");
+    const response = await fetch(getApiBase() + "/auth/steam", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ticket }),
+    });
+    if (response.status !== 200) {
+      console.error("Steam login failed", response);
+      __jwt = null;
+      return;
+    }
+    const json = await response.json();
+    const { jwt, expiresIn } = json;
+    __expiresAt = Date.now() + expiresIn * 1000;
+    console.log("Steam login succeeded");
+    __jwt = jwt;
+  } catch (e) {
+    console.error("Steam login failed", e);
     __jwt = null;
   }
 }

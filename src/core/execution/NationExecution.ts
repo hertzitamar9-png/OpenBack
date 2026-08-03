@@ -391,7 +391,11 @@ export class NationExecution implements Execution {
         continue;
       }
       const tile = this.mg.ref(x, y);
-      if (this.mg.isLand(tile) && !this.mg.hasOwner(tile)) {
+      if (
+        this.mg.isLand(tile) &&
+        !this.mg.hasOwner(tile) &&
+        !this.mg.isImpassable(tile)
+      ) {
         if (
           this.mg.terrainType(tile) === TerrainType.Mountain &&
           this.random.chance(2)

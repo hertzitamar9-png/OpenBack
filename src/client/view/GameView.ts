@@ -36,8 +36,10 @@ import { extractNukeTelegraphsFromIds } from "../render/frame/derive/NukeTelegra
 import { computePlayerStatus } from "../render/frame/derive/PlayerStatus";
 import { buildRelationMatrix } from "../render/frame/derive/RelationMatrix";
 import { RailroadCache } from "../render/frame/RailroadCache";
+import type { SpiralParams } from "../render/frame/SpiralTrails";
+import { SpiralTrails } from "../render/frame/SpiralTrails";
 import { TrailManager } from "../render/frame/TrailManager";
-import type { FrameData, NameEntry, TilePair } from "../render/types";
+import type { FrameData, NameEntry } from "../render/types";
 import { STRUCTURE_TYPES } from "../render/types";
 import { PlayerView } from "./PlayerView";
 import { UnitView } from "./UnitView";
@@ -101,14 +103,19 @@ export class GameView implements GameMap {
   private _teams = new Map<number, string>();
   private updatedTiles: TileRef[] = [];
   private updatedTerrainTiles: TileRef[] = [];
+  private nukeImpactTiles: TileRef[] = [];
+  private _unitsByOwner = new Map<number, UnitView[]>();
+  private _unitsByOwnerStale = true;
 
   // ── FrameData accumulators (renderer-bound state) ─────────────────────
   private trailManager!: TrailManager;
+  private spiralTrails!: SpiralTrails;
+  private readonly _trailIdsScratch: number[] = [];
   private railroadCache!: RailroadCache;
   /** Long-lived NameEntry map for the renderer's NamePass. */
   private _names = new Map<string, NameEntry>();
   /** Reusable scratch buffers for per-tick deltas. */
-  private readonly _changedTilesScratch: TilePair[] = [];
+  private readonly _changedTilesScratch: number[] = [];
   private readonly _trailUnitIds = new Set<number>();
   private readonly _visibleTrailUnitIds = new Set<number>();
   private readonly _incomingTransportUnitIds = new Set<number>();
@@ -205,6 +212,7 @@ export class GameView implements GameMap {
     const mapW = this._map.width();
     const mapH = this._map.height();
     this.trailManager = new TrailManager(mapW, mapH);
+    this.spiralTrails = new SpiralTrails(mapW);
     this.railroadCache = new RailroadCache(mapW, mapH);
 
     // Long-lived FrameData. Most fields are mutable references to long-lived
@@ -217,6 +225,7 @@ export class GameView implements GameMap {
       inSpawnPhase: true,
       tileState: this._map.tileStateBuffer(),
       trailState: this.trailManager.getTrailState(),
+      spiralRibbons: this.spiralTrails.getRibbons(),
       railroadState: this.railroadCache.railroadState,
       units: this._unitStates,
       players: this._playerStates,
@@ -306,6 +315,7 @@ export class GameView implements GameMap {
   }
 
   public update(gu: GameUpdateViewData) {
+    this._unitsByOwnerStale = true;
     if (this.toDelete.size > 0) this._unitsDirty = true;
     this.toDelete.forEach((id) => {
       if (this._statusNukeUnitIds.has(id)) this._statusDirty = true;
@@ -320,6 +330,9 @@ export class GameView implements GameMap {
     this.toDelete.clear();
 
     this.lastUpdate = gu;
+    this.nukeImpactTiles = gu.packedNukeImpacts
+      ? Array.from(gu.packedNukeImpacts)
+      : [];
 
     this.updatedTiles.length = 0;
     this.updatedTerrainTiles.length = 0;
@@ -632,10 +645,10 @@ export class GameView implements GameMap {
     }
 
     // Trail update: walk only locally visible trail units and stamp/decay.
-    this.trailManager.update(
-      this._unitStates as Map<number, import("../render/types").UnitState>,
-      this._visibleTrailUnitIds,
-    );
+    this._trailIdsScratch.length = 0;
+    for (const id of this._visibleTrailUnitIds) this._trailIdsScratch.push(id);
+    this.trailManager.update(this._unitStates, this._trailIdsScratch);
+    this.spiralTrails.update(this._unitStates, this._trailIdsScratch);
 
     // Fog of war: a unit is visible to the local player only when it sits on a
     // tile they own (mirrors FogPass.mine()). Own units are always visible even
@@ -661,13 +674,10 @@ export class GameView implements GameMap {
       state.visibleToLocal = visible;
     }
 
-    // Changed-tile delta refs (zero-copy: state field unused in live mode).
+    // Changed-tile delta refs reused by the renderer.
     const changedCount = this.updatedTiles.length;
     for (let i = 0; i < changedCount; i++) {
-      const existing = this._changedTilesScratch[i];
-      if (existing) existing.ref = this.updatedTiles[i];
-      else
-        this._changedTilesScratch.push({ ref: this.updatedTiles[i], state: 0 });
+      this._changedTilesScratch[i] = this.updatedTiles[i];
     }
     this._changedTilesScratch.length = changedCount;
 
@@ -836,6 +846,7 @@ export class GameView implements GameMap {
         unitType: u.unitType,
         pos: u.pos,
         reachedTarget: u.reachedTarget,
+        ownerSmallID: u.ownerID,
       });
     }
     const myID = this._myPlayer?.id();
@@ -913,6 +924,7 @@ export class GameView implements GameMap {
           unitType: UnitType.Shell,
           pos: this._map.ref(x, y),
           reachedTarget: true,
+          ownerSmallID: typeof event.ownerID === "number" ? event.ownerID : 0,
         });
       }
     }
@@ -921,6 +933,10 @@ export class GameView implements GameMap {
   /** Public accessor: the renderer reads this and uploads to the GPU. */
   frameData(): FrameData {
     return this._frame;
+  }
+
+  setNukeTrailSpiral(smallID: number, params: SpiralParams): void {
+    this.spiralTrails.setParams(smallID, params);
   }
 
   private advanceMotionPlannedUnits(currentTick: Tick): void {
@@ -1161,6 +1177,9 @@ export class GameView implements GameMap {
   recentlyUpdatedTerrainTiles(): TileRef[] {
     return this.updatedTerrainTiles;
   }
+  recentlyNukedTiles(): TileRef[] {
+    return this.nukeImpactTiles;
+  }
 
   nearbyUnits(
     tile: TileRef,
@@ -1231,6 +1250,21 @@ export class GameView implements GameMap {
 
   players(): PlayerView[] {
     return Array.from(this._players.values());
+  }
+
+  unitsOwnedBy(ownerSmallID: number): readonly UnitView[] {
+    if (this._unitsByOwnerStale) {
+      this._unitsByOwnerStale = false;
+      this._unitsByOwner.clear();
+      for (const unit of this._units.values()) {
+        if (!unit.isActive()) continue;
+        const owner = unit.state.ownerID;
+        const owned = this._unitsByOwner.get(owner);
+        if (owned) owned.push(unit);
+        else this._unitsByOwner.set(owner, [unit]);
+      }
+    }
+    return this._unitsByOwner.get(ownerSmallID) ?? [];
   }
 
   /**
@@ -1379,11 +1413,17 @@ export class GameView implements GameMap {
   numLandTiles(): number {
     return this._map.numLandTiles();
   }
+  layers(): import("../../core/game/TerrainMapLoader").MapLayer[] {
+    return this._mapData.layers ?? [];
+  }
   isValidCoord(x: number, y: number): boolean {
     return this._map.isValidCoord(x, y);
   }
   isLand(ref: TileRef): boolean {
     return this._map.isLand(ref);
+  }
+  isImpassable(ref: TileRef): boolean {
+    return this._map.isImpassable(ref);
   }
   isOceanShore(ref: TileRef): boolean {
     return this._map.isOceanShore(ref);

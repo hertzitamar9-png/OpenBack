@@ -1,33 +1,58 @@
-import { html, LitElement, nothing } from "lit";
-import { customElement, query, state } from "lit/decorators.js";
+import { html, LitElement, nothing, PropertyValues } from "lit";
+import { customElement, property, query, state } from "lit/decorators.js";
 import {
   PlayerLeaderboardEntry,
-  PlayerProfile,
+  RankedLeaderboardEntry,
 } from "../../../core/ApiSchemas";
 import { RankedType } from "../../../core/game/Game";
-import { fetchPlayerById, fetchPlayerLeaderboard, getUserMe } from "../../Api";
-import { blockPlayer, sendFriendRequest } from "../../FriendsApi";
-import { showToast, translateText } from "../../Utils";
+import { fetchPlayerLeaderboard, getUserMe } from "../../Api";
+import { translateText } from "../../Utils";
+import "../PlayerName";
+
+/** One ranked ladder's loaded rows. */
+interface LadderState {
+  entries: PlayerLeaderboardEntry[];
+  userEntry: PlayerLeaderboardEntry | null;
+  hasMore: boolean;
+}
+
+const RANKED_TYPES = Object.values(RankedType);
+
+const emptyLadders = (): Record<RankedType, LadderState> => ({
+  [RankedType.OneVOne]: { entries: [], userEntry: null, hasMore: true },
+  [RankedType.TwoVTwo]: { entries: [], userEntry: null, hasMore: true },
+  [RankedType.ThreeVThree]: { entries: [], userEntry: null, hasMore: true },
+  [RankedType.FourVFour]: { entries: [], userEntry: null, hasMore: true },
+});
+
+const toPlayerEntry = (
+  entry: RankedLeaderboardEntry,
+): PlayerLeaderboardEntry => ({
+  rank: entry.rank,
+  playerId: entry.public_id,
+  accountUsername: entry.accountUsername,
+  elo: entry.elo,
+  games: entry.total,
+  wins: entry.wins,
+  losses: entry.losses,
+  winRate: entry.total > 0 ? entry.wins / entry.total : 0,
+});
 
 @customElement("leaderboard-player-list")
 export class LeaderboardPlayerList extends LitElement {
-  @state() private playerData: PlayerLeaderboardEntry[] = [];
-  @state() private currentUserEntry: PlayerLeaderboardEntry | null = null;
+  /**
+   * Which ladder to display. Each ranked type is ranked independently — the
+   * same player can hold a different elo and rank on each — but one request
+   * returns both, so the other ladder rides along and is kept for its own tab.
+   */
+  @property({ attribute: false }) rankedType: RankedType = RankedType.OneVOne;
+
+  @state() private ladders: Record<RankedType, LadderState> = emptyLadders();
   @state() private showStickyUser = false;
   @state() private isLoading = false;
   @state() private error: string | null = null;
   @state() private isLoadingMore = false;
   @state() private loadMoreError: string | null = null;
-  @state() private playerHasMore = true;
-  @state() private selectedProfile: PlayerProfile | null = null;
-  @state() private profileLoading = false;
-  @state() private contextMenu: {
-    publicId: string;
-    username: string;
-    x: number;
-    y: number;
-  } | null = null;
-  private friendRequestPending = false;
 
   private hasLoadedPlayers = false;
   private readonly playerPageSize = 50;
@@ -37,8 +62,40 @@ export class LeaderboardPlayerList extends LitElement {
 
   @query(".scroll-container") private scrollContainer?: HTMLElement;
 
+  private get playerData(): PlayerLeaderboardEntry[] {
+    return this.ladders[this.rankedType].entries;
+  }
+
+  private get currentUserEntry(): PlayerLeaderboardEntry | null {
+    return this.ladders[this.rankedType].userEntry;
+  }
+
+  private get playerHasMore(): boolean {
+    return this.ladders[this.rankedType].hasMore;
+  }
+
+  private mapLadders(
+    fn: (ladder: LadderState) => LadderState,
+  ): Record<RankedType, LadderState> {
+    const next = { ...this.ladders };
+    for (const rankedType of RANKED_TYPES) {
+      next[rankedType] = fn(this.ladders[rankedType]);
+    }
+    return next;
+  }
+
   createRenderRoot() {
     return this;
+  }
+
+  protected updated(changed: PropertyValues) {
+    if (changed.has("rankedType")) {
+      // The ladders are separate lists sharing one scroll container: show the
+      // newly selected one from its top rather than the other one's offset.
+      if (this.scrollContainer) this.scrollContainer.scrollTop = 0;
+      this.scheduleStickyVisibilityCheck();
+      this.schedulePlayerFillCheck();
+    }
   }
 
   public async ensureLoaded() {
@@ -49,10 +106,8 @@ export class LeaderboardPlayerList extends LitElement {
   public async loadPlayerLeaderboard(reset = false) {
     if (reset) {
       this.currentPage = 1;
-      this.playerHasMore = true;
       this.loadMoreError = null;
-      this.playerData = [];
-      this.currentUserEntry = null;
+      this.ladders = emptyLadders();
       this.showStickyUser = false;
     } else if (!this.playerHasMore) {
       return;
@@ -75,45 +130,14 @@ export class LeaderboardPlayerList extends LitElement {
         throw new Error("Failed to load player leaderboard");
       }
 
+      // Past the last page. Not an error: stop paging, leave the footer clear.
       if (result === "reached_limit") {
-        this.playerHasMore = false;
+        this.ladders = this.mapLadders((ladder) => ({
+          ...ladder,
+          hasMore: false,
+        }));
         this.hasLoadedPlayers = true;
         return;
-      }
-
-      const nextPlayers: PlayerLeaderboardEntry[] = result[
-        RankedType.OneVOne
-      ].map((entry) => ({
-        rank: entry.rank,
-        playerId: entry.public_id,
-        username: entry.username,
-        clanTag: entry.clanTag ?? undefined,
-        elo: entry.elo,
-        games: entry.total,
-        wins: entry.wins,
-        losses: entry.losses,
-        winRate: entry.total > 0 ? entry.wins / entry.total : 0,
-      }));
-
-      const receivedCount = nextPlayers.length;
-      if (reset) {
-        this.playerData = nextPlayers;
-      } else {
-        const existingIds = new Set(
-          this.playerData.map((player) => player.playerId),
-        );
-        const deduped = nextPlayers.filter(
-          (player) => !existingIds.has(player.playerId),
-        );
-        this.playerData = [...this.playerData, ...deduped];
-      }
-
-      if (receivedCount > 0) {
-        this.currentPage++;
-      }
-
-      if (receivedCount < this.playerPageSize) {
-        this.playerHasMore = false;
       }
 
       if (reset && !this.currentUserIdLoaded) {
@@ -122,11 +146,43 @@ export class LeaderboardPlayerList extends LitElement {
         this.currentUserId = userMe ? userMe.player.publicId : null;
       }
 
-      if (this.currentUserId && !this.currentUserEntry) {
-        this.currentUserEntry =
-          nextPlayers.find(
-            (player) => player.playerId === this.currentUserId,
-          ) ?? null;
+      // One page carries a slice of every ladder, so fold them all in — even
+      // the ones whose tab isn't showing.
+      let receivedAny = false;
+      const nextLadders = { ...this.ladders };
+      for (const rankedType of RANKED_TYPES) {
+        const ladder = this.ladders[rankedType];
+        const nextPlayers = (result[rankedType] ?? []).map(toPlayerEntry);
+        if (nextPlayers.length > 0) receivedAny = true;
+
+        const existingIds = new Set(
+          ladder.entries.map((player) => player.playerId),
+        );
+        nextLadders[rankedType] = {
+          entries: [
+            ...ladder.entries,
+            ...nextPlayers.filter(
+              (player) => !existingIds.has(player.playerId),
+            ),
+          ],
+          // Ranks differ per ladder, so the pinned "your ranking" row is
+          // whichever row this ladder gave the signed-in player.
+          userEntry:
+            ladder.userEntry ??
+            nextPlayers.find(
+              (player) => player.playerId === this.currentUserId,
+            ) ??
+            null,
+          // A short page ends that ladder. The ladders run out at different
+          // pages — the 2v2 board is younger and has no backfill — so this is
+          // tracked per ladder rather than off the 1v1 page size.
+          hasMore: ladder.hasMore && nextPlayers.length >= this.playerPageSize,
+        };
+      }
+      this.ladders = nextLadders;
+
+      if (receivedAny) {
+        this.currentPage++;
       }
 
       this.hasLoadedPlayers = true;
@@ -151,6 +207,16 @@ export class LeaderboardPlayerList extends LitElement {
   public handleTabActivated() {
     this.scheduleStickyVisibilityCheck();
     this.schedulePlayerFillCheck();
+  }
+
+  // Same handoff as the clan views: the profile modal's back button reopens
+  // the leaderboard (its loaded pages survive the close).
+  private openProfile(publicId: string) {
+    document
+      .querySelector<
+        HTMLElement & { openFromLeaderboard(publicId: string): void }
+      >("player-profile-modal")
+      ?.openFromLeaderboard(publicId);
   }
 
   // TODO: consider IntersectionObserver for better visibility detection?
@@ -220,6 +286,61 @@ export class LeaderboardPlayerList extends LitElement {
     void this.updateComplete.then(() => this.maybeLoadMorePlayers());
   }
 
+  // The pinned "your ranking" row lives in the table's own <tfoot> rather than
+  // in an overlay. `table-fixed w-full` stretches the colgroup widths to fill
+  // the container, so the resolved widths depend on the modal size and cannot
+  // be reproduced by a separate element; and below 34rem the table scrolls
+  // horizontally, which an overlay outside .scroll-container would not follow.
+  private renderStickyUserRow() {
+    if (!this.currentUserEntry || !this.showStickyUser) return nothing;
+    const entry = this.currentUserEntry;
+
+    return html`
+      <tfoot class="sticky bottom-0 z-20">
+        <tr class="bg-blue-600 border-t border-blue-400/30 shadow-2xl">
+          <td class="py-3 px-4 text-center">
+            <div
+              class="w-10 h-10 mx-auto flex items-center justify-center rounded-lg font-bold font-mono text-lg bg-white/20 text-white"
+            >
+              ${entry.rank}
+            </div>
+          </td>
+          <td class="py-3 px-4">
+            <div class="flex flex-col">
+              <span
+                class="text-[10px] uppercase font-bold text-blue-200/80 leading-tight"
+                >${translateText("leaderboard_modal.your_ranking")}</span
+              >
+              <player-name
+                .username=${entry.accountUsername}
+                .publicId=${entry.playerId}
+                .nameClass=${"font-bold text-white truncate text-base hover:underline"}
+                .onNameClick=${() => this.openProfile(entry.playerId)}
+              ></player-name>
+            </div>
+          </td>
+          <td class="py-3 px-4 text-right">
+            <span class="font-mono text-white font-bold">${entry.elo}</span>
+          </td>
+          <td class="py-3 px-4 text-right">
+            <span class="font-mono text-white font-bold">${entry.games}</span>
+          </td>
+          <td class="py-3 px-4 text-right pr-6">
+            <div class="inline-flex flex-col items-end">
+              <span class="font-mono font-bold text-white"
+                >${(entry.winRate * 100).toFixed(1)}%</span
+              >
+              <span
+                class="text-[10px] uppercase text-blue-200/80 font-bold tracking-wider"
+                >${translateText("leaderboard_modal.ratio")}</span
+              >
+            </div>
+          </td>
+        </tr>
+      </tfoot>
+    `;
+  }
+
   private renderPlayerRow(player: PlayerLeaderboardEntry) {
     const isCurrentUser = this.currentUserEntry?.playerId === player.playerId;
     const displayRank = player.rank;
@@ -241,14 +362,9 @@ export class LeaderboardPlayerList extends LitElement {
     return html`
       <tr
         data-current-user=${isCurrentUser ? "true" : "false"}
-        class="cursor-pointer border-b border-white/5 hover:bg-white/[0.07] transition-colors group ${isCurrentUser
+        class="border-b border-white/5 hover:bg-white/[0.07] transition-colors group ${isCurrentUser
           ? "bg-blue-500/15"
           : ""}"
-        @click=${() => this.openPlayerProfile(player.playerId)}
-        @dblclick=${(event: MouseEvent) =>
-          void this.sendFriendRequestForPlayer(event, player)}
-        @contextmenu=${(event: MouseEvent) =>
-          this.openFriendMenu(event, player)}
       >
         <td class="py-3 px-4 text-center">
           <div
@@ -259,16 +375,12 @@ export class LeaderboardPlayerList extends LitElement {
         </td>
         <td class="py-3 px-4">
           <div class="flex items-center gap-2">
-            ${player.clanTag
-              ? html`<div
-                  class="px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-[10px] font-bold text-blue-300 shrink-0"
-                >
-                  ${player.clanTag}
-                </div>`
-              : ""}
-            <span class="font-bold text-blue-300 truncate text-base"
-              >${player.username}</span
-            >
+            <player-name
+              .username=${player.accountUsername}
+              .publicId=${player.playerId}
+              .nameClass=${"font-bold text-blue-300 truncate text-base hover:underline"}
+              .onNameClick=${() => this.openProfile(player.playerId)}
+            ></player-name>
           </div>
         </td>
         <td class="py-3 px-4 text-right">
@@ -292,183 +404,6 @@ export class LeaderboardPlayerList extends LitElement {
           </div>
         </td>
       </tr>
-    `;
-  }
-
-  private openFriendMenu(
-    event: MouseEvent,
-    player: PlayerLeaderboardEntry,
-  ): void {
-    event.preventDefault();
-    event.stopPropagation();
-    if (player.playerId === this.currentUserId) return;
-    this.contextMenu = {
-      publicId: player.playerId,
-      username: player.username,
-      x: Math.min(event.clientX, window.innerWidth - 228),
-      y: Math.min(event.clientY, window.innerHeight - 62),
-    };
-  }
-
-  private async sendContextFriendRequest(): Promise<void> {
-    const target = this.contextMenu;
-    this.contextMenu = null;
-    if (!target || this.friendRequestPending) return;
-    this.friendRequestPending = true;
-    try {
-      const result = await sendFriendRequest(target.publicId);
-      if (typeof result === "string") {
-        const key =
-          result === "not_found"
-            ? "friends.error_not_found"
-            : result === "conflict"
-              ? "friends.error_conflict"
-              : result === "bad_request"
-                ? "friends.error_bad_request"
-                : "friends.error_generic";
-        showToast(translateText(key), "red");
-        return;
-      }
-      showToast(
-        translateText(
-          result.status === "accepted"
-            ? "friends.request_auto_accepted"
-            : "friends.request_sent",
-        ),
-        "green",
-      );
-    } finally {
-      this.friendRequestPending = false;
-    }
-  }
-
-  private async sendFriendRequestForPlayer(
-    event: MouseEvent,
-    player: PlayerLeaderboardEntry,
-  ): Promise<void> {
-    event.preventDefault();
-    event.stopPropagation();
-    if (player.playerId === this.currentUserId) return;
-    this.contextMenu = {
-      publicId: player.playerId,
-      username: player.username,
-      x: event.clientX,
-      y: event.clientY,
-    };
-    await this.sendContextFriendRequest();
-  }
-
-  private async openPlayerProfile(publicId: string) {
-    this.profileLoading = true;
-    this.selectedProfile = null;
-    const profile = await fetchPlayerById(publicId);
-    this.profileLoading = false;
-    if (profile) this.selectedProfile = profile;
-  }
-
-  private async blockSelectedProfile(): Promise<void> {
-    const id = this.selectedProfile?.publicId;
-    if (!id) return;
-    const result = await blockPlayer(id);
-    showToast(
-      translateText(
-        result === true ? "friends.player_blocked" : "friends.error_generic",
-      ),
-      result === true ? "green" : "red",
-    );
-    if (result === true) this.selectedProfile = null;
-  }
-
-  private renderProfileCard() {
-    if (!this.profileLoading && !this.selectedProfile) return nothing;
-    const profile = this.selectedProfile;
-    return html`
-      <div
-        class="absolute inset-0 z-40 flex items-center justify-center bg-[#07101d] p-5"
-      >
-        ${this.profileLoading
-          ? this.renderLoading()
-          : html`<article
-              class="w-full max-w-xl overflow-hidden rounded-2xl border border-white/15 bg-[#0b111d] shadow-2xl"
-            >
-              <div
-                class="min-h-44 bg-gradient-to-br from-black/5 to-black/60 p-7"
-                style=${`background-color:${profile?.bannerColor ?? "#1689d8"}`}
-              >
-                <div class="flex min-h-28 items-end justify-between gap-5">
-                  <div class="min-w-0">
-                    <div
-                      class="text-xs font-black uppercase tracking-widest text-white/60"
-                    >
-                      ${translateText("account_modal.public_profile")}
-                    </div>
-                    <h2
-                      class="truncate text-3xl font-black text-white drop-shadow"
-                    >
-                      ${profile?.displayName}
-                    </h2>
-                    ${profile?.clanTag
-                      ? html`<span
-                          class="mt-2 inline-block rounded border border-white/30 bg-black/20 px-2 py-1 text-xs font-black text-white"
-                        >
-                          ${profile.clanTag}
-                        </span>`
-                      : ""}
-                  </div>
-                  <div class="text-right text-sm font-black text-white">
-                    ${profile?.elo !== undefined
-                      ? html`<div>${profile.elo} OB</div>`
-                      : ""}
-                    ${profile?.rank !== undefined
-                      ? html`<div>#${profile.rank}</div>`
-                      : ""}
-                    ${profile?.selectedFlag
-                      ? html`<div class="mt-1 text-xs text-white/70">
-                          ${profile.selectedFlag}
-                        </div>`
-                      : ""}
-                  </div>
-                </div>
-              </div>
-              <div class="p-7">
-                <p class="min-h-12 text-sm leading-6 text-white/70">
-                  ${profile?.bio ??
-                  translateText("account_modal.no_public_description")}
-                </p>
-                ${profile?.selectedCosmetic
-                  ? html`<div class="mt-4 text-xs font-bold text-white/40">
-                      ${translateText(
-                        "account_modal.profile_cosmetic_preview",
-                        {
-                          cosmetic: profile.selectedCosmetic,
-                        },
-                      )}
-                    </div>`
-                  : ""}
-                <div
-                  class="mt-6 flex items-center justify-between gap-4 border-t border-white/10 pt-5"
-                >
-                  <span class="truncate font-mono text-xs text-white/35">
-                    ${profile?.publicId}
-                  </span>
-                  ${profile?.publicId && profile.publicId !== this.currentUserId
-                    ? html`<button
-                        class="rounded-lg border border-red-500/25 bg-red-950/30 px-5 py-2 text-xs font-black uppercase tracking-wider text-red-300 transition hover:bg-red-900/40"
-                        @click=${() => void this.blockSelectedProfile()}
-                      >
-                        ${translateText("friends.block")}
-                      </button>`
-                    : ""}
-                  <button
-                    class="rounded-lg border border-white/15 bg-white/5 px-5 py-2 text-xs font-black uppercase tracking-wider text-white transition hover:bg-white/10"
-                    @click=${() => (this.selectedProfile = null)}
-                  >
-                    ${translateText("common.close")}
-                  </button>
-                </div>
-              </div>
-            </article>`}
-      </div>
     `;
   }
 
@@ -553,19 +488,58 @@ export class LeaderboardPlayerList extends LitElement {
     `;
   }
 
+  // An empty ladder is a normal state, not an error: a ranked type that has
+  // just launched starts with no rows and fills as games are played.
+  private renderNoData() {
+    return html`
+      <div
+        class="flex flex-col items-center justify-center p-12 text-white/40 h-full"
+      >
+        <div class="bg-white/5 p-6 rounded-full mb-6 border border-white/5">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-16 w-16 text-white/20"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1"
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+            />
+          </svg>
+        </div>
+        <h3 class="text-xl font-bold text-white/60 mb-2">
+          ${translateText("leaderboard_modal.no_data_yet")}
+        </h3>
+        <p class="text-white/30 text-sm">
+          ${translateText("leaderboard_modal.ranked_no_stats")}
+        </p>
+      </div>
+    `;
+  }
+
   render() {
     if (this.isLoading && this.playerData.length === 0)
       return this.renderLoading();
     if (this.error) return this.renderError();
+    if (this.hasLoadedPlayers && this.playerData.length === 0)
+      return this.renderNoData();
 
     return html`
       <div class="h-full">
-        <div class="h-full border border-white/5 bg-black/20 relative">
+        <!--
+          No bottom border: the pinned "your ranking" row sits flush against
+          this edge, and a dark hairline under a saturated blue row reads as a
+          stray outline. The rows above it end on their own border-b.
+        -->
+        <div
+          class="h-full border-x border-t border-white/5 bg-black/20 relative"
+        >
           <div
-            class="scroll-container h-full overflow-y-auto overflow-x-auto scrollbar-thin scrollbar-thumb-white/20 ${this
-              .showStickyUser
-              ? "pb-20"
-              : "pb-0"}"
+            class="scroll-container h-full overflow-y-auto overflow-x-auto scrollbar-thin scrollbar-thumb-white/20"
             @scroll=${() => this.handleScroll()}
           >
             <table class="w-full text-sm border-collapse table-fixed">
@@ -600,83 +574,10 @@ export class LeaderboardPlayerList extends LitElement {
               <tbody>
                 ${this.playerData.map((player) => this.renderPlayerRow(player))}
               </tbody>
+              ${this.renderStickyUserRow()}
             </table>
             ${this.renderPlayerFooter()}
           </div>
-          ${this.currentUserEntry
-            ? html`
-                <div class="absolute inset-x-0 bottom-0 z-20">
-                  <div
-                    class="bg-blue-600/90 backdrop-blur-md border-t border-blue-400/30 py-4 px-6 shadow-2xl flex items-center transition-all duration-200 ${this
-                      .showStickyUser
-                      ? "opacity-100 translate-y-0"
-                      : "opacity-0 translate-y-3 pointer-events-none"}"
-                    aria-hidden=${this.showStickyUser ? nothing : "true"}
-                  >
-                    <div class="w-10 text-center">
-                      <div
-                        class="w-10 h-10 mx-auto flex items-center justify-center rounded-lg font-bold font-mono text-lg bg-white/20 text-white"
-                      >
-                        ${this.currentUserEntry.rank}
-                      </div>
-                    </div>
-                    <div class="flex-1 flex flex-col ml-4">
-                      <span
-                        class="text-[10px] uppercase font-bold text-blue-200/60 leading-tight"
-                        >${translateText(
-                          "leaderboard_modal.your_ranking",
-                        )}</span
-                      >
-                      <div class="flex items-center gap-2">
-                        ${this.currentUserEntry.clanTag
-                          ? html`<div
-                              class="px-2 py-0.5 rounded bg-blue-500/10 border border-blue-300/40 text-[10px] font-bold text-blue-100 shrink-0"
-                            >
-                              ${this.currentUserEntry.clanTag}
-                            </div>`
-                          : ""}
-                        <span class="font-bold text-white text-base"
-                          >${this.currentUserEntry.username}</span
-                        >
-                      </div>
-                    </div>
-                    <div class="flex flex-col items-end w-20">
-                      <div class="font-mono text-white font-bold text-lg">
-                        ${this.currentUserEntry.elo}
-                        <span class="text-[10px] text-white/60"
-                          >${translateText("leaderboard_modal.elo")}</span
-                        >
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              `
-            : ""}
-          ${this.renderProfileCard()}
-          ${this.contextMenu
-            ? html`
-                <div
-                  class="fixed inset-0 z-[10020]"
-                  @pointerdown=${() => (this.contextMenu = null)}
-                  @contextmenu=${(event: Event) => {
-                    event.preventDefault();
-                    this.contextMenu = null;
-                  }}
-                >
-                  <button
-                    class="fixed min-w-[220px] rounded-lg border border-cyan-500/50 bg-slate-950 px-4 py-3 text-left font-bold text-white shadow-2xl hover:bg-slate-800"
-                    style="left:${this.contextMenu.x}px; top:${this.contextMenu
-                      .y}px"
-                    @pointerdown=${(event: Event) => event.stopPropagation()}
-                    @click=${() => void this.sendContextFriendRequest()}
-                  >
-                    ${translateText("friends.send_to_player", {
-                      player: this.contextMenu.username,
-                    })}
-                  </button>
-                </div>
-              `
-            : ""}
         </div>
       </div>
     `;

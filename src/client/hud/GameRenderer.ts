@@ -5,6 +5,7 @@ import { AttackingTroopsController } from "../controllers/AttackingTroopsControl
 import { BuildPreviewController } from "../controllers/BuildPreviewController";
 import { HoverHighlightController } from "../controllers/HoverHighlightController";
 import { LiveStatsController } from "../controllers/LiveStatsController";
+import { MapLayerController } from "../controllers/MapLayerController";
 import { SoundEffectController } from "../controllers/SoundEffectController";
 import { StructureHighlightController } from "../controllers/StructureHighlightController";
 import { ViewModeController } from "../controllers/ViewModeController";
@@ -14,6 +15,7 @@ import { MapRenderer } from "../render/gl";
 import { TransformHandler } from "../TransformHandler";
 import { UIState } from "../UIState";
 import { GameView } from "../view";
+import { FrameProfiler } from "./FrameProfiler";
 import { ActionableEvents } from "./layers/ActionableEvents";
 import { AlertFrame } from "./layers/AlertFrame";
 import { AttacksDisplay } from "./layers/AttacksDisplay";
@@ -29,15 +31,15 @@ import { GraphicsSettingsModal } from "./layers/GraphicsSettingsModal";
 import { HeadsUpMessage } from "./layers/HeadsUpMessage";
 import { ImmunityTimer } from "./layers/ImmunityTimer";
 import { InGamePromo } from "./layers/InGamePromo";
-import { Leaderboard } from "./layers/Leaderboard";
 import { MainRadialMenu } from "./layers/MainRadialMenu";
 import { MultiTabModal } from "./layers/MultiTabModal";
+import { NewLobbyPrompt } from "./layers/NewLobbyPrompt";
+import { PerformanceOverlay } from "./layers/PerformanceOverlay";
 import { PlayerInfoOverlay } from "./layers/PlayerInfoOverlay";
 import { PlayerPanel } from "./layers/PlayerPanel";
 import { ReplayPanel } from "./layers/ReplayPanel";
 import { SettingsModal } from "./layers/SettingsModal";
 import { SpawnTimer } from "./layers/SpawnTimer";
-import { TeamStats } from "./layers/TeamStats";
 import { UnitDisplay } from "./layers/UnitDisplay";
 import { WinModal } from "./layers/WinModal";
 import { loadAllSprites } from "./SpriteLoader";
@@ -48,6 +50,7 @@ export function createRenderer(
   eventBus: EventBus,
   playerRole: string | null,
   view: MapRenderer,
+  mapLayerController?: MapLayerController,
 ): GameRenderer {
   const transformHandler = new TransformHandler(game, eventBus, inputEl);
   const userSettings = new UserSettings();
@@ -82,13 +85,6 @@ export function createRenderer(
   buildMenu.uiState = uiState;
   buildMenu.transformHandler = transformHandler;
 
-  const leaderboard = document.querySelector("leader-board") as Leaderboard;
-  if (!leaderboard || !(leaderboard instanceof Leaderboard)) {
-    console.error("LeaderBoard element not found in the DOM");
-  }
-  leaderboard.eventBus = eventBus;
-  leaderboard.game = game;
-
   const gameLeftSidebar = document.querySelector(
     "game-left-sidebar",
   ) as GameLeftSidebar;
@@ -97,13 +93,6 @@ export function createRenderer(
   }
   gameLeftSidebar.game = game;
   gameLeftSidebar.eventBus = eventBus;
-
-  const teamStats = document.querySelector("team-stats") as TeamStats;
-  if (!teamStats || !(teamStats instanceof TeamStats)) {
-    console.error("TeamStats element not found in the DOM");
-  }
-  teamStats.eventBus = eventBus;
-  teamStats.game = game;
 
   const controlPanel = document.querySelector("control-panel") as ControlPanel;
   if (!(controlPanel instanceof ControlPanel)) {
@@ -167,6 +156,15 @@ export function createRenderer(
   winModal.eventBus = eventBus;
   winModal.game = game;
 
+  const newLobbyPrompt = document.querySelector(
+    "new-lobby-prompt",
+  ) as NewLobbyPrompt;
+  if (!(newLobbyPrompt instanceof NewLobbyPrompt)) {
+    console.error("new lobby prompt not found");
+  }
+  newLobbyPrompt.eventBus = eventBus;
+  newLobbyPrompt.game = game;
+
   const replayPanel = document.querySelector("replay-panel") as ReplayPanel;
   if (!(replayPanel instanceof ReplayPanel)) {
     console.error("replay panel not found");
@@ -200,6 +198,10 @@ export function createRenderer(
   }
   graphicsSettingsModal.userSettings = userSettings;
   graphicsSettingsModal.eventBus = eventBus;
+  graphicsSettingsModal.mapLayers = game.layers();
+  graphicsSettingsModal.onLayerVisibilityChange = (layerId, visible) => {
+    view.setLayerVisible(layerId, visible);
+  };
 
   const unitDisplay = document.querySelector("unit-display") as UnitDisplay;
   if (!(unitDisplay instanceof UnitDisplay)) {
@@ -242,6 +244,15 @@ export function createRenderer(
     console.error("heads-up message not found");
   }
   headsUpMessage.game = game;
+
+  const performanceOverlay = document.querySelector(
+    "performance-overlay",
+  ) as PerformanceOverlay;
+  if (!(performanceOverlay instanceof PerformanceOverlay)) {
+    console.error("performance overlay not found");
+  }
+  performanceOverlay.eventBus = eventBus;
+  performanceOverlay.userSettings = userSettings;
 
   const alertFrame = document.querySelector("alert-frame") as AlertFrame;
   if (!(alertFrame instanceof AlertFrame)) {
@@ -288,6 +299,7 @@ export function createRenderer(
     new ViewModeController(eventBus, view),
     new AttackingTroopsController(game, eventBus, userSettings, view),
     new SoundEffectController(game, eventBus),
+    ...(mapLayerController ? [mapLayerController] : []),
     eventsDisplay,
     actionableEvents,
     attacksDisplay,
@@ -304,35 +316,40 @@ export function createRenderer(
     ),
     spawnTimer,
     immunityTimer,
-    leaderboard,
     gameLeftSidebar,
     unitDisplay,
     gameRightSidebar,
     controlPanel,
     playerInfo,
     winModal,
+    newLobbyPrompt,
     replayPanel,
     settingsModal,
     graphicsSettingsModal,
-    teamStats,
     playerPanel,
     headsUpMessage,
     multiTabModal,
     inGamePromo,
     alertFrame,
+    performanceOverlay,
   ];
 
-  return new GameRenderer(transformHandler, uiState, layers);
+  return new GameRenderer(
+    transformHandler,
+    uiState,
+    layers,
+    performanceOverlay,
+  );
 }
 
 export class GameRenderer {
   private layerTickState = new Map<Controller, { lastTickAtMs: number }>();
-  private readonly listenerAbort = new AbortController();
 
   constructor(
     public transformHandler: TransformHandler,
     public uiState: UIState,
     private layers: Controller[],
+    private performanceOverlay: PerformanceOverlay,
   ) {}
 
   initialize() {
@@ -342,10 +359,8 @@ export class GameRenderer {
 
     this.layers.forEach((l) => l.init?.());
 
-    window.addEventListener(
-      "resize",
-      () => this.transformHandler.updateCanvasBoundingRect(),
-      { signal: this.listenerAbort.signal },
+    window.addEventListener("resize", () =>
+      this.transformHandler.updateCanvasBoundingRect(),
     );
 
     //show whole map on startup
@@ -354,6 +369,10 @@ export class GameRenderer {
 
   tick() {
     const nowMs = performance.now();
+    const shouldProfileTick = FrameProfiler.isEnabled();
+
+    const tickLayerDurations: Record<string, number> = {};
+
     for (const layer of this.layers) {
       if (!layer.tick) {
         continue;
@@ -372,13 +391,17 @@ export class GameRenderer {
       state.lastTickAtMs = nowMs;
       this.layerTickState.set(layer, state);
 
+      const tickStart = shouldProfileTick ? performance.now() : 0;
       layer.tick();
+      if (shouldProfileTick && tickStart !== 0) {
+        const duration = performance.now() - tickStart;
+        const label = layer.constructor?.name ?? "UnknownLayer";
+        tickLayerDurations[label] = (tickLayerDurations[label] ?? 0) + duration;
+      }
     }
-  }
 
-  dispose(): void {
-    this.listenerAbort.abort();
-    for (const layer of this.layers) layer.dispose?.();
-    this.layerTickState.clear();
+    if (shouldProfileTick) {
+      this.performanceOverlay.updateTickLayerMetrics(tickLayerDurations);
+    }
   }
 }

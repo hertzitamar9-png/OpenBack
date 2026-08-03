@@ -423,6 +423,8 @@ function userMeFor(user: StoredUser): UserMeResponse {
     player: {
       publicId: user.publicId,
       adfree: false,
+      unlimitedRanked: user.lifetimeAccess === true,
+      canCreatePublicLobbies: user.lifetimeAccess === true,
       infiniteGold: user.email?.toLowerCase() === OWNER_INFINITE_GOLD_EMAIL,
       flares: user.flares ?? [],
       achievements: { singleplayerMap: [] },

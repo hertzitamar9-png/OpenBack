@@ -184,6 +184,7 @@ describe("PlayerExecution", () => {
         false,
         null,
         [],
+        null,
         ["captain", "friend1", "friend2"],
       ),
     ]);

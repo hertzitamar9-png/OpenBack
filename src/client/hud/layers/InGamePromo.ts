@@ -1,5 +1,6 @@
 import { LitElement, html } from "lit";
 import { customElement } from "lit/decorators.js";
+import { adGatekeeper } from "../../AdGatekeeper";
 import { Controller } from "../../Controller";
 import { GameView } from "../../view";
 
@@ -18,20 +19,13 @@ export class InGamePromo extends LitElement implements Controller {
   private bottomRailDestroyed: boolean = false;
   private cornerAdShown: boolean = false;
   private adCheckInterval: ReturnType<typeof setTimeout> | null = null;
+  private adGateOff: (() => void) | null = null;
 
   createRenderRoot() {
     return this;
   }
 
   init() {}
-
-  disconnectedCallback(): void {
-    super.disconnectedCallback?.();
-    if (this.adCheckInterval) {
-      clearInterval(this.adCheckInterval);
-      this.adCheckInterval = null;
-    }
-  }
 
   tick() {
     if (!this.game.inSpawnPhase()) {
@@ -64,12 +58,17 @@ export class InGamePromo extends LitElement implements Controller {
 
     if (!window.adsEnabled) return;
 
-    this.shouldShow = true;
-    this.requestUpdate();
+    // Show the intrusive in-game ad only to users who have been blocker-free.
+    // Once a blocker is ever detected the gate latches suppressed forever
+    // (persisted across sessions), so whenClear never fires for those users.
+    this.adGateOff = adGatekeeper.whenClear(() => {
+      this.shouldShow = true;
+      this.requestUpdate();
 
-    this.updateComplete.then(() => {
-      this.loadAd();
-      this.checkForAds();
+      this.updateComplete.then(() => {
+        this.loadAd();
+        this.checkForAds();
+      });
     });
   }
 
@@ -119,6 +118,10 @@ export class InGamePromo extends LitElement implements Controller {
   }
 
   public hideAd(): void {
+    if (this.adGateOff) {
+      this.adGateOff();
+      this.adGateOff = null;
+    }
     if (this.adCheckInterval) {
       clearInterval(this.adCheckInterval);
       this.adCheckInterval = null;

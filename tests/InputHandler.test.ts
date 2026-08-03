@@ -1,13 +1,15 @@
 import {
   AutoUpgradeEvent,
   ConfirmGhostStructureEvent,
+  ContextMenuEvent,
   InputHandler,
+  UnitSelectionEvent,
   WarshipSelectionBoxCancelEvent,
   WarshipSelectionBoxCompleteEvent,
   WarshipSelectionBoxUpdateEvent,
 } from "../src/client/InputHandler";
 import { UIState } from "../src/client/UIState";
-import { GameView, PlayerView } from "../src/client/view";
+import { GameView, PlayerView, UnitView } from "../src/client/view";
 import { EventBus } from "../src/core/EventBus";
 import { UnitType } from "../src/core/game/Game";
 import { KEYBINDS_KEY, UserSettings } from "../src/core/game/UserSettings";
@@ -636,6 +638,62 @@ describe("InputHandler AutoUpgrade", () => {
     });
   });
 
+  describe("Digit keys still set ghost structure when bound to Numpad", () => {
+    beforeEach(() => {
+      inputHandler.destroy();
+      testSettings.setKeybinds({
+        buildCity: "Numpad1",
+        buildMIRV: "Numpad0",
+      });
+      const uiState: UIState = {
+        attackRatio: 20,
+        ghostStructure: null,
+        rocketDirectionUp: true,
+      } as UIState;
+      inputHandler = new InputHandler(
+        mockGameView,
+        uiState,
+        mockCanvas,
+        eventBus,
+      );
+      inputHandler.initialize();
+    });
+    test("Digit1 sets ghost structure to City when buildCity is Numpad1", () => {
+      window.dispatchEvent(
+        new KeyboardEvent("keyup", { code: "Digit1", key: "1" }),
+      );
+      expect(inputHandler["uiState"].ghostStructure).toBe(UnitType.City);
+    });
+    test("Digit0 sets ghost structrue to MIRV when buildMIRV is Numpad0", () => {
+      window.dispatchEvent(
+        new KeyboardEvent("keyup", { code: "Digit0", key: "0" }),
+      );
+      expect(inputHandler["uiState"].ghostStructure).toBe(UnitType.MIRV);
+    });
+  });
+
+  describe("InputHandler keybind registry", () => {
+    function makeHandler() {
+      return new InputHandler(
+        {} as any, // gameView
+        {} as any, // uiState
+        document.createElement("div"), // canvas
+        {} as any, // eventBus
+      );
+    }
+
+    test("two actions bound to the same key are both kept (no overwrite)", () => {
+      const ih = makeHandler() as any;
+      ih.keybindAndEvent = [];
+      ih.addKeybindAndEvent("KeyX", () => {});
+      ih.addKeybindAndEvent("KeyX", () => {});
+
+      const entries = ih.keybindAndEvent.filter(
+        ([k]: [string, unknown]) => k === "KeyX",
+      );
+      expect(entries.length).toBe(2); // would have been 1 with the old Map
+    });
+  });
   describe("Build keybind two-phase matching (exact code first, then digit/Numpad alias)", () => {
     beforeEach(() => {
       inputHandler.destroy();
@@ -1038,5 +1096,67 @@ describe("Warship box selection (Shift+drag)", () => {
     expect(mockCanvas.style.cursor).toBe("crosshair");
     window.dispatchEvent(new Event("blur"));
     expect(mockCanvas.style.cursor).toBe("");
+  });
+});
+
+describe("InputHandler right-click cancels unit selection (#4692)", () => {
+  let inputHandler: InputHandler;
+  let eventBus: EventBus;
+  let canvas: HTMLCanvasElement;
+
+  beforeEach(() => {
+    new UserSettings().removeCached(KEYBINDS_KEY, false);
+    canvas = document.createElement("canvas");
+    canvas.width = 800;
+    canvas.height = 600;
+    eventBus = new EventBus();
+    inputHandler = new InputHandler(
+      {
+        inSpawnPhase: () => false,
+        myPlayer: () => ({ isAlive: () => true }),
+      } as unknown as GameView,
+      { attackRatio: 20, ghostStructure: null, rocketDirectionUp: true },
+      canvas,
+      eventBus,
+    );
+    inputHandler.initialize();
+  });
+
+  afterEach(() => inputHandler.destroy());
+
+  const rightClick = () =>
+    inputHandler["onContextMenu"]({
+      preventDefault: () => {},
+      clientX: 100,
+      clientY: 100,
+    } as unknown as MouseEvent);
+
+  const emittedTypes = (spy: ReturnType<typeof vi.spyOn>) =>
+    spy.mock.calls.map((c: unknown[]) => (c[0] as object).constructor.name);
+
+  it("opens the context menu on right-click when nothing is selected", () => {
+    const emit = vi.spyOn(eventBus, "emit");
+    rightClick();
+    expect(emittedTypes(emit)).toContain("ContextMenuEvent");
+  });
+
+  it("cancels the selection and suppresses the context menu when a warship is selected", () => {
+    // Select a warship (wires unitSelectionActive via the real listener).
+    eventBus.emit(
+      new UnitSelectionEvent({ id: () => 1 } as unknown as UnitView, true),
+    );
+    const emit = vi.spyOn(eventBus, "emit");
+    rightClick();
+    const emitted = emit.mock.calls.map((c: unknown[]) => c[0]);
+    // A deselection specifically (unit === null, isSelected === false) must be
+    // emitted — not just any UnitSelectionEvent.
+    const deselect = emitted.find(
+      (e): e is UnitSelectionEvent => e instanceof UnitSelectionEvent,
+    );
+    expect(deselect).toBeDefined();
+    expect(deselect!.unit).toBeNull();
+    expect(deselect!.isSelected).toBe(false);
+    // ...and the context menu must NOT open.
+    expect(emitted.some((e) => e instanceof ContextMenuEvent)).toBe(false);
   });
 });

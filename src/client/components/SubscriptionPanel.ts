@@ -11,7 +11,6 @@ import { translateCosmetic } from "../Cosmetics";
 import { showInGameAlert, showInGameConfirm } from "../InGameModal";
 import { translateText } from "../Utils";
 import "./baseComponents/Button";
-import "./CapIcon";
 import "./PlutoniumIcon";
 
 @customElement("subscription-panel")
@@ -44,6 +43,7 @@ export class SubscriptionPanel extends LitElement {
   private handleCancel = async (): Promise<void> => {
     const confirmed = await showInGameConfirm(
       translateText("account_modal.cancel_subscription_confirm"),
+      { heading: translateText("account_modal.cancel_subscription") },
     );
     if (!confirmed) return;
     const ok = await cancelSubscription();
@@ -142,16 +142,16 @@ export class SubscriptionPanel extends LitElement {
                   <div class="flex items-center gap-1.5">
                     <plutonium-icon .size=${20}></plutonium-icon>
                     <span class="text-sm font-bold text-green-400"
-                      >${cosmetic.dailyHardCurrency.toLocaleString()}</span
+                      >${cosmetic.hardCurrencySignupBonus.toLocaleString()}</span
                     >
                     <span class="text-[10px] text-white/50 uppercase"
-                      >${translateText("cosmetics.per_day")}</span
+                      >${translateText("cosmetics.signup_bonus")}</span
                     >
                   </div>
                   <div class="flex items-center gap-1.5">
-                    <cap-icon .size=${20}></cap-icon>
-                    <span class="text-sm font-bold text-amber-700"
-                      >${cosmetic.dailySoftCurrency.toLocaleString()}</span
+                    <plutonium-icon .size=${20}></plutonium-icon>
+                    <span class="text-sm font-bold text-green-400"
+                      >${cosmetic.dailyHardCurrency.toLocaleString()}</span
                     >
                     <span class="text-[10px] text-white/50 uppercase"
                       >${translateText("cosmetics.per_day")}</span

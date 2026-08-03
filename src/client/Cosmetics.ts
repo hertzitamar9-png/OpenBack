@@ -4,6 +4,9 @@ import {
   ColorPalette,
   Cosmetics,
   CosmeticsSchema,
+  Crown,
+  Effect,
+  findEffectForSlot,
   Flag,
   Pack,
   Pattern,
@@ -11,26 +14,26 @@ import {
   Skin,
   Subscription,
 } from "../core/CosmeticSchemas";
+import { UserSettings } from "../core/game/UserSettings";
 import {
   PlayerCosmeticRefs,
   PlayerCosmetics,
+  PlayerEffect,
   PlayerPattern,
 } from "../core/Schemas";
-import { UserSettings } from "../core/game/UserSettings";
 import {
   changeSubscriptionTier,
   createCheckoutSession,
+  getApiBase,
   getUserMe,
   invalidateUserMe,
   purchaseWithCurrency,
 } from "./Api";
 import { showInGameAlert, showInGameConfirm } from "./InGameModal";
+import { isPlayingVerified } from "./UsernameInput";
 import { translateText } from "./Utils";
 
 export const TEMP_FLARE_OFFSET = 1 * 60 * 1000; // 1 minute
-
-// Subscriptions are not ready yet — flip to true to show them in the store
-// and on the account/profile modal.
 export const SUBSCRIPTIONS_ENABLED = false;
 
 let __cosmetics: Promise<Cosmetics | null> | null = null;
@@ -61,10 +64,25 @@ export function getLocalSelectedSkin(): { name: string; url: string } | null {
 
 export type PaymentMethod = "dollar" | "hard" | "soft";
 
+/** Returned by {@link purchaseCosmetic} when the player can't afford an item. */
+export interface InsufficientCurrency {
+  /** Display name of the currency, e.g. "Plutonium". */
+  currency: string;
+  /** How much more currency is needed (raw; localized in the dialog text). */
+  shortfall: number;
+  /** Display name of the item being bought. */
+  item: string;
+  /** Whether the currency can be topped up (hard currency only). */
+  canTopUp: boolean;
+}
+
+/** Outcome of a purchase: unaffordable details, or void on success/redirect. */
+export type PurchaseResult = InsufficientCurrency | void;
+
 export async function purchaseCosmetic(
   resolved: ResolvedCosmetic,
   method: PaymentMethod,
-): Promise<void> {
+): Promise<PurchaseResult> {
   if (!resolved.cosmetic) return;
   const c = resolved.cosmetic;
   const colorPaletteName = resolved.colorPalette?.name;
@@ -95,11 +113,19 @@ export async function purchaseCosmetic(
         : "store.confirm_downgrade";
       const confirmed = await showInGameConfirm(
         translateText(confirmKey, { tier: targetName }),
+        {
+          heading: translateText("account_modal.change_tier"),
+          variant: "warning",
+        },
       );
       if (!confirmed) return;
 
-      const ok = await changeSubscriptionTier(sub.name);
-      if (!ok) {
+      const result = await changeSubscriptionTier(sub.name);
+      if (result === "rate_limited") {
+        await showInGameAlert(translateText("store.change_tier_rate_limited"));
+        return;
+      }
+      if (!result) {
         await showInGameAlert(translateText("store.change_tier_failed"));
         return;
       }
@@ -142,7 +168,7 @@ export async function purchaseCosmetic(
     method === "hard" ? (priced.priceHard ?? 0) : (priced.priceSoft ?? 0);
   const userMe = await getUserMe();
   if (userMe === false) {
-    await showInGameAlert(translateText("store.login_required"));
+    alert(translateText("store.login_required"));
     return;
   }
   const balance =
@@ -150,11 +176,32 @@ export async function purchaseCosmetic(
       ? (userMe.player.currency?.hard ?? 0)
       : (userMe.player.currency?.soft ?? 0);
   if (balance < price) {
-    await showInGameAlert(translateText("store.not_enough_currency"));
-    return;
+    const currencyName = translateText(
+      method === "hard" ? "cosmetics.hard" : "cosmetics.soft",
+    );
+    let itemName: string;
+    if (resolved.type === "flag") {
+      itemName = translateCosmetic("flags", c.name);
+    } else if (resolved.type === "crown") {
+      itemName = translateCosmetic("crowns", c.name);
+    } else {
+      itemName = translateCosmetic("territory_patterns.pattern", c.name);
+    }
+    return {
+      currency: currencyName,
+      shortfall: price - balance,
+      item: itemName,
+      // Only plutonium can be topped up; caps are dismiss-only.
+      canTopUp: method === "hard",
+    };
   }
 
-  const cosmeticType = resolved.type as "pattern" | "skin" | "flag";
+  const cosmeticType = resolved.type as
+    | "pattern"
+    | "skin"
+    | "flag"
+    | "crown"
+    | "effect";
   const success = await purchaseWithCurrency(
     cosmeticType,
     c.name,
@@ -162,12 +209,10 @@ export async function purchaseCosmetic(
     colorPaletteName,
   );
   if (!success) {
-    await showInGameAlert(translateText("store.purchase_failed"));
+    alert(translateText("store.purchase_failed"));
     return;
   }
-  await showInGameAlert(
-    translateText("store.purchase_success", { name: c.name }),
-  );
+  alert(translateText("store.purchase_success", { name: c.name }));
   invalidateUserMe();
   window.location.reload();
 }
@@ -188,12 +233,7 @@ export async function fetchCosmetics(): Promise<Cosmetics | null> {
   }
   __cosmetics = (async () => {
     try {
-      const response = await fetch(assetUrl("cosmetics.json"), {
-        // Revalidate rather than trust a possibly year-old cached copy (older
-        // deploys served cosmetics.json with a 1y immutable-style cache), so
-        // newly added shop flags/skins show up without a hard refresh.
-        cache: "no-cache",
-      });
+      const response = await fetch(`${getApiBase()}/cosmetics.json`);
       if (!response.ok) {
         console.error(`HTTP error! status: ${response.status}`);
         return null;
@@ -225,7 +265,7 @@ export async function resolveFlagUrl(
     const key = flagRef.slice("flag:".length);
     const cosmetics = await fetchCosmetics();
     const flagData = cosmetics?.flags?.[key];
-    return flagData ? assetUrl(flagData.url) : undefined;
+    return flagData?.url;
   }
   if (flagRef.startsWith("country:")) {
     const code = flagRef.slice("country:".length);
@@ -343,6 +383,25 @@ export function flagRelationship(
   );
 }
 
+export function crownRelationship(
+  crown: Crown,
+  userMeResponse: UserMeResponse | false,
+  affiliateCode: string | null,
+): "owned" | "purchasable" | "blocked" {
+  return cosmeticRelationship(
+    {
+      wildcardFlare: "crown:*",
+      requiredFlare: `crown:${crown.name}`,
+      product: crown.product,
+      priceSoft: crown.priceSoft,
+      priceHard: crown.priceHard,
+      affiliateCode,
+      itemAffiliateCode: crown.affiliateCode ?? null,
+    },
+    userMeResponse,
+  );
+}
+
 export function skinRelationship(
   skin: Skin,
   userMeResponse: UserMeResponse | false,
@@ -362,13 +421,41 @@ export function skinRelationship(
   );
 }
 
+export function effectRelationship(
+  effect: Effect,
+  userMeResponse: UserMeResponse | false,
+  affiliateCode: string | null,
+): "owned" | "purchasable" | "blocked" {
+  return cosmeticRelationship(
+    {
+      wildcardFlare: "effect:*",
+      requiredFlare: `effect:${effect.name}`,
+      product: effect.product,
+      priceSoft: effect.priceSoft,
+      priceHard: effect.priceHard,
+      affiliateCode,
+      itemAffiliateCode: effect.affiliateCode ?? null,
+    },
+    userMeResponse,
+  );
+}
+
 export type ResolvedCosmetic = {
-  type: "pattern" | "skin" | "flag" | "pack" | "subscription";
-  cosmetic: Pattern | Skin | Flag | Pack | Subscription | null;
+  type:
+    | "pattern"
+    | "skin"
+    | "flag"
+    | "crown"
+    | "effect"
+    | "pack"
+    | "subscription";
+  cosmetic: Pattern | Skin | Flag | Crown | Effect | Pack | Subscription | null;
   colorPalette: ColorPalette | null;
   relationship: "owned" | "purchasable" | "blocked";
   /** Unique key for selection/identity, e.g. "pattern:hearts:red" or "skin:mountain" */
   key: string;
+  /** For effects only: the effectType (also the catalog's outer key). */
+  effectType?: string;
 };
 
 /**
@@ -430,6 +517,18 @@ export function resolveCosmetics(
     });
   }
 
+  // Crowns
+  for (const [crownKey, crown] of Object.entries(cosmetics.crowns ?? {})) {
+    const rel = crownRelationship(crown, userMeResponse, affiliateCode);
+    result.push({
+      type: "crown",
+      cosmetic: crown,
+      colorPalette: null,
+      relationship: rel,
+      key: `crown:${crownKey}`,
+    });
+  }
+
   // Skins (image-based territory cosmetics). No separate "default" entry —
   // the pattern default doubles as "no skin": selecting it clears both.
   for (const [skinKey, skin] of Object.entries(cosmetics.skins ?? {})) {
@@ -441,6 +540,23 @@ export function resolveCosmetics(
       relationship: rel,
       key: `skin:${skinKey}`,
     });
+  }
+
+  // Effects (boat-trail wakes, etc.) — a cosmetic category like skins/flags.
+  // Catalog is nested: effects[effectType][effectName]. We carry effectType (the
+  // outer key, which each effect also stores) on the resolved item.
+  for (const [effectType, byName] of Object.entries(cosmetics.effects ?? {})) {
+    for (const [effectKey, effect] of Object.entries(byName ?? {})) {
+      const rel = effectRelationship(effect, userMeResponse, affiliateCode);
+      result.push({
+        type: "effect",
+        cosmetic: effect,
+        colorPalette: null,
+        relationship: rel,
+        key: `effect:${effectType}:${effectKey}`,
+        effectType,
+      });
+    }
   }
 
   // Packs
@@ -480,6 +596,30 @@ export function resolveCosmetics(
   }
 
   return result;
+}
+
+/**
+ * Groups resolved cosmetics so that colour-palette variants of the same pattern
+ * collapse into a single entry. Returns an array of groups in first-seen order
+ */
+export function groupCosmeticVariants(
+  items: ResolvedCosmetic[],
+): ResolvedCosmetic[][] {
+  const groups: ResolvedCosmetic[][] = [];
+  const patternGroupByName = new Map<string, number>();
+  for (const item of items) {
+    if (item.type === "pattern" && item.cosmetic !== null) {
+      const name = item.cosmetic.name;
+      const existing = patternGroupByName.get(name);
+      if (existing !== undefined) {
+        groups[existing].push(item);
+        continue;
+      }
+      patternGroupByName.set(name, groups.length);
+    }
+    groups.push([item]);
+  }
+  return groups;
 }
 
 export function resolvedToPlayerPattern(
@@ -566,11 +706,62 @@ export async function getPlayerCosmeticsRefs(): Promise<PlayerCosmeticRefs> {
     }
   }
 
+  let crownName = userSettings.getSelectedCrownName() ?? undefined;
+  if (crownName) {
+    const crown = cosmetics?.crowns?.[crownName];
+    if (cosmetics && !crown) {
+      // Cosmetics loaded but the saved crown no longer exists.
+      crownName = undefined;
+    } else if (crown) {
+      const userMe = await getUserMe();
+      if (userMe) {
+        const flares = userMe.player.flares ?? [];
+        const hasWildcard = flares.includes("crown:*");
+        if (!hasWildcard && !flares.includes(`crown:${crown.name}`)) {
+          crownName = undefined;
+        }
+      }
+    }
+    if (crownName === undefined) {
+      userSettings.setSelectedCrownName(undefined);
+    }
+  }
+
+  // Effects: a per-slot map (slot -> effect name). A slot is the effectType for
+  // trails and the nukeType for nuke explosions (see effectTypeForSlot). Drop any
+  // entry whose effect no longer exists, doesn't fit the slot, or the user can't
+  // access. Like skins/flags/patterns above, a selection is kept (and left to the
+  // server to validate) when cosmetics or userMe fail to load.
+  const selectedEffects = userSettings.getSelectedEffects();
+  const effects: Record<string, string> = {};
+  for (const [slot, name] of Object.entries(selectedEffects)) {
+    const effect = findEffectForSlot(cosmetics, slot, name);
+    if (cosmetics && !effect) {
+      userSettings.setSelectedEffectName(slot, undefined);
+      continue;
+    }
+    if (effect) {
+      const userMe = await getUserMe();
+      if (userMe) {
+        const flares = userMe.player.flares ?? [];
+        const hasWildcard = flares.includes("effect:*");
+        if (!hasWildcard && !flares.includes(`effect:${effect.name}`)) {
+          userSettings.setSelectedEffectName(slot, undefined);
+          continue;
+        }
+      }
+    }
+    effects[slot] = name;
+  }
+
   return {
     flag: flag ?? undefined,
     patternName: pattern?.name ?? undefined,
     patternColorPaletteName: pattern?.colorPalette?.name ?? undefined,
     skinName,
+    crownName,
+    effects: Object.keys(effects).length > 0 ? effects : undefined,
+    verified: isPlayingVerified() ? true : undefined,
   };
 }
 
@@ -611,6 +802,32 @@ export async function getPlayerCosmetics(): Promise<PlayerCosmetics> {
     if (skin) {
       result.skin = { name: refs.skinName, url: skin.url };
     }
+  }
+
+  const devCrown = new UserSettings().getDevOnlyCrown();
+
+  if (devCrown) {
+    result.crown = { name: "dev_crown", url: devCrown };
+  } else if (refs.crownName && cosmetics) {
+    const crown = cosmetics.crowns?.[refs.crownName];
+    if (crown) {
+      result.crown = { name: refs.crownName, url: crown.url };
+    }
+  }
+
+  if (refs.effects && cosmetics) {
+    const effects: Record<string, PlayerEffect> = {};
+    for (const [slot, name] of Object.entries(refs.effects)) {
+      const effect = findEffectForSlot(cosmetics, slot, name);
+      if (effect) {
+        effects[slot] = { name: effect.name, effectType: effect.effectType };
+      }
+    }
+    if (Object.keys(effects).length > 0) result.effects = effects;
+  }
+
+  if (refs.verified) {
+    result.verified = true;
   }
 
   return result;

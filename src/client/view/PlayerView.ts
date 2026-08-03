@@ -61,6 +61,7 @@ function staticFromUpdate(pu: PlayerUpdate): PlayerStatic {
     id: pu.id,
     name: pu.name!,
     displayName: pu.displayName!,
+    clanTag: pu.clanTag ?? null,
     clientID: pu.clientID ?? null,
     controllerClientIDs:
       pu.controllerClientIDs ?? (pu.clientID ? [pu.clientID] : []),
@@ -78,6 +79,8 @@ function stateFromUpdate(pu: PlayerUpdate): PlayerState {
     smallID: pu.smallID!,
     isAlive: pu.isAlive!,
     isDisconnected: pu.isDisconnected!,
+    killedBy: pu.killedBy ?? null,
+    deathPosition: pu.deathPosition ?? null,
     tilesOwned: pu.tilesOwned!,
     gold: Number(pu.gold!),
     troops: pu.troops!,
@@ -96,7 +99,9 @@ function stateFromUpdate(pu: PlayerUpdate): PlayerState {
     incomingAttacks: pu.incomingAttacks!,
     outgoingAllianceRequests: pu.outgoingAllianceRequests!.slice(),
     alliances: pu.alliances!,
-    outgoingEmojis: pu.outgoingEmojis!,
+    // Respect the client-side "Disable emojis" setting: when off, never surface
+    // emoji data to any renderer/overlay that reads this shared state (#4430).
+    outgoingEmojis: userSettings.emojis() ? pu.outgoingEmojis! : [],
   };
 }
 
@@ -266,6 +271,11 @@ export class PlayerView {
    */
   applyUpdate(pu: PlayerUpdate): void {
     applyStateUpdate(this.state, pu);
+    // applyStateUpdate refreshes outgoingEmojis every tick; re-apply the
+    // "Disable emojis" setting so live emojis stay hidden when it's off (#4430).
+    if (!userSettings.emojis()) {
+      this.state.outgoingEmojis = [];
+    }
   }
 
   /** Set the renderer-format embargoes (smallIDs). */
@@ -405,9 +415,11 @@ export class PlayerView {
   }
 
   units(...types: UnitType[]): UnitView[] {
-    return this.game
-      .units(...types)
-      .filter((u) => u.owner().smallID() === this.smallID());
+    const owned = this.game.unitsOwnedBy(this.smallID());
+    if (types.length === 0) {
+      return [...owned];
+    }
+    return owned.filter((u) => types.includes(u.type()));
   }
 
   nameLocation(): NameViewData | undefined {
@@ -428,7 +440,11 @@ export class PlayerView {
       ? this.anonymousName
       : this.static.displayName;
   }
-
+  clanTag(): string | null {
+    return this.anonymousName !== null && userSettings.anonymousNames()
+      ? null
+      : this.static.clanTag;
+  }
   clientID(): ClientID | null {
     return this.static.clientID;
   }
@@ -453,6 +469,12 @@ export class PlayerView {
   }
   isAlive(): boolean {
     return this.state.isAlive;
+  }
+  killedBy(): string | null {
+    return this.state.killedBy;
+  }
+  deathPosition(): number | null {
+    return this.state.deathPosition;
   }
   isPlayer(): this is PlayerView {
     return true;

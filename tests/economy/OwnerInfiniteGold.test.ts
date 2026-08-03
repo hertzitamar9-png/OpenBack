@@ -11,6 +11,7 @@ describe("owner account infinite gold", () => {
       false,
       null,
       [],
+      null,
       ["owner001"],
       null,
     );

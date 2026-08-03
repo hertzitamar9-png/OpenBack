@@ -1,30 +1,33 @@
 /**
  * StatusIconProgram — instanced status icons above player names.
  *
- * Renders up to 9 status icons per player (crown, traitor, disconnected,
- * alliance, alliance request, target, embargo, nuke, doomsday-clock skull). Each
- * instance reads individual float flags to decide whether to draw.
+ * Renders up to 10 icons per player: 9 status-row icons above the name
+ * (crown, traitor, disconnected, alliance, alliance request, target, embargo,
+ * nuke, doomsday-clock skull) plus the verified badge to the right of the
+ * name. Each instance reads individual float flags to decide whether to draw.
  *
  * Owns: shader program, uniform locations, status atlas texture.
  * The shared playerDataTex is passed in but not owned/deleted.
  */
 
-import statusAtlasMeta from "resources/atlases/status-atlas-meta.json" with { type: "json" };
+import statusAtlasMeta from "resources/atlases/status-atlas-meta.json";
 import { assetUrl } from "src/core/AssetUrls";
 import type { RenderSettings } from "../../RenderSettings";
 import statusFragSrc from "../../shaders/name/status-icon.frag.glsl?raw";
 import statusVertSrc from "../../shaders/name/status-icon.vert.glsl?raw";
 import { createProgram } from "../../utils/GlUtils";
+import type { FlagAtlasArray } from "./FlagAtlasArray";
 import type { ParsedAtlas } from "./Types";
 
 const statusAtlasUrl = assetUrl("atlases/status-atlas.png");
 
-const MAX_STATUS_ICONS = 9;
+const MAX_STATUS_ICONS = 10;
 
 export class StatusIconProgram {
   private gl: WebGL2RenderingContext;
   private program: WebGLProgram;
   private playerDataTex: WebGLTexture;
+  private maxPlayers: number;
 
   private statusAtlasTex: WebGLTexture | null = null;
   private atlasReady = false;
@@ -45,10 +48,14 @@ export class StatusIconProgram {
     gl: WebGL2RenderingContext,
     atlas: ParsedAtlas,
     playerDataTex: WebGLTexture,
+    // Crown-cosmetic images; skins the first-place crown (slot 0).
+    private crownAtlas: FlagAtlasArray,
+    maxPlayers: number,
     allianceFlashWindowTicks: number,
   ) {
     this.gl = gl;
     this.playerDataTex = playerDataTex;
+    this.maxPlayers = maxPlayers;
 
     this.program = createProgram(gl, statusVertSrc, statusFragSrc);
     gl.useProgram(this.program);
@@ -56,6 +63,7 @@ export class StatusIconProgram {
     // Texture unit bindings
     gl.uniform1i(gl.getUniformLocation(this.program, "uPlayerData"), 0);
     gl.uniform1i(gl.getUniformLocation(this.program, "uStatusAtlas"), 1);
+    gl.uniform1i(gl.getUniformLocation(this.program, "uCrownAtlas"), 2);
 
     // Static uniforms from atlas metadata
     const sm = statusAtlasMeta as any;
@@ -151,7 +159,6 @@ export class StatusIconProgram {
     settings: RenderSettings,
     vao: WebGLVertexArrayObject,
     fadeOwnerID: number,
-    playerCount: number,
   ): void {
     if (!this.atlasReady) return;
 
@@ -174,9 +181,16 @@ export class StatusIconProgram {
     gl.bindTexture(gl.TEXTURE_2D, this.playerDataTex);
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, this.statusAtlasTex!);
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D_ARRAY, this.crownAtlas.texture);
 
     gl.bindVertexArray(vao);
-    gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, playerCount * MAX_STATUS_ICONS);
+    gl.drawArraysInstanced(
+      gl.TRIANGLES,
+      0,
+      6,
+      this.maxPlayers * MAX_STATUS_ICONS,
+    );
   }
 
   dispose(): void {

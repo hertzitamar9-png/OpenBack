@@ -103,23 +103,30 @@ describe("Spawn execution", () => {
     expect(player.numTilesOwned()).toBeGreaterThan(0);
   });
 
-  test("Spawn intent after the spawn phase cannot relocate territory", async () => {
+  test("Spawn intent after the spawn phase cannot relocate territory (anti-teleport)", async () => {
     const playerInfo = new PlayerInfo(
-      "player",
+      `player`,
       PlayerType.Human,
-      "client_id",
-      "player_id",
+      `client_id`,
+      `player_id`,
     );
+
+    // setup() ends the spawn phase by default, so the game is already underway.
     const game = await setup("half_land_half_ocean", {}, [playerInfo]);
 
+    // Establish the player's territory with a legitimate first spawn.
     game.addExecution(new SpawnExecution("game_id", playerInfo, 20));
     game.executeNextTick();
     game.executeNextTick();
 
     const player = game.playerByClientID("client_id")!;
-    const tilesBefore = player.numTilesOwned();
     expect(player.spawnTile()).toBe(20);
+    const tilesBefore = player.numTilesOwned();
+    expect(tilesBefore).toBeGreaterThan(0);
 
+    // Malicious "teleport": a spawn intent to a new tile after the game has
+    // started must be a deterministic no-op — the player keeps their original
+    // spawn location and territory rather than relinquishing and re-conquering.
     game.addExecution(new SpawnExecution("game_id", playerInfo, 10));
     game.executeNextTick();
     game.executeNextTick();

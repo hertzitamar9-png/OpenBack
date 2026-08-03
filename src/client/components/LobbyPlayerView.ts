@@ -472,6 +472,7 @@ export class LobbyTeamView extends LitElement {
           false,
           c.clanTag,
           c.friends ?? [],
+          null,
           [c.clientID],
           c.selectedTeam ?? null,
         ),

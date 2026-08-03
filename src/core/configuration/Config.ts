@@ -37,6 +37,9 @@ declare global {
       googleEnabled?: boolean;
       instanceId?: string;
       shareOrigin?: string;
+      // Desktop-only: explicit game-server host for the WebSocket origin.
+      // Absent on the web build (client falls back to same-origin location).
+      serverHost?: string;
     };
   }
 }
@@ -87,21 +90,27 @@ export const SAM_CONSTRUCTION_TICKS = 30 * 10;
 // Doomsday Clock tunables (anti-stall). Off unless enabled in GameConfig.
 // Times in seconds. The required map share rises in waves (levels + times in
 // DoomsdayClock.ts, chosen by `speed`). A side caught below the bar gets a
-// warnSeconds cooldown ("Danger, decay in Xs"), then troops bleed to zero: the
-// warn (30s) + the linear drain (~90s from full troops, sooner with fewer troops
-// or a shrinking territory) make ~2 minutes from caught to wiped out.
+// warnSeconds cooldown ("Danger, decay in Xs"), then troops bleed DOWN TO A
+// FLOOR (drainFloorPercent of max), not to zero: the warn (30s) + the linear
+// drain (~90s from full troops, sooner with fewer troops or a shrinking
+// territory) make ~2 minutes from caught to the floor. A doomed side is crippled
+// to 5% of max, not eliminated, so a brief dip below the bar is recoverable (the
+// drain stops the moment it climbs back); the rising bar still guarantees a
+// finish by squeezing territory and leaving the doomed side easy to conquer.
 const DOOMSDAY_CLOCK_DEFAULTS = {
   enabled: false,
   speed: "normal" as DoomsdayClockSpeed,
   warnSeconds: 30, // cooldown (the flashing danger cue) before decay begins
   drainStartPercent: 2, // starts bleeding at once (already beats troop income)
   drainMaxPercent: 5,
-  drainRampSeconds: 90, // ramps LINEARLY to the max over this long (~1:30 to zero)
+  drainRampSeconds: 90, // ramps LINEARLY to the max over this long
+  drainFloorPercent: 5, // drain stops here: crippled to 5% of max, never wiped
   // Warships bleed on their OWN gentler start + a STEEP (convex) ramp to a much
   // higher ceiling. A ship caught when its side is first doomed lasts about as
   // long as troops (the low start + no income ≈ the troop net rate), but the rate
   // curves up sharply (warshipDrainCurveExponent), so once a side has been under
-  // the clock the full ramp, ships sink in ~2s (50%/s). Ships only.
+  // the clock the full ramp, ships drop to the same floor in ~2s (50%/s), not
+  // sunk. Ships only.
   warshipDrainStartPercent: 1,
   warshipDrainMaxPercent: 50,
   warshipDrainCurveExponent: 8, // >1 = convex: stays gentle early, then spikes
@@ -113,6 +122,7 @@ export class Config {
     private _gameConfig: GameConfig,
     private _userSettings: UserSettings | null,
     private _isReplay: boolean,
+    public readonly listed: boolean = false,
   ) {}
 
   isReplay(): boolean {
@@ -141,6 +151,7 @@ export class Config {
       drainStartPercent: d.drainStartPercent,
       drainMaxPercent: d.drainMaxPercent,
       drainRampSeconds: d.drainRampSeconds,
+      drainFloorPercent: d.drainFloorPercent,
       warshipDrainStartPercent: d.warshipDrainStartPercent,
       warshipDrainMaxPercent: d.warshipDrainMaxPercent,
       warshipDrainCurveExponent: d.warshipDrainCurveExponent,
@@ -312,9 +323,6 @@ export class Config {
     return 110;
   }
   fuelRailMaxRange(baseLevel: number = 1, runwayLevel: number = 1): number {
-    // A fuel link must fit inside both structures' displayed operational
-    // circles. This prevents military rails reaching farther than either the
-    // tank base or runway itself can operate.
     return Math.min(
       this.tankMaxDriveRadius(baseLevel),
       this.planeMaxFlightRadius(runwayLevel),
@@ -743,6 +751,8 @@ export class Config {
         mag = 120;
         speed = 25;
         break;
+      case TerrainType.Impassable:
+        throw new Error(`impassable terrain cannot be attacked`);
       default:
         throw new Error(`terrain type ${type} not supported`);
     }
@@ -1000,33 +1010,36 @@ export class Config {
     return 100;
   }
 
-  defaultNukeSpeed(): number {
-    return 10;
+  nukeSpeed(unitType: UnitType): number {
+    switch (unitType) {
+      case UnitType.AtomBomb:
+      case UnitType.HydrogenBomb:
+        return 10;
+      case UnitType.MIRV:
+        return 15;
+      case UnitType.MIRVWarhead:
+        return 22;
+    }
+    throw new Error(`Unknown nuke type: ${unitType}`);
+  }
+
+  defaultNukeTargetableRange(): number {
+    return 150;
   }
 
   planeSpeed(): number {
-    // AirPathFinder advances one path node per step. PlaneExecution consumes
-    // this many nodes per simulation tick (8x the old one-node movement).
     return 8;
   }
 
   planeFalloutRadius(): number {
-    // Half the previous blast footprint.
     return this.nukeMagnitudes(UnitType.AtomBomb).outer / 4;
   }
 
-  // How long a plane's landing tiles are exempt from the automatic
-  // surrounded-cluster annexation sweep (15 seconds). After this window the
-  // beachhead is treated like any other pocket and can be annexed.
   planeBeachheadGraceTicks(): number {
     return 10 * 15;
   }
 
-  // The plane's maximum flight distance ("fuel range"), measured from the
-  // launch runway. Every completed runway level adds 35% of the base radius.
   planeMaxFlightRadius(runwayCount: number = 1): number {
-    // Each additional completed runway adds 35% of the base range.
-    // 1 runway = 100%, 2 = 135%, 3 = 170%, ...
     const runways = Math.max(1, runwayCount);
     return this.defaultSamRange() * (1 + 0.35 * (runways - 1));
   }
@@ -1036,13 +1049,10 @@ export class Config {
   }
 
   tankMineRange(level: number = 1): number {
-    const safeLevel = Math.max(1, level);
-    return this.defensePostRange() * (1 + 0.25 * (safeLevel - 1));
+    return this.defensePostRange() * (1 + 0.25 * (Math.max(1, level) - 1));
   }
 
   tankMaxDriveRadius(baseLevel: number = 1): number {
-    // Each additional military base level on the tank's tile adds 40% of the
-    // base range. Level 1 keeps the 1.2x baseline; 2 = 160%, 3 = 200%, ...
     return this.defaultSamRange() * (1.2 + 0.4 * Math.max(0, baseLevel - 1));
   }
 
@@ -1051,18 +1061,11 @@ export class Config {
   }
 
   openBackSnapRadius(_unitType?: UnitType): number {
-    // Use the same interaction radius as the base game's structures. Added
-    // units therefore stack and select with exactly the regular game feel.
     return this.structureMinDist();
   }
 
   openBackVehicleSnapRadius(): number {
-    // Parking a plane or tank uses the same base-game structure radius too.
     return this.structureMinDist();
-  }
-
-  defaultNukeTargetableRange(): number {
-    return 150;
   }
 
   defaultSamRange(): number {
@@ -1129,8 +1132,10 @@ export class Config {
     return 5;
   }
 
-  warshipRetreatHealthThreshold(): number {
-    return 750;
+  /** Health at or below which a warship retreats to repair, as a percent of its
+   *  (veterancy-adjusted) max health, so the threshold scales with max health. */
+  warshipRetreatHealthPercent(): number {
+    return 75;
   }
 
   warshipPassiveHealing(): number {
@@ -1143,6 +1148,35 @@ export class Config {
 
   warshipPortSwitchThreshold(): number {
     return 0.75;
+  }
+
+  // --- Warship veterancy ---
+
+  /** Maximum veterancy level a warship can reach. */
+  warshipMaxVeterancy(): number {
+    return 3;
+  }
+
+  /** Max-health boost per veterancy level, as an integer percent of base max
+   *  health. Integer-only to keep src/core deterministic (no float constants). */
+  warshipVeterancyHealthBonus(): number {
+    return 20;
+  }
+
+  /** Shell-damage boost per veterancy level, as an integer percent of the
+   *  rolled damage. Integer-only to keep src/core deterministic. */
+  warshipVeterancyShellDamageBonus(): number {
+    return 20;
+  }
+
+  /** Transport ships a warship must destroy to gain one veterancy level. */
+  warshipVeterancyTransportKills(): number {
+    return 10;
+  }
+
+  /** Trade ships a warship must capture to gain one veterancy level. */
+  warshipVeterancyTradeCaptures(): number {
+    return 25;
   }
 
   defensePostShellAttackRate(): number {

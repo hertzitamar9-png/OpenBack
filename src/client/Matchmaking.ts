@@ -2,7 +2,12 @@ import { html, LitElement } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { ClientEnv } from "src/client/ClientEnv";
 import { UserMeResponse } from "../core/ApiSchemas";
-import { getLastUserMe, getUserMe, hasLinkedAccount } from "./Api";
+import {
+  getLastUserMe,
+  getUserMe,
+  hasLinkedAccount,
+  invalidateUserMe,
+} from "./Api";
 import { getPlayToken } from "./Auth";
 import "./components/baseComponents/Button";
 import { BaseModal } from "./components/BaseModal";
@@ -19,6 +24,7 @@ import {
   shouldJoinRankedQueue,
 } from "./RankedMatchmakingFlow";
 import { socialClient } from "./SocialClient";
+import type { UsernameInput } from "./UsernameInput";
 import { showToast, translateText } from "./Utils";
 
 interface PartyMember {
@@ -53,6 +59,18 @@ export class MatchmakingModal extends BaseModal {
   private playToken = "";
   private partyMembers: string[] = [];
   private invitedPartyCode = "";
+  private selectedClanTag: string | null = null;
+  private legacyModeOverride = false;
+
+  public get mode(): "1v1" | "2v2" {
+    return this.teamSize === 1 ? "1v1" : "2v2";
+  }
+
+  public set mode(mode: "1v1" | "2v2") {
+    this.teamSize = mode === "1v1" ? 1 : 2;
+    this.withFriends = false;
+    this.legacyModeOverride = true;
+  }
 
   constructor() {
     super();
@@ -286,15 +304,25 @@ export class MatchmakingModal extends BaseModal {
         partyCode: this.joinCode,
       });
       if (shouldJoinRankedQueue(flow)) {
-        socket.send(
-          JSON.stringify({
-            type: "join",
-            jwt: this.playToken,
-            teamSize: this.teamSize,
-            bots: this.bots,
-            nations: this.nations,
-          }),
-        );
+        const message = this.legacyModeOverride
+          ? {
+              type: "join",
+              jwt: this.playToken,
+              ...(this.selectedClanTag === null
+                ? {}
+                : { clanTag: this.selectedClanTag }),
+            }
+          : {
+              type: "join",
+              jwt: this.playToken,
+              teamSize: this.teamSize,
+              bots: this.bots,
+              nations: this.nations,
+              ...(this.selectedClanTag === null
+                ? {}
+                : { clanTag: this.selectedClanTag }),
+            };
+        socket.send(JSON.stringify(message));
       } else if (flow.partyCode.length === 6) {
         this.sendPartyMessage("party_join");
       } else if (shouldCreateRankedParty(flow)) {
@@ -338,9 +366,19 @@ export class MatchmakingModal extends BaseModal {
     socket.onerror = (event: Event) => {
       console.error("WebSocket error occurred:", event);
     };
-    socket.onclose = () => {
+    socket.onclose = (event: CloseEvent) => {
       console.log("Matchmaking server closed connection");
       if (this.socket === socket) this.socket = null;
+      if (event.code === 1008 && event.reason === "invalid_clan") {
+        this.handleInvalidClan();
+        return;
+      }
+      if (event.code === 1011 && event.reason === "clan_verification_failed") {
+        this.connected = false;
+        this.close();
+        this.showMatchmakingError("matchmaking_modal.clan_verification_failed");
+        return;
+      }
       if (this.isModalOpen && this.gameID === null) {
         this.connected = false;
         this.reconnectTimeout = setTimeout(() => this.connect(), 1000);
@@ -349,9 +387,14 @@ export class MatchmakingModal extends BaseModal {
   }
 
   protected async onOpen(args?: Record<string, unknown>): Promise<void> {
-    const flow = rankedMatchmakingFlow(args);
-    this.teamSize = flow.teamSize;
-    this.withFriends = flow.withFriends;
+    const flow = rankedMatchmakingFlow(
+      args ?? { teamSize: this.teamSize, withFriends: this.withFriends },
+    );
+    if (args !== undefined) {
+      this.legacyModeOverride = false;
+      this.teamSize = flow.teamSize;
+      this.withFriends = flow.withFriends;
+    }
     this.party = null;
     this.joinCode = flow.partyCode;
     this.partyMembers = flow.partyMembers;
@@ -394,11 +437,56 @@ export class MatchmakingModal extends BaseModal {
       userMe.player.leaderboard?.oneVone?.elo ??
       translateText("matchmaking_modal.no_elo");
     this.myPublicId = userMe.player.publicId;
+    this.selectedClanTag = this.selectedClanFrom(userMe);
     this.playToken = await getPlayToken();
 
     this.connected = false;
     this.gameID = null;
     this.connect();
+  }
+
+  private selectedClanFrom(userMe: UserMeResponse): string | null {
+    if (this.teamSize !== 2) return null;
+    const selectedTag = document
+      .querySelector<UsernameInput>("username-input")
+      ?.getClanTag();
+    if (!selectedTag) return null;
+    return (
+      userMe.player.clans?.find(
+        (clan) => clan.tag.toUpperCase() === selectedTag.toUpperCase(),
+      )?.tag ?? null
+    );
+  }
+
+  private showMatchmakingError(messageKey: string): void {
+    window.dispatchEvent(
+      new CustomEvent("show-message", {
+        detail: {
+          message: translateText(messageKey),
+          color: "red",
+          duration: 5000,
+        },
+      }),
+    );
+  }
+
+  private handleInvalidClan(): void {
+    const rejectedClanTag = this.selectedClanTag;
+    this.connected = false;
+    this.close();
+    this.showMatchmakingError("matchmaking_modal.invalid_clan");
+    invalidateUserMe();
+    void getUserMe().then((userMe) => {
+      if (userMe === false || rejectedClanTag === null) return;
+      const stillMember = userMe.player.clans?.some(
+        (clan) => clan.tag.toUpperCase() === rejectedClanTag.toUpperCase(),
+      );
+      if (!stillMember) {
+        document
+          .querySelector<UsernameInput>("username-input")
+          ?.clearClanTag(rejectedClanTag);
+      }
+    });
   }
 
   protected onClose(): void {

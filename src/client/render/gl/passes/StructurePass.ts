@@ -79,6 +79,7 @@ const BYTES_PER_INSTANCE = FLOATS_PER_INSTANCE * 4;
 // ---------------------------------------------------------------------------
 
 export class StructurePass {
+  private highlightOwner = 0;
   private gl: WebGL2RenderingContext;
   private settings: RenderSettings;
   private program: WebGLProgram;
@@ -298,6 +299,10 @@ export class StructurePass {
 
   setLocalPlayer(smallID: number): void {
     this.localPlayerID = smallID;
+  }
+
+  setHighlightOwner(ownerID: number): void {
+    this.highlightOwner = ownerID;
   }
 
   updateStructures(units: Map<number, UnitState>): void {

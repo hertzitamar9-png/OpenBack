@@ -167,6 +167,12 @@ export class SendHashEvent implements GameEvent {
   ) {}
 }
 
+// Emitted when the server tells us the host started a successor lobby, carrying
+// the new game id to move the group to.
+export class NewLobbyEvent implements GameEvent {
+  constructor(public readonly gameID: string) {}
+}
+
 export class MoveWarshipIntentEvent implements GameEvent {
   constructor(
     public readonly unitIds: number[],
@@ -353,10 +359,10 @@ export class Transport {
   ) {
     this.startPing();
     this.killExistingSocket();
-    const wsHost = window.location.host;
-    const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    // WS origin comes from ClientEnv (same-origin on web, audience-derived on
+    // the desktop app://openfront origin), not window.location.host.
     const workerPath = ClientEnv.workerPath(this.lobbyConfig.gameID);
-    this.socket = new WebSocket(`${wsProtocol}//${wsHost}/${workerPath}`);
+    this.socket = new WebSocket(`${ClientEnv.serverWsBase()}/${workerPath}`);
     this.onconnect = onconnect;
     this.onmessage = onmessage;
     this.socket.onopen = () => {

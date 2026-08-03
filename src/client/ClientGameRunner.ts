@@ -54,6 +54,7 @@ import { terrainMapFileLoader } from "./TerrainMapFileLoader";
 import { GoToPlayerEvent } from "./TransformHandler";
 import {
   MoveWarshipIntentEvent,
+  NewLobbyEvent,
   SendAllianceExtensionIntentEvent,
   SendAllianceRequestIntentEvent,
   SendAttackIntentEvent,
@@ -66,15 +67,19 @@ import {
 } from "./Transport";
 import { createCanvas } from "./Utils";
 import { WebGLFrameBuilder } from "./WebGLFrameBuilder";
+import { MapLayerController } from "./controllers/MapLayerController";
 import { createRenderer, GameRenderer } from "./hud/GameRenderer";
 import {
   applyGraphicsOverrides,
   createRenderSettings,
   deepAssign,
+  GLUnavailableError,
   MapRenderer,
   preloadAtlasData,
   renderDpr,
   type RenderSettings,
+  showGLGate,
+  trackGLInit,
 } from "./render/gl";
 import { ALL_UNIT_TYPES, UnitState } from "./render/types";
 import { SoundManager } from "./sound/SoundManager";
@@ -107,7 +112,6 @@ export function joinLobby(
   eventBus: EventBus,
   lobbyConfig: LobbyConfig,
 ): JoinLobbyResult {
-  const gameEventBus = eventBus.scoped();
   // Mutable clientID state — assigned by server (multiplayer) or derived from gameStartInfo (singleplayer)
   let clientID: ClientID | undefined;
 
@@ -122,7 +126,7 @@ export function joinLobby(
   themeProvider.reset(); // fresh colour allocators for this game
   startGame(lobbyConfig.gameID, lobbyConfig.gameStartInfo?.config ?? {});
 
-  const transport = new Transport(lobbyConfig, gameEventBus);
+  const transport = new Transport(lobbyConfig, eventBus);
 
   let currentGameRunner: ClientGameRunner | null = null;
 
@@ -141,7 +145,7 @@ export function joinLobby(
     if (message.type === "lobby_info") {
       // Server tells us our assigned clientID
       clientID = message.myClientID;
-      gameEventBus.emit(new LobbyInfoEvent(message.lobby, message.myClientID));
+      eventBus.emit(new LobbyInfoEvent(message.lobby, message.myClientID));
       return;
     }
     if (message.type === "prestart") {
@@ -152,7 +156,7 @@ export function joinLobby(
         message.gameMap,
         message.gameMapSize,
         terrainMapFileLoader,
-        { loadMiniMap: false },
+        false, // Layer images loaded off the critical path after game start.
       );
       resolvePrestart();
     }
@@ -170,7 +174,7 @@ export function joinLobby(
       createClientGame(
         lobbyConfig,
         clientID,
-        gameEventBus,
+        eventBus,
         transport,
         userSettings,
         terrainLoad,
@@ -190,6 +194,12 @@ export function joinLobby(
           ) as HTMLElement;
           if (startingModal) {
             startingModal.classList.add("hidden");
+          }
+          // No GPU-accelerated WebGL2: gate with an actionable message rather
+          // than the generic crash modal (the game would crawl at ~1fps).
+          if (e instanceof GLUnavailableError) {
+            showGLGate(e.glStatus);
+            return;
           }
           showErrorModal(
             e.message,
@@ -221,6 +231,31 @@ export function joinLobby(
             }),
           );
         });
+      } else if (message.error === "kick_reason.match_cancelled") {
+        // A matched player never connected and the server cancelled the game
+        // pre-start. Tear down the dead lobby, then put the matchmaking
+        // modal — still open on "waiting for game" (it only closes at
+        // prestart) — straight back into the queue so the players who did
+        // connect don't have to requeue by hand. A non-blocking toast
+        // explains why; an alert here would keep them out of the queue
+        // until dismissed.
+        document.dispatchEvent(
+          new CustomEvent("leave-lobby", {
+            detail: { lobby: lobbyConfig.gameID, cause: "match-cancelled" },
+            bubbles: true,
+            composed: true,
+          }),
+        );
+        document.dispatchEvent(new CustomEvent("matchmaking-requeue"));
+        window.dispatchEvent(
+          new CustomEvent("show-message", {
+            detail: {
+              message: translateText("kick_reason.match_cancelled"),
+              color: "red",
+              duration: 5000,
+            },
+          }),
+        );
       } else {
         showErrorModal(
           message.error,
@@ -248,7 +283,6 @@ export function joinLobby(
       } else {
         transport.leaveGame();
       }
-      gameEventBus.dispose();
       return true;
     },
     prestart: prestartPromise,
@@ -271,12 +305,20 @@ function createWebGLView(
   const mapWidth = gameMap.width();
   const mapHeight = gameMap.height();
 
-  const terrainBytes = new Uint8Array(mapWidth * mapHeight);
-  for (let y = 0; y < mapHeight; y++) {
-    for (let x = 0; x < mapWidth; x++) {
-      terrainBytes[y * mapWidth + x] = gameMap.terrainByte(gameMap.ref(x, y));
+  // Provider, not a buffer: per-tile terrain bytes are map-sized (8 MB on
+  // the giant map), so consumers regenerate them on demand (initial bake,
+  // context restore, theme change) instead of anyone retaining a copy.
+  // gameMap is updated live by water-nuke conversions, so a regenerated
+  // array always reflects them.
+  const terrainSource = (): Uint8Array => {
+    const terrainBytes = new Uint8Array(mapWidth * mapHeight);
+    for (let y = 0; y < mapHeight; y++) {
+      for (let x = 0; x < mapWidth; x++) {
+        terrainBytes[y * mapWidth + x] = gameMap.terrainByte(gameMap.ref(x, y));
+      }
     }
-  }
+    return terrainBytes;
+  };
 
   const glCanvas = createCanvas();
   glCanvas.id = "webgl-debug-canvas";
@@ -301,26 +343,53 @@ function createWebGLView(
   };
 
   const palette = new Float32Array(4096 * 2 * 4);
-  const view = new MapRenderer(
-    glCanvas,
-    {
-      mapWidth,
-      mapHeight,
-      unitTypes: [...ALL_UNIT_TYPES],
-      players: [],
-      // Pre-allocate renderer textures for up to 1024 players. We add players
-      // dynamically via view.addPlayers() as they come in from the simulation,
-      // but the NamePass / palette / relation matrix all need a static upper
-      // bound at construction time.
-      maxPlayers: 1024,
-    },
-    terrainBytes,
-    palette,
-    config,
-    settings,
-    captureRaf,
-    captureCaf,
-  );
+  // Log the GPU init result on every session so we can size the real % of
+  // users on software/missing WebGL2. MapRenderer constructs the GL context;
+  // a non-accelerated context throws GLUnavailableError (handled by the
+  // game-start catch, which shows the gate).
+  let view: MapRenderer;
+  try {
+    view = new MapRenderer(
+      glCanvas,
+      {
+        mapWidth,
+        mapHeight,
+        unitTypes: [...ALL_UNIT_TYPES],
+        players: [],
+        // Pre-allocate renderer textures for up to 1024 players. We add players
+        // dynamically via view.addPlayers() as they come in from the simulation,
+        // but the NamePass / palette / relation matrix all need a static upper
+        // bound at construction time.
+        maxPlayers: 1024,
+      },
+      terrainSource,
+      palette,
+      config,
+      settings,
+      captureRaf,
+      captureCaf,
+    );
+  } catch (e) {
+    if (e instanceof GLUnavailableError) {
+      trackGLInit(e.glStatus, e.renderer);
+    }
+    // The renderer never took ownership of the canvas, so remove it here —
+    // otherwise it lingers in the DOM holding a (possibly software) GL context.
+    glCanvas.remove();
+    throw e;
+  }
+  // Fingerprint-capped context (#4357): the game runs, but the map may render
+  // with black areas. Warn with fix instructions; the player can continue.
+  if (view.glLimited) {
+    trackGLInit(
+      "limited",
+      view.glLimited.renderer,
+      view.glLimited.maxTextureSize,
+    );
+    showGLGate("limited");
+  } else {
+    trackGLInit("ok", "");
+  }
 
   (window as unknown as { __webglView?: unknown }).__webglView = view;
 
@@ -380,7 +449,7 @@ function mountWebGLFrameLoop(
   // animated chevron pass at the target tile. The renderer needs the target's
   // tile x/y and the warship's owner smallID (so the chevrons use the right
   // color).
-  const unsubscribeMoveIndicator = eventBus.on(MoveWarshipIntentEvent, (e) => {
+  eventBus.on(MoveWarshipIntentEvent, (e) => {
     const tile = e.tile;
     const tx = gameView.x(tile);
     const ty = gameView.y(tile);
@@ -411,7 +480,6 @@ function mountWebGLFrameLoop(
       rafId = null;
     }
     resizeObs.disconnect();
-    unsubscribeMoveIndicator();
   };
 
   const builder = new WebGLFrameBuilder(view);
@@ -462,6 +530,7 @@ async function createClientGame(
     lobbyConfig.gameStartInfo.config,
     userSettings,
     lobbyConfig.gameRecord !== undefined,
+    lobbyConfig.gameStartInfo.listed,
   );
   let gameMap: TerrainMapData;
 
@@ -472,7 +541,7 @@ async function createClientGame(
       lobbyConfig.gameStartInfo.config.gameMap,
       lobbyConfig.gameStartInfo.config.gameMapSize,
       mapLoader,
-      { loadMiniMap: false },
+      false, // Layer images loaded off the critical path after game start.
     );
   }
   // Kick off the font-atlas fetch so it overlaps with worker init; the
@@ -526,6 +595,17 @@ async function createClientGame(
     const graphicsListenerAbort = new AbortController();
 
     view.setShowPatterns(userSettings.territoryPatterns());
+
+    const mapLayerController = new MapLayerController(
+      view,
+      gameMap,
+      userSettings,
+      lobbyConfig.gameStartInfo.config.gameMap,
+      lobbyConfig.gameStartInfo.config.gameMapSize,
+      mapLoader,
+      graphicsListenerAbort.signal,
+    );
+
     globalThis.addEventListener(
       `${USER_SETTINGS_CHANGED_EVENT}:settings.territoryPatterns`,
       (e) => view.setShowPatterns((e as CustomEvent<string>).detail === "true"),
@@ -603,6 +683,7 @@ async function createClientGame(
       eventBus,
       lobbyConfig.playerRole,
       view,
+      mapLayerController,
     );
 
     const { builder: webglBuilder, stopFrameLoop } = mountWebGLFrameLoop(
@@ -623,7 +704,6 @@ async function createClientGame(
     const disposeRenderer = (): void => {
       if (rendererDisposed) return;
       rendererDisposed = true;
-      gameRenderer.dispose();
       stopFrameLoop();
       view.dispose();
       glCanvas.remove();
@@ -668,19 +748,6 @@ export class ClientGameRunner {
 
   private lastTickReceiveTime: number = 0;
   private currentTickDelay: number | undefined = undefined;
-
-  // Coalescing: incoming worker game-updates are buffered and applied in a
-  // single RAF-driven flush instead of running the full update+render pipeline
-  // once per message. Under heavy catch-up (e.g. reconnect resync of hundreds
-  // of turns) the worker can deliver many updates in a single macrotask, and
-  // running gameView.update + webglBuilder.update + renderer.tick per message
-  // floods the main thread and drops frames / crashes the tab.
-  private pendingUpdates: GameUpdateViewData[] = [];
-  private flushRafId: number | null = null;
-  private readonly eventListenerAbort = new AbortController();
-  // Maximum simulation updates applied per animation frame. Extra updates stay
-  // queued for later frames so reconnect bursts cannot monopolize one frame.
-  private static readonly MAX_UPDATES_PER_FLUSH = 8;
 
   constructor(
     private lobby: LobbyConfig,
@@ -760,42 +827,28 @@ export class ClientGameRunner {
       );
     }, 20000);
 
-    const listenerOptions = { signal: this.eventListenerAbort.signal };
-    this.eventBus.on(MouseUpEvent, this.inputEvent.bind(this), listenerOptions);
-    this.eventBus.on(
-      MouseMoveEvent,
-      this.onMouseMove.bind(this),
-      listenerOptions,
-    );
-    this.eventBus.on(
-      AutoUpgradeEvent,
-      this.autoUpgradeEvent.bind(this),
-      listenerOptions,
-    );
+    this.eventBus.on(MouseUpEvent, this.inputEvent.bind(this));
+    this.eventBus.on(MouseMoveEvent, this.onMouseMove.bind(this));
+    this.eventBus.on(AutoUpgradeEvent, this.autoUpgradeEvent.bind(this));
     this.eventBus.on(
       DoBoatAttackEvent,
       this.doBoatAttackUnderCursor.bind(this),
-      listenerOptions,
     );
     this.eventBus.on(
       DoGroundAttackEvent,
       this.doGroundAttackUnderCursor.bind(this),
-      listenerOptions,
     );
     this.eventBus.on(
       DoRetaliateAttackEvent,
       this.doRetaliateAttackMostRecent.bind(this),
-      listenerOptions,
     );
     this.eventBus.on(
       DoRequestAllianceEvent,
       this.doRequestAllianceUnderCursor.bind(this),
-      listenerOptions,
     );
     this.eventBus.on(
       DoBreakAllianceEvent,
       this.doBreakAllianceUnderCursor.bind(this),
-      listenerOptions,
     );
 
     this.renderer.initialize();
@@ -819,12 +872,9 @@ export class ClientGameRunner {
       gu.updates[GameUpdateType.Hash].forEach((hu: HashUpdate) => {
         this.eventBus.emit(new SendHashEvent(hu.tick, hu.hash));
       });
-
-      // Buffer the update and coalesce rendering into a single RAF flush.
-      // Hash events and win handling are processed immediately (they are
-      // cheap and must not be lost), but the heavy update+render pipeline
-      // runs at most once per frame regardless of how many updates arrived.
-      this.pendingUpdates.push(gu);
+      this.gameView.update(gu);
+      this.webglBuilder?.update(this.gameView);
+      this.renderer.tick();
 
       // Emit tick metrics event for performance overlay
       this.eventBus.emit(
@@ -837,8 +887,6 @@ export class ClientGameRunner {
       if (gu.updates[GameUpdateType.Win].length > 0) {
         this.saveGame(gu.updates[GameUpdateType.Win][0]);
       }
-
-      this.flushRafId ??= requestAnimationFrame(() => this.flushUpdates());
     });
 
     const onconnect = () => {
@@ -924,6 +972,12 @@ export class ClientGameRunner {
           "error_modal.connection_error",
         );
       }
+      if (message.type === "new_lobby") {
+        // The host reused this private lobby: surface the successor id so the
+        // group can hop over. NewLobbyPrompt navigates the host and prompts
+        // everyone else.
+        this.eventBus.emit(new NewLobbyEvent(message.gameID));
+      }
       if (message.type === "turn") {
         if (
           !this.gameView.inSpawnPhase() &&
@@ -969,45 +1023,13 @@ export class ClientGameRunner {
     this.transport.rejoinGame(0);
   }
 
-  // Apply all buffered worker updates to the simulation view, then run the
-  // heavy WebGL update + render exactly once for the frame. This collapses
-  // many rapid updates (resync storms) into a single draw call per RAF.
-  private flushUpdates(): void {
-    this.flushRafId = null;
-    if (!this.isActive) {
-      this.pendingUpdates.length = 0;
-      return;
-    }
-    const count = Math.min(
-      this.pendingUpdates.length,
-      ClientGameRunner.MAX_UPDATES_PER_FLUSH,
-    );
-    for (let i = 0; i < count; i++) {
-      this.gameView.update(this.pendingUpdates[i]);
-    }
-    this.pendingUpdates = this.pendingUpdates.slice(count);
-
-    this.webglBuilder?.update(this.gameView);
-    this.renderer.tick();
-    if (this.pendingUpdates.length > 0) {
-      this.flushRafId = requestAnimationFrame(() => this.flushUpdates());
-    }
-  }
-
   public stop() {
     this.soundManager.dispose();
-    this.eventListenerAbort.abort();
-    this.input.dispose();
     this.graphicsListenerAbort?.abort();
     this.disposeRenderer?.();
     if (!this.isActive) return;
 
     this.isActive = false;
-    if (this.flushRafId !== null) {
-      cancelAnimationFrame(this.flushRafId);
-      this.flushRafId = null;
-    }
-    this.pendingUpdates.length = 0;
     this.worker.cleanup();
     this.transport.leaveGame();
     if (this.connectionCheckInterval) {
@@ -1348,7 +1370,16 @@ export class ClientGameRunner {
     if (!this.gameView.isLand(tile)) return false;
 
     const canBuild = this.canBoatAttack(buildables);
-    return canBuild !== false;
+    if (canBuild === false) return false;
+
+    // TODO: Global enable flag
+    // TODO: Global limit autoboat to nearby shore flag
+    // if (!enableAutoBoat) return false;
+    // if (!limitAutoBoatNear) return true;
+    const distanceSquared = this.gameView.euclideanDistSquared(tile, canBuild);
+    const limit = 100;
+    const limitSquared = limit * limit;
+    return distanceSquared < limitSquared;
   }
 
   private onMouseMove(event: MouseMoveEvent) {
@@ -1377,7 +1408,7 @@ function showErrorModal(
   gameID: GameID,
   clientID: ClientID | undefined,
   closable = false,
-  includeReportInstructions = true,
+  showDiscord = true,
   heading = "error_modal.crashed",
 ) {
   if (document.querySelector("#error-modal")) {
@@ -1391,9 +1422,7 @@ function showErrorModal(
   modal.id = "error-modal";
 
   const content = [
-    includeReportInstructions
-      ? translateText("error_modal.report_intro")
-      : null,
+    showDiscord ? translateText("error_modal.paste_discord") : null,
     translateText(heading),
     `game id: ${gameID}`,
     `client id: ${clientID}`,

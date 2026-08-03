@@ -11,20 +11,20 @@ export function assignTeams(
   const result = new Map<PlayerInfo, Team | "kicked">();
   const teamPlayerCount = new Map<Team, number>();
 
-  // Explicit lobby choices are authoritative and may intentionally create
-  // uneven teams (for example 3v1). Automatic placement balances everybody
-  // who left their choice on Auto around those selections.
-  const explicitlyAssigned = new Set<PlayerInfo>();
-  for (const player of players) {
-    if (player.selectedTeam === null || !teams.includes(player.selectedTeam)) {
+  // Matchmade games arrive with a server-pinned team slot (teamIndex). The
+  // matchmaker already balanced those teams, so pins are honored
+  // unconditionally — before and regardless of clan/friend grouping and
+  // maxTeamSize — and seed the counts the balancing below sees.
+  const unpinned: PlayerInfo[] = [];
+  for (const p of players) {
+    const pinnedTeam =
+      p.teamIndex === null ? (p.selectedTeam ?? undefined) : teams[p.teamIndex];
+    if (pinnedTeam === undefined) {
+      unpinned.push(p);
       continue;
     }
-    result.set(player, player.selectedTeam);
-    explicitlyAssigned.add(player);
-    teamPlayerCount.set(
-      player.selectedTeam,
-      (teamPlayerCount.get(player.selectedTeam) ?? 0) + 1,
-    );
+    result.set(p, pinnedTeam);
+    teamPlayerCount.set(pinnedTeam, (teamPlayerCount.get(pinnedTeam) ?? 0) + 1);
   }
 
   // Clans are strict: a clan goes to one team together, and any overflow
@@ -32,8 +32,7 @@ export function assignTeams(
   // nothing" for placement.)
   const clanGroups = new Map<string, PlayerInfo[]>();
   const nonClanPlayers: PlayerInfo[] = [];
-  for (const p of players) {
-    if (explicitlyAssigned.has(p)) continue;
+  for (const p of unpinned) {
     if (p.clanTag) {
       if (!clanGroups.has(p.clanTag)) clanGroups.set(p.clanTag, []);
       clanGroups.get(p.clanTag)!.push(p);

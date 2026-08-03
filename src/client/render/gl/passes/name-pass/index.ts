@@ -41,6 +41,7 @@ import {
   buildGlyphMetricsTex,
   buildPlayerDataTex,
   buildStringTex,
+  PLAYER_DATA_COLS,
 } from "./DataTextures";
 import { DebugProgram } from "./DebugProgram";
 import { FlagAtlasArray } from "./FlagAtlasArray";
@@ -53,6 +54,14 @@ import { LINES_PER_PLAYER, MAX_CHARS } from "./Types";
 
 // Flag quad aspect ratio — must match FLAG_CELL_W / FLAG_CELL_H in FlagAtlasArray.ts.
 const FLAG_ASPECT = 128 / 85;
+
+// Crown cosmetics use square cells (must match the crownAtlas cell size below).
+export const CROWN_CELL = 128;
+
+// Initial unique-crown capacity. Crowns are a rare cosmetic, so start small
+// (32 × 128×128 RGBA8 + mips ≈ 2.8 MB vs ~43 MB at the 512 flag default);
+// the atlas doubles itself if a game exceeds it.
+const CROWN_INITIAL_LAYERS = 32;
 
 export class NamePass {
   private gl: WebGL2RenderingContext;
@@ -81,14 +90,16 @@ export class NamePass {
 
   // Player management
   private playerByID: Map<string, PlayerStatic>;
-  private smallIDToPlayerID: Map<number, string>;
   private slots: Map<string, PlayerSlot> = new Map();
   private maxPlayers: number;
   private playerColors: Map<string, [number, number, number]> = new Map();
   private flagAtlas: FlagAtlasArray;
+  private crownAtlas: FlagAtlasArray;
   private emojiCharToIndex: Map<string, number>;
   /** Slots waiting on a flag URL → set of slots that want that URL's layer. */
   private slotsWaitingForFlag = new Map<string, Set<PlayerSlot>>();
+  /** Slots waiting on a crown URL → set of slots that want that URL's layer. */
+  private slotsWaitingForCrown = new Map<string, Set<PlayerSlot>>();
 
   // CPU-side mirrors — batched upload in draw()
   private cpuPlayerData: Float32Array;
@@ -102,16 +113,15 @@ export class NamePass {
   private stringRow: Uint8Array;
   private cursorRow: Float32Array;
 
-  // Reusable per-tick lookup maps (avoid allocation + GC)
-  private alivePlayerIDs = new Set<string>();
-  private troopsByPlayerID = new Map<string, number>();
+  /** Slots refreshed per updateNames call: index % UPDATE_SLICES === phase. */
+  private static readonly UPDATE_SLICES = 4;
+  private slicePhase = 0;
 
   // Hovered player's small ID (0 = no highlight, matches TerritoryPass).
   private highlightOwnerID = 0;
   // Cursor in world coords — fades names under it (far off-map = no fade).
   private mouseWorldX = -1e9;
   private mouseWorldY = -1e9;
-  private playerStateByID = new Map<string, PlayerState>();
 
   constructor(
     gl: WebGL2RenderingContext,
@@ -146,12 +156,30 @@ export class NamePass {
       }
     });
 
+    // Crown cosmetics share the flag-atlas mechanism but use their own array
+    // (square cells so crown quads carry no letterbox margins). The crown
+    // image skins the first-place status crown (StatusIconProgram slot 0).
+    this.crownAtlas = new FlagAtlasArray(
+      gl,
+      (url, layer) => {
+        const waiting = this.slotsWaitingForCrown.get(url);
+        if (!waiting) return;
+        this.slotsWaitingForCrown.delete(url);
+        for (const slot of waiting) {
+          if (slot.crownUrl !== url) continue;
+          slot.crownLayerIdx = layer;
+          this.writePlayerDataRow(slot);
+        }
+      },
+      CROWN_CELL,
+      CROWN_CELL,
+      CROWN_INITIAL_LAYERS,
+    );
+
     // Build player lookups and extract territory colors from palette
     this.playerByID = new Map();
-    this.smallIDToPlayerID = new Map();
     for (const p of header.players) {
       this.playerByID.set(p.id, p);
-      this.smallIDToPlayerID.set(p.smallID, p.id);
       const off = p.smallID * 4;
       this.playerColors.set(p.id, [
         paletteData[off],
@@ -162,7 +190,9 @@ export class NamePass {
 
     // CPU-side texture mirrors + reusable layout buffers
     const textRows = this.maxPlayers * LINES_PER_PLAYER;
-    this.cpuPlayerData = new Float32Array(8 * this.maxPlayers * 4);
+    this.cpuPlayerData = new Float32Array(
+      PLAYER_DATA_COLS * this.maxPlayers * 4,
+    );
     this.cpuStringData = new Uint8Array(MAX_CHARS * textRows);
     this.cpuCursorData = new Float32Array(MAX_CHARS * textRows);
     this.stringRow = new Uint8Array(MAX_CHARS);
@@ -189,14 +219,22 @@ export class NamePass {
       atlas,
       this.playerDataTex,
       this.flagAtlas,
+      this.maxPlayers,
     );
     this.statusIconProgram = new StatusIconProgram(
       gl,
       atlas,
       this.playerDataTex,
+      this.crownAtlas,
+      this.maxPlayers,
       config.allianceExtensionPromptOffset(),
     );
-    this.debugProgram = new DebugProgram(gl, atlas, this.playerDataTex);
+    this.debugProgram = new DebugProgram(
+      gl,
+      atlas,
+      this.playerDataTex,
+      this.maxPlayers,
+    );
   }
 
   // -------------------------------------------------------------------------
@@ -208,7 +246,6 @@ export class NamePass {
     for (const p of players) {
       if (this.playerByID.has(p.id)) continue;
       this.playerByID.set(p.id, p);
-      this.smallIDToPlayerID.set(p.smallID, p.id);
       const off = p.smallID * 4;
       this.playerColors.set(p.id, [
         paletteData[off],
@@ -275,6 +312,24 @@ export class NamePass {
     waiting.add(slot);
   }
 
+  /** Same as resolveSlotFlag, for the slot's crown cosmetic. */
+  private resolveSlotCrown(slot: PlayerSlot): void {
+    const url = slot.crownUrl;
+    if (!url) return;
+    this.crownAtlas.request(url);
+    const layer = this.crownAtlas.getLayer(url);
+    if (layer >= 0) {
+      slot.crownLayerIdx = layer;
+      return;
+    }
+    let waiting = this.slotsWaitingForCrown.get(url);
+    if (!waiting) {
+      waiting = new Set();
+      this.slotsWaitingForCrown.set(url, waiting);
+    }
+    waiting.add(slot);
+  }
+
   // -------------------------------------------------------------------------
   // Name updates — called by GPURenderer
   // -------------------------------------------------------------------------
@@ -287,76 +342,87 @@ export class NamePass {
   ): void {
     const now = performance.now() / 1000;
 
-    // Build alive set and emoji lookup from smallID → playerID
-    const alivePlayerIDs = this.alivePlayerIDs;
-    alivePlayerIDs.clear();
-    const troopsByPlayerID = this.troopsByPlayerID;
-    troopsByPlayerID.clear();
-    const playerStateByID = this.playerStateByID;
-    playerStateByID.clear();
-    for (const [, ps] of players) {
-      const pid = this.smallIDToPlayerID.get(ps.smallID);
-      if (!pid) continue;
-      if (ps.isAlive) alivePlayerIDs.add(pid);
-      troopsByPlayerID.set(pid, ps.troops ?? 0);
-      playerStateByID.set(pid, ps);
-    }
-
-    // Assign slot indices to players (stable ordering by header index)
-    let nextSlotIndex = 0;
-    for (const p of this.playerByID.values()) {
-      if (!this.slots.has(p.id)) {
-        const slot: PlayerSlot = {
-          index: nextSlotIndex++,
-          playerID: p.id,
-          static: p,
-          srcX: 0,
-          srcY: 0,
-          srcScale: 0,
-          tgtX: 0,
-          tgtY: 0,
-          tgtScale: 0,
-          startTime: now,
-          alive: false,
-          nameLen: 0,
-          troopLen: 0,
-          lastTroopStr: "",
-          lastTroopBucket: -1,
-          flagUrl: p.flag,
-          flagLayerIdx: -1,
-          emojiAtlasIdx: -1,
-          nameHalfWidth: 0,
-          crown: false,
-          traitor: false,
-          disconnected: false,
-          alliance: false,
-          allianceReq: false,
-          target: false,
-          embargo: false,
-          nukeActive: false,
-          nukeTargetsMe: false,
-          inDoomsdayClock: false,
-          doomsdayClockDraining: false,
-          doomsdayClockWarnProgress: 0,
-          traitorRemainingTicks: 0,
-          allianceFraction: 0,
-          allianceRemainingTicks: 0,
-        };
-        this.slots.set(p.id, slot);
-        this.resolveSlotFlag(slot);
-      } else {
-        nextSlotIndex = Math.max(
-          nextSlotIndex,
-          this.slots.get(p.id)!.index + 1,
-        );
+    // Assign slot indices to players (stable ordering by header index).
+    // Both maps only ever grow, and every assignment pass leaves them the
+    // same size — equal sizes means every player already has a slot.
+    if (this.slots.size !== this.playerByID.size) {
+      let nextSlotIndex = 0;
+      for (const p of this.playerByID.values()) {
+        if (!this.slots.has(p.id)) {
+          const slot: PlayerSlot = {
+            index: nextSlotIndex++,
+            playerID: p.id,
+            static: p,
+            srcX: 0,
+            srcY: 0,
+            srcScale: 0,
+            tgtX: 0,
+            tgtY: 0,
+            tgtScale: 0,
+            startTime: now,
+            alive: false,
+            nameLen: 0,
+            troopLen: 0,
+            lastTroopStr: "",
+            lastTroopBucket: -1,
+            flagUrl: p.flag,
+            flagLayerIdx: -1,
+            crownUrl: p.crown,
+            crownLayerIdx: -1,
+            emojiAtlasIdx: -1,
+            nameHalfWidth: 0,
+            crown: false,
+            traitor: false,
+            disconnected: false,
+            alliance: false,
+            allianceReq: false,
+            target: false,
+            embargo: false,
+            nukeActive: false,
+            nukeTargetsMe: false,
+            inDoomsdayClock: false,
+            doomsdayClockDraining: false,
+            doomsdayClockWarnProgress: 0,
+            traitorRemainingTicks: 0,
+            allianceFraction: 0,
+            allianceRemainingTicks: 0,
+          };
+          this.slots.set(p.id, slot);
+          this.resolveSlotFlag(slot);
+          this.resolveSlotCrown(slot);
+        } else {
+          nextSlotIndex = Math.max(
+            nextSlotIndex,
+            this.slots.get(p.id)!.index + 1,
+          );
+        }
       }
     }
+
+    // Round-robin time slicing: each call refreshes 1/UPDATE_SLICES of the
+    // slots, spreading the per-player diff work across game ticks (full
+    // refresh every UPDATE_SLICES ticks ≈ 400 ms — under the 500 ms troop
+    // text cadence, and name positions lerp continuously anyway). Slots
+    // without a written name (new player, refreshNames reset) and snap
+    // passes (seek) are always processed so nothing pops in late.
+    const phase = this.slicePhase;
+    this.slicePhase = (phase + 1) % NamePass.UPDATE_SLICES;
 
     for (const [playerID, entry] of names) {
       const slot = this.slots.get(playerID);
       if (!slot) continue;
 
-      const alive = alivePlayerIDs.has(playerID);
+      if (
+        !snap &&
+        slot.nameLen !== 0 &&
+        slot.index % NamePass.UPDATE_SLICES !== phase
+      ) {
+        continue;
+      }
+
+      // Per-player state straight from the caller's map — smallID is the key.
+      const ps = players.get(slot.static.smallID);
+      const alive = ps?.isAlive ?? false;
 
       // Skip dead players already marked dead — no work needed
       if (!alive && !slot.alive) continue;
@@ -388,7 +454,7 @@ export class NamePass {
       const troopBucket = Math.floor((now + (slot.index % 5) * 0.1) / 0.5);
       if (snap || slot.troopLen === 0 || troopBucket !== slot.lastTroopBucket) {
         slot.lastTroopBucket = troopBucket;
-        const troops = troopsByPlayerID.get(playerID) ?? 0;
+        const troops = ps?.troops ?? 0;
         const troopStr = renderTroops(troops);
         if (troopStr !== slot.lastTroopStr) {
           slot.troopLen = Math.min(troopStr.length, MAX_CHARS);
@@ -427,7 +493,6 @@ export class NamePass {
 
       // Resolve active broadcast emoji for this player
       let newEmoji = -1;
-      const ps = playerStateByID.get(playerID);
       if (ps?.outgoingEmojis && ps.outgoingEmojis.length > 0) {
         for (const e of ps.outgoingEmojis) {
           if (e.recipientID === "AllPlayers") {
@@ -535,7 +600,7 @@ export class NamePass {
   /** Pack player data into the CPU buffer (flushed to GPU in draw). */
   private writePlayerDataRow(slot: PlayerSlot): void {
     const d = this.cpuPlayerData;
-    const off = slot.index * 32; // 8 columns × 4 floats per RGBA texel
+    const off = slot.index * (PLAYER_DATA_COLS * 4); // 4 floats per RGBA texel
 
     // Column 0: srcX, srcY, srcScale, startTime
     d[off + 0] = slot.srcX;
@@ -601,6 +666,23 @@ export class NamePass {
     d[off + 29] = slot.traitorRemainingTicks;
     d[off + 30] = slot.allianceFraction;
     d[off + 31] = slot.allianceRemainingTicks;
+
+    // Column 8: crownLayerIdx (crown cosmetic), verified badge, statusIconCount, free
+    d[off + 32] = slot.crownLayerIdx;
+    d[off + 33] = slot.static.verified === true ? 1.0 : 0.0;
+    // Count of active status-row icons so shaders don't recompute it independently.
+    d[off + 34] = [
+      slot.crown,
+      slot.traitor,
+      slot.disconnected,
+      slot.alliance,
+      slot.allianceReq,
+      slot.target,
+      slot.embargo,
+      slot.nukeActive,
+      slot.inDoomsdayClock || slot.doomsdayClockDraining,
+    ].filter(Boolean).length;
+    d[off + 35] = 0.0;
 
     this.playerDataDirty = true;
   }
@@ -678,8 +760,6 @@ export class NamePass {
     if (this.slots.size === 0) return;
 
     const gl = this.gl;
-    const playerCount = this.slots.size;
-    const textRowCount = playerCount * LINES_PER_PLAYER;
     if (this.stringDataDirty) {
       gl.bindTexture(gl.TEXTURE_2D, this.stringTex);
       gl.texSubImage2D(
@@ -688,10 +768,10 @@ export class NamePass {
         0,
         0,
         MAX_CHARS,
-        textRowCount,
+        this.maxPlayers * LINES_PER_PLAYER,
         gl.RED_INTEGER,
         gl.UNSIGNED_BYTE,
-        this.cpuStringData.subarray(0, MAX_CHARS * textRowCount),
+        this.cpuStringData,
       );
       this.stringDataDirty = false;
     }
@@ -703,10 +783,10 @@ export class NamePass {
         0,
         0,
         MAX_CHARS,
-        textRowCount,
+        this.maxPlayers * LINES_PER_PLAYER,
         gl.RED,
         gl.FLOAT,
-        this.cpuCursorData.subarray(0, MAX_CHARS * textRowCount),
+        this.cpuCursorData,
       );
       this.cursorDataDirty = false;
     }
@@ -717,11 +797,11 @@ export class NamePass {
         0,
         0,
         0,
-        8,
-        playerCount,
+        PLAYER_DATA_COLS,
+        this.maxPlayers,
         gl.RGBA,
         gl.FLOAT,
-        this.cpuPlayerData.subarray(0, 32 * playerCount),
+        this.cpuPlayerData,
       );
       this.playerDataDirty = false;
     }
@@ -732,7 +812,7 @@ export class NamePass {
       cameraMatrix,
       this.settings,
       this.vao,
-      playerCount,
+      this.maxPlayers,
       ambient,
       this.highlightOwnerID,
       fadeOwnerID,
@@ -742,23 +822,11 @@ export class NamePass {
       this.settings,
       this.vao,
       fadeOwnerID,
-      playerCount,
     );
-    this.iconProgram.draw(
-      cameraMatrix,
-      this.settings,
-      this.vao,
-      fadeOwnerID,
-      playerCount,
-    );
+    this.iconProgram.draw(cameraMatrix, this.settings, this.vao, fadeOwnerID);
 
     if (this.settings.passEnabled.nameDebug) {
-      this.debugProgram.draw(
-        cameraMatrix,
-        this.settings,
-        this.vao,
-        playerCount,
-      );
+      this.debugProgram.draw(cameraMatrix, this.settings, this.vao);
     }
   }
 
@@ -771,6 +839,7 @@ export class NamePass {
     this.textProgram.dispose();
     this.iconProgram.dispose();
     this.flagAtlas.dispose();
+    this.crownAtlas.dispose();
     this.statusIconProgram.dispose();
     this.debugProgram.dispose();
     gl.deleteTexture(this.glyphMetricsTex);

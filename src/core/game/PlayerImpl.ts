@@ -316,18 +316,23 @@ export class PlayerImpl implements Player {
       }
     }
 
+    const deathStats = this.mg.stats().getPlayerStats(this);
+
     return {
       type: GameUpdateType.Player,
       clientID: this.clientID(),
       controllerClientIDs: this.serializedControllerClientIDs,
       name: this.name(),
       displayName: this.displayName(),
+      clanTag: this.clanTag(),
       id: this.id(),
       team: this.team() ?? undefined,
       smallID: this.smallID(),
       playerType: this.type(),
       isAlive: this.isAlive(),
       isDisconnected: this.isDisconnected(),
+      killedBy: deathStats?.killedBy ?? null,
+      deathPosition: deathStats?.deathPosition ?? null,
       tilesOwned: this.numTilesOwned(),
       gold: this._gold,
       troops: this.troops(),
@@ -361,6 +366,9 @@ export class PlayerImpl implements Player {
   displayName(): string {
     return this.playerInfo.displayName;
   }
+  clanTag(): string | null {
+    return this.playerInfo.clanTag;
+  }
 
   clientID(): ClientID | null {
     return this.playerInfo.clientID;
@@ -378,7 +386,21 @@ export class PlayerImpl implements Player {
     return this.playerInfo.playerType;
   }
 
-  units(...types: UnitType[]): Unit[] {
+  units(): Unit[];
+  units(types: readonly UnitType[]): Unit[];
+  units(type: UnitType, type2?: UnitType, type3?: UnitType): Unit[];
+  units(
+    first?: UnitType | readonly UnitType[],
+    second?: UnitType,
+    third?: UnitType,
+  ): Unit[] {
+    const types = Array.isArray(first)
+      ? first
+      : first === undefined
+        ? []
+        : [first as UnitType, second, third].filter(
+            (type): type is UnitType => type !== undefined,
+          );
     const len = types.length;
     if (len === 0) {
       return this._units;
@@ -503,7 +525,10 @@ export class PlayerImpl implements Player {
     const ns: Set<Player | TerraNullius> = new Set();
     for (const border of this.borderTiles()) {
       for (const neighbor of this.mg.map().neighbors(border)) {
-        if (this.mg.map().isLand(neighbor)) {
+        if (
+          this.mg.map().isLand(neighbor) &&
+          !this.mg.map().isImpassable(neighbor)
+        ) {
           if (
             !this.mg.map().hasOwner(neighbor) &&
             this.mg.map().hasFallout(neighbor)
@@ -1923,7 +1948,7 @@ export class PlayerImpl implements Player {
       return false;
     }
 
-    if (!this.mg.isLand(tile)) {
+    if (!this.mg.isLand(tile) || this.mg.isImpassable(tile)) {
       return false;
     }
     if (this.mg.hasOwner(tile)) {
@@ -1932,7 +1957,7 @@ export class PlayerImpl implements Player {
       for (const t of this.mg.bfs(
         tile,
         andFN(
-          (gm, t) => !gm.hasOwner(t) && gm.isLand(t),
+          (gm, t) => !gm.hasOwner(t) && gm.isLand(t) && !gm.isImpassable(t),
           manhattanDistFN(tile, 200),
         ),
       )) {

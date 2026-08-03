@@ -25,12 +25,25 @@ export class CosmeticInfo extends LitElement {
   @property({ type: Boolean })
   showAdFree: boolean = false;
 
+  /** Equivalent USD value; only set for plutonium-only items. */
+  @property({ type: Number })
+  usdValue?: number;
+
+  /** Subscription perks, each with an in-depth explanation. */
+  @property({ type: Array })
+  perks: Array<{ label: string; info: string }> = [];
+
   createRenderRoot() {
     return this;
   }
 
   render() {
-    if (!this.artist && !this.rarity && !this.colorPalette) {
+    if (
+      !this.artist &&
+      !this.rarity &&
+      !this.colorPalette &&
+      this.perks.length === 0
+    ) {
       return nothing;
     }
 
@@ -61,6 +74,20 @@ export class CosmeticInfo extends LitElement {
                 ${translateText("cosmetics.adfree")}
               </div>`
             : nothing}
+          ${this.usdValue !== undefined
+            ? html`<div>
+                ${translateText("cosmetics.usd_value", {
+                  usd: `$${this.usdValue.toFixed(2)}`,
+                })}
+              </div>`
+            : nothing}
+          ${this.perks.map(
+            (perk) =>
+              html`<div class="whitespace-normal w-56">
+                <span class="font-bold text-purple-300">${perk.label}:</span>
+                <span class="text-white/80">${perk.info}</span>
+              </div>`,
+          )}
           ${this.colorPalette
             ? html`<div>
                 ${translateText("cosmetics.color_label")}

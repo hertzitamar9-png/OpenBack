@@ -1,11 +1,17 @@
 import { html, LitElement, TemplateResult } from "lit";
 import { customElement, state } from "lit/decorators.js";
-import { translateText, TUTORIAL_VIDEO_URL } from "../../../client/Utils";
-import { assetUrl } from "../../../core/AssetUrls";
+import {
+  getGamesPlayed,
+  isInIframe,
+  translateText,
+  TUTORIAL_VIDEO_URL,
+} from "../../../client/Utils";
 import { EventBus } from "../../../core/EventBus";
+import { RankedType } from "../../../core/game/Game";
 import { GameUpdateType } from "../../../core/game/GameUpdates";
 import { getUserMe } from "../../Api";
 import "../../components/CosmeticButton";
+import "../../components/SteamWishlist";
 import { Controller } from "../../Controller";
 import {
   fetchCosmetics,
@@ -13,25 +19,16 @@ import {
   resolveCosmetics,
 } from "../../Cosmetics";
 import { crazyGamesSDK } from "../../CrazyGamesSDK";
-import { Platform } from "../../Platform";
+import { steamSDK } from "../../SteamSDK";
 import { SendWinnerEvent } from "../../Transport";
 import { GameView } from "../../view";
-
-const WIN_MODAL_DISMISSED_KEY = "openback-win-modal-dismissed";
 
 @customElement("win-modal")
 export class WinModal extends LitElement implements Controller {
   public game: GameView;
   public eventBus: EventBus;
 
-  private showLogoOnDeath = false;
-  private wasAlive = true;
-  // Deaths in the current game session. The first death of a session shows the
-  // tutorial video (helpful for everyone, including returning players whose
-  // browser history predates this build); every later death shows the logo.
-  // Session-scoped on purpose so it is identical for all players and not
-  // polluted by deaths from previous visits.
-  private deathCountThisSession = 0;
+  private hasShownDeathModal = false;
 
   @state()
   isVisible = false;
@@ -50,6 +47,8 @@ export class WinModal extends LitElement implements Controller {
 
   private _title: string;
 
+  private rand = Math.random();
+
   // Override to prevent shadow DOM creation
   createRenderRoot() {
     return this;
@@ -63,16 +62,18 @@ export class WinModal extends LitElement implements Controller {
     return html`
       <div
         class="${this.isVisible
-          ? "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900 p-6 shrink-0 rounded-lg z-[10010] shadow-2xl backdrop-blur-xs text-white w-87.5 max-w-[90%] md:w-175"
+          ? "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-800/70 p-4 md:p-6 shrink-0 rounded-lg z-[10010] shadow-2xl backdrop-blur-xs text-white w-[min(90vw,700px)] max-w-[90%] max-h-[90dvh] overflow-hidden flex flex-col"
           : "hidden"}"
       >
-        <h2 class="m-0 mb-4 text-[26px] text-center text-white">
+        <h2 class="m-0 mb-4 text-[26px] text-center text-white shrink-0">
           ${this._title || ""}
         </h2>
-        ${this.innerHtml()}
+        <div class="min-h-0 flex-1 overflow-y-auto pr-0.5">
+          ${this.innerHtml()}
+        </div>
         <div
           class="${this.showButtons
-            ? "flex justify-between gap-2.5"
+            ? "mt-4 flex justify-between gap-2.5 shrink-0"
             : "hidden"}"
         >
           <o-button
@@ -108,22 +109,24 @@ export class WinModal extends LitElement implements Controller {
   }
 
   innerHtml() {
-    if (this.isWin) {
+    // The Steam desktop build has nothing to wishlist — fall through to the
+    // other promos so the box is never empty.
+    const canWishlist = !steamSDK.isOnSteam();
+
+    if (isInIframe()) {
+      return canWishlist ? this.steamWishlist() : this.discordDisplay();
+    }
+
+    if (!this.isWin && getGamesPlayed() < 3) {
       return this.renderYoutubeTutorial();
     }
-    return this.showLogoOnDeath
-      ? this.renderLogo()
-      : this.renderYoutubeTutorial();
-  }
-
-  renderLogo() {
-    return html`
-      <img
-        src=${assetUrl("images/death_logo.png")}
-        alt="OpenBack"
-        class="w-full h-auto rounded-sm block"
-      />
-    `;
+    if (this.rand < 0.25 && canWishlist) {
+      return this.steamWishlist();
+    } else if (this.rand < 0.5) {
+      return this.discordDisplay();
+    } else {
+      return this.renderPatternButton();
+    }
   }
 
   renderYoutubeTutorial() {
@@ -156,7 +159,13 @@ export class WinModal extends LitElement implements Controller {
         <p class="text-white mb-3">
           ${translateText("win_modal.territory_pattern")}
         </p>
-        <div class="flex justify-center">${this.patternContent}</div>
+        <div
+          class="mx-auto w-full overflow-x-auto overflow-y-visible rounded-sm"
+        >
+          <div class="flex min-w-max items-start justify-start gap-4 px-1 py-1">
+            ${this.patternContent}
+          </div>
+        </div>
       </div>
     `;
   }
@@ -174,13 +183,12 @@ export class WinModal extends LitElement implements Controller {
       return;
     }
 
-    // Shuffle the array and take patterns based on screen size
+    // Shuffle the array and take patterns. Will always be 3 wide to allow scrolling
     const shuffled = [...purchasable].sort(() => Math.random() - 0.5);
-    const maxPatterns = Platform.isMobileWidth ? 1 : 3;
-    const selected = shuffled.slice(0, Math.min(maxPatterns, shuffled.length));
+    const selected = shuffled.slice(0, Math.min(3, shuffled.length));
 
     this.patternContent = html`
-      <div class="flex gap-4 flex-wrap justify-start">
+      <div class="flex gap-4 flex-nowrap justify-start items-start">
         ${selected.map(
           (r) => html`
             <cosmetic-button
@@ -193,11 +201,43 @@ export class WinModal extends LitElement implements Controller {
     `;
   }
 
-  async show(force = false) {
+  steamWishlist(): TemplateResult {
+    return html`
+      <div class="text-center mb-6 bg-black/30 p-2.5 rounded-sm">
+        <h3 class="text-xl font-semibold text-white mb-3">
+          ${translateText("steam_wishlist.title")}
+        </h3>
+        <steam-wishlist
+          campaign="win_modal"
+          .active=${this.isVisible}
+        ></steam-wishlist>
+      </div>
+    `;
+  }
+
+  discordDisplay(): TemplateResult {
+    return html`
+      <div class="text-center mb-6 bg-black/30 p-2.5 rounded-sm">
+        <h3 class="text-xl font-semibold text-white mb-3">
+          ${translateText("win_modal.join_discord")}
+        </h3>
+        <p class="text-white mb-3">
+          ${translateText("win_modal.discord_description")}
+        </p>
+        <a
+          href="https://discord.com/invite/openfront"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-block px-6 py-3 bg-indigo-600 text-white rounded-sm font-semibold transition-all duration-200 hover:bg-indigo-700 hover:-translate-y-px no-underline"
+        >
+          ${translateText("win_modal.join_server")}
+        </a>
+      </div>
+    `;
+  }
+
+  async show() {
     crazyGamesSDK.gameplayStop();
-    if (!force && localStorage.getItem(WIN_MODAL_DISMISSED_KEY) === "true") {
-      return;
-    }
     await this.loadPatternContent();
     // Check if this is a ranked game
     this.isRankedGame =
@@ -211,7 +251,6 @@ export class WinModal extends LitElement implements Controller {
   }
 
   hide() {
-    localStorage.setItem(WIN_MODAL_DISMISSED_KEY, "true");
     this.isVisible = false;
     this.showButtons = false;
     this.requestUpdate();
@@ -224,49 +263,48 @@ export class WinModal extends LitElement implements Controller {
 
   private _handleRequeue() {
     this.hide();
-    // Navigate to homepage and open matchmaking modal
-    window.location.href = "/?requeue";
+    // Requeue for the same mode; Main owns the mechanism (currently a
+    // reload with the requeue param, which reopens the queue after the
+    // page teardown).
+    document.dispatchEvent(
+      new CustomEvent("matchmaking-requeue", {
+        detail: {
+          mode:
+            this.game.config().gameConfig().rankedType === RankedType.TwoVTwo
+              ? ("2v2" as const)
+              : ("1v1" as const),
+        },
+      }),
+    );
   }
 
-  init() {
-    // Begin each game with a fresh death count so the first death of the new
-    // game shows the tutorial video regardless of prior sessions.
-    this.deathCountThisSession = 0;
-  }
+  init() {}
 
   tick() {
     const myPlayer = this.game.myPlayer();
-    const alive =
-      !!myPlayer &&
-      myPlayer.isAlive() &&
-      (this.game.inSpawnPhase() || myPlayer.hasSpawned());
-
-    if (alive) {
-      // Player is alive (new game / respawned): ready for the next death.
-      this.wasAlive = true;
-    } else if (
+    if (
+      !this.hasShownDeathModal &&
       myPlayer &&
+      !myPlayer.isAlive() &&
       !this.game.inSpawnPhase() &&
-      myPlayer.hasSpawned() &&
-      this.wasAlive
+      myPlayer.hasSpawned()
     ) {
-      // Transition alive -> dead: handle exactly once per death.
-      this.wasAlive = false;
-      // A death is never a win — make sure a prior win didn't leave isWin set.
-      this.isWin = false;
-      // First death of this session shows the tutorial video; later deaths
-      // show the logo. Session-scoped so it's the same for every player and
-      // isn't affected by how many times they've died in the past.
-      this.deathCountThisSession++;
-      this.showLogoOnDeath = this.deathCountThisSession >= 2;
+      this.hasShownDeathModal = true;
       this._title = translateText("win_modal.died");
-      this.show(true);
+      this.show();
     }
     const updates = this.game.updatesSinceLastTick();
     const winUpdates = updates !== null ? updates[GameUpdateType.Win] : [];
     winUpdates.forEach((wu) => {
       if (wu.winner === undefined) {
-        // ...
+        // Match cancelled (e.g. a ranked 2v2 that didn't fill or fully
+        // spawn): the game ends with no winner. Still vote the result to the
+        // server so the record is archived winnerless (never ranked).
+        this.eventBus.emit(new SendWinnerEvent(undefined, wu.allPlayersStats));
+        this._title = translateText("win_modal.match_cancelled");
+        this.isWin = false;
+        history.replaceState(null, "", `${window.location.pathname}?replay`);
+        this.show();
       } else if (wu.winner[0] === "team") {
         this.eventBus.emit(new SendWinnerEvent(wu.winner, wu.allPlayersStats));
         if (wu.winner[1] === this.game.myPlayer()?.team()) {

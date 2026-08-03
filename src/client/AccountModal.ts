@@ -71,6 +71,8 @@ export class AccountModal extends BaseModal {
   private statsTree: PlayerStatsTree | null = null;
   // Preserves the Games tab's accumulated list + cursor across tab switches.
   private gameHistoryCache: PlayerGameHistoryCache | null = null;
+  private gamesScrollTop = 0;
+  private restoreGamesScrollAfterOpen = false;
   private returnToPurchase = false;
   @state() private pendingFriendId = "";
   @state() private socialAttentionStage: SocialAttentionStage =
@@ -161,7 +163,7 @@ export class AccountModal extends BaseModal {
     // produced a session — otherwise a failed exchange would show a dead
     // "connected as" view with no way to retry.
     return (
-      !!(me?.discord ?? me?.email) ||
+      !!(me?.discord ?? me?.google ?? me?.email ?? me?.steam) ||
       (!!this.crazyGamesUser && this.userMeResponse !== null)
     );
   }
@@ -500,6 +502,8 @@ export class AccountModal extends BaseModal {
         @history-updated=${(e: CustomEvent<PlayerGameHistoryCache>) => {
           this.gameHistoryCache = e.detail;
         }}
+        @view-stats=${(e: CustomEvent<{ gameId: string }>) =>
+          this.openGameStats(e.detail.gameId)}
         @view-game=${(e: CustomEvent<{ gameId: string }>) =>
           void this.viewGame(e.detail.gameId)}
       ></player-game-history-view>
@@ -944,7 +948,7 @@ export class AccountModal extends BaseModal {
               </span>
             </button>
           </div>
-          ${ClientEnv.googleEnabled()
+          ${this.googleAuthEnabled()
             ? html`<button
                 class="mt-5 text-sm font-bold text-white/55 underline underline-offset-4 hover:text-white"
                 @click=${this.handleGoogleLogin}
@@ -955,6 +959,37 @@ export class AccountModal extends BaseModal {
         </div>
       </div>
     `;
+  }
+
+  private openGameStats(gameId: string): void {
+    this.gamesScrollTop = this.modalEl?.getScrollTop() ?? 0;
+    const statsModal = document.querySelector<
+      HTMLElement & { openFromAccount(gameId: string): void }
+    >("game-stats-modal");
+    statsModal?.openFromAccount(gameId);
+  }
+
+  public returnToGames(): void {
+    this.restoreGamesScrollAfterOpen = true;
+    this.open({ tab: "games" });
+  }
+
+  private async restoreGamesScroll(): Promise<void> {
+    await this.updateComplete;
+    await this.modalEl?.updateComplete;
+    const historyView = this.querySelector<
+      HTMLElement & { updateComplete?: Promise<boolean> }
+    >("player-game-history-view");
+    await historyView?.updateComplete;
+    this.modalEl?.setScrollTop(this.gamesScrollTop);
+  }
+
+  private googleAuthEnabled(): boolean {
+    try {
+      return ClientEnv.googleEnabled?.() ?? true;
+    } catch {
+      return true;
+    }
   }
 
   private chooseAuthMode(mode: EmailAuthMode | null) {
@@ -1193,6 +1228,10 @@ export class AccountModal extends BaseModal {
         }
         this.isLoadingUser = false;
         this.requestUpdate();
+        if (this.restoreGamesScrollAfterOpen) {
+          this.restoreGamesScrollAfterOpen = false;
+          void this.restoreGamesScroll();
+        }
       })
       .catch((err) => {
         console.warn("Failed to fetch user info in AccountModal.open():", err);

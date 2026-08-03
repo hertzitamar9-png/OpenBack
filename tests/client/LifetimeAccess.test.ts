@@ -10,6 +10,8 @@ describe("lifetime access", () => {
         player: {
           publicId: "player",
           adfree: false,
+          unlimitedRanked: false,
+          canCreatePublicLobbies: false,
           achievements: { singleplayerMap: [] },
           friends: [],
           lifetimeAccess: false,
@@ -26,6 +28,8 @@ describe("lifetime access", () => {
         player: {
           publicId: "owner",
           adfree: false,
+          unlimitedRanked: false,
+          canCreatePublicLobbies: false,
           achievements: { singleplayerMap: [] },
           friends: [],
           lifetimeAccess: true,

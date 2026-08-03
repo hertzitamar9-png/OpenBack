@@ -126,6 +126,7 @@ export class MapPlaylist {
     ffa: [],
     special: [],
     team: [],
+    hosted: [],
   };
   private lastRankedMap: GameMapType | null = null;
 

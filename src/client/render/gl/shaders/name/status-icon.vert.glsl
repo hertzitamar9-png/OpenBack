@@ -35,6 +35,7 @@ uniform float uAllianceFlashWindowSec; // seconds before expiry the alliance ico
 
 out vec2 vUV;
 out vec2 vLocalUV;               // 0..1 within the icon cell
+flat out int vCrownLayer;        // crown-cosmetic atlas layer for slot 0, or -1
 flat out int vDiscard;
 flat out float vAllianceFraction; // 0 = no drain effect, >0 = active drain
 flat out vec2 vFadedUV0;         // top-left UV of faded alliance cell
@@ -87,18 +88,25 @@ vec4 cellUV(int idx) {
 }
 
 void main() {
-  // Decode instance ID → playerIdx + iconSlot (0..8)
-  int playerIdx = gl_InstanceID / 9;
-  int iconSlot  = gl_InstanceID - playerIdx * 9;
+  // Decode instance ID → playerIdx + iconSlot (0..8 status row, 9 = verified
+  // badge to the right of the name)
+  int playerIdx = gl_InstanceID / 10;
+  int iconSlot  = gl_InstanceID - playerIdx * 10;
+  bool isVerifiedSlot = (iconSlot == 9);
 
   // Read player data
   vec4 pd0 = texelFetch(uPlayerData, ivec2(0, playerIdx), 0); // srcX, srcY, srcScale, startTime
   vec4 pd1 = texelFetch(uPlayerData, ivec2(1, playerIdx), 0); // tgtX, tgtY, tgtScale, alive
+  vec4 pd3 = texelFetch(uPlayerData, ivec2(3, playerIdx), 0); // nameLen, troopLen, nameShade, nameHalfWidth
   vec4 pd4 = texelFetch(uPlayerData, ivec2(4, playerIdx), 0); // flagIdx, emojiIdx, smallID, [free]
   vec4 pd7 = texelFetch(uPlayerData, ivec2(7, playerIdx), 0); // nukeTargetsMe, traitorRemainingTicks, allianceFraction, allianceRemainingTicks
+  vec4 pd8 = texelFetch(uPlayerData, ivec2(8, playerIdx), 0); // crownLayer, verified, [free]
 
-  // Early out: dead player OR emoji is active
-  if (pd1.w <= 0.0 || pd4.y >= 0.0) {
+  // A crown cosmetic skins the first-place crown (slot 0).
+  vCrownLayer = (iconSlot == 0 && pd8.x >= 0.0) ? int(pd8.x) : -1;
+
+  // Early out: dead player only (emoji no longer hides status icons)
+  if (pd1.w <= 0.0) {
     gl_Position = vec4(0.0);
     vUV = vec2(0.0);
     vLocalUV = vec2(0.0);
@@ -115,8 +123,10 @@ void main() {
   // Read status flags into array
   readStatusFlags(playerIdx);
 
-  // Early out: this icon slot is inactive
-  if (statusFlag[iconSlot] < 0.5) {
+  // Early out: this icon slot is inactive. The verified badge (slot 9) is
+  // driven by pd8.y, not the status-row flag array.
+  bool slotActive = isVerifiedSlot ? (pd8.y > 0.5) : (statusFlag[iconSlot] > 0.5);
+  if (!slotActive) {
     gl_Position = vec4(0.0);
     vUV = vec2(0.0);
     vLocalUV = vec2(0.0);
@@ -163,21 +173,33 @@ void main() {
   // Icon world size: matches name text height
   float iconWorldSize = uFontBase * nameWorldScale * 1.1;
 
-  // Count active icons and position of this one (left-to-right)
-  int totalActive = 0;
-  for (int i = 0; i < 9; i++) {
-    if (statusFlag[i] > 0.5) totalActive++;
+  float iconX;
+  float iconY;
+  if (isVerifiedSlot) {
+    // Verified badge: anchored just right of the name text, sitting slightly
+    // below the name line's vertical center (name glyphs center on wy).
+    iconWorldSize = uFontBase * nameWorldScale * 0.9;
+    iconX = wx + pd3.w * nameWorldScale + iconWorldSize * 0.12;
+    iconY = wy - iconWorldSize * 0.4;
+  } else {
+    // Count active status icons and position of this one (left-to-right).
+    // If an emoji is also active it occupies one extra slot on the right,
+    // so include it in the total for centering purposes.
+    // totalActive is precomputed by the CPU into pd8.z — single source of truth.
+    int totalActive = int(pd8.z);
+    bool hasEmoji = (pd4.y >= 0.0);
+    int totalItems = totalActive + (hasEmoji ? 1 : 0);
+    int myIndex = countBelow(iconSlot);
+
+    // Horizontal centering: treat status icons + emoji as one group.
+    float gap = iconWorldSize * 0.15;
+    float totalWidth = float(totalItems) * iconWorldSize + float(totalItems - 1) * gap;
+    float startX = wx - totalWidth * 0.5;
+    iconX = startX + float(myIndex) * (iconWorldSize + gap);
+
+    // Position: same row as the emoji
+    iconY = wy - uFontBase * nameWorldScale * uStatusRowOffset;
   }
-  int myIndex = countBelow(iconSlot);
-
-  // Horizontal centering: spread icons evenly above the name
-  float gap = iconWorldSize * 0.15;
-  float totalWidth = float(totalActive) * iconWorldSize + float(totalActive - 1) * gap;
-  float startX = wx - totalWidth * 0.5;
-  float iconX = startX + float(myIndex) * (iconWorldSize + gap);
-
-  // Position: row above the emoji row
-  float iconY = wy - uFontBase * nameWorldScale * uStatusRowOffset;
 
   // Determine atlas index
   // Slots 0-6 map directly to atlas indices 0-6
@@ -188,6 +210,9 @@ void main() {
   }
   if (iconSlot == 8) {
     atlasIdx = 10; // doomsday-clock skull
+  }
+  if (isVerifiedSlot) {
+    atlasIdx = 11; // blue verified check
   }
 
   // Only the alliance icon (slot 3) gets the dark outline.

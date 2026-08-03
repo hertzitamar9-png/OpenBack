@@ -6,38 +6,13 @@ import type {
   ClanMemberSort,
   ClanMemberStats,
 } from "../../ClanApi";
-import { sendFriendRequest } from "../../FriendsApi";
 import { showToast, translateText } from "../../Utils";
+import "../PlayerName";
 import "./ClanStatsBreakdown";
 export { renderLoadingSpinner } from "../BaseModal";
 export { showToast };
 
 export type ClanRole = "leader" | "officer" | "member";
-
-async function requestClanMemberFriend(publicId: string): Promise<void> {
-  const result = await sendFriendRequest(publicId);
-  if (typeof result === "string") {
-    showToast(
-      translateText(
-        result === "not_found"
-          ? "friends.error_not_found"
-          : result === "conflict"
-            ? "friends.error_conflict"
-            : "friends.error_generic",
-      ),
-      "red",
-    );
-    return;
-  }
-  showToast(
-    translateText(
-      result.status === "accepted"
-        ? "friends.request_auto_accepted"
-        : "friends.request_sent",
-    ),
-    "green",
-  );
-}
 
 export function defaultOrderForSort(sort: ClanMemberSort): ClanMemberOrder {
   return sort === "default" ? "asc" : "desc";
@@ -404,6 +379,7 @@ export function renderMemberStats(
 export function renderMemberRow(
   member: ClanMember,
   myPublicId: string | null,
+  onViewProfile?: (publicId: string) => void,
 ): TemplateResult {
   const isMe = member.publicId === myPublicId;
   return html`
@@ -412,11 +388,6 @@ export function renderMemberRow(
         ${isMe
         ? "bg-malibu-blue/10 border-malibu-blue/20"
         : "bg-white/5 border-white/10"}"
-      @dblclick=${() => {
-        if (!isMe) {
-          void requestClanMemberFriend(member.publicId);
-        }
-      }}
     >
       <div class="flex items-center gap-3">
         <div
@@ -430,26 +401,16 @@ export function renderMemberRow(
         <div class="flex-1 min-w-0 flex flex-col">
           <div class="flex items-center justify-between gap-2">
             <div class="min-w-0">
-              <copy-button
-                compact
-                .copyText=${member.publicId}
-                .displayText=${member.displayName ?? member.publicId}
-                .showVisibilityToggle=${false}
-                .showCopyIcon=${false}
-              ></copy-button>
+              <player-name
+                .username=${member.username}
+                .publicId=${member.publicId}
+                .nameClass=${"font-bold text-blue-300 truncate text-base hover:underline"}
+                .onNameClick=${onViewProfile
+                  ? () => onViewProfile(member.publicId)
+                  : null}
+              ></player-name>
             </div>
-            <div class="flex shrink-0 items-center gap-2">
-              ${!isMe
-                ? html`<button
-                    class="rounded-md border border-blue-500/30 bg-blue-500/15 px-2 py-1 text-[9px] font-bold uppercase text-blue-300 hover:bg-blue-500/25"
-                    @click=${(event: Event) => {
-                      event.stopPropagation();
-                      void requestClanMemberFriend(member.publicId);
-                    }}
-                  >
-                    ${translateText("friends.add_friend")}
-                  </button>`
-                : ""}
+            <div class="flex items-center gap-2 shrink-0">
               <span
                 class="text-white/30 text-[10px] text-right whitespace-nowrap"
                 >${translateText("clan_modal.joined_date", {
@@ -474,8 +435,8 @@ export function filterMembersBySearch(
   return members.filter(
     (m) =>
       m.publicId.toLowerCase().includes(q) ||
-      (m.displayName?.toLowerCase().includes(q) ?? false) ||
-      m.role.toLowerCase().includes(q),
+      m.role.toLowerCase().includes(q) ||
+      (m.username?.toLowerCase().includes(q) ?? false),
   );
 }
 
@@ -488,6 +449,6 @@ export function filterRequestsBySearch(
   return requests.filter(
     (r) =>
       r.publicId.toLowerCase().includes(q) ||
-      (r.displayName?.toLowerCase().includes(q) ?? false),
+      (r.username?.toLowerCase().includes(q) ?? false),
   );
 }

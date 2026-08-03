@@ -32,10 +32,12 @@ export default [
           allowDefaultProject: [
             "__mocks__/fileMock.js",
             "eslint.config.js",
-            "scripts/sync-assets.mjs",
             "scripts/generate-icon-atlas.mjs",
             "scripts/import-fictional-shop-cosmetics.mjs",
+            "scripts/sync-assets.mjs",
+            "tests/matchmaking/*.mjs",
           ],
+          maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 12,
         },
         tsconfigRootDir: import.meta.dirname,
       },
