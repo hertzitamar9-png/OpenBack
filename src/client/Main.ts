@@ -45,7 +45,6 @@ import { modalRouter } from "./ModalRouter";
 import { initNavigation } from "./Navigation";
 import "./NewsModal";
 import "./PatternInput";
-import "./PurchaseModal";
 import {
   rankedMatchmakingFlow,
   RankedMatchmakingOpenDetail,

@@ -34,6 +34,7 @@ export class TextProgram {
 
   // Uniform locations
   private uCamera: WebGLUniformLocation;
+  private uScreenFacing: WebGLUniformLocation;
   private uTime: WebGLUniformLocation;
   private uDistRange: WebGLUniformLocation;
   private uLerpSpeed: WebGLUniformLocation;
@@ -94,6 +95,7 @@ export class TextProgram {
 
     // Dynamic uniform locations
     this.uCamera = gl.getUniformLocation(this.program, "uCamera")!;
+    this.uScreenFacing = gl.getUniformLocation(this.program, "uScreenFacing")!;
     this.uTime = gl.getUniformLocation(this.program, "uTime")!;
     this.uDistRange = gl.getUniformLocation(this.program, "uDistRange")!;
     this.uLerpSpeed = gl.getUniformLocation(this.program, "uLerpSpeed")!;
@@ -172,6 +174,7 @@ export class TextProgram {
     ambient: number,
     highlightOwnerID: number,
     fadeOwnerID: number,
+    screenFacing = false,
   ): void {
     if (!this.atlasReady) return;
 
@@ -180,6 +183,7 @@ export class TextProgram {
     gl.useProgram(this.program);
 
     gl.uniformMatrix3fv(this.uCamera, false, cameraMatrix);
+    gl.uniform1i(this.uScreenFacing, screenFacing ? 1 : 0);
     gl.uniform1f(this.uTime, performance.now() / 1000);
     gl.uniform1f(this.uDistRange, this.distanceRange);
     gl.uniform1f(this.uLerpSpeed, ns.lerpSpeed);

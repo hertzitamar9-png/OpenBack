@@ -239,6 +239,10 @@ export class InputHandler {
   private pointerDown: boolean = false;
   private multiTouchGesture: boolean = false;
   private rightDragActive = false;
+  private rightDragMoved = false;
+  private suppressNextContextMenu = false;
+  private rightPointerDownX = 0;
+  private rightPointerDownY = 0;
 
   private alternateView = false;
 
@@ -736,9 +740,11 @@ export class InputHandler {
 
     if (event.button === 2 && this.isThreeDMode()) {
       this.rightDragActive = true;
+      this.rightDragMoved = false;
+      this.rightPointerDownX = event.clientX;
+      this.rightPointerDownY = event.clientY;
       this.lastPointerX = event.clientX;
       this.lastPointerY = event.clientY;
-      this.canvas.style.cursor = "grabbing";
       event.preventDefault();
       return;
     }
@@ -801,7 +807,13 @@ export class InputHandler {
     }
 
     if (event.button === 2 && this.isThreeDMode()) {
+      const wasCameraDrag = this.rightDragMoved;
       this.rightDragActive = false;
+      this.rightDragMoved = false;
+      if (wasCameraDrag) {
+        this.suppressNextContextMenu = true;
+        setTimeout(() => (this.suppressNextContextMenu = false), 100);
+      }
       this.canvas.style.cursor = "";
       event.preventDefault();
       return;
@@ -993,7 +1005,15 @@ export class InputHandler {
     if (this.rightDragActive) {
       const deltaX = event.clientX - this.lastPointerX;
       const deltaY = event.clientY - this.lastPointerY;
-      if (deltaX !== 0 || deltaY !== 0) {
+      const distanceFromPress = Math.hypot(
+        event.clientX - this.rightPointerDownX,
+        event.clientY - this.rightPointerDownY,
+      );
+      if (!this.rightDragMoved && distanceFromPress >= 5) {
+        this.rightDragMoved = true;
+        this.canvas.style.cursor = "grabbing";
+      }
+      if (this.rightDragMoved && (deltaX !== 0 || deltaY !== 0)) {
         this.eventBus.emit(new RotateCameraEvent(deltaX, deltaY));
       }
       this.lastPointerX = event.clientX;
@@ -1071,9 +1091,13 @@ export class InputHandler {
 
   private onContextMenu(event: MouseEvent) {
     event.preventDefault();
-    // The desktop 3D camera owns the right mouse button. Left click remains
-    // free for selection, attacks, and building; wheel/pinch continues to zoom.
-    if (this.isThreeDMode()) return;
+    if (this.suppressNextContextMenu) {
+      this.suppressNextContextMenu = false;
+      return;
+    }
+    // In 3D a short right-click keeps the normal action menu. Only a deliberate
+    // right-drag owns the gesture for camera orbiting.
+    if (this.isThreeDMode() && this.rightDragMoved) return;
     if (this.gameView.inSpawnPhase()) {
       return;
     }

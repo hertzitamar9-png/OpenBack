@@ -13,6 +13,8 @@ export class CurrencyDisplay extends LitElement {
   }
 
   render() {
+    const amount =
+      this.soft >= Number.MAX_SAFE_INTEGER ? "∞" : this.soft.toLocaleString();
     return html`
       <div class="flex justify-center">
         <div
@@ -20,9 +22,7 @@ export class CurrencyDisplay extends LitElement {
           title=${translateText("cosmetics.soft")}
         >
           <cap-icon .size=${20} style="margin-top:3px"></cap-icon>
-          <span class="text-sm font-bold text-amber-700"
-            >${this.soft.toLocaleString()}</span
-          >
+          <span class="text-sm font-bold text-amber-700">${amount}</span>
         </div>
       </div>
     `;

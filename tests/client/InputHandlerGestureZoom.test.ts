@@ -1,4 +1,5 @@
 import {
+  ContextMenuEvent,
   DragEvent,
   InputHandler,
   RotateCameraEvent,
@@ -64,19 +65,26 @@ function setup(threeDMode = false) {
   const touches: TouchEvent[] = [];
   const drags: DragEvent[] = [];
   const rotations: RotateCameraEvent[] = [];
+  const contextMenus: ContextMenuEvent[] = [];
   eventBus.on(ZoomEvent, (e) => zooms.push(e));
   eventBus.on(TouchEvent, (e) => touches.push(e));
   eventBus.on(DragEvent, (e) => drags.push(e));
   eventBus.on(RotateCameraEvent, (e) => rotations.push(e));
+  eventBus.on(ContextMenuEvent, (e) => contextMenus.push(e));
 
   const gameView = {
     inSpawnPhase: () => false,
     config: () => ({ worldMechanics: () => ({ threeDMode }) }),
   } as unknown as GameView;
-  const handler = new InputHandler(gameView, {} as UIState, canvas, eventBus);
+  const handler = new InputHandler(
+    gameView,
+    { ghostStructure: null } as UIState,
+    canvas,
+    eventBus,
+  );
   handler.initialize();
 
-  return { canvas, handler, zooms, touches, drags, rotations };
+  return { canvas, handler, zooms, touches, drags, rotations, contextMenus };
 }
 
 function dispatchMousePointer(
@@ -250,15 +258,46 @@ describe("InputHandler Safari trackpad pinch", () => {
 });
 
 describe("InputHandler 3D desktop camera", () => {
+  it("keeps a short right-click available for the gameplay menu", () => {
+    const ctx = setup(true);
+    dispatchMousePointer(ctx.canvas, "pointerdown", 2, 100, 90);
+    dispatchMousePointer(window, "pointerup", 2, 100, 90);
+    ctx.canvas.dispatchEvent(
+      Object.assign(
+        new Event("contextmenu", { bubbles: true, cancelable: true }),
+        {
+          clientX: 100,
+          clientY: 90,
+        },
+      ),
+    );
+
+    expect(ctx.contextMenus).toHaveLength(1);
+    expect(ctx.contextMenus[0]).toMatchObject({ x: 100, y: 90 });
+    expect(ctx.rotations).toHaveLength(0);
+    ctx.handler.destroy();
+    ctx.canvas.remove();
+  });
+
   it("orbits only while the right mouse button is held", () => {
     const ctx = setup(true);
     dispatchMousePointer(ctx.canvas, "pointerdown", 2, 100, 90);
     dispatchMousePointer(window, "pointermove", -1, 128, 104);
     dispatchMousePointer(window, "pointerup", 2, 128, 104);
+    ctx.canvas.dispatchEvent(
+      Object.assign(
+        new Event("contextmenu", { bubbles: true, cancelable: true }),
+        {
+          clientX: 128,
+          clientY: 104,
+        },
+      ),
+    );
 
     expect(ctx.rotations).toHaveLength(1);
     expect(ctx.rotations[0]).toMatchObject({ deltaX: 28, deltaY: 14 });
     expect(ctx.drags).toHaveLength(0);
+    expect(ctx.contextMenus).toHaveLength(0);
     ctx.handler.destroy();
     ctx.canvas.remove();
   });

@@ -15,7 +15,6 @@ import {
 import { getUserMe } from "./Api";
 import { checkClanTagOwnership } from "./ClanApi";
 import { crazyGamesSDK } from "./CrazyGamesSDK";
-import { showInGameConfirm } from "./InGameModal";
 import { steamSDK } from "./SteamSDK";
 
 interface LangSelectorLike {
@@ -82,8 +81,8 @@ export class UsernameInput extends LitElement {
   }
 
   // The server-resolved bare name this player may play verified under, or null
-  // when ineligible. Sub-only by design: `claimed` (lapsed) holders and
-  // TEMPORARY####-renamed players don't qualify.
+  // when ineligible. OpenBack email accounts receive an indefinite reserved
+  // name, so the badge proves account ownership without a paid subscription.
   private verifiedName(): string | null {
     if (this.userMe === null || this.userMe === false) return null;
     const player = this.userMe.player;
@@ -126,17 +125,7 @@ export class UsernameInput extends LitElement {
       window.location.hash = "modal=account";
       return;
     }
-    const goStore = await showInGameConfirm(
-      translateText("username.verified_sub_required"),
-      {
-        heading: translateText("username.verified_heading"),
-        variant: "warning",
-        confirmText: translateText("username.verified_sub_required_confirm"),
-      },
-    );
-    if (goStore) {
-      window.location.hash = "modal=store&tab=subscriptions";
-    }
+    window.location.hash = "modal=account";
   }
 
   public getUsername(): string {

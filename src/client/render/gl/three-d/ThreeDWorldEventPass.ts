@@ -45,7 +45,7 @@ out float vLife;
 out float vKind;
 
 float hash(float n){return fract(sin(n*91.3458)*47453.5453);}
-float heightFor(uint b){bool land=(b&128u)!=0u;float m=float(b&31u);if(land&&m>30.5)return 27.0;if(land)return 2.2+pow(m/30.0,1.14)*17.8;return -1.1-min(m,10.0)*0.07;}
+float heightFor(uint b){bool land=(b&128u)!=0u;float m=float(b&31u);if(land&&m>30.5)return 24.0;if(land)return 1.8+pow(m/30.0,1.5)*10.5;return -1.1-min(m,10.0)*0.07;}
 void main(){
   float id=float(gl_VertexID);
   float h1=hash(id+uEventCenter.x*0.13),h2=hash(id+uEventCenter.y*0.17),h3=hash(id*3.71);
@@ -70,8 +70,8 @@ void main(){
   vec2 d=world.xz-uCenter;
   float cy=cos(uYaw),sy=sin(uYaw);
   d=vec2(d.x*cy-d.y*sy,d.x*sy+d.y*cy);
-  float ct=cos(uTilt),st=sin(uTilt),viewY=d.y*ct+world.y*st;
-  float viewZ=uDistance+d.y*st-world.y*ct;
+  float ct=cos(uTilt),st=sin(uTilt),viewY=-d.y*ct+world.y*st;
+  float viewZ=uDistance-d.y*st-world.y*ct;
   if(viewZ<=0.5){gl_Position=vec4(2.0);gl_PointSize=0.0;vLife=0.0;vKind=float(uKind);return;}
   float nearPlane=0.5,farPlane=max(nearPlane+1.0,uDistance*8.0+50.0);
   float clipZ=((farPlane+nearPlane)/(farPlane-nearPlane))*viewZ-(2.0*farPlane*nearPlane)/(farPlane-nearPlane);

@@ -1394,6 +1394,11 @@ export class GPURenderer {
           this.threeDYaw,
           this.threeDPitch,
         );
+        // Preserve the classic renderer's tactical information in 3D. These
+        // passes include ship routes, railways, targeting paths, ranges,
+        // selection feedback, build previews, and combat effects; world
+        // objects and environment masks already have dedicated 3D passes.
+        this.renderOverlays(billboardCamera, zoom, true, true, true, true);
         // Spawn markers are UI, not paint on the terrain. Keeping them in a
         // screen-facing pass prevents perspective from turning circles into
         // stretched shapes during the placement countdown.
@@ -1417,6 +1422,7 @@ export class GPURenderer {
           this.namePass.draw(
             billboardCamera,
             this.nightCompositePass.getAmbient(),
+            true,
           );
         }
         this.worldTextPass.tick(zoom);
@@ -1472,7 +1478,7 @@ export class GPURenderer {
     const tanHalfFov = Math.tan((THREE_D_FOV_DEGREES * Math.PI) / 360);
     const distance = height / Math.max(0.01, zoom * 2) / tanHalfFov;
     const sx = 1 / (distance * tanHalfFov * (width / Math.max(1, height)));
-    const sy = Math.cos(this.threeDPitch) / (distance * tanHalfFov);
+    const sy = -Math.cos(this.threeDPitch) / (distance * tanHalfFov);
     const cy = Math.cos(this.threeDYaw);
     const yawSin = Math.sin(this.threeDYaw);
     const m = this.threeDBillboardMatrix;
@@ -1540,6 +1546,8 @@ export class GPURenderer {
     zoom: number,
     omitWorldObjects = false,
     omitSpawnOverlay = false,
+    omitEnvironment = false,
+    threeDCompatibleOnly = false,
   ): void {
     const gl = this.gl;
     const pe = this.settings.passEnabled;
@@ -1548,8 +1556,11 @@ export class GPURenderer {
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
     if (!omitSpawnOverlay) this.spawnOverlayPass.draw(cam);
-    if (pe.borderStamp) this.borderStampPass.draw(cam);
-    if (pe.railroad) this.railroadPass.draw(cam, zoom);
+    // Tile-edge stamps and rail geometry require terrain projection. Drawing
+    // them through the label tangent plane creates the floating polygon webs
+    // seen near the 3D horizon, so dedicated 3D geometry owns those features.
+    if (pe.borderStamp && !threeDCompatibleOnly) this.borderStampPass.draw(cam);
+    if (pe.railroad && !threeDCompatibleOnly) this.railroadPass.draw(cam, zoom);
     if (pe.unit && !omitWorldObjects) this.unitPass.drawGround(cam);
     if (pe.falloutBloom) this.bloomPass.draw(cam, this.frameTick);
     this.samRadiusPass.draw(cam);
@@ -1560,7 +1571,7 @@ export class GPURenderer {
     if (pe.structure && !omitWorldObjects)
       this.structureLevelPass.draw(cam, zoom);
     // Small-player glow draws after structures so buildings can't hide it.
-    this.smallPlayerGlowPass.draw(cam);
+    if (!threeDCompatibleOnly) this.smallPlayerGlowPass.draw(cam);
     if (pe.bar && !omitWorldObjects) this.barPass.draw(cam);
     this.updateSelectionBox();
     this.selectionBoxPass.draw(cam, this.frameTick);
@@ -1579,7 +1590,9 @@ export class GPURenderer {
 
     // Grid shows on either trigger; names hide only under alt-view (space
     // hold), not under the persistent M-key gridView toggle.
-    if (this.gridView || this.altView) this.coordinateGridPass.draw(cam, zoom);
+    if (!threeDCompatibleOnly && (this.gridView || this.altView)) {
+      this.coordinateGridPass.draw(cam, zoom);
+    }
     if (pe.name && !this.altView && !omitWorldObjects)
       this.namePass.draw(cam, this.nightCompositePass.getAmbient());
 
@@ -1589,8 +1602,10 @@ export class GPURenderer {
       this.worldTextPass.tick(zoom);
       this.worldTextPass.draw(cam, zoom);
     }
-    this.fogPass?.draw(cam);
-    this.worldEventPass?.draw(cam);
+    if (!omitEnvironment) {
+      this.fogPass?.draw(cam);
+      this.worldEventPass?.draw(cam);
+    }
 
     gl.disable(gl.BLEND);
   }

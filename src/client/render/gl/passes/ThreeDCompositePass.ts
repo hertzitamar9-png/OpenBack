@@ -21,21 +21,10 @@ uniform float uTime;
 uniform float uTilt;
 out vec4 outColor;
 void main(){
-  // This is the exact horizon of the perspective ground plane. At the normal
-  // overhead tabletop angle it remains above the viewport; lowering the
-  // camera with right-drag reveals one continuous horizon and sky.
-  float horizonNdc=cos(uTilt)/(max(0.01,sin(uTilt))*0.383864);
-  float horizon=0.5+0.5*horizonNdc;
-  float orbit=1.0-smoothstep(1.0,1.16,horizon);
-  float skyMask=smoothstep(horizon-0.018,horizon+0.018,vUV.y);
-  vec3 ocean=mix(vec3(0.025,0.18,0.31),vec3(0.012,0.075,0.17),vUV.y);
-  float skyT=clamp((vUV.y-horizon)/max(0.08,1.0-horizon),0.0,1.0);
-  vec3 sky=mix(vec3(0.20,0.42,0.61),vec3(0.025,0.075,0.16),skyT);
-  float horizonGlow=exp(-abs(vUV.y-horizon)*42.0)*orbit;
-  vec3 c=mix(ocean,sky,skyMask)+vec3(0.12,0.18,0.22)*horizonGlow;
-  float vignette=1.0-0.24*smoothstep(0.35,0.82,length(vUV-vec2(0.5)));
-  c*=vignette;
-  outColor=vec4(c,1.0);
+  // Match the classic battlefield's unobtrusive dark surround. The terrain is
+  // the board; a painted horizon must never look like a second detached map.
+  float vignette=1.0-0.16*smoothstep(0.28,0.82,length(vUV-vec2(0.5)));
+  outColor=vec4(vec3(0.012,0.017,0.026)*vignette,1.0);
 }`;
 
 const terrainVert = `#version 300 es
@@ -59,8 +48,8 @@ out float vViewDepth;
 float heightFor(uint b){
   bool land=(b&128u)!=0u;
   float m=float(b&31u);
-  if(land&&m>30.5)return 27.0;
-  if(land)return 2.2+pow(m/30.0,1.14)*17.8;
+  if(land&&m>30.5)return 24.0;
+  if(land)return 1.8+pow(m/30.0,1.5)*10.5;
   return -1.1-min(m,10.0)*0.07;
 }
 float smoothHeight(vec2 world,uint centerByte){
@@ -89,7 +78,7 @@ float smoothHeight(vec2 world,uint centerByte){
     // Contiguous impassable terrain becomes a high defensive wall. Isolated
     // noisy pixels stay blended into the surrounding ridge instead of making
     // the needle-shaped triangles seen in the old renderer.
-    if(wallNeighbors>=3.0)return 27.0;
+    if(wallNeighbors>=3.0)return 24.0;
   }
   return total/weight;
 }
@@ -109,8 +98,8 @@ void main(){
   // A real camera above the XZ floor: positive terrain height moves toward
   // the camera and upward on screen; distant ground converges upward toward
   // the horizon rather than hanging below it like an inverted map.
-  float viewY=d.y*ct+h*st;
-  float viewZ=uDistance+d.y*st-h*ct;
+  float viewY=-d.y*ct+h*st;
+  float viewZ=uDistance-d.y*st-h*ct;
   float nearPlane=0.5,farPlane=max(nearPlane+1.0,uDistance*8.0+50.0);
   float clipZ=((farPlane+nearPlane)/(farPlane-nearPlane))*viewZ
     -(2.0*farPlane*nearPlane)/(farPlane-nearPlane);
@@ -145,8 +134,8 @@ out vec4 outColor;
 
 float heightFor(uint b){
   bool land=(b&128u)!=0u; float m=float(b&31u);
-  if(land&&m>30.5)return 27.0;
-  if(land)return 2.2+pow(m/30.0,1.14)*17.8;
+  if(land&&m>30.5)return 24.0;
+  if(land)return 1.8+pow(m/30.0,1.5)*10.5;
   return -1.1-min(m,10.0)*0.07;
 }
 float sameSurfaceHeight(uint centerByte,ivec2 samplePoint){
@@ -166,12 +155,12 @@ void main(){
   float hr=sameSurfaceHeight(centerByte,ivec2(x1,p.y));
   float hu=sameSurfaceHeight(centerByte,ivec2(p.x,y0));
   float hd=sameSurfaceHeight(centerByte,ivec2(p.x,y1));
-  vec3 n=normalize(vec3(hl-hr,4.2,hu-hd));
+  vec3 n=normalize(vec3(hl-hr,5.0,hu-hd));
   vec3 light=normalize(vec3(-0.62,0.74,-0.55));
   float diffuse=clamp(dot(n,light),0.0,1.0);
   float backLight=clamp(dot(n,-light),0.0,1.0);
   float rim=pow(1.0-clamp(n.y,0.0,1.0),1.45);
-  float altitude=clamp(vHeight/16.0,0.0,1.0);
+  float altitude=clamp(vHeight/10.0,0.0,1.0);
   float contour=1.0-smoothstep(0.02,0.08,abs(fract(vHeight/4.5)-0.5));
   float localOcclusion=clamp((hl+hr+hu+hd-vHeight*4.0)*0.025+0.9,0.70,1.0);
   vec3 lowGround=vec3(0.20,0.34,0.16);
@@ -181,8 +170,6 @@ void main(){
   uint tileState=inside?texelFetch(uTileState,p,0).r:0u;
   uint owner=tileState&4095u;
   vec3 ownerColor=texture(uPalette,vec2((float(owner)+0.5)/4096.0,0.25)).rgb;
-  float facet=fract(sin(dot(floor(vMapUV*uMapSize/3.0),vec2(12.9898,78.233)))*43758.5453);
-  terrainMaterial*=0.94+facet*0.10;
   vec3 boardMaterial=owner>0u?mix(terrainMaterial,ownerColor,0.72):terrainMaterial;
   vec3 color=boardMaterial*(0.55+diffuse*0.62)*localOcclusion;
   color+=backLight*vec3(0.035,0.055,0.08)+rim*vec3(0.09,0.13,0.19);
@@ -370,7 +357,7 @@ export class ThreeDCompositePass {
     const groundHalfY = halfVisibleHeight * 2.55;
     const groundHalfX = groundHalfY * (width / Math.max(1, height));
     const sampleRadius = Math.max(
-      1,
+      3,
       (groundHalfY * 2 * 0.58) / Math.max(1, mesh.segmentsY),
     );
     gl.uniform2f(this.uniforms.uGroundHalfSize, groundHalfX, groundHalfY);

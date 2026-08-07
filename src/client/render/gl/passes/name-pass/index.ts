@@ -755,7 +755,11 @@ export class NamePass {
     return 0;
   }
 
-  draw(cameraMatrix: Float32Array, ambient: number): void {
+  draw(
+    cameraMatrix: Float32Array,
+    ambient: number,
+    screenFacing = false,
+  ): void {
     if (!this.textProgram.ready) return;
     if (this.slots.size === 0) return;
 
@@ -816,6 +820,7 @@ export class NamePass {
       ambient,
       this.highlightOwnerID,
       fadeOwnerID,
+      screenFacing,
     );
     this.statusIconProgram.draw(
       cameraMatrix,

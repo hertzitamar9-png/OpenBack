@@ -277,8 +277,8 @@ export class FailOpenPrivilegeChecker implements PrivilegeChecker {
 
 /**
  * Enforce the client-claimed verified badge on resolved cosmetics. The claim
- * is kept only when the account vouches for it: an entitled bare-name status
- * (premium/indefinite) AND a join name EXACTLY matching the account's
+ * is kept only when the account vouches for it: a verified email account's
+ * reserved bare-name status AND a join name EXACTLY matching the account's
  * server-resolved display name — the client locks the input to that form, so
  * any drift (a rename race, a censor rewrite, a hand-crafted join message)
  * drops the badge. Strips, never rejects.

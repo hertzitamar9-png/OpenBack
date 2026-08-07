@@ -190,16 +190,6 @@ export async function startWorker() {
       return res.status(401).json({ error: "Invalid creator token" });
     }
     const creatorPersistentID = auth.persistentId;
-    const creatorProfile = await getUserMe(
-      authHeader.substring("Bearer ".length),
-    );
-    if (
-      creatorProfile.type === "error" ||
-      !creatorProfile.response.player.lifetimeAccess
-    ) {
-      return res.status(403).json({ error: "lifetime_access_required" });
-    }
-
     const parsed = CreateGameInputSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json({ error: z.prettifyError(parsed.error) });
@@ -623,16 +613,6 @@ export async function startWorker() {
           infiniteGold = result.response.player.infiniteGold ?? false;
           ownedClanTags = result.response.player.clans?.map((c) => c.tag) ?? [];
           accountUsername = result.response.player;
-          const targetGame = gm.game(clientMsg.gameID);
-          if (
-            targetGame &&
-            targetGame.gameConfig.gameType !== GameType.Singleplayer &&
-            !result.response.player.lifetimeAccess
-          ) {
-            ws.close(1008, "Lifetime access required");
-            return;
-          }
-
           if (allowedFlares !== undefined) {
             const allowed =
               allowedFlares.length === 0 ||

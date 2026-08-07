@@ -257,12 +257,13 @@ export class TransformHandler {
     let height = 0;
     let denominator = ct - ky * st;
     let localZ =
-      (ky * c.distance) / (Math.abs(denominator) < 0.001 ? 0.001 : denominator);
+      (-ky * c.distance) /
+      (Math.abs(denominator) < 0.001 ? 0.001 : denominator);
     // Intersect the pointer ray with the actual height field. Two iterations
     // are enough because terrain is tile-stepped and keeps clicks aligned with
     // raised land and impassable walls instead of the hidden sea-level plane.
     for (let i = 0; i < 2; i++) {
-      const sampleViewZ = c.distance + localZ * st - height * ct;
+      const sampleViewZ = c.distance - localZ * st - height * ct;
       const localX =
         clipX * sampleViewZ * c.tanHalfFov * (c.width / Math.max(1, c.height));
       const worldDx = localX * cy + localZ * sy;
@@ -270,12 +271,12 @@ export class TransformHandler {
       const sampleX = Math.floor(c.centerX + worldDx);
       const sampleY = Math.floor(c.centerY + worldDy);
       height = this.threeDHeightAt(sampleX, sampleY);
-      const numerator = ky * c.distance - height * (ky * ct + st);
+      const numerator = height * (ky * ct + st) - ky * c.distance;
       denominator = ct - ky * st;
       localZ =
         numerator / (Math.abs(denominator) < 0.001 ? 0.001 : denominator);
     }
-    const viewZ = c.distance + localZ * st - height * ct;
+    const viewZ = c.distance - localZ * st - height * ct;
     const localX =
       clipX * viewZ * c.tanHalfFov * (c.width / Math.max(1, c.height));
     return {
@@ -298,10 +299,10 @@ export class TransformHandler {
       Math.floor(worldX),
       Math.floor(worldY),
     );
-    const viewZ = Math.max(1, c.distance + localZ * st - terrainHeight * ct);
+    const viewZ = Math.max(1, c.distance - localZ * st - terrainHeight * ct);
     const clipX =
       localX / (viewZ * c.tanHalfFov * (c.width / Math.max(1, c.height)));
-    const clipY = (localZ * ct + terrainHeight * st) / (viewZ * c.tanHalfFov);
+    const clipY = (-localZ * ct + terrainHeight * st) / (viewZ * c.tanHalfFov);
     return {
       x: ((clipX + 1) * c.width) / 2,
       y: ((1 - clipY) * c.height) / 2,
@@ -512,7 +513,7 @@ export class TransformHandler {
       // The floor is foreshortened as the camera lowers. Compensating for the
       // angle keeps left-drag attached to the ground at every orbit angle.
       const localZ =
-        -event.deltaY /
+        event.deltaY /
         (this.scale * Math.max(0.22, Math.cos(this.threeDPitch)));
       const cy = Math.cos(this.threeDYaw);
       const sy = Math.sin(this.threeDYaw);

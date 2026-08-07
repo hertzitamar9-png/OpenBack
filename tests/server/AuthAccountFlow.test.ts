@@ -80,7 +80,7 @@ describe("email account lifecycle", () => {
     await expect(after.json()).resolves.toEqual({ exists: true });
   });
 
-  test("grants the owner email complimentary lifetime access", async () => {
+  test("grants the owner email open access and infinite Store currency", async () => {
     const email = "hertzitamar9@gmail.com";
     const codeResponse = await postJson("/auth/request-code", {
       email,
@@ -121,7 +121,14 @@ describe("email account lifecycle", () => {
     expect(me.status).toBe(200);
     await expect(me.json()).resolves.toMatchObject({
       user: { email },
-      player: { lifetimeAccess: true, infiniteGold: true },
+      player: {
+        lifetimeAccess: true,
+        infiniteGold: false,
+        currency: {
+          soft: Number.MAX_SAFE_INTEGER,
+          hard: Number.MAX_SAFE_INTEGER,
+        },
+      },
     });
   });
 

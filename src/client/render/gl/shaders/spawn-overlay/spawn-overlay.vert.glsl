@@ -41,9 +41,9 @@ void main() {
     float cy = cos(uYaw), sy = sin(uYaw);
     d = vec2(d.x * cy - d.y * sy, d.x * sy + d.y * cy);
     float ct = cos(uTilt), st = sin(uTilt);
-    float groundHeight = 2.2;
-    float viewY = d.y * ct + groundHeight * st;
-    float viewZ = uDistance + d.y * st - groundHeight * ct;
+    float groundHeight = 1.8;
+    float viewY = -d.y * ct + groundHeight * st;
+    float viewZ = uDistance - d.y * st - groundHeight * ct;
     if (viewZ <= 0.5) {
       gl_Position = vec4(2.0);
       return;

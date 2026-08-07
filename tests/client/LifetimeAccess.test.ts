@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { hasLifetimeAccess } from "../../src/client/LifetimeAccess";
 
-describe("lifetime access", () => {
-  it("does not treat guests or ordinary accounts as paid", () => {
-    expect(hasLifetimeAccess(false)).toBe(false);
+describe("open gameplay access", () => {
+  it("does not gate guests or ordinary accounts", () => {
+    expect(hasLifetimeAccess(false)).toBe(true);
     expect(
       hasLifetimeAccess({
         user: { email: "player@example.com" },
@@ -18,10 +18,10 @@ describe("lifetime access", () => {
           subscription: null,
         },
       }),
-    ).toBe(false);
+    ).toBe(true);
   });
 
-  it("recognizes the server-issued lifetime entitlement", () => {
+  it("keeps old entitlement responses compatible", () => {
     expect(
       hasLifetimeAccess({
         user: { email: "owner@example.com" },

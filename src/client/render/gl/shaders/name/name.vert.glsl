@@ -14,6 +14,7 @@ uniform sampler2D  uPlayerData;    // 4 × MAX_PLAYERS, RGBA32F
 
 // Uniforms
 uniform mat3  uCamera;
+uniform int uScreenFacing;
 uniform float uTime;
 uniform float uFontSize;    // atlas reference font size
 uniform float uAtlasScaleW; // atlas texture width
@@ -160,7 +161,21 @@ void main() {
   vec2 worldPos = vec2(wx, wy + lineOffsetY) + glyphOrigin + aPos * glyphSize;
 
   // 9. Camera transform
-  vec3 clip = uCamera * vec3(worldPos, 1.0);
+  vec3 clip;
+  if (uScreenFacing == 1) {
+    // Project the player anchor through the rotating world camera, then keep
+    // glyph offsets aligned to the screen. Names therefore follow the board
+    // without rotating upside-down or becoming mirrored as the camera orbits.
+    vec3 anchorClip = uCamera * vec3(wx, wy, 1.0);
+    vec2 localOffset = worldPos - vec2(wx, wy);
+    vec2 screenScale = vec2(
+      length(vec2(uCamera[0][0], uCamera[0][1])),
+      -length(vec2(uCamera[1][0], uCamera[1][1]))
+    );
+    clip = vec3(anchorClip.xy + localOffset * screenScale, 1.0);
+  } else {
+    clip = uCamera * vec3(worldPos, 1.0);
+  }
   gl_Position = vec4(clip.xy, 0.0, 1.0);
 
   // 10. Fade the whole name plate when the cursor is on top of any part of it

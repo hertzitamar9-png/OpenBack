@@ -623,3 +623,16 @@ OpenBack continues from OpenFront's player-facing gameplay foundation, including
 - Cities, ports, factories, defense posts, silos, SAMs, trains, railroads, ships, and nuclear weapons.
 - Favorites, map search, many world and regional maps, translations, hotkeys, alerts, and accessibility improvements.
 - Balance, performance, security, and stability fixes that affect live matches.
+
+## OpenBack v0.34.84 - Complete 3D Gameplay View
+
+- Restored ship routes, railways, targeting paths, range indicators, build previews, selections, and combat effects in 3D World so tactical information matches the classic 2D game.
+- Split the right mouse gesture cleanly: a normal right-click opens the gameplay menu while a deliberate right-drag orbits the 3D camera.
+- Reworked the 3D terrain into a cleaner tabletop surface with broader smoothing, restrained ordinary relief, clearly elevated impassable ridges, safer camera angles, and a dark classic-style surround without the detached painted horizon.
+- Kept spawn markers as crisp screen-facing circles and synchronized the increased terrain relief across units, structures, world events, and mouse targeting.
+- Removed Lifetime Access from gameplay: multiplayer, Ranked, parties, invite links, public lobbies, and every Frootz map are available without a purchase gate.
+- Made the blue verified-name mark work for signed-in email accounts, proving that the reserved displayed username belongs to that account without requiring a subscription.
+- Removed the Source and Licenses homepage news banner while retaining the required notices in OpenBack's legal and source pages.
+- Corrected the 3D map's vertical camera basis so geography, labels, models, spawn markers, effects, mouse targeting, and drag movement preserve the same orientation as the 2D battlefield.
+
+Created by **frootz jhklphy**.

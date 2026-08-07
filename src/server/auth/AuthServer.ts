@@ -197,7 +197,8 @@ const complimentaryLifetimeEmails = new Set(
     .map((email) => email.trim().toLowerCase())
     .filter(Boolean),
 );
-const OWNER_INFINITE_GOLD_EMAIL = "hertzitamar9@gmail.com";
+const OWNER_STORE_CURRENCY_EMAIL = "hertzitamar9@gmail.com";
+const OWNER_STORE_CURRENCY_BALANCE = Number.MAX_SAFE_INTEGER;
 // Parsed once at startup. Purchases validate item names/prices against this.
 const cosmetics = CosmeticsSchema.parse(cosmeticsJson);
 const databaseUrl = process.env.DATABASE_URL;
@@ -423,16 +424,26 @@ function userMeFor(user: StoredUser): UserMeResponse {
     player: {
       publicId: user.publicId,
       adfree: false,
-      unlimitedRanked: user.lifetimeAccess === true,
-      canCreatePublicLobbies: user.lifetimeAccess === true,
-      infiniteGold: user.email?.toLowerCase() === OWNER_INFINITE_GOLD_EMAIL,
+      unlimitedRanked: true,
+      canCreatePublicLobbies: true,
+      username: usernameFor(user),
+      usernameBase: usernameFor(user),
+      usernameDiscriminator: null,
+      usernameStatus: user.email ? "indefinite" : "unclaimed",
+      infiniteGold: false,
       flares: user.flares ?? [],
       achievements: { singleplayerMap: [] },
       leaderboard:
         user.elo !== undefined ? { oneVone: { elo: user.elo } } : undefined,
       currency: {
-        soft: user.currencySoft ?? 0,
-        hard: user.currencyHard ?? 0,
+        soft:
+          user.email?.toLowerCase() === OWNER_STORE_CURRENCY_EMAIL
+            ? OWNER_STORE_CURRENCY_BALANCE
+            : (user.currencySoft ?? 0),
+        hard:
+          user.email?.toLowerCase() === OWNER_STORE_CURRENCY_EMAIL
+            ? OWNER_STORE_CURRENCY_BALANCE
+            : (user.currencyHard ?? 0),
       },
       clans,
       clanRequests,
@@ -444,7 +455,7 @@ function userMeFor(user: StoredUser): UserMeResponse {
         .map((friendship) =>
           friendship.a === user.publicId ? friendship.b : friendship.a,
         ),
-      lifetimeAccess: user.lifetimeAccess === true,
+      lifetimeAccess: true,
       subscription: null,
     },
   });
@@ -2276,7 +2287,11 @@ export function authRouter(): express.Router {
 
     const balanceKey =
       currencyType === "hard" ? "currencyHard" : "currencySoft";
-    const balance = user[balanceKey] ?? 0;
+    const ownerStoreAccess =
+      user.email?.toLowerCase() === OWNER_STORE_CURRENCY_EMAIL;
+    const balance = ownerStoreAccess
+      ? OWNER_STORE_CURRENCY_BALANCE
+      : (user[balanceKey] ?? 0);
     if (balance < price) {
       res.status(402).json({ error: "insufficient_funds" });
       return;
@@ -2287,7 +2302,7 @@ export function authRouter(): express.Router {
         ? `pattern:${cosmeticName}:${colorPaletteName}`
         : `${cosmeticType}:${cosmeticName}`;
 
-    user[balanceKey] = balance - price;
+    if (!ownerStoreAccess) user[balanceKey] = balance - price;
     user.flares = user.flares ?? [];
     if (!user.flares.includes(flare)) {
       user.flares.push(flare);

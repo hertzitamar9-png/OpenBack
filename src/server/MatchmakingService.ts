@@ -120,11 +120,6 @@ export class MatchmakingService {
       ws.close();
       return;
     }
-    if (!account.lifetimeAccess) {
-      this.send(ws, { type: "error", error: "lifetime_access_required" });
-      ws.close();
-      return;
-    }
     const player: RankedPlayer = {
       publicId: account.publicId,
       elo: account.elo,
