@@ -2,6 +2,7 @@ import {
   THREE_D_MODELS,
   threeDModel,
 } from "../../../src/client/render/gl/three-d/ThreeDModelRegistry";
+import { rotateThreeDModelOffset } from "../../../src/client/render/gl/three-d/ThreeDUnitPass";
 import { UnitType } from "../../../src/core/game/Game";
 
 describe("3D model registry", () => {
@@ -29,5 +30,17 @@ describe("3D model registry", () => {
         ).toBe(true);
       }
     }
+  });
+});
+
+describe("3D assembled model transforms", () => {
+  it("rotates primitive offsets with the parent heading", () => {
+    expect(rotateThreeDModelOffset(2, 0, Math.PI / 2)[0]).toBeCloseTo(0);
+    expect(rotateThreeDModelOffset(2, 0, Math.PI / 2)[1]).toBeCloseTo(-2);
+  });
+
+  it("preserves the distance of every part from the model center", () => {
+    const [x, z] = rotateThreeDModelOffset(1.4, -0.8, 1.237);
+    expect(Math.hypot(x, z)).toBeCloseTo(Math.hypot(1.4, -0.8));
   });
 });

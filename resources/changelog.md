@@ -1,3 +1,14 @@
+## OpenBack v0.34.82 - Solid 3D Battlefield
+
+- Replaced the 3D renderer's screen-space projection with true perspective depth and near-plane clipping so terrain, player territory, units, and structures no longer stretch into broken triangles while orbiting or zooming.
+- Rebuilt aircraft wings as closed solid geometry, doubled the smoothness of round units, closed cylinder and cone bases, replaced faceted projectile balls with smooth spherical meshes, and locked every model part to its parent while turning.
+- Raised contiguous impassable terrain into bright, readable wall ridges while smoothing isolated height noise so mountain barriers remain dramatic without needle spikes.
+- Integrated the ocean floor with a camera-aware horizon and skybox: the sky appears naturally when the camera is lowered and remains outside the view while looking down from above.
+- Corrected the inverted camera basis that made the world resemble a hanging 2D sheet: the battlefield is now a horizontal floor below the camera, distant land converges toward the upper horizon, and elevated terrain rises toward the viewer.
+- Rebuilt tabletop navigation so left-drag stays attached to the foreshortened floor, right-drag orbits and tilts above it, and wheel zoom preserves the exact ground point under the cursor.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.81 - Living 3D World
 
 - Added the optional Living World modifier: warned, deterministic winter freezes create temporary crossings; droughts expose routes; floods and tsunamis form temporary barriers; volcanic eruptions and sinkholes create impassable ground; and nuclear saturation can permanently reshape contested routes.

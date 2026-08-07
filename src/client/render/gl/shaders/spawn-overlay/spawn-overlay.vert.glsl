@@ -41,12 +41,16 @@ void main() {
     float cy = cos(uYaw), sy = sin(uYaw);
     d = vec2(d.x * cy - d.y * sy, d.x * sy + d.y * cy);
     float ct = cos(uTilt), st = sin(uTilt);
-    float groundHeight = 0.65;
-    float viewY = d.y * ct - groundHeight * st;
-    float viewZ = max(1.0, uDistance + d.y * st + groundHeight * ct);
+    float groundHeight = 2.2;
+    float viewY = d.y * ct + groundHeight * st;
+    float viewZ = uDistance + d.y * st - groundHeight * ct;
+    if (viewZ <= 0.5) {
+      gl_Position = vec4(2.0);
+      return;
+    }
     vec2 centerClip = vec2(
       d.x / (viewZ * uTanHalfFov * uAspect),
-      -viewY / (viewZ * uTanHalfFov)
+      viewY / (viewZ * uTanHalfFov)
     );
     // Marker geometry is screen-facing UI: its center follows the 3D ground,
     // while its local X/Y radius stays circular and selectable.

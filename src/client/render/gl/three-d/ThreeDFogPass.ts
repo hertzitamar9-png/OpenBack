@@ -28,10 +28,13 @@ void main(){
   vec2 d=world-uCenter;
   float cy=cos(uYaw),sy=sin(uYaw);
   d=vec2(d.x*cy-d.y*sy,d.x*sy+d.y*cy);
-  float ct=cos(uTilt),st=sin(uTilt),viewY=d.y*ct-height*st;
-  float viewZ=max(1.0,uDistance+d.y*st+height*ct);
-  gl_Position=vec4(d.x/(viewZ*uTanHalfFov*uAspect),-viewY/(viewZ*uTanHalfFov),(viewZ/uDistance-1.0)*.55-.001,1.0);
-  gl_PointSize=clamp((42.0+layer*54.0)*(uDistance/viewZ),24.0,112.0);
+  float ct=cos(uTilt),st=sin(uTilt),viewY=d.y*ct+height*st;
+  float viewZ=uDistance+d.y*st-height*ct;
+  if(viewZ<=0.5){gl_Position=vec4(2.0);gl_PointSize=0.0;vDensity=0.0;return;}
+  float nearPlane=0.5,farPlane=max(nearPlane+1.0,uDistance*8.0+50.0);
+  float clipZ=((farPlane+nearPlane)/(farPlane-nearPlane))*viewZ-(2.0*farPlane*nearPlane)/(farPlane-nearPlane);
+  gl_Position=vec4(d.x/(uTanHalfFov*uAspect),viewY/uTanHalfFov,clipZ,viewZ);
+  gl_PointSize=clamp((42.0+layer*54.0)*(uDistance/max(viewZ,.5)),24.0,112.0);
   vDensity=.18+.16*hash(id+uTime*.01);
 }`;
 

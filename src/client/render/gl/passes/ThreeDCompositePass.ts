@@ -18,13 +18,21 @@ const skyFrag = `#version 300 es
 precision highp float;
 in vec2 vUV;
 uniform float uTime;
+uniform float uTilt;
 out vec4 outColor;
 void main(){
-  // The world continues as ocean beyond the generated terrain mesh. This is
-  // the tabletop floor, not a skybox behind a floating map.
-  vec3 top=vec3(0.018,0.12,0.24);
-  vec3 bottom=vec3(0.025,0.18,0.31);
-  vec3 c=mix(bottom,top,smoothstep(0.0,1.0,vUV.y));
+  // This is the exact horizon of the perspective ground plane. At the normal
+  // overhead tabletop angle it remains above the viewport; lowering the
+  // camera with right-drag reveals one continuous horizon and sky.
+  float horizonNdc=cos(uTilt)/(max(0.01,sin(uTilt))*0.383864);
+  float horizon=0.5+0.5*horizonNdc;
+  float orbit=1.0-smoothstep(1.0,1.16,horizon);
+  float skyMask=smoothstep(horizon-0.018,horizon+0.018,vUV.y);
+  vec3 ocean=mix(vec3(0.025,0.18,0.31),vec3(0.012,0.075,0.17),vUV.y);
+  float skyT=clamp((vUV.y-horizon)/max(0.08,1.0-horizon),0.0,1.0);
+  vec3 sky=mix(vec3(0.20,0.42,0.61),vec3(0.025,0.075,0.16),skyT);
+  float horizonGlow=exp(-abs(vUV.y-horizon)*42.0)*orbit;
+  vec3 c=mix(ocean,sky,skyMask)+vec3(0.12,0.18,0.22)*horizonGlow;
   float vignette=1.0-0.24*smoothstep(0.35,0.82,length(vUV-vec2(0.5)));
   c*=vignette;
   outColor=vec4(c,1.0);
@@ -51,9 +59,9 @@ out float vViewDepth;
 float heightFor(uint b){
   bool land=(b&128u)!=0u;
   float m=float(b&31u);
-  if(land&&m>30.5)return 17.0;
-  if(land)return 0.9+pow(m/30.0,1.16)*14.0;
-  return -0.5-min(m,10.0)*0.045;
+  if(land&&m>30.5)return 27.0;
+  if(land)return 2.2+pow(m/30.0,1.14)*17.8;
+  return -1.1-min(m,10.0)*0.07;
 }
 float smoothHeight(vec2 world,uint centerByte){
   bool centerLand=(centerByte&128u)!=0u;
@@ -68,6 +76,20 @@ float smoothHeight(vec2 world,uint centerByte){
       uint b=texelFetch(uTerrain,p,0).r;
       if(((b&128u)!=0u)==centerLand){total+=heightFor(b);weight+=1.0;}
     }
+  }
+  if(centerLand&&(centerByte&31u)==31u){
+    float wallNeighbors=0.0;
+    for(int y=-1;y<=1;y++){
+      for(int x=-1;x<=1;x++){
+        ivec2 p=clamp(base+ivec2(x,y),ivec2(0),ivec2(uMapSize)-1);
+        uint b=texelFetch(uTerrain,p,0).r;
+        wallNeighbors+=((b&128u)!=0u&&(b&31u)==31u)?1.0:0.0;
+      }
+    }
+    // Contiguous impassable terrain becomes a high defensive wall. Isolated
+    // noisy pixels stay blended into the surrounding ridge instead of making
+    // the needle-shaped triangles seen in the old renderer.
+    if(wallNeighbors>=3.0)return 27.0;
   }
   return total/weight;
 }
@@ -84,13 +106,23 @@ void main(){
   float cy=cos(uYaw),sy=sin(uYaw);
   d=vec2(d.x*cy-d.y*sy,d.x*sy+d.y*cy);
   float ct=cos(uTilt),st=sin(uTilt);
-  float viewY=d.y*ct-h*st;
-  float viewZ=max(1.0,uDistance+d.y*st+h*ct);
-  vec2 clip=vec2(
-    d.x/(viewZ*uTanHalfFov*uAspect),
-    -viewY/(viewZ*uTanHalfFov)
+  // A real camera above the XZ floor: positive terrain height moves toward
+  // the camera and upward on screen; distant ground converges upward toward
+  // the horizon rather than hanging below it like an inverted map.
+  float viewY=d.y*ct+h*st;
+  float viewZ=uDistance+d.y*st-h*ct;
+  float nearPlane=0.5,farPlane=max(nearPlane+1.0,uDistance*8.0+50.0);
+  float clipZ=((farPlane+nearPlane)/(farPlane-nearPlane))*viewZ
+    -(2.0*farPlane*nearPlane)/(farPlane-nearPlane);
+  // Preserve viewZ as clip-space W. WebGL now performs real perspective
+  // interpolation and clips geometry at the near plane, preventing terrain
+  // and player models from stretching into giant screen-sized triangles.
+  gl_Position=vec4(
+    d.x/(uTanHalfFov*uAspect),
+    viewY/uTanHalfFov,
+    clipZ,
+    viewZ
   );
-  gl_Position=vec4(clip,(viewZ/uDistance-1.0)*0.55,1.0);
   vMapUV=mapUV;
   vHeight=h;
   vViewDepth=viewZ;
@@ -113,9 +145,9 @@ out vec4 outColor;
 
 float heightFor(uint b){
   bool land=(b&128u)!=0u; float m=float(b&31u);
-  if(land&&m>30.5)return 17.0;
-  if(land)return 0.9+pow(m/30.0,1.16)*14.0;
-  return -0.5-min(m,10.0)*0.045;
+  if(land&&m>30.5)return 27.0;
+  if(land)return 2.2+pow(m/30.0,1.14)*17.8;
+  return -1.1-min(m,10.0)*0.07;
 }
 float sameSurfaceHeight(uint centerByte,ivec2 samplePoint){
   uint sampleByte=texelFetch(uTerrain,samplePoint,0).r;
@@ -197,6 +229,7 @@ export class ThreeDCompositePass {
   private skyVao: WebGLVertexArrayObject;
   private meshes: TerrainMesh[];
   private skyTime: WebGLUniformLocation | null;
+  private skyTilt: WebGLUniformLocation | null;
   private uniforms: Record<string, WebGLUniformLocation | null>;
 
   constructor(
@@ -210,6 +243,7 @@ export class ThreeDCompositePass {
     this.skyProgram = createProgram(gl, skyVert, skyFrag);
     this.terrainProgram = createProgram(gl, terrainVert, terrainFrag);
     this.skyTime = gl.getUniformLocation(this.skyProgram, "uTime");
+    this.skyTilt = gl.getUniformLocation(this.skyProgram, "uTilt");
     this.uniforms = Object.fromEntries(
       [
         "uTerrain",
@@ -299,6 +333,7 @@ export class ThreeDCompositePass {
     gl.disable(gl.DEPTH_TEST);
     gl.useProgram(this.skyProgram);
     gl.uniform1f(this.skyTime, performance.now() / 1000);
+    gl.uniform1f(this.skyTilt, pitch);
     gl.bindVertexArray(this.skyVao);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 

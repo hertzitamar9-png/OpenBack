@@ -27,6 +27,16 @@ const ANIMATION: Record<ThreeDAnimation, number> = {
   hover: 5,
 };
 
+export function rotateThreeDModelOffset(
+  x: number,
+  z: number,
+  heading: number,
+): readonly [number, number] {
+  const c = Math.cos(heading);
+  const s = Math.sin(heading);
+  return [x * c + z * s, -x * s + z * c];
+}
+
 const vert = `#version 300 es
 precision highp float;
 precision highp usampler2D;
@@ -42,7 +52,7 @@ uniform float uDistance,uTanHalfFov,uAspect,uTilt,uYaw,uTime;
 out vec3 vNormal;
 out vec3 vMeta;
 
-float heightFor(uint b){bool land=(b&128u)!=0u;float m=float(b&31u);if(land&&m>30.5)return 17.0;if(land)return 0.9+pow(m/30.0,1.16)*14.0;return -0.5-min(m,10.0)*0.045;}
+float heightFor(uint b){bool land=(b&128u)!=0u;float m=float(b&31u);if(land&&m>30.5)return 27.0;if(land)return 2.2+pow(m/30.0,1.14)*17.8;return -1.1-min(m,10.0)*0.07;}
 mat3 rx(float a){float c=cos(a),s=sin(a);return mat3(1,0,0,0,c,s,0,-s,c);}
 mat3 ry(float a){float c=cos(a),s=sin(a);return mat3(c,0,-s,0,1,0,s,0,c);}
 mat3 rz(float a){float c=cos(a),s=sin(a);return mat3(c,s,0,-s,c,0,0,0,1);}
@@ -65,9 +75,11 @@ void main(){
   float cy=cos(uYaw),sy=sin(uYaw);
   d=vec2(d.x*cy-d.y*sy,d.x*sy+d.y*cy);
   float ct=cos(uTilt),st=sin(uTilt);
-  float viewY=d.y*ct-world.y*st;
-  float viewZ=max(1.0,uDistance+d.y*st+world.y*ct);
-  gl_Position=vec4(d.x/(viewZ*uTanHalfFov*uAspect),-viewY/(viewZ*uTanHalfFov),(viewZ/uDistance-1.0)*0.55,1.0);
+  float viewY=d.y*ct+world.y*st;
+  float viewZ=uDistance+d.y*st-world.y*ct;
+  float nearPlane=0.5,farPlane=max(nearPlane+1.0,uDistance*8.0+50.0);
+  float clipZ=((farPlane+nearPlane)/(farPlane-nearPlane))*viewZ-(2.0*farPlane*nearPlane)/(farPlane-nearPlane);
+  gl_Position=vec4(d.x/(uTanHalfFov*uAspect),viewY/uTanHalfFov,clipZ,viewZ);
   vNormal=normalize(heading*local*aNormal);
   vMeta=iMeta.xyz;
 }`;
@@ -210,10 +222,18 @@ export class ThreeDUnitPass {
       for (const primitive of model.primitives) {
         const batch = this.batches.get(primitive.kind)!;
         const rotation = primitive.rotation ?? [0, 0, 0];
+        // Keep every primitive in one rigid model. The old path rotated each
+        // part's geometry but left its center offset in world axes, so a plane
+        // nose or tank barrel could detach from its body while turning.
+        const [offsetX, offsetZ] = rotateThreeDModelOffset(
+          primitive.position[0],
+          primitive.position[2],
+          heading,
+        );
         batch.push(
-          x + primitive.position[0],
+          x + offsetX,
           (model.altitude ?? 0) + primitive.position[1],
-          z + primitive.position[2],
+          z + offsetZ,
           primitive.scale[0] * model.footprint * 0.34,
           primitive.scale[1] * model.footprint * 0.34,
           primitive.scale[2] * model.footprint * 0.34,
@@ -415,21 +435,62 @@ export class ThreeDUnitPass {
   }
 
   private wingGeometry() {
-    const vertices = [
-      -0.5, -0.08, -0.5, 0, 1, 0, 0.5, -0.08, -0.12, 0, 1, 0, 0.5, -0.08, 0.12,
-      0, 1, 0, -0.5, -0.08, 0.5, 0, 1, 0, -0.5, 0.08, -0.5, 0, -1, 0, 0.5, 0.08,
-      -0.12, 0, -1, 0, 0.5, 0.08, 0.12, 0, -1, 0, -0.5, 0.08, 0.5, 0, -1, 0,
-    ];
-    const indices = [
-      0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6, 0, 4, 5, 0, 5, 1, 3, 2, 6, 3, 6, 7,
-    ];
+    const vertices: number[] = [];
+    const indices: number[] = [];
+    const corners = [
+      [-0.5, -0.5],
+      [0.5, -0.12],
+      [0.5, 0.12],
+      [-0.5, 0.5],
+    ] as const;
+    for (const [x, z] of corners) vertices.push(x, 0.08, z, 0, 1, 0);
+    for (const [x, z] of corners) vertices.push(x, -0.08, z, 0, -1, 0);
+    indices.push(0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6);
+    for (let i = 0; i < corners.length; i++) {
+      const j = (i + 1) % corners.length;
+      const [x0, z0] = corners[i];
+      const [x1, z1] = corners[j];
+      const dx = x1 - x0;
+      const dz = z1 - z0;
+      const length = Math.hypot(dx, dz) || 1;
+      const nx = dz / length;
+      const nz = -dx / length;
+      const base = vertices.length / 6;
+      vertices.push(
+        x0,
+        -0.08,
+        z0,
+        nx,
+        0,
+        nz,
+        x1,
+        -0.08,
+        z1,
+        nx,
+        0,
+        nz,
+        x1,
+        0.08,
+        z1,
+        nx,
+        0,
+        nz,
+        x0,
+        0.08,
+        z0,
+        nx,
+        0,
+        nz,
+      );
+      indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
+    }
     return { vertices, indices };
   }
 
   private radialGeometry(cone: boolean) {
     const vertices: number[] = [];
     const indices: number[] = [];
-    const n = 12;
+    const n = 24;
     for (let i = 0; i < n; i++) {
       const a = (i * Math.PI * 2) / n,
         c = Math.cos(a),
@@ -448,17 +509,60 @@ export class ThreeDUnitPass {
       const j = (i + 1) % n;
       indices.push(i * 2, j * 2, i * 2 + 1, j * 2, j * 2 + 1, i * 2 + 1);
     }
+    const bottomCenter = vertices.length / 6;
+    vertices.push(0, -0.5, 0, 0, -1, 0);
+    for (let i = 0; i < n; i++) {
+      const a = (i * Math.PI * 2) / n;
+      vertices.push(Math.cos(a) * 0.5, -0.5, Math.sin(a) * 0.5, 0, -1, 0);
+    }
+    for (let i = 0; i < n; i++) {
+      indices.push(
+        bottomCenter,
+        bottomCenter + 1 + ((i + 1) % n),
+        bottomCenter + 1 + i,
+      );
+    }
+    if (!cone) {
+      const topCenter = vertices.length / 6;
+      vertices.push(0, 0.5, 0, 0, 1, 0);
+      for (let i = 0; i < n; i++) {
+        const a = (i * Math.PI * 2) / n;
+        vertices.push(Math.cos(a) * 0.5, 0.5, Math.sin(a) * 0.5, 0, 1, 0);
+      }
+      for (let i = 0; i < n; i++) {
+        indices.push(
+          topCenter,
+          topCenter + 1 + i,
+          topCenter + 1 + ((i + 1) % n),
+        );
+      }
+    }
     return { vertices, indices };
   }
 
   private sphereGeometry() {
-    const vertices = [
-      0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, -1, 0, 0, -1, 0, 0,
-      0, 0, -1, 0, 0, -1, 0, -1, 0, 0, -1, 0,
-    ];
-    const indices = [
-      0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 1, 5, 2, 1, 5, 3, 2, 5, 4, 3, 5, 1, 4,
-    ];
+    const vertices: number[] = [];
+    const indices: number[] = [];
+    const latitudes = 12;
+    const longitudes = 20;
+    for (let y = 0; y <= latitudes; y++) {
+      const phi = (y * Math.PI) / latitudes;
+      const ny = Math.cos(phi);
+      const ring = Math.sin(phi);
+      for (let x = 0; x <= longitudes; x++) {
+        const theta = (x * Math.PI * 2) / longitudes;
+        const nx = Math.cos(theta) * ring;
+        const nz = Math.sin(theta) * ring;
+        vertices.push(nx, ny, nz, nx, ny, nz);
+      }
+    }
+    for (let y = 0; y < latitudes; y++) {
+      for (let x = 0; x < longitudes; x++) {
+        const a = y * (longitudes + 1) + x;
+        const b = a + longitudes + 1;
+        indices.push(a, b, a + 1, a + 1, b, b + 1);
+      }
+    }
     return { vertices, indices };
   }
 

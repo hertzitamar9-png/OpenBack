@@ -1472,7 +1472,7 @@ export class GPURenderer {
     const tanHalfFov = Math.tan((THREE_D_FOV_DEGREES * Math.PI) / 360);
     const distance = height / Math.max(0.01, zoom * 2) / tanHalfFov;
     const sx = 1 / (distance * tanHalfFov * (width / Math.max(1, height)));
-    const sy = -Math.cos(this.threeDPitch) / (distance * tanHalfFov);
+    const sy = Math.cos(this.threeDPitch) / (distance * tanHalfFov);
     const cy = Math.cos(this.threeDYaw);
     const yawSin = Math.sin(this.threeDYaw);
     const m = this.threeDBillboardMatrix;
