@@ -30,7 +30,7 @@ describe("ranked 1v1 playlist", () => {
   });
 
   it("rolls at most one optional world modifier in ranked", () => {
-    for (const roll of [0.1, 0.25, 0.38, 0.8]) {
+    for (const roll of [0.1, 0.25, 0.34, 0.8]) {
       let call = 0;
       const config = new MapPlaylist().get1v1Config(() => {
         call++;
@@ -40,6 +40,7 @@ describe("ranked 1v1 playlist", () => {
         config.worldMechanics?.strategicObjectives,
         config.worldMechanics?.naturalDisasters,
         config.worldMechanics?.fogOfWar,
+        config.worldMechanics?.livingWorld,
       ].filter(Boolean);
       expect(modifiers.length).toBeLessThanOrEqual(1);
     }

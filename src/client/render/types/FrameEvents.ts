@@ -17,6 +17,7 @@ export interface WorldEventFx {
   radius: number;
   durationTicks: number;
   pathEnd?: number;
+  warnedKind?: WorldEventKind;
 }
 
 // ── FrameEvents ─────────────────────────────────────────────────────────

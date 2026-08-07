@@ -1,5 +1,8 @@
 import {
+  DragEvent,
   InputHandler,
+  RotateCameraEvent,
+  TouchEvent,
   ZOOM_DELTA_DIVISOR,
   ZoomEvent,
 } from "../../src/client/InputHandler";
@@ -43,19 +46,59 @@ function dispatchPointerUp(target: EventTarget, pointerId: number): void {
   target.dispatchEvent(event);
 }
 
-function setup() {
+function dispatchPointerCancel(target: EventTarget, pointerId: number): void {
+  const event = new Event("pointercancel", {
+    bubbles: true,
+    cancelable: true,
+  });
+  Object.assign(event, { pointerId, pointerType: "touch", button: 0 });
+  target.dispatchEvent(event);
+}
+
+function setup(threeDMode = false) {
   const canvas = document.createElement("div");
   document.body.appendChild(canvas);
 
   const eventBus = new EventBus();
   const zooms: ZoomEvent[] = [];
+  const touches: TouchEvent[] = [];
+  const drags: DragEvent[] = [];
+  const rotations: RotateCameraEvent[] = [];
   eventBus.on(ZoomEvent, (e) => zooms.push(e));
+  eventBus.on(TouchEvent, (e) => touches.push(e));
+  eventBus.on(DragEvent, (e) => drags.push(e));
+  eventBus.on(RotateCameraEvent, (e) => rotations.push(e));
 
-  const gameView = { inSpawnPhase: () => false } as unknown as GameView;
+  const gameView = {
+    inSpawnPhase: () => false,
+    config: () => ({ worldMechanics: () => ({ threeDMode }) }),
+  } as unknown as GameView;
   const handler = new InputHandler(gameView, {} as UIState, canvas, eventBus);
   handler.initialize();
 
-  return { canvas, handler, zooms };
+  return { canvas, handler, zooms, touches, drags, rotations };
+}
+
+function dispatchMousePointer(
+  target: EventTarget,
+  type: "pointerdown" | "pointermove" | "pointerup",
+  button: number,
+  clientX: number,
+  clientY: number,
+): Event {
+  const event = new Event(type, { bubbles: true, cancelable: true });
+  Object.assign(event, {
+    pointerId: 99,
+    pointerType: "mouse",
+    button,
+    buttons: type === "pointerup" ? 0 : 1 << button,
+    clientX,
+    clientY,
+    x: clientX,
+    y: clientY,
+  });
+  target.dispatchEvent(event);
+  return event;
 }
 
 describe("InputHandler Safari trackpad pinch", () => {
@@ -174,6 +217,23 @@ describe("InputHandler Safari trackpad pinch", () => {
     expect(ctx.zooms).toHaveLength(1);
   });
 
+  it("does not turn the final finger of a pinch into a country tap", () => {
+    dispatchPointerDown(ctx.canvas, 1, { clientX: 100, clientY: 100 });
+    dispatchPointerDown(ctx.canvas, 2, { clientX: 200, clientY: 200 });
+
+    dispatchPointerUp(window, 1);
+    dispatchPointerUp(window, 2);
+
+    expect(ctx.touches).toHaveLength(0);
+  });
+
+  it("does not turn a canceled touch into a country tap", () => {
+    dispatchPointerDown(ctx.canvas, 1, { clientX: 100, clientY: 100 });
+    dispatchPointerCancel(window, 1);
+
+    expect(ctx.touches).toHaveLength(0);
+  });
+
   it("emits nothing when the pinch has not moved", () => {
     dispatchGesture(ctx.canvas, "gesturestart", { scale: 1 });
     dispatchGesture(ctx.canvas, "gesturechange", { scale: 1 });
@@ -186,5 +246,33 @@ describe("InputHandler Safari trackpad pinch", () => {
       const event = dispatchGesture(ctx.canvas, type, { scale: 1.2 });
       expect(event.defaultPrevented).toBe(true);
     }
+  });
+});
+
+describe("InputHandler 3D desktop camera", () => {
+  it("orbits only while the right mouse button is held", () => {
+    const ctx = setup(true);
+    dispatchMousePointer(ctx.canvas, "pointerdown", 2, 100, 90);
+    dispatchMousePointer(window, "pointermove", -1, 128, 104);
+    dispatchMousePointer(window, "pointerup", 2, 128, 104);
+
+    expect(ctx.rotations).toHaveLength(1);
+    expect(ctx.rotations[0]).toMatchObject({ deltaX: 28, deltaY: 14 });
+    expect(ctx.drags).toHaveLength(0);
+    ctx.handler.destroy();
+    ctx.canvas.remove();
+  });
+
+  it("uses left-drag to move across the 3D tabletop", () => {
+    const ctx = setup(true);
+    dispatchMousePointer(ctx.canvas, "pointerdown", 0, 100, 90);
+    dispatchMousePointer(window, "pointermove", -1, 128, 104);
+    dispatchMousePointer(window, "pointerup", 0, 128, 104);
+
+    expect(ctx.drags).toHaveLength(1);
+    expect(ctx.drags[0]).toMatchObject({ deltaX: 28, deltaY: 14 });
+    expect(ctx.rotations).toHaveLength(0);
+    ctx.handler.destroy();
+    ctx.canvas.remove();
   });
 });

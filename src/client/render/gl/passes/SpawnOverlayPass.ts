@@ -17,6 +17,7 @@
 
 import { DynamicInstanceBuffer } from "../DynamicBuffer";
 import type { RenderSettings } from "../RenderSettings";
+import { THREE_D_FOV_DEGREES } from "../three-d/ThreeDWorldMath";
 import { createProgram, shaderSrc } from "../utils/GlUtils";
 import { TILE_DEFINES } from "../utils/TileCodec";
 
@@ -62,6 +63,15 @@ export class SpawnOverlayPass {
   private uSelfRadii: WebGLUniformLocation;
   private uMateRadii: WebGLUniformLocation;
   private uGradientStops: WebGLUniformLocation;
+  private uThreeD: WebGLUniformLocation;
+  private uThreeDCenter: WebGLUniformLocation;
+  private uViewport: WebGLUniformLocation;
+  private uDistance: WebGLUniformLocation;
+  private uTanHalfFov: WebGLUniformLocation;
+  private uAspect: WebGLUniformLocation;
+  private uTilt: WebGLUniformLocation;
+  private uYaw: WebGLUniformLocation;
+  private uZoom: WebGLUniformLocation;
 
   private mapW: number;
   private mapH: number;
@@ -109,6 +119,15 @@ export class SpawnOverlayPass {
       this.program,
       "uGradientStops",
     )!;
+    this.uThreeD = gl.getUniformLocation(this.program, "uThreeD")!;
+    this.uThreeDCenter = gl.getUniformLocation(this.program, "uThreeDCenter")!;
+    this.uViewport = gl.getUniformLocation(this.program, "uViewport")!;
+    this.uDistance = gl.getUniformLocation(this.program, "uDistance")!;
+    this.uTanHalfFov = gl.getUniformLocation(this.program, "uTanHalfFov")!;
+    this.uAspect = gl.getUniformLocation(this.program, "uAspect")!;
+    this.uTilt = gl.getUniformLocation(this.program, "uTilt")!;
+    this.uYaw = gl.getUniformLocation(this.program, "uYaw")!;
+    this.uZoom = gl.getUniformLocation(this.program, "uZoom")!;
 
     gl.useProgram(this.program);
     gl.uniform1i(gl.getUniformLocation(this.program, "uTileTex"), 0);
@@ -222,6 +241,7 @@ export class SpawnOverlayPass {
     const breathRadius = 0.5 + 0.5 * Math.sin(this.animTime);
 
     gl.useProgram(this.program);
+    gl.uniform1i(this.uThreeD, 0);
     gl.uniformMatrix3fv(this.uCamera, false, cameraMatrix);
     gl.uniform2f(this.uMapSize, this.mapW, this.mapH);
     gl.uniform1f(this.uBreathRadius, breathRadius);
@@ -239,6 +259,55 @@ export class SpawnOverlayPass {
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.tileTex);
 
+    gl.bindVertexArray(this.vao);
+    gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, this.instanceCount);
+    gl.bindVertexArray(null);
+  }
+
+  drawThreeD(
+    centerX: number,
+    centerY: number,
+    zoom: number,
+    width: number,
+    height: number,
+    yaw: number,
+    pitch: number,
+  ): void {
+    if (!this.active || this.instanceCount === 0) return;
+    const gl = this.gl;
+    const tanHalfFov = Math.tan((THREE_D_FOV_DEGREES * Math.PI) / 360);
+    const distance = height / Math.max(0.01, zoom * 2) / tanHalfFov;
+    gl.useProgram(this.program);
+    gl.uniform1i(this.uThreeD, 1);
+    gl.uniform2f(this.uThreeDCenter, centerX, centerY);
+    gl.uniform2f(this.uViewport, width, height);
+    gl.uniform1f(this.uDistance, distance);
+    gl.uniform1f(this.uTanHalfFov, tanHalfFov);
+    gl.uniform1f(this.uAspect, width / Math.max(1, height));
+    gl.uniform1f(this.uTilt, pitch);
+    gl.uniform1f(this.uYaw, yaw);
+    gl.uniform1f(this.uZoom, zoom);
+    this.drawSharedUniformsAndInstances();
+  }
+
+  private drawSharedUniformsAndInstances(): void {
+    const gl = this.gl;
+    const s = this.settings;
+    const now = performance.now();
+    if (this.lastTime > 0) this.animTime += (now - this.lastTime) * s.animSpeed;
+    this.lastTime = now;
+    gl.uniform2f(this.uMapSize, this.mapW, this.mapH);
+    gl.uniform1f(this.uBreathRadius, 0.5 + 0.5 * Math.sin(this.animTime));
+    gl.uniform1f(
+      this.uHighlightRadiusSq,
+      s.highlightRadius * s.highlightRadius,
+    );
+    gl.uniform1f(this.uHighlightAlpha, s.highlightAlpha);
+    gl.uniform4f(this.uSelfRadii, s.selfMinRad, s.selfMaxRad, 0, 0);
+    gl.uniform4f(this.uMateRadii, s.mateMinRad, s.mateMaxRad, 0, 0);
+    gl.uniform2f(this.uGradientStops, s.gradientInnerEdge, s.gradientSolidEnd);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.tileTex);
     gl.bindVertexArray(this.vao);
     gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, this.instanceCount);
     gl.bindVertexArray(null);

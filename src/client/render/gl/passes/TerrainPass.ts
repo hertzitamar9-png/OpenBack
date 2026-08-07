@@ -36,7 +36,7 @@ export class TerrainPass {
   // Base ocean (deep water) color; reused by applyTerrainDelta and rebuilds.
   private terrainColors: TerrainColorOverrides | undefined;
   // Scratch buffer for 1×1 sub-uploads; reused across applyTerrainDelta calls.
-  private readonly pixelScratch = new Uint8Array(4);
+  private pixelScratch = new Uint8Array(4);
 
   constructor(
     private gl: WebGL2RenderingContext,
@@ -117,22 +117,45 @@ export class TerrainPass {
     const gl = this.gl;
     gl.bindTexture(gl.TEXTURE_2D, this.tex);
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-    for (let i = 0; i < refs.length; i++) {
+    for (let i = 0; i < refs.length; ) {
       const ref = refs[i];
       const x = ref % this.mapW;
       const y = (ref - x) / this.mapW;
-      encodeTerrainTile(bytes[i], this.pixelScratch, 0, this.terrainColors);
+      let end = i + 1;
+      while (
+        end < refs.length &&
+        refs[end] === refs[end - 1] + 1 &&
+        Math.floor(refs[end] / this.mapW) === y
+      ) {
+        end++;
+      }
+      const runLength = end - i;
+      const required = runLength * 4;
+      if (this.pixelScratch.length < required) {
+        let capacity = this.pixelScratch.length;
+        while (capacity < required) capacity *= 2;
+        this.pixelScratch = new Uint8Array(capacity);
+      }
+      for (let j = 0; j < runLength; j++) {
+        encodeTerrainTile(
+          bytes[i + j],
+          this.pixelScratch,
+          j * 4,
+          this.terrainColors,
+        );
+      }
       gl.texSubImage2D(
         gl.TEXTURE_2D,
         0,
         x,
         y,
-        1,
+        runLength,
         1,
         gl.RGBA,
         gl.UNSIGNED_BYTE,
-        this.pixelScratch,
+        this.pixelScratch.subarray(0, required),
       );
+      i = end;
     }
   }
 

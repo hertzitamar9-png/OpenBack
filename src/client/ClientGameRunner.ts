@@ -436,7 +436,13 @@ function mountWebGLFrameLoop(
       transformHandler.offsetY +
       mapHeight / 2 +
       (cachedCanvasH - mapHeight) / (2 * scale);
-    view.setCameraState(centerX, centerY, scale * dpr);
+    view.setCameraState(
+      centerX,
+      centerY,
+      scale * dpr,
+      transformHandler.threeDYaw,
+      transformHandler.threeDPitch,
+    );
     // Invoke the WebGL renderer's frame callback synchronously, with the just-
     // updated camera state. The callback re-arms itself via captureRaf, so
     // we'll get a fresh callback ready for the next canvas2D frame.
@@ -676,6 +682,55 @@ async function createClientGame(
         debugGui = null;
       }
     });
+
+    // Closing the setup/lobby UI can briefly replace the Lit-rendered HUD
+    // subtree. Starting the renderer in that same frame used to race the
+    // replacement and dereference a missing actionable-events element. Wait
+    // for the complete HUD contract instead of making game startup dependent
+    // on device/render timing.
+    const requiredHudSelectors = [
+      "game-starting-modal",
+      "emoji-table",
+      "build-menu",
+      "game-left-sidebar",
+      "control-panel",
+      "events-display",
+      "actionable-events",
+      "attacks-display",
+      "chat-display",
+      "player-info-overlay",
+      "win-modal",
+      "replay-panel",
+      "game-right-sidebar",
+      "settings-modal",
+      "graphics-settings-modal",
+      "unit-display",
+      "player-panel",
+      "chat-modal",
+      "multi-tab-modal",
+      "heads-up-message",
+      "alert-frame",
+      "spawn-timer",
+      "immunity-timer",
+      "in-game-promo",
+    ];
+    for (let attempt = 0; attempt < 120; attempt++) {
+      if (
+        requiredHudSelectors.every((selector) =>
+          document.querySelector(selector),
+        )
+      )
+        break;
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => resolve()),
+      );
+      if (attempt === 119) {
+        const missing = requiredHudSelectors.filter(
+          (selector) => !document.querySelector(selector),
+        );
+        throw new Error(`Game HUD failed to mount: ${missing.join(", ")}`);
+      }
+    }
 
     const gameRenderer = createRenderer(
       inputOverlay,

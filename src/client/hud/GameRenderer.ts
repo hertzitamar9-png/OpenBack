@@ -159,11 +159,10 @@ export function createRenderer(
   const newLobbyPrompt = document.querySelector(
     "new-lobby-prompt",
   ) as NewLobbyPrompt;
-  if (!(newLobbyPrompt instanceof NewLobbyPrompt)) {
-    console.error("new lobby prompt not found");
+  if (newLobbyPrompt instanceof NewLobbyPrompt) {
+    newLobbyPrompt.eventBus = eventBus;
+    newLobbyPrompt.game = game;
   }
-  newLobbyPrompt.eventBus = eventBus;
-  newLobbyPrompt.game = game;
 
   const replayPanel = document.querySelector("replay-panel") as ReplayPanel;
   if (!(replayPanel instanceof ReplayPanel)) {
@@ -248,11 +247,10 @@ export function createRenderer(
   const performanceOverlay = document.querySelector(
     "performance-overlay",
   ) as PerformanceOverlay;
-  if (!(performanceOverlay instanceof PerformanceOverlay)) {
-    console.error("performance overlay not found");
+  if (performanceOverlay instanceof PerformanceOverlay) {
+    performanceOverlay.eventBus = eventBus;
+    performanceOverlay.userSettings = userSettings;
   }
-  performanceOverlay.eventBus = eventBus;
-  performanceOverlay.userSettings = userSettings;
 
   const alertFrame = document.querySelector("alert-frame") as AlertFrame;
   if (!(alertFrame instanceof AlertFrame)) {
@@ -322,7 +320,7 @@ export function createRenderer(
     controlPanel,
     playerInfo,
     winModal,
-    newLobbyPrompt,
+    ...(newLobbyPrompt instanceof NewLobbyPrompt ? [newLobbyPrompt] : []),
     replayPanel,
     settingsModal,
     graphicsSettingsModal,
@@ -331,14 +329,18 @@ export function createRenderer(
     multiTabModal,
     inGamePromo,
     alertFrame,
-    performanceOverlay,
+    ...(performanceOverlay instanceof PerformanceOverlay
+      ? [performanceOverlay]
+      : []),
   ];
 
   return new GameRenderer(
     transformHandler,
     uiState,
     layers,
-    performanceOverlay,
+    performanceOverlay instanceof PerformanceOverlay
+      ? performanceOverlay
+      : null,
   );
 }
 
@@ -349,7 +351,7 @@ export class GameRenderer {
     public transformHandler: TransformHandler,
     public uiState: UIState,
     private layers: Controller[],
-    private performanceOverlay: PerformanceOverlay,
+    private performanceOverlay: PerformanceOverlay | null,
   ) {}
 
   initialize() {
@@ -401,7 +403,7 @@ export class GameRenderer {
     }
 
     if (shouldProfileTick) {
-      this.performanceOverlay.updateTickLayerMetrics(tickLayerDurations);
+      this.performanceOverlay?.updateTickLayerMetrics(tickLayerDurations);
     }
   }
 }

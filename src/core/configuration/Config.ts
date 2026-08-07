@@ -166,6 +166,8 @@ export class Config {
       logisticsCargo: c?.logisticsCargo ?? true,
       naturalDisasters: c?.naturalDisasters ?? false,
       fogOfWar: c?.fogOfWar ?? false,
+      livingWorld: c?.livingWorld ?? false,
+      threeDMode: c?.threeDMode ?? false,
       sharedControlSize: c?.sharedControlSize ?? 1,
     } as const;
   }

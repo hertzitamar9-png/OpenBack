@@ -1,5 +1,10 @@
 import { WarshipSelectionController } from "../../../src/client/controllers/WarshipSelectionController";
-import { UnitSelectionEvent } from "../../../src/client/InputHandler";
+import {
+  ContextMenuEvent,
+  MouseUpEvent,
+  TouchEvent,
+  UnitSelectionEvent,
+} from "../../../src/client/InputHandler";
 
 describe("WarshipSelectionController", () => {
   let game: any;
@@ -25,8 +30,10 @@ describe("WarshipSelectionController", () => {
       ticks: () => 1,
       updatesSinceLastTick: () => undefined,
     };
-    eventBus = { on: vi.fn() };
-    transformHandler = {};
+    eventBus = { on: vi.fn(), emit: vi.fn() };
+    transformHandler = {
+      screenToWorldCoordinates: vi.fn(() => ({ x: 4, y: 5 })),
+    };
     view = { setSelectedUnits: vi.fn() };
   });
 
@@ -92,5 +99,46 @@ describe("WarshipSelectionController", () => {
     } as unknown as UnitSelectionEvent);
     expect(ui["multiSelectedWarships"]).toEqual(units);
     expect(ui["selectedUnit"]).toBeNull();
+  });
+
+  it("keeps a touch on enemy land as the primary attack action", () => {
+    const me = game.myPlayer();
+    game.myPlayer = () => me;
+    game.isValidCoord = () => true;
+    game.ref = () => 42;
+    game.inSpawnPhase = () => false;
+    game.isWater = () => false;
+    game.hasOwner = () => true;
+    game.owner = () => ({ id: () => 2 });
+    const ui = new WarshipSelectionController(
+      game,
+      eventBus,
+      transformHandler,
+      view,
+    );
+    ui["onTouch"](new TouchEvent(50, 60));
+    expect(eventBus.emit).toHaveBeenCalledWith(expect.any(MouseUpEvent));
+    expect(eventBus.emit).not.toHaveBeenCalledWith(
+      expect.any(ContextMenuEvent),
+    );
+  });
+
+  it("opens the build menu when touching owned land", () => {
+    const me = game.myPlayer();
+    game.myPlayer = () => me;
+    game.isValidCoord = () => true;
+    game.ref = () => 42;
+    game.inSpawnPhase = () => false;
+    game.isWater = () => false;
+    game.hasOwner = () => true;
+    game.owner = () => me;
+    const ui = new WarshipSelectionController(
+      game,
+      eventBus,
+      transformHandler,
+      view,
+    );
+    ui["onTouch"](new TouchEvent(50, 60));
+    expect(eventBus.emit).toHaveBeenCalledWith(expect.any(ContextMenuEvent));
   });
 });

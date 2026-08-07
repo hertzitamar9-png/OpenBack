@@ -16,6 +16,7 @@ export class WaterManager {
   private _waterGraphLastRebuildTick: number = 0;
 
   private _pendingWaterTiles: Set<TileRef> = new Set();
+  private _pendingTerrainRefresh: Set<TileRef> = new Set();
   private _dirtyMiniTiles: Set<TileRef> = new Set();
 
   // Reusable stamp-based distance tracking for magnitude BFS (avoids allocation per nuke)
@@ -43,12 +44,50 @@ export class WaterManager {
     this._pendingWaterTiles.add(tile);
   }
 
+  /** Marks a live land/water mutation for minimap and water-nav refresh. */
+  notifyTerrainChange(tile: TileRef): void {
+    this._pendingTerrainRefresh.add(tile);
+  }
+
   /**
    * Flush pending water conversions, run terrain fixup (ocean/magnitude/shoreline/minimap),
    * and throttled graph rebuild. Returns tiles whose terrain changed (for recording).
    */
   tick(currentTick: number): TileRef[] {
     const changedTiles: TileRef[] = [];
+
+    if (this._pendingTerrainRefresh.size > 0) {
+      for (const tile of this._pendingTerrainRefresh) {
+        const miniX = Math.floor(this.map.x(tile) / 2);
+        const miniY = Math.floor(this.map.y(tile) / 2);
+        if (!this.miniMap.isValidCoord(miniX, miniY)) continue;
+        const miniTile = this.miniMap.ref(miniX, miniY);
+        let land = 0;
+        let impassable = 0;
+        let samples = 0;
+        for (let dy = 0; dy < 2; dy++) {
+          for (let dx = 0; dx < 2; dx++) {
+            const x = miniX * 2 + dx;
+            const y = miniY * 2 + dy;
+            if (!this.map.isValidCoord(x, y)) continue;
+            const sample = this.map.ref(x, y);
+            samples++;
+            if (this.map.isLand(sample)) land++;
+            if (this.map.isImpassable(sample)) impassable++;
+          }
+        }
+        const nextByte =
+          impassable >= Math.max(1, Math.ceil(samples / 2))
+            ? 0x9f
+            : land >= Math.max(1, Math.ceil(samples / 2))
+              ? 0x81
+              : 0;
+        this.miniMap.setTerrainByte(miniTile, nextByte);
+        this._dirtyMiniTiles.add(miniTile);
+      }
+      this._pendingTerrainRefresh.clear();
+      this._waterGraphDirty = true;
+    }
 
     if (this._pendingWaterTiles.size > 0) {
       const converted: TileRef[] = [];

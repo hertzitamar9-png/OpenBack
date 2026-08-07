@@ -94,6 +94,8 @@ export class HostLobbyModal extends BaseModal {
   @state() private strategicObjectives = false;
   @state() private naturalDisasters = false;
   @state() private fogOfWar = false;
+  @state() private livingWorld = false;
+  @state() private threeDMode = false;
   @state() private sharedControl = false;
   @state() private sharedControlSize = 2;
   @state() private anonymizeNames: boolean = false;
@@ -492,6 +494,14 @@ export class HostLobbyModal extends BaseModal {
                     checked: this.fogOfWar,
                   },
                   {
+                    labelKey: "host_modal.living_world",
+                    checked: this.livingWorld,
+                  },
+                  {
+                    labelKey: "host_modal.three_d_mode",
+                    checked: this.threeDMode,
+                  },
+                  {
                     labelKey: "host_modal.host_cheats",
                     checked: this.hostCheatsEnabled,
                   },
@@ -729,6 +739,8 @@ export class HostLobbyModal extends BaseModal {
     this.strategicObjectives = false;
     this.naturalDisasters = false;
     this.fogOfWar = false;
+    this.livingWorld = false;
+    this.threeDMode = false;
     this.sharedControl = false;
     this.sharedControlSize = 2;
     this.anonymizeNames = false;
@@ -847,6 +859,14 @@ export class HostLobbyModal extends BaseModal {
         break;
       case "host_modal.fog_of_war":
         this.fogOfWar = checked;
+        this.putGameConfig();
+        break;
+      case "host_modal.living_world":
+        this.livingWorld = checked;
+        this.putGameConfig();
+        break;
+      case "host_modal.three_d_mode":
+        this.threeDMode = checked;
         this.putGameConfig();
         break;
       case "host_modal.host_cheats":
@@ -1295,6 +1315,8 @@ export class HostLobbyModal extends BaseModal {
               strategicObjectives: this.strategicObjectives,
               naturalDisasters: this.naturalDisasters,
               fogOfWar: this.fogOfWar,
+              livingWorld: this.livingWorld,
+              threeDMode: this.threeDMode,
               sharedControlSize: this.sharedControl
                 ? this.sharedControlSize
                 : 1,

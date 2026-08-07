@@ -112,6 +112,37 @@ body {
     env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
+/* 3D World keeps the same UI language while giving HUD surfaces physical
+   separation from the perspective battlefield. No layout dimensions change. */
+html.openback-3d-mode button,
+html.openback-3d-mode [role="button"] {
+  box-shadow:
+    0 3px 0 rgba(0, 0, 0, 0.46),
+    0 8px 18px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+  transition:
+    transform 100ms ease,
+    box-shadow 100ms ease;
+}
+
+html.openback-3d-mode button:active,
+html.openback-3d-mode [role="button"]:active {
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.5),
+    0 3px 8px rgba(0, 0, 0, 0.24),
+    inset 0 1px 4px rgba(0, 0, 0, 0.25);
+  transform: translateY(1px);
+}
+
+html.openback-3d-mode dialog,
+html.openback-3d-mode [role="dialog"] {
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.58),
+    0 0 0 1px rgba(92, 184, 255, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
 * {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;

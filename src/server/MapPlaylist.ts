@@ -427,8 +427,9 @@ export class MapPlaylist {
     // exclusive makes each match readable while still producing genuinely
     // different contests.
     const worldRoll = random();
-    const strategicObjectives = worldRoll < 0.2;
-    const naturalDisasters = worldRoll >= 0.2 && worldRoll < 0.32;
+    const strategicObjectives = worldRoll < 0.18;
+    const naturalDisasters = worldRoll >= 0.18 && worldRoll < 0.3;
+    const livingWorld = worldRoll >= 0.3 && worldRoll < 0.38;
     const fogOfWar = false;
 
     return {
@@ -470,6 +471,8 @@ export class MapPlaylist {
         strategicObjectives,
         naturalDisasters,
         fogOfWar,
+        livingWorld,
+        threeDMode: false,
         // Ranked teammates are allies controlling separate nations. Shared
         // control remains an optional private-game mode, not ranked behavior.
         sharedControlSize: 1,

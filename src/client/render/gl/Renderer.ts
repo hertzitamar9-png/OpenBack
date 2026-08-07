@@ -61,11 +61,16 @@ import { StructureLevelPass } from "./passes/StructureLevelPass";
 import { StructurePass } from "./passes/StructurePass";
 import { TerrainPass } from "./passes/TerrainPass";
 import { TerritoryPass } from "./passes/TerritoryPass";
+import { ThreeDCompositePass } from "./passes/ThreeDCompositePass";
 import { TrailPass } from "./passes/TrailPass";
 import { UnitPass } from "./passes/UnitPass";
 import { WorldEventPass } from "./passes/WorldEventPass";
 import { WorldTextPass } from "./passes/WorldTextPass";
 import type { RenderSettings } from "./RenderSettings";
+import { ThreeDFogPass } from "./three-d/ThreeDFogPass";
+import { ThreeDUnitPass } from "./three-d/ThreeDUnitPass";
+import { ThreeDWorldEventPass } from "./three-d/ThreeDWorldEventPass";
+import { THREE_D_FOV_DEGREES, THREE_D_TILT } from "./three-d/ThreeDWorldMath";
 import { AffiliationPalette } from "./utils/Affiliation";
 import {
   EFFECT_PALETTE_BLOCKS,
@@ -108,6 +113,8 @@ const GRID_VIEW_KEY = "renderer:grid_view_enabled";
 export class GPURenderer {
   private gl: WebGL2RenderingContext;
   private camera: Camera;
+  private threeDYaw = 0;
+  private threeDPitch = THREE_D_TILT;
   private res: GPUResources;
 
   /**
@@ -143,6 +150,10 @@ export class GPURenderer {
   private barPass: BarPass;
   private worldTextPass: WorldTextPass;
   private worldEventPass: WorldEventPass | null = null;
+  private threeDPass: ThreeDCompositePass | null = null;
+  private threeDUnitPass: ThreeDUnitPass | null = null;
+  private threeDWorldEventPass: ThreeDWorldEventPass | null = null;
+  private threeDFogPass: ThreeDFogPass | null = null;
   private selectionBoxPass: SelectionBoxPass;
   private moveIndicatorPass: MoveIndicatorPass;
   private nukeTrajectoryPass: NukeTrajectoryPass;
@@ -153,6 +164,7 @@ export class GPURenderer {
   private spawnOverlayPass: SpawnOverlayPass;
   private smallPlayerGlowPass: SmallPlayerGlowPass;
   private inSpawnPhase = false;
+  private threeDModeActive = false;
 
   // Map-layer passes keyed by layer id, drawn between terrain and territory.
   private mapLayerPasses: Map<string, MapLayerPass> = new Map();
@@ -163,7 +175,6 @@ export class GPURenderer {
   /** Stored layer images for context-restore re-creation. */
   private storedLayerImages: Map<string, ImageBitmap> = new Map();
   /** Scratch buffer for per-tile terrain byte uploads (avoids allocations). */
-  private terrainDeltaScratch = new Uint8Array(1);
 
   private paletteTex: WebGLTexture;
   private paletteData: Float32Array;
@@ -185,10 +196,17 @@ export class GPURenderer {
   private canvas: HTMLCanvasElement;
   private settings: RenderSettings;
   private sceneTarget: RenderTarget;
+  private threeDBillboardMatrix = new Float32Array(9);
   private raf: typeof requestAnimationFrame;
   private caf: typeof cancelAnimationFrame;
 
   private animId: number | null = null;
+  private renderSuspended = false;
+  private readonly onVisibilityChange = (): void => {
+    this.renderSuspended = document.visibilityState === "hidden";
+    if (this.renderSuspended) this.stopLoop();
+    else this.startLoop();
+  };
   private frameTick = 0;
   private mapW = 0;
   private mapH = 0;
@@ -396,8 +414,42 @@ export class GPURenderer {
     if (mechanics.fogOfWar) {
       this.fogPass = new FogPass(gl, this.res.tileTex, mapW, mapH, true);
     }
-    if (mechanics.naturalDisasters) {
+    if (mechanics.naturalDisasters || mechanics.livingWorld) {
       this.worldEventPass = new WorldEventPass(gl, mapW, config.msPerTick());
+    }
+    if (mechanics.threeDMode) {
+      this.threeDModeActive = true;
+      document.documentElement.classList.add("openback-3d-mode");
+      this.threeDPass = new ThreeDCompositePass(
+        gl,
+        this.terrainBytesTex!,
+        this.res.tileTex,
+        this.paletteTex,
+        mapW,
+        mapH,
+      );
+      this.threeDUnitPass = new ThreeDUnitPass(
+        gl,
+        this.terrainBytesTex!,
+        this.paletteTex,
+        mapW,
+        mapH,
+      );
+      this.threeDWorldEventPass = new ThreeDWorldEventPass(
+        gl,
+        this.terrainBytesTex!,
+        mapW,
+        mapH,
+        config.msPerTick(),
+      );
+      if (mechanics.fogOfWar) {
+        this.threeDFogPass = new ThreeDFogPass(
+          gl,
+          this.res.tileTex,
+          mapW,
+          mapH,
+        );
+      }
     }
 
     // --- Border compute (needs tileTex) ---
@@ -630,7 +682,6 @@ export class GPURenderer {
     );
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     this.sceneTarget = { fbo: sceneFbo, tex: sceneTex, w: 1, h: 1 };
-
     // --- Alt-view passes ---
     this.affiliationPalette = new AffiliationPalette(gl, this.settings);
     const affTex = this.affiliationPalette.getTexture();
@@ -657,10 +708,16 @@ export class GPURenderer {
     // FFA shows raw skin colors; teams multiply skin by team primary color.
     this.territoryPass.setTeamMode(this.playerTeams.size > 0);
 
-    this.startLoop();
+    document.addEventListener("visibilitychange", this.onVisibilityChange);
+    this.renderSuspended = document.visibilityState === "hidden";
+    if (!this.renderSuspended) this.startLoop();
   }
 
   private renderLoop = (): void => {
+    if (this.renderSuspended) {
+      this.animId = null;
+      return;
+    }
     this.draw();
     this.animId = this.raf(this.renderLoop);
   };
@@ -687,8 +744,16 @@ export class GPURenderer {
     this.camera.resize(cssWidth, cssHeight);
   }
 
-  setCameraState(x: number, y: number, z: number): void {
+  setCameraState(
+    x: number,
+    y: number,
+    z: number,
+    yaw = 0,
+    pitch = THREE_D_TILT,
+  ): void {
     this.camera.setCameraState(x, y, z);
+    this.threeDYaw = yaw;
+    this.threeDPitch = pitch;
   }
 
   // ---------------------------------------------------------------------------
@@ -888,6 +953,13 @@ export class GPURenderer {
     this.lastUnits = units;
     this.frameTick++;
     this.unitPass.updateUnits(units, this.frameTick);
+    this.threeDUnitPass?.update(units, {
+      centerX: this.camera.offsetX,
+      centerY: this.camera.offsetY,
+      zoom: this.camera.zoom,
+      width: this.canvas.width,
+      height: this.canvas.height,
+    });
     this.barPass.updateBars(units, this.lastStructures, gameTick);
     this.pointLightPass.updateLights(units);
     this.heatManager.decayHeat();
@@ -984,22 +1056,30 @@ export class GPURenderer {
       );
       return;
     }
-    for (let i = 0; i < refs.length; i++) {
+    for (let i = 0; i < refs.length; ) {
       const ref = refs[i];
       const x = ref % this.mapW;
       const y = Math.floor(ref / this.mapW);
-      this.terrainDeltaScratch[0] = terrainBytes[i];
+      let end = i + 1;
+      while (
+        end < refs.length &&
+        refs[end] === refs[end - 1] + 1 &&
+        Math.floor(refs[end] / this.mapW) === y
+      ) {
+        end++;
+      }
       gl.texSubImage2D(
         gl.TEXTURE_2D,
         0,
         x,
         y,
-        1,
+        end - i,
         1,
         gl.RED_INTEGER,
         gl.UNSIGNED_BYTE,
-        this.terrainDeltaScratch,
+        terrainBytes.subarray(i, end),
       );
+      i = end;
     }
   }
 
@@ -1043,12 +1123,14 @@ export class GPURenderer {
 
   applyWorldEvents(events: WorldEventFx[]): void {
     this.worldEventPass?.add(events);
+    this.threeDWorldEventPass?.add(events);
   }
 
   updateFogReveals(
     reveals: Array<{ x: number; y: number; radius: number }>,
   ): void {
     this.fogPass?.setRadarReveals(reveals);
+    this.threeDFogPass?.setRadarReveals(reveals);
   }
 
   updateAttackRings(rings: AttackRingInput[]): void {
@@ -1129,6 +1211,7 @@ export class GPURenderer {
     if (id === this.localPlayerID) return;
     this.localPlayerID = id;
     this.fogPass?.setLocalOwner(id);
+    this.threeDFogPass?.setLocalOwner(id);
     this.samRadiusPass.setLocalPlayer(id);
     this.structurePass.setLocalPlayer(id);
     this.affiliationPalette.setLocalPlayer(id);
@@ -1290,6 +1373,76 @@ export class GPURenderer {
     const ch = this.canvas.height;
     const compositingActive = this.isLightCompositingActive();
 
+    if (this.threeDPass) {
+      toScreen(this.gl, cw, ch, () => {
+        const billboardCamera = this.makeThreeDBillboardCamera(cw, ch, zoom);
+        this.threeDPass!.draw(
+          cw,
+          ch,
+          this.camera.offsetX,
+          this.camera.offsetY,
+          zoom,
+          this.threeDYaw,
+          this.threeDPitch,
+        );
+        this.threeDUnitPass?.draw(
+          this.camera.offsetX,
+          this.camera.offsetY,
+          zoom,
+          cw,
+          ch,
+          this.threeDYaw,
+          this.threeDPitch,
+        );
+        // Spawn markers are UI, not paint on the terrain. Keeping them in a
+        // screen-facing pass prevents perspective from turning circles into
+        // stretched shapes during the placement countdown.
+        this.spawnOverlayPass.drawThreeD(
+          this.camera.offsetX,
+          this.camera.offsetY,
+          zoom,
+          cw,
+          ch,
+          this.threeDYaw,
+          this.threeDPitch,
+        );
+        // Screen-facing information remains crisp instead of being baked into
+        // and distorted by the terrain material. It is still positioned in
+        // world space and therefore follows the perspective battlefield.
+        if (this.settings.passEnabled.structure) {
+          this.structureLevelPass.draw(billboardCamera, zoom);
+        }
+        if (this.settings.passEnabled.bar) this.barPass.draw(billboardCamera);
+        if (this.settings.passEnabled.name && !this.altView) {
+          this.namePass.draw(
+            billboardCamera,
+            this.nightCompositePass.getAmbient(),
+          );
+        }
+        this.worldTextPass.tick(zoom);
+        this.worldTextPass.draw(billboardCamera, zoom);
+        this.threeDFogPass?.draw(
+          this.camera.offsetX,
+          this.camera.offsetY,
+          zoom,
+          cw,
+          ch,
+          this.threeDYaw,
+          this.threeDPitch,
+        );
+        this.threeDWorldEventPass?.draw(
+          this.camera.offsetX,
+          this.camera.offsetY,
+          zoom,
+          cw,
+          ch,
+          this.threeDYaw,
+          this.threeDPitch,
+        );
+      });
+      return;
+    }
+
     if (compositingActive) {
       this.resizeSceneTargetIfNeeded(cw, ch);
       const sceneTex = toTarget(this.gl, this.sceneTarget, () =>
@@ -1306,16 +1459,53 @@ export class GPURenderer {
     this.renderOverlays(cam, zoom);
   }
 
+  /**
+   * Tangent-plane projection for screen-facing labels and status bars. The
+   * world itself uses full perspective; UI billboards deliberately keep a
+   * stable pixel size so distant player names remain readable.
+   */
+  private makeThreeDBillboardCamera(
+    width: number,
+    height: number,
+    zoom: number,
+  ): Float32Array {
+    const tanHalfFov = Math.tan((THREE_D_FOV_DEGREES * Math.PI) / 360);
+    const distance = height / Math.max(0.01, zoom * 2) / tanHalfFov;
+    const sx = 1 / (distance * tanHalfFov * (width / Math.max(1, height)));
+    const sy = -Math.cos(this.threeDPitch) / (distance * tanHalfFov);
+    const cy = Math.cos(this.threeDYaw);
+    const yawSin = Math.sin(this.threeDYaw);
+    const m = this.threeDBillboardMatrix;
+    m[0] = cy * sx;
+    m[1] = yawSin * sy;
+    m[2] = 0;
+    m[3] = -yawSin * sx;
+    m[4] = cy * sy;
+    m[5] = 0;
+    m[6] = -(this.camera.offsetX * cy - this.camera.offsetY * yawSin) * sx;
+    m[7] = -(this.camera.offsetX * yawSin + this.camera.offsetY * cy) * sy;
+    m[8] = 1;
+    return m;
+  }
+
   private isLightCompositingActive(): boolean {
     return this.settings.lighting.enabled;
   }
 
   private resizeSceneTargetIfNeeded(cw: number, ch: number): void {
-    if (this.sceneTarget.w === cw && this.sceneTarget.h === ch) return;
-    this.sceneTarget.w = cw;
-    this.sceneTarget.h = ch;
+    this.resizeTargetIfNeeded(this.sceneTarget, cw, ch);
+  }
+
+  private resizeTargetIfNeeded(
+    target: RenderTarget,
+    cw: number,
+    ch: number,
+  ): void {
+    if (target.w === cw && target.h === ch) return;
+    target.w = cw;
+    target.h = ch;
     const gl = this.gl;
-    gl.bindTexture(gl.TEXTURE_2D, this.sceneTarget.tex);
+    gl.bindTexture(gl.TEXTURE_2D, target.tex);
     gl.texImage2D(
       gl.TEXTURE_2D,
       0,
@@ -1345,27 +1535,33 @@ export class GPURenderer {
     if (pe.territory) this.territoryPass.draw(cam);
   }
 
-  private renderOverlays(cam: Float32Array, zoom: number): void {
+  private renderOverlays(
+    cam: Float32Array,
+    zoom: number,
+    omitWorldObjects = false,
+    omitSpawnOverlay = false,
+  ): void {
     const gl = this.gl;
     const pe = this.settings.passEnabled;
 
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-    this.spawnOverlayPass.draw(cam);
+    if (!omitSpawnOverlay) this.spawnOverlayPass.draw(cam);
     if (pe.borderStamp) this.borderStampPass.draw(cam);
     if (pe.railroad) this.railroadPass.draw(cam, zoom);
-    if (pe.unit) this.unitPass.drawGround(cam);
+    if (pe.unit && !omitWorldObjects) this.unitPass.drawGround(cam);
     if (pe.falloutBloom) this.bloomPass.draw(cam, this.frameTick);
     this.samRadiusPass.draw(cam);
     this.rangeCirclePass.draw(cam);
     this.nukeTrajectoryPass.draw(cam);
     this.crosshairPass.draw(cam);
-    if (pe.structure) this.structurePass.draw(cam, zoom);
-    if (pe.structure) this.structureLevelPass.draw(cam, zoom);
+    if (pe.structure && !omitWorldObjects) this.structurePass.draw(cam, zoom);
+    if (pe.structure && !omitWorldObjects)
+      this.structureLevelPass.draw(cam, zoom);
     // Small-player glow draws after structures so buildings can't hide it.
     this.smallPlayerGlowPass.draw(cam);
-    if (pe.bar) this.barPass.draw(cam);
+    if (pe.bar && !omitWorldObjects) this.barPass.draw(cam);
     this.updateSelectionBox();
     this.selectionBoxPass.draw(cam, this.frameTick);
     this.moveIndicatorPass.draw(cam, zoom);
@@ -1374,7 +1570,7 @@ export class GPURenderer {
     // Spiral vortexes sit above the plain trails, below the missiles that
     // trail them. Skipped in alt view — the strategic overlay stays effects-free.
     if (!this.altView) this.spiralRibbonPass.draw(cam);
-    if (pe.unit) this.unitPass.drawMissiles(cam);
+    if (pe.unit && !omitWorldObjects) this.unitPass.drawMissiles(cam);
 
     if (pe.fx) {
       this.fxPass.tick();
@@ -1384,13 +1580,15 @@ export class GPURenderer {
     // Grid shows on either trigger; names hide only under alt-view (space
     // hold), not under the persistent M-key gridView toggle.
     if (this.gridView || this.altView) this.coordinateGridPass.draw(cam, zoom);
-    if (pe.name && !this.altView)
+    if (pe.name && !this.altView && !omitWorldObjects)
       this.namePass.draw(cam, this.nightCompositePass.getAmbient());
 
     // World text (attack-troop labels, popups, ghost cost) draws on top of
     // player names so attack callouts aren't hidden behind a centered name.
-    this.worldTextPass.tick(zoom);
-    this.worldTextPass.draw(cam, zoom);
+    if (!omitWorldObjects) {
+      this.worldTextPass.tick(zoom);
+      this.worldTextPass.draw(cam, zoom);
+    }
     this.fogPass?.draw(cam);
     this.worldEventPass?.draw(cam);
 
@@ -1463,6 +1661,10 @@ export class GPURenderer {
 
   dispose(): void {
     this.stopLoop();
+    document.removeEventListener("visibilitychange", this.onVisibilityChange);
+    if (this.threeDModeActive) {
+      document.documentElement.classList.remove("openback-3d-mode");
+    }
     for (const p of this.mapLayerPasses.values()) p.dispose();
     this.mapLayerPasses.clear();
     if (this.terrainBytesTex) {
@@ -1498,6 +1700,10 @@ export class GPURenderer {
     this.fxPass.dispose();
     this.worldTextPass.dispose();
     this.worldEventPass?.dispose();
+    this.threeDPass?.dispose();
+    this.threeDUnitPass?.dispose();
+    this.threeDWorldEventPass?.dispose();
+    this.threeDFogPass?.dispose();
     this.selectionBoxPass.dispose();
     this.moveIndicatorPass.dispose();
     this.nukeTrajectoryPass.dispose();

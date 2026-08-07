@@ -187,6 +187,10 @@ export class ControlPanel extends LitElement implements Controller {
   }
 
   private renderOwnGold(): string {
+    // Lit can render once before GameRenderer injects the active GameView.
+    // Keep that harmless first paint from dereferencing an uninitialized
+    // controller, especially during the heavier 3D startup path.
+    if (!this.game) return renderNumber(this._gold ?? 0n);
     return this.game.config().hasPrivateInfiniteGold(this.game.myClientID())
       ? "∞"
       : renderNumber(this._gold);

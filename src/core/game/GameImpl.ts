@@ -106,6 +106,8 @@ export class GameImpl implements Game {
   private unitGrid: UnitGrid;
   private _unitMap = new Map<number, Unit>();
   private readonly mapState: Uint16Array;
+  /** Incremental checksum of live terrain edits for multiplayer desync checks. */
+  private terrainMutationHash = 0;
 
   private playerTeams: Team[] = [];
   private botTeam: Team = ColoredTeams.Bot;
@@ -280,6 +282,26 @@ export class GameImpl implements Game {
       this._map.setFallout(tile, false);
     }
     this._map.setWater(tile);
+    this.recordTileUpdate(tile);
+  }
+
+  setTerrainByte(tile: TileRef, value: number): void {
+    value &= 0xff;
+    const previous = this._map.terrainByte(tile);
+    if (previous === value) return;
+    const becomesBlocked = (value & 0x80) === 0 || (value & 0x1f) === 31;
+    if (becomesBlocked && this.hasOwner(tile)) {
+      this.relinquish(tile);
+    }
+    if ((value & 0x80) === 0 && this._map.hasFallout(tile)) {
+      this._map.setFallout(tile, false);
+    }
+    this._map.setTerrainByte(tile, value);
+    // XOR makes repeated edits cheap while retaining both tile and byte values.
+    const previousToken = Math.imul(tile + 1, 0x45d9f3b) ^ previous;
+    const nextToken = Math.imul(tile + 1, 0x45d9f3b) ^ value;
+    this.terrainMutationHash ^= previousToken ^ nextToken;
+    this._waterManager.notifyTerrainChange(tile);
     this.recordTileUpdate(tile);
   }
 
@@ -587,7 +609,7 @@ export class GameImpl implements Game {
   }
 
   private hash(): number {
-    let hash = 1;
+    let hash = 1 + this.terrainMutationHash;
     for (const player of this._players.values()) hash += player.hash();
     return hash;
   }

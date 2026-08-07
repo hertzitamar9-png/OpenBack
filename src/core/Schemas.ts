@@ -325,6 +325,8 @@ export const WorldMechanicsConfigSchema = z.object({
   logisticsCargo: z.boolean().optional(),
   naturalDisasters: z.boolean().optional(),
   fogOfWar: z.boolean().optional(),
+  livingWorld: z.boolean().optional(),
+  threeDMode: z.boolean().optional(),
   sharedControlSize: z.number().int().min(1).max(20).optional(),
 });
 

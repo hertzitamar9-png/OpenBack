@@ -1,3 +1,19 @@
+## OpenBack v0.34.81 - Living 3D World
+
+- Added the optional Living World modifier: warned, deterministic winter freezes create temporary crossings; droughts expose routes; floods and tsunamis form temporary barriers; volcanic eruptions and sinkholes create impassable ground; and nuclear saturation can permanently reshape contested routes.
+- Expanded Natural Disasters to 14 rotating event types with distinct movement, damage, warnings, recovery announcements, and richer 2D and 3D effects.
+- Added the optional 3D World foundation with height-mapped terrain, cliffs, water depth, perspective controls, owner-colored lighting, and data-driven instanced 3D models for every current unit and structure while preserving the complete classic 2D mode.
+- Rebuilt 3D World as a Catan-style tabletop battlefield: a horizontal ocean board below the camera, stylized elevated land, owner-colored territory materials, adaptive local geometry, and no projected flat-map sheet, skybox, grid, or black seams.
+- Added layered volumetric fog, animated 3D objective beacons, screen-facing battlefield labels, shadows, and event particles while retaining lighter rendering paths for smaller screens.
+- Made live terrain changes part of multiplayer desync detection and rebuilt water navigation after route changes so clients, bots, replays, and servers stay synchronized.
+- Made temporary flood barriers restore surviving nations' original ground when the water recedes and hardened game startup against removed optional HUD components.
+- Restored the complete terrain during the spawn countdown by matching the terrain shader to OpenBack's live RGBA terrain texture, removing the blank gray pre-game battlefield.
+- Added dedicated desktop 3D camera controls: hold left mouse and drag to move across the board, hold right mouse and drag to orbit and tilt the camera, and use the wheel to move closer or farther.
+- Removed the early HUD startup error during 3D loading and kept the unlimited-gold indicator stable during the first frame.
+- Improved touch targeting so attacks on enemy land no longer open the ship or trade menu by mistake.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.80 - Expanded World Update
 
 - Added 22 maps, including Sol, Russia, the United States, Germany, China, France, Vietnam, Scandinavia, the Baltics, Crimea, and new arcade battlefields, while keeping every Frootz map available.

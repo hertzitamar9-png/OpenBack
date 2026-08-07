@@ -906,6 +906,9 @@ export interface Game extends GameMap {
   /** Queue a land tile for conversion to water (batched every few ticks). Tile must be unowned. */
   queueWaterConversion(tile: TileRef): void;
 
+  /** Apply a replicated terrain-byte mutation used by living-world events. */
+  setTerrainByte(tile: TileRef, value: number): void;
+
   /** Queue a tile that was inside a nuke blast radius (for nukeable layer destruction). */
   queueNukeImpact(tile: TileRef): void;
 

@@ -34,6 +34,7 @@ import type { SpawnCenter } from "./passes/SpawnOverlayPass";
 import type { AttackTroopLabel } from "./passes/WorldTextPass";
 import { GPURenderer } from "./Renderer";
 import type { RenderSettings } from "./RenderSettings";
+import { THREE_D_TILT } from "./three-d/ThreeDWorldMath";
 
 export class MapRenderer {
   private renderer: GPURenderer | null = null;
@@ -138,8 +139,14 @@ export class MapRenderer {
 
   // ---- Camera ----
 
-  setCameraState(x: number, y: number, z: number): void {
-    this.renderer?.setCameraState(x, y, z);
+  setCameraState(
+    x: number,
+    y: number,
+    z: number,
+    yaw = 0,
+    pitch = THREE_D_TILT,
+  ): void {
+    this.renderer?.setCameraState(x, y, z, yaw, pitch);
   }
 
   // ---- Data upload ----

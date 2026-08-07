@@ -70,6 +70,8 @@ const DEFAULT_OPTIONS = {
   strategicObjectives: false,
   naturalDisasters: false,
   fogOfWar: false,
+  livingWorld: false,
+  threeDMode: false,
 } as const;
 
 // A map earns achievements only if it has nations to conquer — the same rule
@@ -162,6 +164,8 @@ export class SinglePlayerModal extends BaseModal {
     DEFAULT_OPTIONS.strategicObjectives;
   @state() private naturalDisasters: boolean = DEFAULT_OPTIONS.naturalDisasters;
   @state() private fogOfWar: boolean = DEFAULT_OPTIONS.fogOfWar;
+  @state() private livingWorld: boolean = DEFAULT_OPTIONS.livingWorld;
+  @state() private threeDMode: boolean = DEFAULT_OPTIONS.threeDMode;
 
   private mapLoader = terrainMapFileLoader;
 
@@ -494,6 +498,14 @@ export class SinglePlayerModal extends BaseModal {
                     labelKey: "single_modal.fog_of_war",
                     checked: this.fogOfWar,
                   },
+                  {
+                    labelKey: "single_modal.living_world",
+                    checked: this.livingWorld,
+                  },
+                  {
+                    labelKey: "single_modal.three_d_mode",
+                    checked: this.threeDMode,
+                  },
                 ],
                 inputCards,
               },
@@ -561,6 +573,8 @@ export class SinglePlayerModal extends BaseModal {
       this.strategicObjectives !== DEFAULT_OPTIONS.strategicObjectives ||
       this.naturalDisasters !== DEFAULT_OPTIONS.naturalDisasters ||
       this.fogOfWar !== DEFAULT_OPTIONS.fogOfWar ||
+      this.livingWorld !== DEFAULT_OPTIONS.livingWorld ||
+      this.threeDMode !== DEFAULT_OPTIONS.threeDMode ||
       this.disabledUnits.length > 0
     );
   }
@@ -595,6 +609,8 @@ export class SinglePlayerModal extends BaseModal {
     this.strategicObjectives = DEFAULT_OPTIONS.strategicObjectives;
     this.naturalDisasters = DEFAULT_OPTIONS.naturalDisasters;
     this.fogOfWar = DEFAULT_OPTIONS.fogOfWar;
+    this.livingWorld = DEFAULT_OPTIONS.livingWorld;
+    this.threeDMode = DEFAULT_OPTIONS.threeDMode;
   }
 
   protected onOpen(): void {
@@ -693,6 +709,12 @@ export class SinglePlayerModal extends BaseModal {
         break;
       case "single_modal.fog_of_war":
         this.fogOfWar = checked;
+        break;
+      case "single_modal.living_world":
+        this.livingWorld = checked;
+        break;
+      case "single_modal.three_d_mode":
+        this.threeDMode = checked;
         break;
       default:
         break;
@@ -955,6 +977,8 @@ export class SinglePlayerModal extends BaseModal {
               strategicObjectives: this.strategicObjectives,
               naturalDisasters: this.naturalDisasters,
               fogOfWar: this.fogOfWar,
+              livingWorld: this.livingWorld,
+              threeDMode: this.threeDMode,
               sharedControlSize: 1,
             },
           },

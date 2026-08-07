@@ -894,6 +894,7 @@ export class GameView implements GameMap {
         radius: event.radius,
         durationTicks: event.durationTicks,
         pathEnd: event.pathEnd,
+        warnedKind: event.warnedKind,
       });
 
       // Only meteors use the explosion atlas. Other disasters have dedicated
@@ -1454,6 +1455,9 @@ export class GameView implements GameMap {
   }
   setMagnitude(ref: TileRef, value: number): void {
     this._map.setMagnitude(ref, value);
+  }
+  setTerrainByte(ref: TileRef, value: number): void {
+    this._map.setTerrainByte(ref, value);
   }
   ownerID(ref: TileRef): number {
     return this._map.ownerID(ref);

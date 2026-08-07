@@ -79,6 +79,13 @@ export class DragEvent implements GameEvent {
   ) {}
 }
 
+export class RotateCameraEvent implements GameEvent {
+  constructor(
+    public readonly deltaX: number,
+    public readonly deltaY: number,
+  ) {}
+}
+
 export class AlternateViewEvent implements GameEvent {
   constructor(public readonly alternateView: boolean) {}
 }
@@ -230,6 +237,8 @@ export class InputHandler {
   private lastGestureScale: number | null = null;
 
   private pointerDown: boolean = false;
+  private multiTouchGesture: boolean = false;
+  private rightDragActive = false;
 
   private alternateView = false;
 
@@ -450,7 +459,7 @@ export class InputHandler {
 
     this.canvas.addEventListener("pointerdown", (e) => this.onPointerDown(e));
     window.addEventListener("pointerup", (e) => this.onPointerUp(e));
-    window.addEventListener("pointercancel", (e) => this.onPointerUp(e));
+    window.addEventListener("pointercancel", (e) => this.onPointerCancel(e));
     this.canvas.addEventListener(
       "wheel",
       (e) => {
@@ -504,6 +513,8 @@ export class InputHandler {
       }
       this.pointerDown = false;
       this.pointers.clear();
+      this.multiTouchGesture = false;
+      this.rightDragActive = false;
       this.lastGestureScale = null;
       if (this.longPressTimer !== null) {
         clearTimeout(this.longPressTimer);
@@ -723,6 +734,15 @@ export class InputHandler {
       return;
     }
 
+    if (event.button === 2 && this.isThreeDMode()) {
+      this.rightDragActive = true;
+      this.lastPointerX = event.clientX;
+      this.lastPointerY = event.clientY;
+      this.canvas.style.cursor = "grabbing";
+      event.preventDefault();
+      return;
+    }
+
     if (event.button > 0) {
       return;
     }
@@ -759,6 +779,7 @@ export class InputHandler {
         }, this.LONG_PRESS_MS);
       }
     } else if (this.pointers.size === 2) {
+      this.multiTouchGesture = true;
       // Second finger down — cancel any pending long-press to avoid
       // triggering selection mode mid-pinch
       if (this.longPressTimer !== null) {
@@ -779,16 +800,47 @@ export class InputHandler {
       return;
     }
 
+    if (event.button === 2 && this.isThreeDMode()) {
+      this.rightDragActive = false;
+      this.canvas.style.cursor = "";
+      event.preventDefault();
+      return;
+    }
+
     if (event.button > 0) {
       return;
     }
+    const wasMultiTouch = this.multiTouchGesture;
+    this.pointers.delete(event.pointerId);
+    if (this.pointers.size > 0) {
+      this.pointerDown = true;
+      const remaining = this.pointers.values().next().value as
+        | PointerEvent
+        | undefined;
+      if (remaining) {
+        this.lastPointerX = remaining.clientX;
+        this.lastPointerY = remaining.clientY;
+      }
+      return;
+    }
     this.pointerDown = false;
-    this.pointers.clear();
+    this.multiTouchGesture = false;
 
     // Clean up long-press state
     if (this.longPressTimer !== null) {
       clearTimeout(this.longPressTimer);
       this.longPressTimer = null;
+    }
+    // A pinch ending must never become a tap on the country underneath the
+    // final finger. That phantom tap was another source of accidental boat /
+    // trade menus on phones.
+    if (wasMultiTouch) {
+      this.longPressActive = false;
+      this.selectionBoxActive = false;
+      this.suppressNextTap = false;
+      this.canvas.style.cursor = "";
+      event.preventDefault();
+      return;
     }
     const wasLongPress = this.longPressActive;
     this.longPressActive = false;
@@ -859,6 +911,23 @@ export class InputHandler {
     }
   }
 
+  private onPointerCancel(event: PointerEvent): void {
+    this.rightDragActive = false;
+    this.pointers.delete(event.pointerId);
+    if (this.pointers.size > 0) return;
+    this.pointerDown = false;
+    this.multiTouchGesture = false;
+    this.selectionBoxActive = false;
+    this.longPressActive = false;
+    this.suppressNextTap = false;
+    if (this.longPressTimer !== null) {
+      clearTimeout(this.longPressTimer);
+      this.longPressTimer = null;
+    }
+    this.canvas.style.cursor = "";
+    this.eventBus.emit(new WarshipSelectionBoxCancelEvent());
+  }
+
   private onScroll(event: WheelEvent) {
     if (!event.shiftKey) {
       const realCtrl =
@@ -921,6 +990,18 @@ export class InputHandler {
   }
 
   private onPointerMove(event: PointerEvent) {
+    if (this.rightDragActive) {
+      const deltaX = event.clientX - this.lastPointerX;
+      const deltaY = event.clientY - this.lastPointerY;
+      if (deltaX !== 0 || deltaY !== 0) {
+        this.eventBus.emit(new RotateCameraEvent(deltaX, deltaY));
+      }
+      this.lastPointerX = event.clientX;
+      this.lastPointerY = event.clientY;
+      event.preventDefault();
+      return;
+    }
+
     if (event.button === 1) {
       event.preventDefault();
       return;
@@ -990,6 +1071,9 @@ export class InputHandler {
 
   private onContextMenu(event: MouseEvent) {
     event.preventDefault();
+    // The desktop 3D camera owns the right mouse button. Left click remains
+    // free for selection, attacks, and building; wheel/pinch continues to zoom.
+    if (this.isThreeDMode()) return;
     if (this.gameView.inSpawnPhase()) {
       return;
     }
@@ -1004,6 +1088,12 @@ export class InputHandler {
       return;
     }
     this.eventBus.emit(new ContextMenuEvent(event.clientX, event.clientY));
+  }
+
+  private isThreeDMode(): boolean {
+    // Some lightweight embeds and test harnesses intentionally expose only
+    // interaction state. Treat a missing configuration as classic 2D.
+    return this.gameView.config?.().worldMechanics?.().threeDMode === true;
   }
 
   private setGhostStructure(ghostStructure: PlayerBuildableUnitType | null) {

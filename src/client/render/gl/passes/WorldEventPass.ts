@@ -69,11 +69,74 @@ void main(){
     float core=(1.0-smoothstep(0.0,0.23,d))*max(0.0,1.0-uTime*1.2);
     float sparks=step(0.9,hash(floor(vP*29.0-uTime*7.0)))*(1.0-d);
     alpha=blast+core+sparks*0.8; color=mix(vec3(1.0,0.16,0.01),vec3(1.0,0.94,0.48),core+blast);
-  }else{
+  }else if(uKind==5){
     float dust=hash(floor((q+uTime*vec2(1.4,0.22))*17.0));
     float bands=0.5+0.5*sin(q.y*21.0+q.x*7.0+uTime*18.0);
     alpha=smoothstep(0.48,0.9,dust)*mix(0.25,0.7,bands)*(1.0-d);
     color=mix(vec3(0.42,0.28,0.12),vec3(0.96,0.77,0.39),bands);
+  }else if(uKind==6){
+    float flakes=step(0.78,hash(floor((q+uTime*vec2(1.8,-2.6))*31.0)));
+    float gust=pow(0.5+0.5*sin(q.y*35.0+q.x*9.0+uTime*42.0),7.0);
+    float whiteout=(1.0-d)*(0.18+gust*0.48+flakes*0.8);
+    alpha=whiteout; color=mix(vec3(0.42,0.68,0.88),vec3(1.0),flakes+gust);
+  }else if(uKind==7){
+    float front=q.x-0.10*sin(q.y*8.0+uTime*15.0);
+    float surge=band(front,0.08)+band(front+0.24,0.035)*0.55;
+    float foam=step(0.66,hash(floor(vec2(q.y*38.0,uTime*18.0))))*surge;
+    alpha=(surge*0.7+foam)*(1.0-smoothstep(0.8,1.0,d));
+    color=mix(vec3(0.02,0.31,0.57),vec3(0.86,0.98,1.0),foam);
+  }else if(uKind==8){
+    float cone=smoothstep(0.34,0.02,abs(q.x)) * smoothstep(0.62,-0.72,q.y);
+    float lava=pow(max(0.0,sin(a*7.0-d*18.0+uTime*19.0)),8.0)*(1.0-d);
+    float plume=smoothstep(0.55,0.05,d)*(0.45+0.55*hash(floor((q-uTime*vec2(0.0,1.6))*18.0)));
+    float shock=ring(d,min(0.92,uTime*1.3),0.045);
+    alpha=max(cone*0.75+lava,plume*0.55)+shock*0.8;
+    color=mix(vec3(0.13,0.11,0.12),vec3(1.0,0.20,0.015),clamp(lava+shock,0.0,1.0));
+  }else if(uKind==9){
+    float bolt=band(q.x-0.08*sin(q.y*23.0)-0.035*sin(q.y*61.0),0.025)*smoothstep(-0.92,0.7,q.y);
+    float flash=(1.0-smoothstep(0.0,0.7,d))*pow(max(0.0,sin(uTime*75.0)),18.0);
+    float ground=ring(d,0.22+uTime*0.5,0.035);
+    alpha=bolt+flash*0.8+ground*0.65; color=mix(vec3(0.30,0.50,1.0),vec3(1.0),bolt+flash);
+  }else if(uKind==10){
+    float wall=smoothstep(0.65,-0.45,q.x)*(1.0-smoothstep(0.72,1.0,abs(q.y)));
+    float grain=hash(floor((q+uTime*vec2(2.4,0.18))*45.0));
+    float curls=pow(0.5+0.5*sin(q.y*18.0-q.x*7.0+uTime*28.0),5.0);
+    alpha=wall*(0.25+grain*0.42+curls*0.25); color=mix(vec3(0.42,0.23,0.08),vec3(0.96,0.70,0.30),grain);
+  }else if(uKind==11){
+    float slope=smoothstep(-0.72,0.62,q.y+q.x*0.28);
+    float chunks=step(0.63,hash(floor((q+vec2(0.0,uTime*2.8))*22.0)));
+    float powder=pow(0.5+0.5*sin(q.x*26.0+q.y*9.0+uTime*35.0),6.0);
+    alpha=slope*(chunks*0.75+powder*0.38)*(1.0-d); color=mix(vec3(0.42,0.55,0.64),vec3(0.98),powder);
+  }else if(uKind==12){
+    float edge=ring(d,0.18+uTime*0.62,0.055);
+    float pit=(1.0-smoothstep(0.05,0.48,d))*smoothstep(0.16,0.8,uTime);
+    float fractures=pow(max(0.0,sin(a*11.0+d*17.0)),14.0)*(1.0-d);
+    alpha=pit*0.88+edge+fractures*0.7; color=mix(vec3(0.025,0.02,0.018),vec3(0.48,0.27,0.12),edge+fractures);
+  }else if(uKind==13){
+    float cells=hash(floor((q+uTime*vec2(1.3,-0.4))*24.0));
+    float arcs=ring(d,fract(uTime*1.9),0.032)+ring(d,fract(uTime*1.9+0.5),0.025);
+    float glow=smoothstep(0.54,0.95,cells)*(1.0-d);
+    alpha=glow*0.7+arcs*0.5; color=mix(vec3(0.08,0.45,0.05),vec3(0.68,1.0,0.12),glow+arcs);
+  }else if(uKind==14){
+    float crystal=pow(abs(cos(a*6.0))*max(0.0,1.0-d),7.0);
+    float frost=ring(d,min(0.95,uTime*1.25),0.07)+crystal*0.7;
+    alpha=frost; color=mix(vec3(0.18,0.62,0.92),vec3(0.92,1.0,1.0),crystal);
+  }else if(uKind==15){
+    float crack=pow(abs(sin(a*8.0+d*14.0)),15.0);
+    float melt=ring(d,max(0.08,1.0-uTime),0.08);
+    alpha=(crack*0.5+melt)*(1.0-d*0.35); color=mix(vec3(0.05,0.35,0.66),vec3(0.75,0.96,1.0),melt);
+  }else if(uKind==16){
+    float hazard=0.5+0.5*sin(a*3.0+uTime*7.0);
+    float pulse=ring(d,0.34+0.08*sin(uTime*11.0),0.055)+ring(d,0.72,0.03);
+    float embers=step(0.82,hash(floor((q-uTime*vec2(0.2,1.1))*28.0)))*(1.0-d);
+    alpha=pulse*hazard+embers*0.75; color=mix(vec3(0.12,0.55,0.02),vec3(0.90,1.0,0.12),pulse);
+  }else{
+    float sweep=fract(a/6.28318+uTime*1.7);
+    float arc=step(0.0,sweep)*step(sweep,0.13)*smoothstep(0.28,0.38,d)*smoothstep(0.94,0.84,d);
+    float outer=ring(d,0.88,0.028)*(0.35+0.65*step(0.5,fract(a*12.0/6.28318)));
+    float inner=ring(d,0.52+0.045*sin(uTime*25.0),0.025);
+    float cross=band(vP.x,0.012)*step(abs(vP.y),0.24)+band(vP.y,0.012)*step(abs(vP.x),0.24);
+    alpha=outer+inner*0.75+arc+cross*0.7; color=mix(vec3(1.0,0.13,0.03),vec3(1.0,0.86,0.12),arc+inner);
   }
   alpha*=1.0-smoothstep(0.86,1.0,d); if(alpha<0.015) discard; outColor=vec4(color,alpha);
 }`;
@@ -148,6 +211,18 @@ export class WorldEventPass {
       wildfire: 3,
       meteor: 4,
       drought: 5,
+      blizzard: 6,
+      flood: 7,
+      volcano: 8,
+      lightning: 9,
+      sandstorm: 10,
+      avalanche: 11,
+      sinkhole: 12,
+      radiation_storm: 13,
+      winter_freeze: 14,
+      spring_thaw: 15,
+      nuclear_saturation: 16,
+      disaster_warning: 17,
     };
     const gl = this.gl;
     gl.useProgram(this.program);
@@ -167,7 +242,10 @@ export class WorldEventPass {
         if (
           e.kind === "tornado" ||
           e.kind === "tsunami" ||
-          e.kind === "wildfire"
+          e.kind === "flood" ||
+          e.kind === "wildfire" ||
+          e.kind === "sandstorm" ||
+          e.kind === "avalanche"
         ) {
           x += (ex - sx) * progress;
           y += (ey - sy) * progress;

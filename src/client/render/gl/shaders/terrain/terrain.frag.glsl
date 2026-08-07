@@ -1,14 +1,14 @@
 #version 300 es
 precision highp float;
-precision highp usampler2D;
 
-uniform usampler2D uTerrain;
-uniform sampler2D uTerrainPalette;
+// TerrainPass uploads a complete RGBA8 color texture. Sampling it as an
+// integer terrain-byte texture (the newer upstream palette path) leaves the
+// framebuffer blank because those two resource contracts are incompatible.
+uniform sampler2D uTerrain;
 
 in vec2 vUV;
 out vec4 fragColor;
 
 void main() {
-  uint terrainByte = texture(uTerrain, vUV).r;
-  fragColor = texelFetch(uTerrainPalette, ivec2(int(terrainByte), 0), 0);
+  fragColor = texture(uTerrain, vUV);
 }

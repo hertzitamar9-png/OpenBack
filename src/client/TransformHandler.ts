@@ -3,9 +3,15 @@ import { Cell } from "../core/game/Game";
 import {
   CenterCameraEvent,
   DragEvent,
+  RotateCameraEvent,
   ZOOM_DELTA_DIVISOR,
   ZoomEvent,
 } from "./InputHandler";
+import {
+  THREE_D_FOV_DEGREES,
+  THREE_D_TILT,
+  threeDHeightForTerrainByte,
+} from "./render/gl/three-d/ThreeDWorldMath";
 import { GameView, PlayerView, UnitView } from "./view";
 
 export class GoToPlayerEvent implements GameEvent {
@@ -35,6 +41,8 @@ export class TransformHandler {
   private _boundingRect: DOMRect;
   public offsetX: number = -350;
   public offsetY: number = -200;
+  public threeDYaw = 0;
+  public threeDPitch = THREE_D_TILT;
   private lastGoToCallTime: number | null = null;
 
   private target: Cell | null;
@@ -50,6 +58,7 @@ export class TransformHandler {
     this._boundingRect = this.canvas.getBoundingClientRect();
     this.eventBus.on(ZoomEvent, (e) => this.onZoom(e));
     this.eventBus.on(DragEvent, (e) => this.onMove(e));
+    this.eventBus.on(RotateCameraEvent, (e) => this.onRotateCamera(e));
     this.eventBus.on(GoToPlayerEvent, (e) => this.onGoToPlayer(e));
     this.eventBus.on(GoToPositionEvent, (e) => this.onGoToPosition(e));
     this.eventBus.on(GoToUnitEvent, (e) => this.onGoToUnit(e));
@@ -90,6 +99,7 @@ export class TransformHandler {
   }
 
   worldToCanvasCoordinates(cell: Cell): { x: number; y: number } {
+    if (this.isThreeD()) return this.worldToThreeDCanvas(cell.x, cell.y);
     // Step 1: Convert from Cell coordinates to game coordinates
     // (reverse of Math.floor operation - we'll use the exact values)
     const gameX = cell.x;
@@ -130,6 +140,9 @@ export class TransformHandler {
     screenY: number,
   ): { x: number; y: number } {
     const canvasCoords = this.screenToCanvasCoordinates(screenX, screenY);
+    if (this.isThreeD()) {
+      return this.threeDCanvasToWorld(canvasCoords.x, canvasCoords.y);
+    }
     const gameX =
       (canvasCoords.x - this.game.width() / 2) / this.scale +
       this.offsetX +
@@ -164,6 +177,24 @@ export class TransformHandler {
     const canvasRect = this.boundingRect();
     const canvasWidth = canvasRect.width;
     const canvasHeight = canvasRect.height;
+    if (this.isThreeD()) {
+      const corners = [
+        this.threeDCanvasToWorld(0, 0),
+        this.threeDCanvasToWorld(canvasWidth, 0),
+        this.threeDCanvasToWorld(0, canvasHeight),
+        this.threeDCanvasToWorld(canvasWidth, canvasHeight),
+      ];
+      return [
+        new Cell(
+          Math.floor(Math.min(...corners.map((c) => c.x))),
+          Math.floor(Math.min(...corners.map((c) => c.y))),
+        ),
+        new Cell(
+          Math.ceil(Math.max(...corners.map((c) => c.x))),
+          Math.ceil(Math.max(...corners.map((c) => c.y))),
+        ),
+      ];
+    }
 
     const LeftX = -this.game.width() / 2 / this.scale + this.offsetX;
     const TopY = -this.game.height() / 2 / this.scale + this.offsetY;
@@ -183,6 +214,103 @@ export class TransformHandler {
       new Cell(Math.floor(gameLeftX), Math.floor(gameTopY)),
       new Cell(Math.floor(gameRightX), Math.floor(gameBottomY)),
     ];
+  }
+
+  private isThreeD(): boolean {
+    return this.game.config().worldMechanics().threeDMode;
+  }
+
+  private threeDCamera() {
+    const { width, height } = this.boundingRect();
+    const centerX =
+      this.offsetX +
+      this.game.width() / 2 +
+      (width - this.game.width()) / (2 * this.scale);
+    const centerY =
+      this.offsetY +
+      this.game.height() / 2 +
+      (height - this.game.height()) / (2 * this.scale);
+    const tanHalfFov = Math.tan((THREE_D_FOV_DEGREES * Math.PI) / 360);
+    return {
+      width,
+      height,
+      centerX,
+      centerY,
+      tanHalfFov,
+      distance: height / Math.max(0.01, this.scale * 2) / tanHalfFov,
+      pitch: this.threeDPitch,
+      yaw: this.threeDYaw,
+    };
+  }
+
+  private threeDCanvasToWorld(canvasX: number, canvasY: number) {
+    const c = this.threeDCamera();
+    const clipX = (canvasX / Math.max(1, c.width)) * 2 - 1;
+    const clipY = 1 - (canvasY / Math.max(1, c.height)) * 2;
+    const ct = Math.cos(c.pitch);
+    const st = Math.sin(c.pitch);
+    const cy = Math.cos(c.yaw);
+    const sy = Math.sin(c.yaw);
+    const denominator = ct + clipY * c.tanHalfFov * st;
+    const ky = clipY * c.tanHalfFov;
+    let height = 0;
+    let localZ =
+      (-ky * c.distance) /
+      (Math.abs(denominator) < 0.001 ? 0.001 : denominator);
+    // Intersect the pointer ray with the actual height field. Two iterations
+    // are enough because terrain is tile-stepped and keeps clicks aligned with
+    // raised land and impassable walls instead of the hidden sea-level plane.
+    for (let i = 0; i < 2; i++) {
+      const sampleViewZ = c.distance + localZ * st + height * ct;
+      const localX =
+        clipX * sampleViewZ * c.tanHalfFov * (c.width / Math.max(1, c.height));
+      const worldDx = localX * cy + localZ * sy;
+      const worldDy = -localX * sy + localZ * cy;
+      const sampleX = Math.floor(c.centerX + worldDx);
+      const sampleY = Math.floor(c.centerY + worldDy);
+      height = this.threeDHeightAt(sampleX, sampleY);
+      const numerator = ky * c.distance + height * (ky * ct - st);
+      const divisor = -ky * st - ct;
+      localZ = numerator / (Math.abs(divisor) < 0.001 ? 0.001 : divisor);
+    }
+    const viewZ = c.distance + localZ * st;
+    const localX =
+      clipX * viewZ * c.tanHalfFov * (c.width / Math.max(1, c.height));
+    return {
+      x: c.centerX + localX * cy + localZ * sy,
+      y: c.centerY - localX * sy + localZ * cy,
+    };
+  }
+
+  private worldToThreeDCanvas(worldX: number, worldY: number) {
+    const c = this.threeDCamera();
+    const dx = worldX - c.centerX;
+    const dy = worldY - c.centerY;
+    const ct = Math.cos(c.pitch);
+    const st = Math.sin(c.pitch);
+    const cy = Math.cos(c.yaw);
+    const sy = Math.sin(c.yaw);
+    const localX = dx * cy - dy * sy;
+    const localZ = dx * sy + dy * cy;
+    const terrainHeight = this.threeDHeightAt(
+      Math.floor(worldX),
+      Math.floor(worldY),
+    );
+    const viewZ = Math.max(1, c.distance + localZ * st + terrainHeight * ct);
+    const clipX =
+      localX / (viewZ * c.tanHalfFov * (c.width / Math.max(1, c.height)));
+    const clipY = -(localZ * ct - terrainHeight * st) / (viewZ * c.tanHalfFov);
+    return {
+      x: ((clipX + 1) * c.width) / 2,
+      y: ((1 - clipY) * c.height) / 2,
+    };
+  }
+
+  private threeDHeightAt(x: number, y: number): number {
+    if (!this.game.isValidCoord(x, y)) return 0;
+    return threeDHeightForTerrainByte(
+      this.game.terrainByte(this.game.ref(x, y)),
+    );
   }
 
   isOnScreen(cell: Cell): boolean {
@@ -361,9 +489,29 @@ export class TransformHandler {
 
   onMove(event: DragEvent) {
     this.clearTarget();
-    this.offsetX -= event.deltaX / this.scale;
-    this.offsetY -= event.deltaY / this.scale;
+    if (this.isThreeD()) {
+      const localX = -event.deltaX / this.scale;
+      const localZ = -event.deltaY / this.scale;
+      const cy = Math.cos(this.threeDYaw);
+      const sy = Math.sin(this.threeDYaw);
+      this.offsetX += localX * cy + localZ * sy;
+      this.offsetY += -localX * sy + localZ * cy;
+    } else {
+      this.offsetX -= event.deltaX / this.scale;
+      this.offsetY -= event.deltaY / this.scale;
+    }
     this.clampOffsets();
+    this.changed = true;
+  }
+
+  onRotateCamera(event: RotateCameraEvent) {
+    if (!this.isThreeD()) return;
+    this.clearTarget();
+    this.threeDYaw = (this.threeDYaw - event.deltaX * 0.006) % (Math.PI * 2);
+    this.threeDPitch = Math.max(
+      0.28,
+      Math.min(1.25, this.threeDPitch + event.deltaY * 0.0045),
+    );
     this.changed = true;
   }
 

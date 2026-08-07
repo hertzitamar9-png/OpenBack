@@ -141,7 +141,19 @@ export type WorldEventKind =
   | "tornado"
   | "wildfire"
   | "meteor"
-  | "drought";
+  | "drought"
+  | "blizzard"
+  | "flood"
+  | "volcano"
+  | "lightning"
+  | "sandstorm"
+  | "avalanche"
+  | "sinkhole"
+  | "radiation_storm"
+  | "winter_freeze"
+  | "spring_thaw"
+  | "nuclear_saturation"
+  | "disaster_warning";
 
 export interface WorldEventUpdate {
   type: GameUpdateType.WorldEvent;
@@ -154,6 +166,7 @@ export interface WorldEventUpdate {
   ownerID?: PlayerID;
   amount?: number;
   pathEnd?: TileRef;
+  warnedKind?: WorldEventKind;
 }
 
 export interface BonusEventUpdate {

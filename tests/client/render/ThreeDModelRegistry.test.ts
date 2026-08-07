@@ -1,0 +1,33 @@
+import {
+  THREE_D_MODELS,
+  threeDModel,
+} from "../../../src/client/render/gl/three-d/ThreeDModelRegistry";
+import { UnitType } from "../../../src/core/game/Game";
+
+describe("3D model registry", () => {
+  it("defines a renderable model for every game unit", () => {
+    for (const type of Object.values(UnitType)) {
+      const model = threeDModel(type);
+      expect(model, `${type} is missing a 3D model`).toBeDefined();
+      expect(model.footprint).toBeGreaterThan(0);
+      expect(model.primitives.length).toBeGreaterThan(0);
+    }
+    expect(Object.keys(THREE_D_MODELS)).toHaveLength(
+      Object.values(UnitType).length,
+    );
+  });
+
+  it("uses only finite transforms so new models cannot poison instance buffers", () => {
+    for (const model of Object.values(THREE_D_MODELS)) {
+      for (const primitive of model.primitives) {
+        expect(
+          [
+            ...primitive.position,
+            ...primitive.scale,
+            ...(primitive.rotation ?? []),
+          ].every(Number.isFinite),
+        ).toBe(true);
+      }
+    }
+  });
+});

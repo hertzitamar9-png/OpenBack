@@ -27,6 +27,8 @@ export interface GameMap {
   clearShorelineBit(ref: TileRef): void;
   setOcean(ref: TileRef): void;
   setMagnitude(ref: TileRef, value: number): void;
+  /** Replaces the complete terrain byte for deterministic live-map events. */
+  setTerrainByte(ref: TileRef, value: number): void;
   // State getters and setters (mutable)
   ownerID(ref: TileRef): number;
   hasOwner(ref: TileRef): boolean;
@@ -272,6 +274,15 @@ export class GameMapImpl implements GameMap {
     this.terrain[ref] =
       (this.terrain[ref] & ~GameMapImpl.MAGNITUDE_MASK) |
       (value & GameMapImpl.MAGNITUDE_MASK);
+  }
+
+  setTerrainByte(ref: TileRef, value: number): void {
+    value &= 0xff;
+    if (this.terrain[ref] === value) return;
+    const wasLand = this.isLand(ref);
+    this.terrain[ref] = value;
+    const isLand = this.isLand(ref);
+    if (wasLand !== isLand) this.numLandTiles_ += isLand ? 1 : -1;
   }
 
   // State getters and setters (mutable)
