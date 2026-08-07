@@ -1,3 +1,13 @@
+## OpenBack v0.34.83 - Complete OpenBack Store
+
+- Removed the OpenFront merchandise destination and the unsupported empty Packs, Subscriptions, and Merch sections from the Store.
+- Made Cosmetics the Store landing section and added six purchasable OpenBack crowns with clear rarity and price progression.
+- Filled every effects category with purchasable OpenBack visuals, including ship wakes, nuclear trails, Atom Bomb, Hydrogen Bomb, and MIRV explosions, animated structures, and warship finishes.
+- Completed currency-purchase support for crowns and effects and replaced blank effect panels with a clear catalog message if a future category has no available items.
+- Corrected the local OpenBack API fallback so Store inventory, profiles, and other self-contained services load through the running game instead of an unused legacy port.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.82 - Solid 3D Battlefield
 
 - Replaced the 3D renderer's screen-space projection with true perspective depth and near-plane clipping so terrain, player territory, units, and structures no longer stretch into broken triangles while orbiting or zooming.

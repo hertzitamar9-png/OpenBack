@@ -2332,6 +2332,283 @@
       "artist": "OpenBack"
     }
   },
+  "crowns": {
+    "command_crown": {
+      "name": "command_crown",
+      "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgyPSIwIiB5Mj0iMSI+PHN0b3Agc3RvcC1jb2xvcj0iI2UwZjJmZSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzM4YmRmOCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxwYXRoIGQ9Ik0zMSA4M2w0OSAzOSA0OC03NSA0OCA3NSA0OS0zOS0yMCAxMTlINTFMMzEgODN6IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiMwODExMWYiIHN0cm9rZS13aWR0aD0iMTIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNNTYgMTc0aDE0NHYzM0g1NnoiIGZpbGw9IiMzOGJkZjgiIHN0cm9rZT0iIzA4MTExZiIgc3Ryb2tlLXdpZHRoPSIxMCIvPjxjaXJjbGUgY3g9IjgwIiBjeT0iMTUwIiByPSI5IiBmaWxsPSIjZmZmIi8+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTUwIiByPSI5IiBmaWxsPSIjZmZmIi8+PGNpcmNsZSBjeD0iMTc2IiBjeT0iMTUwIiByPSI5IiBmaWxsPSIjZmZmIi8+PC9zdmc+",
+      "product": null,
+      "priceSoft": 350,
+      "rarity": "common",
+      "artist": "OpenBack"
+    },
+    "victory_crown": {
+      "name": "victory_crown",
+      "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgyPSIwIiB5Mj0iMSI+PHN0b3Agc3RvcC1jb2xvcj0iI2ZmZjdhZSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2ZhY2MxNSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxwYXRoIGQ9Ik0zMSA4M2w0OSAzOSA0OC03NSA0OCA3NSA0OS0zOS0yMCAxMTlINTFMMzEgODN6IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiMwODExMWYiIHN0cm9rZS13aWR0aD0iMTIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNNTYgMTc0aDE0NHYzM0g1NnoiIGZpbGw9IiNmYWNjMTUiIHN0cm9rZT0iIzA4MTExZiIgc3Ryb2tlLXdpZHRoPSIxMCIvPjxjaXJjbGUgY3g9IjgwIiBjeT0iMTUwIiByPSI5IiBmaWxsPSIjZmZmIi8+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTUwIiByPSI5IiBmaWxsPSIjZmZmIi8+PGNpcmNsZSBjeD0iMTc2IiBjeT0iMTUwIiByPSI5IiBmaWxsPSIjZmZmIi8+PC9zdmc+",
+      "product": null,
+      "priceSoft": 600,
+      "rarity": "uncommon",
+      "artist": "OpenBack"
+    },
+    "ember_crown": {
+      "name": "ember_crown",
+      "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgyPSIwIiB5Mj0iMSI+PHN0b3Agc3RvcC1jb2xvcj0iI2ZlY2FjYSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2Y5NzMxNiIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxwYXRoIGQ9Ik0zMSA4M2w0OSAzOSA0OC03NSA0OCA3NSA0OS0zOS0yMCAxMTlINTFMMzEgODN6IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiMwODExMWYiIHN0cm9rZS13aWR0aD0iMTIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNNTYgMTc0aDE0NHYzM0g1NnoiIGZpbGw9IiNmOTczMTYiIHN0cm9rZT0iIzA4MTExZiIgc3Ryb2tlLXdpZHRoPSIxMCIvPjxjaXJjbGUgY3g9IjgwIiBjeT0iMTUwIiByPSI5IiBmaWxsPSIjZmZmIi8+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTUwIiByPSI5IiBmaWxsPSIjZmZmIi8+PGNpcmNsZSBjeD0iMTc2IiBjeT0iMTUwIiByPSI5IiBmaWxsPSIjZmZmIi8+PC9zdmc+",
+      "product": null,
+      "priceSoft": 900,
+      "rarity": "rare",
+      "artist": "OpenBack"
+    },
+    "emerald_crown": {
+      "name": "emerald_crown",
+      "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgyPSIwIiB5Mj0iMSI+PHN0b3Agc3RvcC1jb2xvcj0iI2JiZjdkMCIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzIyYzU1ZSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxwYXRoIGQ9Ik0zMSA4M2w0OSAzOSA0OC03NSA0OCA3NSA0OS0zOS0yMCAxMTlINTFMMzEgODN6IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiMwODExMWYiIHN0cm9rZS13aWR0aD0iMTIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNNTYgMTc0aDE0NHYzM0g1NnoiIGZpbGw9IiMyMmM1NWUiIHN0cm9rZT0iIzA4MTExZiIgc3Ryb2tlLXdpZHRoPSIxMCIvPjxjaXJjbGUgY3g9IjgwIiBjeT0iMTUwIiByPSI5IiBmaWxsPSIjZmZmIi8+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTUwIiByPSI5IiBmaWxsPSIjZmZmIi8+PGNpcmNsZSBjeD0iMTc2IiBjeT0iMTUwIiByPSI5IiBmaWxsPSIjZmZmIi8+PC9zdmc+",
+      "product": null,
+      "priceSoft": 1200,
+      "rarity": "epic",
+      "artist": "OpenBack"
+    },
+    "royal_crown": {
+      "name": "royal_crown",
+      "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgyPSIwIiB5Mj0iMSI+PHN0b3Agc3RvcC1jb2xvcj0iI2U5ZDVmZiIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2E4NTVmNyIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxwYXRoIGQ9Ik0zMSA4M2w0OSAzOSA0OC03NSA0OCA3NSA0OS0zOS0yMCAxMTlINTFMMzEgODN6IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiMwODExMWYiIHN0cm9rZS13aWR0aD0iMTIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNNTYgMTc0aDE0NHYzM0g1NnoiIGZpbGw9IiNhODU1ZjciIHN0cm9rZT0iIzA4MTExZiIgc3Ryb2tlLXdpZHRoPSIxMCIvPjxjaXJjbGUgY3g9IjgwIiBjeT0iMTUwIiByPSI5IiBmaWxsPSIjZmZmIi8+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTUwIiByPSI5IiBmaWxsPSIjZmZmIi8+PGNpcmNsZSBjeD0iMTc2IiBjeT0iMTUwIiByPSI5IiBmaWxsPSIjZmZmIi8+PC9zdmc+",
+      "product": null,
+      "priceSoft": 1700,
+      "rarity": "legendary",
+      "artist": "OpenBack"
+    },
+    "midnight_crown": {
+      "name": "midnight_crown",
+      "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgyPSIwIiB5Mj0iMSI+PHN0b3Agc3RvcC1jb2xvcj0iI2M3ZDJmZSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzYzNjZmMSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxwYXRoIGQ9Ik0zMSA4M2w0OSAzOSA0OC03NSA0OCA3NSA0OS0zOS0yMCAxMTlINTFMMzEgODN6IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiMwODExMWYiIHN0cm9rZS13aWR0aD0iMTIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNNTYgMTc0aDE0NHYzM0g1NnoiIGZpbGw9IiM2MzY2ZjEiIHN0cm9rZT0iIzA4MTExZiIgc3Ryb2tlLXdpZHRoPSIxMCIvPjxjaXJjbGUgY3g9IjgwIiBjeT0iMTUwIiByPSI5IiBmaWxsPSIjZmZmIi8+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTUwIiByPSI5IiBmaWxsPSIjZmZmIi8+PGNpcmNsZSBjeD0iMTc2IiBjeT0iMTUwIiByPSI5IiBmaWxsPSIjZmZmIi8+PC9zdmc+",
+      "product": null,
+      "priceSoft": 2200,
+      "rarity": "legendary",
+      "artist": "OpenBack"
+    }
+  },
+  "effects": {
+    "transportShipTrail": {
+      "azure_wake": {
+        "name": "azure_wake",
+        "effectType": "transportShipTrail",
+        "attributes": {
+          "type": "gradient",
+          "colors": ["#e0f2fe", "#38bdf8", "#0369a1"],
+          "colorSize": 5,
+          "movementSpeed": 8
+        },
+        "product": null,
+        "priceSoft": 500,
+        "rarity": "uncommon",
+        "artist": "OpenBack"
+      },
+      "ember_wake": {
+        "name": "ember_wake",
+        "effectType": "transportShipTrail",
+        "attributes": {
+          "type": "transition",
+          "colors": ["#fde047", "#f97316", "#dc2626"],
+          "frequency": 1.4
+        },
+        "product": null,
+        "priceSoft": 900,
+        "rarity": "rare",
+        "artist": "OpenBack"
+      }
+    },
+    "nukeTrail": {
+      "ion_vortex": {
+        "name": "ion_vortex",
+        "effectType": "nukeTrail",
+        "attributes": {
+          "type": "spiral",
+          "colors": ["#67e8f9", "#818cf8", "#f0abfc"],
+          "radius": 8,
+          "strands": 3,
+          "rotationSpeed": 4
+        },
+        "product": null,
+        "priceSoft": 1300,
+        "rarity": "epic",
+        "artist": "OpenBack"
+      },
+      "solar_streak": {
+        "name": "solar_streak",
+        "effectType": "nukeTrail",
+        "attributes": {
+          "type": "gradient",
+          "colors": ["#fff7ae", "#facc15", "#ef4444"],
+          "colorSize": 7,
+          "movementSpeed": 13
+        },
+        "product": null,
+        "priceSoft": 1000,
+        "rarity": "rare",
+        "artist": "OpenBack"
+      }
+    },
+    "nukeExplosion": {
+      "atom_blue_ring": {
+        "name": "atom_blue_ring",
+        "effectType": "nukeExplosion",
+        "attributes": {
+          "type": "shockwave",
+          "nukeType": "atom",
+          "colors": ["#ffffff", "#38bdf8", "#1d4ed8"],
+          "size": 52,
+          "speed": 18,
+          "thickness": 5,
+          "transitionSpeed": 2
+        },
+        "product": null,
+        "priceSoft": 850,
+        "rarity": "rare",
+        "artist": "OpenBack"
+      },
+      "atom_ember_burst": {
+        "name": "atom_ember_burst",
+        "effectType": "nukeExplosion",
+        "attributes": {
+          "type": "sparkles",
+          "nukeType": "atom",
+          "colors": ["#fef3c7", "#fb923c", "#dc2626"],
+          "size": 48,
+          "speed": 20,
+          "thickness": 3,
+          "transitionSpeed": 2.4,
+          "density": 42
+        },
+        "product": null,
+        "priceSoft": 1050,
+        "rarity": "epic",
+        "artist": "OpenBack"
+      },
+      "hydro_arctic_ring": {
+        "name": "hydro_arctic_ring",
+        "effectType": "nukeExplosion",
+        "attributes": {
+          "type": "shockwave",
+          "nukeType": "hydro",
+          "colors": ["#ffffff", "#a5f3fc", "#2563eb"],
+          "size": 82,
+          "speed": 24,
+          "thickness": 7,
+          "transitionSpeed": 1.8
+        },
+        "product": null,
+        "priceSoft": 1400,
+        "rarity": "epic",
+        "artist": "OpenBack"
+      },
+      "hydro_solar_burst": {
+        "name": "hydro_solar_burst",
+        "effectType": "nukeExplosion",
+        "attributes": {
+          "type": "sparkles",
+          "nukeType": "hydro",
+          "colors": ["#ffffff", "#fde047", "#f97316"],
+          "size": 88,
+          "speed": 25,
+          "thickness": 4,
+          "transitionSpeed": 2.8,
+          "density": 70
+        },
+        "product": null,
+        "priceSoft": 1700,
+        "rarity": "legendary",
+        "artist": "OpenBack"
+      },
+      "mirv_violet_ring": {
+        "name": "mirv_violet_ring",
+        "effectType": "nukeExplosion",
+        "attributes": {
+          "type": "shockwave",
+          "nukeType": "mirvWarhead",
+          "colors": ["#f5f3ff", "#c084fc", "#6d28d9"],
+          "size": 44,
+          "speed": 22,
+          "thickness": 4,
+          "transitionSpeed": 3
+        },
+        "product": null,
+        "priceSoft": 1250,
+        "rarity": "epic",
+        "artist": "OpenBack"
+      },
+      "mirv_star_burst": {
+        "name": "mirv_star_burst",
+        "effectType": "nukeExplosion",
+        "attributes": {
+          "type": "sparkles",
+          "nukeType": "mirvWarhead",
+          "colors": ["#ffffff", "#22d3ee", "#a855f7"],
+          "size": 46,
+          "speed": 24,
+          "thickness": 3,
+          "transitionSpeed": 3.2,
+          "density": 55
+        },
+        "product": null,
+        "priceSoft": 1600,
+        "rarity": "legendary",
+        "artist": "OpenBack"
+      }
+    },
+    "structures": {
+      "command_neon": {
+        "name": "command_neon",
+        "effectType": "structures",
+        "attributes": {
+          "type": "gradient",
+          "colors": ["#22d3ee", "#3b82f6", "#a855f7"],
+          "colorSize": 4,
+          "movementSpeed": 3
+        },
+        "product": null,
+        "priceSoft": 950,
+        "rarity": "rare",
+        "artist": "OpenBack"
+      },
+      "royal_structures": {
+        "name": "royal_structures",
+        "effectType": "structures",
+        "attributes": {
+          "type": "transition",
+          "colors": ["#facc15", "#f8fafc", "#a855f7"],
+          "frequency": 0.8
+        },
+        "product": null,
+        "priceSoft": 1450,
+        "rarity": "epic",
+        "artist": "OpenBack"
+      }
+    },
+    "warship": {
+      "ocean_fleet": {
+        "name": "ocean_fleet",
+        "effectType": "warship",
+        "attributes": {
+          "type": "gradient",
+          "colors": ["#cffafe", "#06b6d4", "#1e40af"],
+          "colorSize": 4,
+          "movementSpeed": 5
+        },
+        "product": null,
+        "priceSoft": 800,
+        "rarity": "rare",
+        "artist": "OpenBack"
+      },
+      "inferno_fleet": {
+        "name": "inferno_fleet",
+        "effectType": "warship",
+        "attributes": {
+          "type": "transition",
+          "colors": ["#fde047", "#f97316", "#ef4444"],
+          "frequency": 1.2
+        },
+        "product": null,
+        "priceSoft": 1350,
+        "rarity": "epic",
+        "artist": "OpenBack"
+      }
+    }
+  },
   "colorPalettes": {},
   "currencyPacks": {},
   "subscriptions": {}

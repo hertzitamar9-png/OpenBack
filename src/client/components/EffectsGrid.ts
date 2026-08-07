@@ -235,13 +235,11 @@ export class EffectsGrid extends LitElement {
     if (sections.length === 0) {
       // A single-type view keeps its (empty) panel — the tab stays present and
       // just shows nothing. Only the all-types view shows the "no effects" notice.
-      panel = activeType
-        ? html`<div class="p-4"></div>`
-        : html`<div
-            class="text-white/40 text-sm font-bold uppercase tracking-wider text-center py-8"
-          >
-            ${translateText("store.no_effects")}
-          </div>`;
+      panel = html`<div
+        class="text-white/40 text-sm font-bold uppercase tracking-wider text-center py-8"
+      >
+        ${translateText("store.no_effects")}
+      </div>`;
     } else {
       panel = html`
         <div class="flex flex-col gap-4 p-4">

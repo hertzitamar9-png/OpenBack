@@ -353,6 +353,26 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           secure: false,
         },
+        "/shop": {
+          target: "http://localhost:3000",
+          changeOrigin: true,
+          secure: false,
+        },
+        "/stripe": {
+          target: "http://localhost:3000",
+          changeOrigin: true,
+          secure: false,
+        },
+        "/subscriptions": {
+          target: "http://localhost:3000",
+          changeOrigin: true,
+          secure: false,
+        },
+        "/rewards": {
+          target: "http://localhost:3000",
+          changeOrigin: true,
+          secure: false,
+        },
         "/clans": {
           target: "http://localhost:3000",
           changeOrigin: true,

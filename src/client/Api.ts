@@ -959,7 +959,7 @@ export function getApiBase() {
   if (audience === "localhost") {
     const apiDomain = process.env.API_DOMAIN;
     if (apiDomain && apiDomain !== "undefined") return `https://${apiDomain}`;
-    return localStorage.getItem("apiHost") ?? "http://localhost:8787";
+    return localStorage.getItem("apiHost") ?? window.location.origin;
   }
   return window.location.hostname === "localhost"
     ? `https://api.${audience}`

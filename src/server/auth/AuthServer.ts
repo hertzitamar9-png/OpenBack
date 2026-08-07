@@ -2240,7 +2240,7 @@ export function authRouter(): express.Router {
     }
     const parsed = z
       .object({
-        cosmeticType: z.enum(["pattern", "skin", "flag"]),
+        cosmeticType: z.enum(["pattern", "skin", "flag", "crown", "effect"]),
         cosmeticName: z.string(),
         currencyType: z.enum(["hard", "soft"]),
         colorPaletteName: z.string().optional(),
@@ -2253,12 +2253,15 @@ export function authRouter(): express.Router {
     const { cosmeticType, cosmeticName, currencyType, colorPaletteName } =
       parsed.data;
 
-    const collection =
-      cosmeticType === "pattern"
-        ? cosmetics.patterns
-        : cosmeticType === "flag"
-          ? cosmetics.flags
-          : cosmetics.skins;
+    const collection = (() => {
+      if (cosmeticType === "pattern") return cosmetics.patterns;
+      if (cosmeticType === "skin") return cosmetics.skins;
+      if (cosmeticType === "flag") return cosmetics.flags;
+      if (cosmeticType === "crown") return cosmetics.crowns;
+      return Object.values(cosmetics.effects ?? {}).reduce<
+        Record<string, { priceHard?: number; priceSoft?: number }>
+      >((all, group) => Object.assign(all, group), {});
+    })();
     const item = collection?.[cosmeticName];
     if (!item) {
       res.status(404).json({ error: "unknown_cosmetic" });
