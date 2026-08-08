@@ -16,9 +16,43 @@ const JwksSchema = z.object({
     .min(1),
 });
 
+const OPENBACK_PRODUCTION_HOSTNAME = "openback.servegame.com";
+
+function hostnameFromOrigin(value: string | undefined): string {
+  if (!value) return "";
+  try {
+    return new URL(
+      value.includes("://") ? value : `https://${value}`,
+    ).hostname.toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+export function resolveServerGameEnv(
+  value: string | undefined,
+  domain: string | undefined,
+  publicOrigin: string | undefined,
+): GameEnv {
+  const configured = parseGameEnv(value);
+  if (
+    configured === GameEnv.Dev &&
+    [hostnameFromOrigin(domain), hostnameFromOrigin(publicOrigin)].includes(
+      OPENBACK_PRODUCTION_HOSTNAME,
+    )
+  ) {
+    return GameEnv.Prod;
+  }
+  return configured;
+}
+
 export class ServerEnv {
   private static readonly brandedOrigin = "https://openback.servegame.com";
-  private static readonly gameEnv: GameEnv = parseGameEnv(process.env.GAME_ENV);
+  private static readonly gameEnv: GameEnv = resolveServerGameEnv(
+    process.env.GAME_ENV,
+    process.env.DOMAIN,
+    process.env.PUBLIC_ORIGIN ?? process.env.AUTH_ORIGIN,
+  );
   private static publicKey: JWK | null = null;
 
   // Values that also flow to the client via index.html, but on the server
@@ -232,6 +266,12 @@ export class ServerEnv {
     const v = process.env.COSMETICS_BASE_URL;
     if (v) return v.replace(/\/+$/, "");
     return "";
+  }
+  // Purchased bot tribe names require an explicit OpenBack-compatible
+  // service. Leave this empty to use the built-in organic tribe names without
+  // making a doomed request before every public match.
+  static customTribesUrl(): string {
+    return (process.env.CUSTOM_TRIBES_URL ?? "").replace(/\/+$/, "");
   }
   // Matchmaking API base URL. OpenBack's matchmaking runs in the master
   // process, so workers poll it over the loopback interface by default. Set

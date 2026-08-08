@@ -9,7 +9,7 @@ import * as dotenv from "dotenv";
 import winston from "winston";
 import { getOtelResource } from "./OtelResource";
 import { ServerEnv } from "./ServerEnv";
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const resource = getOtelResource();
 
@@ -33,9 +33,7 @@ if (ServerEnv.otelEnabled()) {
   // Set as the global logger provider
   logsAPI.logs.setGlobalLoggerProvider(loggerProvider);
 } else {
-  console.log(
-    "No OTLP endpoint and credentials provided, remote logging disabled",
-  );
+  // Local console logging remains active; remote export is simply disabled.
 }
 
 // Custom format to add severity tag based on log level
@@ -55,7 +53,7 @@ const logger = winston.createLogger({
     winston.format.json(),
   ),
   defaultMeta: {
-    service: "openfront",
+    service: "openback",
     environment: ServerEnv.gameEnvName(),
   },
   transports: [

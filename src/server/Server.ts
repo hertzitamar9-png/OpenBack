@@ -2,7 +2,7 @@ import * as dotenv from "dotenv";
 import cluster from "node:cluster";
 
 // Load environment variables before we read configuration values derived from them.
-dotenv.config();
+dotenv.config({ quiet: true });
 
 // Main entry point of the application
 async function main() {

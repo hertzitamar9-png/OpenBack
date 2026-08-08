@@ -1,17 +1,27 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fetchCustomTribes } from "../../src/server/CustomTribes";
-
-// fetchCustomTribes resolves its endpoint from ServerEnv.jwtIssuer(), which
-// throws if DOMAIN is unset.
-process.env.DOMAIN ??= "localhost";
 
 function jsonResponse(body: unknown, status = 200) {
   return { ok: status < 300, status, json: async () => body };
 }
 
 describe("fetchCustomTribes", () => {
+  beforeEach(() => {
+    vi.stubEnv("CUSTOM_TRIBES_URL", "https://tribes.example.test");
+  });
+
   afterEach(() => {
+    vi.unstubAllEnvs();
     vi.unstubAllGlobals();
+  });
+
+  it("uses organic names without a configured tribe service", async () => {
+    vi.stubEnv("CUSTOM_TRIBES_URL", "");
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchCustomTribes([])).resolves.toEqual([]);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("posts the lobby players and returns the tribes", async () => {
@@ -29,7 +39,7 @@ describe("fetchCustomTribes", () => {
     ]);
 
     const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toContain("/custom_tribes");
+    expect(url).toBe("https://tribes.example.test/custom_tribes");
     expect(init.headers["x-api-key"]).toBeDefined();
     expect(JSON.parse(init.body)).toEqual({ players });
   });

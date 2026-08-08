@@ -5,7 +5,7 @@ import { startMaster } from "./Master";
 import { ServerEnv } from "./ServerEnv";
 import { startWorker } from "./Worker";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 // Deno Deploy identifies revisions itself, while the existing server expects a
 // commit label for diagnostics and commit.txt.

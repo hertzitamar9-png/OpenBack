@@ -8,9 +8,11 @@ import { GameManager } from "./GameManager";
 import { getOtelResource, getPromLabels } from "./OtelResource";
 import { ServerEnv } from "./ServerEnv";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 export function initWorkerMetrics(gameManager: GameManager): void {
+  if (!ServerEnv.otelEnabled()) return;
+
   // Create resource with worker information
   const resource = getOtelResource();
 
@@ -43,25 +45,25 @@ export function initWorkerMetrics(gameManager: GameManager): void {
 
   // Create observable gauges
   const activeGamesGauge = meter.createObservableGauge(
-    "openfront.active_games.gauge",
+    "openback.active_games.gauge",
     {
       description: "Number of active games on this worker",
     },
   );
 
   const connectedClientsGauge = meter.createObservableGauge(
-    "openfront.connected_clients.gauge",
+    "openback.connected_clients.gauge",
     {
       description: "Number of connected clients on this worker",
     },
   );
 
-  const desyncsGauge = meter.createObservableGauge("openfront.desyncs.gauge", {
+  const desyncsGauge = meter.createObservableGauge("openback.desyncs.gauge", {
     description: "Number of detected desyncs on active games on this worker",
   });
 
   const memoryUsageGauge = meter.createObservableGauge(
-    "openfront.memory_usage.bytes",
+    "openback.memory_usage.bytes",
     {
       description: "Current memory usage of the worker process in bytes",
     },

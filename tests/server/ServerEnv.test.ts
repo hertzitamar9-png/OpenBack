@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { ServerEnv } from "../../src/server/ServerEnv";
+import { GameEnv } from "../../src/core/configuration/Config";
+import { resolveServerGameEnv, ServerEnv } from "../../src/server/ServerEnv";
 
 describe("ServerEnv.numWorkers", () => {
   afterEach(() => {
@@ -134,5 +135,32 @@ describe("ServerEnv.allowedFlares", () => {
   test("trims whitespace and drops empties", () => {
     vi.stubEnv("ALLOWED_FLARES", " admin , , beta ");
     expect(ServerEnv.allowedFlares()).toEqual(["admin", "beta"]);
+  });
+});
+
+describe("resolveServerGameEnv", () => {
+  test("treats the branded public site as production", () => {
+    expect(
+      resolveServerGameEnv(
+        "dev",
+        "openback.servegame.com",
+        "https://openback.servegame.com",
+      ),
+    ).toBe(GameEnv.Prod);
+  });
+
+  test("keeps localhost development mode", () => {
+    expect(
+      resolveServerGameEnv("dev", "localhost", "http://localhost:9000"),
+    ).toBe(GameEnv.Dev);
+  });
+
+  test("preserves explicit staging and production modes", () => {
+    expect(resolveServerGameEnv("staging", undefined, undefined)).toBe(
+      GameEnv.Preprod,
+    );
+    expect(resolveServerGameEnv("prod", undefined, undefined)).toBe(
+      GameEnv.Prod,
+    );
   });
 });

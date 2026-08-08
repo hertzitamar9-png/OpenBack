@@ -1,3 +1,11 @@
+## OpenBack v0.34.91 - Clean Production Matches
+
+- Removed the failed custom-tribe network request that ran before every public match when no compatible tribe service was configured, eliminating repeated 404 warnings and unnecessary startup work.
+- Corrected production identity so the live OpenBack service, workers, and optional telemetry no longer identify themselves as a development OpenFront server.
+- Disabled unused remote telemetry work cleanly when no collector is configured and reduced deployment noise without changing gameplay or visual quality.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.90 - Reliable Artwork
 
 - Fixed broken flag thumbnails, Help illustrations, icons, map previews, and other bundled images after deployments or in older mobile browser tabs.
