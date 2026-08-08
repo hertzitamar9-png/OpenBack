@@ -1,1 +1,8 @@
-[]
+[
+  {
+    "id": "openback-news-home",
+    "title": "OpenBack News",
+    "description": "Announcements, compatibility notices, and important updates now appear only inside the News page.",
+    "type": "announcement"
+  }
+]

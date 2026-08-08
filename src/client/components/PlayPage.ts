@@ -3,8 +3,6 @@ import { customElement } from "lit/decorators.js";
 import { assetUrl } from "../../core/AssetUrls";
 import { crazyGamesSDK } from "../CrazyGamesSDK";
 import "./CosmeticBackground";
-import "./NewsBox";
-import "./SteamWishlist";
 import "./StreamingNow";
 
 @customElement("play-page")
@@ -58,9 +56,9 @@ export class PlayPage extends LitElement {
               class="col-start-2 flex items-center justify-center text-malibu-blue min-w-0"
             >
               <img
-                src=${assetUrl("images/OpenFrontLogo.svg")}
-                alt="OpenFront"
-                class="h-full w-auto"
+                src=${assetUrl("images/OpenBackLogo.svg")}
+                alt="OpenBack"
+                class="block h-7 max-w-[9rem] w-auto object-contain"
               />
             </div>
 
@@ -116,10 +114,9 @@ export class PlayPage extends LitElement {
             class="lg:hidden h-[calc(env(safe-area-inset-top)+56px)] -mb-4"
           ></div>
 
-          <!-- Left column: news banner + identity row, stacked tight. -->
-          <div class="flex flex-col gap-2 min-w-0">
-            <news-box></news-box>
-
+          <!-- Announcements stay on the News page so gameplay controls never
+               move when a new warning or release notice arrives. -->
+          <div class="flex flex-col min-w-0">
             <!-- Identity row: flag + tag/username + skin in one line. Flag sits before the
                  tag (where it shows in-game), skin at the end; both preview the current
                  selection. Replaces the old separate SELECT SKIN / SELECT FLAG buttons. -->
@@ -138,7 +135,7 @@ export class PlayPage extends LitElement {
               >
                 <flag-input
                   show-select-label
-                  class="shrink-0 h-full max-h-[52px] aspect-square"
+                  class="shrink-0 h-11 w-11 sm:h-full sm:w-auto sm:max-h-[52px] aspect-square"
                 ></flag-input>
                 <username-input
                   class="flex-1 min-w-0 h-10 sm:h-[50px]"
@@ -147,7 +144,7 @@ export class PlayPage extends LitElement {
                 <cosmetics-input
                   id="cosmetics-input-mobile"
                   show-select-label
-                  class="no-crazygames shrink-0 h-full max-h-[52px] aspect-square rounded-lg [box-shadow:0_3px_6px_#00000099,0_1px_2px_#000000cc]"
+                  class="no-crazygames shrink-0 h-11 max-w-11 sm:h-full sm:max-w-none sm:max-h-[52px] aspect-square rounded-lg [box-shadow:0_3px_6px_#00000099,0_1px_2px_#000000cc]"
                 ></cosmetics-input>
               </div>
             </div>
@@ -161,12 +158,6 @@ export class PlayPage extends LitElement {
         </div>
 
         <game-mode-selector></game-mode-selector>
-
-        <!-- Desktop gets the compact footer button instead. -->
-        <steam-wishlist
-          campaign="home_mobile"
-          class="block px-2 pb-4 lg:hidden"
-        ></steam-wishlist>
       </div>
     `;
   }

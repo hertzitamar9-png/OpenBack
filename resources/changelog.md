@@ -1,3 +1,12 @@
+## OpenBack v0.34.87 - Clean Mobile Home
+
+- Removed homepage announcement and warning banners and moved compatibility notices and important announcements into the dedicated News page.
+- Removed the oversized decorative OB background that overlapped the home controls during startup and corrected the mobile header to use the real OpenBack logo.
+- Rebuilt phone lobby browsing as a compact swipeable carousel, tightened the identity and action controls, and wrapped the compact footer cleanly while preserving access to legal pages and language selection.
+- Removed the unrelated mobile store promotion from the OpenBack home screen so the first view stays focused on playing.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.86 - Anchored 3D Battlefield
 
 - Locked 3D terrain geometry to the world so hills and coastlines no longer reshape or swim when the camera moves.

@@ -129,7 +129,9 @@ export class GameModeSelector extends LitElement {
     const special = this.lobbies?.games?.["special"]?.[0];
 
     return html`
-      <div class="flex flex-col gap-4 w-full px-4 sm:px-0 mx-auto pb-4 sm:pb-0">
+      <div
+        class="flex flex-col gap-3 sm:gap-4 w-full px-3 sm:px-0 mx-auto pb-3 sm:pb-0"
+      >
         <!-- Solo: mobile only, top -->
         <div class="sm:hidden h-14">
           ${this.renderSmallActionCard(
@@ -139,7 +141,7 @@ export class GameModeSelector extends LitElement {
           )}
         </div>
         <!-- Create/ranked/join: mobile only, below solo -->
-        <div class="sm:hidden grid grid-cols-3 gap-4 h-14">
+        <div class="sm:hidden grid grid-cols-3 gap-2 h-14">
           ${this.renderSmallActionCard(
             translateText("main.create"),
             this.openHostLobby,
@@ -195,18 +197,32 @@ export class GameModeSelector extends LitElement {
                   : nothing}
               </div>
 
-              <!-- Mobile: special, ffa, teams inline -->
-              <div class="sm:hidden">
-                ${special ? this.renderSpecialLobbyCard(special) : nothing}
-              </div>
-              <div class="sm:hidden">
-                ${ffa
-                  ? this.renderLobbyCard(ffa, this.getLobbyTitle(ffa))
+              <!-- Phones use one snap carousel instead of a tall stack. The
+                   next card peeks in at the edge to make horizontal swiping
+                   discoverable without covering the footer. -->
+              <div
+                class="sm:hidden flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 -mx-1 px-1"
+              >
+                ${special
+                  ? html`<div
+                      class="shrink-0 w-[calc(100vw-3.25rem)] max-w-[25rem] snap-center"
+                    >
+                      ${this.renderSpecialLobbyCard(special)}
+                    </div>`
                   : nothing}
-              </div>
-              <div class="sm:hidden">
+                ${ffa
+                  ? html`<div
+                      class="shrink-0 w-[calc(100vw-3.25rem)] max-w-[25rem] snap-center"
+                    >
+                      ${this.renderLobbyCard(ffa, this.getLobbyTitle(ffa))}
+                    </div>`
+                  : nothing}
                 ${teams
-                  ? this.renderLobbyCard(teams, this.getLobbyTitle(teams))
+                  ? html`<div
+                      class="shrink-0 w-[calc(100vw-3.25rem)] max-w-[25rem] snap-center"
+                    >
+                      ${this.renderLobbyCard(teams, this.getLobbyTitle(teams))}
+                    </div>`
                   : nothing}
               </div>
             </div>`}
@@ -287,7 +303,7 @@ export class GameModeSelector extends LitElement {
       <button
         @click=${onClick}
         ?disabled=${!this.inputValid}
-        class="relative flex items-center justify-center w-full h-full rounded-lg ${bgClass} transition-all duration-200 text-sm lg:text-base font-medium text-white uppercase tracking-wider text-center ${!this
+        class="relative flex items-center justify-center w-full h-full rounded-lg px-1 ${bgClass} transition-all duration-200 text-[11px] leading-tight sm:text-sm lg:text-base font-semibold text-white uppercase tracking-[0.06em] sm:tracking-wider text-center ${!this
           .inputValid
           ? "opacity-50 cursor-not-allowed pointer-events-none"
           : ""}"

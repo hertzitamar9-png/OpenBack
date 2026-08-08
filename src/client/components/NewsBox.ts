@@ -32,6 +32,21 @@ const typeLabelKeys: Record<string, string> = {
   warning: "news_box.warning",
 };
 
+const typeLabelFallbacks: Record<string, string> = {
+  tournament: "Tournament",
+  tutorial: "Tutorial",
+  announcement: "News",
+  warning: "Warning",
+};
+
+function typeLabel(type: string): string {
+  const key = typeLabelKeys[type] ?? typeLabelKeys.announcement;
+  const translated = translateText(key);
+  return translated === key
+    ? (typeLabelFallbacks[type] ?? typeLabelFallbacks.announcement)
+    : translated;
+}
+
 const typeLabelColors: Record<string, string> = {
   tournament: "bg-amber-500/20 text-amber-300",
   tutorial: "bg-sky-500/20 text-sky-300",
@@ -122,9 +137,7 @@ export class NewsBox extends LitElement {
             class="shrink-0 text-[10px] font-bold tracking-wider px-2 py-0.5 rounded ${typeLabelColors[
               item.type
             ] ?? typeLabelColors["announcement"]}"
-            >${translateText(
-              typeLabelKeys[item.type] ?? typeLabelKeys["announcement"],
-            )}</span
+            >${typeLabel(item.type)}</span
           >
           <div class="flex-1 min-w-0">
             ${item.url

@@ -3,6 +3,7 @@ import { customElement, property } from "lit/decorators.js";
 import { translateText } from "../client/Utils";
 import { assetUrl } from "../core/AssetUrls";
 import { BaseModal } from "./components/BaseModal";
+import "./components/NewsBox";
 import { modalHeader } from "./components/ui/ModalHeader";
 import { renderMarkdown } from "./Markdown";
 import { normalizeNewsMarkdown } from "./NewsMarkdown";
@@ -49,6 +50,9 @@ export class NewsModal extends BaseModal {
 
   protected renderBody() {
     return html`
+      <div class="px-4 pt-3 sm:px-6">
+        <news-box class="block"></news-box>
+      </div>
       <div
         class="prose prose-invert prose-sm max-w-none px-6 py-3
           [&_a]:text-blue-400 [&_a:hover]:text-blue-300 transition-colors
