@@ -10,8 +10,6 @@ import {
   MapInfo,
   maps,
 } from "../../../core/game/Game";
-import { getLastUserMe } from "../../Api";
-import { hasLifetimeAccess, requireLifetimeAccess } from "../../LifetimeAccess";
 import { translateText } from "../../Utils";
 import "./MapDisplay";
 import { getFavoriteMaps, starIcon, toggleFavoriteMap } from "./MapFavorites";
@@ -46,41 +44,16 @@ export class MapPicker extends LitElement {
   @state() private activeTab: MapTab = "featured";
   @state() private expandedCategories: Set<string> = new Set();
   @state() private favorites: GameMapType[] = getFavoriteMaps();
-  @state() private lifetimeAccess = hasLifetimeAccess(getLastUserMe());
 
   createRenderRoot() {
     return this;
   }
 
-  connectedCallback() {
-    super.connectedCallback();
-    document.addEventListener("userMeResponse", this.onUserMe as EventListener);
-  }
-
-  disconnectedCallback() {
-    document.removeEventListener(
-      "userMeResponse",
-      this.onUserMe as EventListener,
-    );
-    super.disconnectedCallback();
-  }
-
-  private onUserMe = (event: CustomEvent) => {
-    this.lifetimeAccess = hasLifetimeAccess(event.detail);
-  };
-
   private handleToggleFavorite(mapValue: GameMapType) {
     this.favorites = toggleFavoriteMap(mapValue);
   }
 
-  private async handleMapSelection(mapValue: GameMapType) {
-    const map = maps.find((candidate) => candidate.type === mapValue);
-    if (
-      map?.categories.includes("frootz") &&
-      !(await requireLifetimeAccess("frootz"))
-    ) {
-      return;
-    }
+  private handleMapSelection(mapValue: GameMapType) {
     this.onSelectMap?.(mapValue);
   }
 
@@ -128,7 +101,6 @@ export class MapPicker extends LitElement {
   }
 
   private renderMapCard(map: MapInfo) {
-    const locked = map.categories.includes("frootz") && !this.lifetimeAccess;
     return html`
       <div
         @click=${() => this.handleMapSelection(map.type)}
@@ -143,16 +115,6 @@ export class MapPicker extends LitElement {
           .onToggleFavorite=${() => this.handleToggleFavorite(map.type)}
           .translation=${translateText(map.translationKey)}
         ></map-display>
-        ${locked
-          ? html`<div
-              class="pointer-events-none absolute inset-0 flex items-center justify-center rounded-xl bg-black/55"
-            >
-              <span
-                class="rounded-full border border-aquarius/50 bg-black/80 px-3 py-1 text-xs font-black uppercase tracking-wider text-aquarius"
-                >Lifetime Access</span
-              >
-            </div>`
-          : null}
       </div>
     `;
   }

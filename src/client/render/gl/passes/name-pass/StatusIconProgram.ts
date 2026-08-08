@@ -42,6 +42,7 @@ export class StatusIconProgram {
   private uNameScaleCap: WebGLUniformLocation;
   private uStatusRowOffset: WebGLUniformLocation;
   private uFadeOwnerID: WebGLUniformLocation;
+  private uHighlightOwnerID: WebGLUniformLocation;
   private uHoverFadeAlpha: WebGLUniformLocation;
   private uStatusOutlinePx: WebGLUniformLocation;
 
@@ -121,6 +122,10 @@ export class StatusIconProgram {
       "uStatusRowOffset",
     )!;
     this.uFadeOwnerID = gl.getUniformLocation(this.program, "uFadeOwnerID")!;
+    this.uHighlightOwnerID = gl.getUniformLocation(
+      this.program,
+      "uHighlightOwnerID",
+    )!;
     this.uHoverFadeAlpha = gl.getUniformLocation(
       this.program,
       "uHoverFadeAlpha",
@@ -161,6 +166,7 @@ export class StatusIconProgram {
     settings: RenderSettings,
     vao: WebGLVertexArrayObject,
     fadeOwnerID: number,
+    highlightOwnerID: number,
     screenFacing = false,
   ): void {
     if (!this.atlasReady) return;
@@ -178,6 +184,7 @@ export class StatusIconProgram {
     gl.uniform1f(this.uNameScaleCap, ns.nameScaleCap);
     gl.uniform1f(this.uStatusRowOffset, ns.statusRowOffset);
     gl.uniform1f(this.uFadeOwnerID, fadeOwnerID);
+    gl.uniform1f(this.uHighlightOwnerID, highlightOwnerID);
     gl.uniform1f(this.uHoverFadeAlpha, ns.hoverFadeAlpha);
     gl.uniform1f(this.uStatusOutlinePx, ns.statusOutlineWidth);
 

@@ -98,7 +98,30 @@ const wrapColors = [
   ["magenta", 320],
 ];
 
-function wrapSvg(familyIndex, hue) {
+const wrapDetails = [
+  '<g fill="url(#b)"><circle cx="34" cy="38" r="8"/><circle cx="82" cy="78" r="13"/><circle cx="196" cy="48" r="17"/><circle cx="222" cy="194" r="10"/></g>',
+  '<g fill="none" stroke="url(#b)" stroke-width="8"><path d="M-20 54l42-28 42 28 42-28 42 28 42-28 86 58"/><path d="M-20 194l42-28 42 28 42-28 42 28 42-28 86 58"/></g>',
+  '<g fill="none" stroke="url(#b)" stroke-width="5" opacity=".8"><path d="M0 32h256M0 72h256M0 112h256M0 152h256M0 192h256M0 232h256"/></g>',
+  '<g fill="url(#b)"><path d="M34 22l12 24 27 4-20 19 5 27-24-13-24 13 5-27-20-19 27-4z"/><path d="M204 158l10 20 22 3-16 16 4 22-20-11-20 11 4-22-16-16 22-3z"/></g>',
+  '<g fill="none" stroke="url(#b)" stroke-width="7"><circle cx="48" cy="202" r="34"/><circle cx="206" cy="48" r="25"/><circle cx="206" cy="48" r="10"/></g>',
+  '<g fill="url(#b)"><path d="M0 18l64 22-64 22zM256 92l-84 28 84 28zM0 186l92 30-92 30z"/></g>',
+  '<g fill="none" stroke="url(#b)" stroke-width="9"><path d="M-12 238L86 140l34 34L274 20"/><path d="M-16 104L54 34l30 30 72-72"/></g>',
+  '<g fill="url(#b)"><path d="M22 18h34v34H22zM88 78h22v22H88zM178 24h54v54h-54zM194 170h30v30h-30zM42 190h46v46H42z"/></g>',
+  '<g fill="none" stroke="url(#b)" stroke-width="6"><path d="M-20 230L230-20M18 276L276 18M-70 180L180-70"/></g>',
+  '<g fill="url(#b)"><path d="M128 8l18 44 46-18-18 46 44 18-44 18 18 46-46-18-18 44-18-44-46 18 18-46-44-18 44-18-18-46 46 18z"/></g>',
+];
+
+function wrapRarity(familyIndex, colorIndex) {
+  const score =
+    (familyIndex * 11 + colorIndex * 7 + familyIndex * colorIndex) % 20;
+  if (score >= 18) return "legendary";
+  if (score >= 14) return "epic";
+  if (score >= 9) return "rare";
+  if (score >= 4) return "uncommon";
+  return "common";
+}
+
+function wrapSvg(familyIndex, colorIndex, hue) {
   const accent = (hue + 38 + familyIndex * 7) % 360;
   const dark = (hue + 205) % 360;
   const transforms = [
@@ -113,7 +136,53 @@ function wrapSvg(familyIndex, hue) {
     '<path d="M0 0h86l42 72L170 0h86l-74 128 74 128h-86l-42-72-42 72H0l74-128z" fill="url(#a)"/>',
     '<path d="M128 128m-118 0a118 118 0 1 0 236 0a88 88 0 1 1-176 0 58 58 0 1 0 116 0 28 28 0 1 1-56 0" fill="none" stroke="url(#a)" stroke-width="24"/>',
   ];
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><defs><linearGradient id="g" x2="1" y2="1"><stop stop-color="hsl(${dark} 38% 10%)"/><stop offset="1" stop-color="hsl(${hue} 65% 23%)"/></linearGradient><linearGradient id="a"><stop stop-color="hsl(${hue} 96% 62%)"/><stop offset="1" stop-color="hsl(${accent} 94% 54%)"/></linearGradient><linearGradient id="b" x2="1" y2="1"><stop stop-color="hsl(${accent} 100% 76%)" stop-opacity=".92"/><stop offset="1" stop-color="hsl(${hue} 96% 48%)" stop-opacity=".2"/></linearGradient></defs><rect width="256" height="256" fill="url(#g)"/>${transforms[familyIndex]}<path d="M0 224L224 0h32v32L32 256H0z" fill="#fff" opacity=".08"/></svg>`;
+  const rotation = ((colorIndex * 17 + familyIndex * 9) % 31) - 15;
+  const scale = 0.9 + ((colorIndex * 3 + familyIndex) % 5) * 0.035;
+  const rarity = wrapRarity(familyIndex, colorIndex);
+  const shineOpacity = {
+    common: 0.05,
+    uncommon: 0.07,
+    rare: 0.09,
+    epic: 0.12,
+    legendary: 0.16,
+  }[rarity];
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><defs><linearGradient id="g" x2="1" y2="1"><stop stop-color="hsl(${dark} 38% 10%)"/><stop offset="1" stop-color="hsl(${hue} 65% 23%)"/></linearGradient><linearGradient id="a" x2="${colorIndex % 2}" y2="${(colorIndex + 1) % 2}"><stop stop-color="hsl(${hue} 96% 62%)"/><stop offset="1" stop-color="hsl(${accent} 94% 54%)"/></linearGradient><linearGradient id="b" x2="1" y2="1"><stop stop-color="hsl(${accent} 100% 76%)" stop-opacity=".92"/><stop offset="1" stop-color="hsl(${hue} 96% 48%)" stop-opacity=".2"/></linearGradient></defs><rect width="256" height="256" fill="url(#g)"/><g transform="translate(128 128) rotate(${rotation}) scale(${scale}) translate(-128 -128)">${transforms[familyIndex]}</g>${wrapDetails[colorIndex]}<path d="M0 224L224 0h32v32L32 256H0z" fill="#fff" opacity="${shineOpacity}"/></svg>`;
+}
+
+function replaceWraps(cosmetics) {
+  cosmetics.skins ??= {};
+  for (const key of Object.keys(cosmetics.skins)) {
+    if (key.startsWith("wrap_")) delete cosmetics.skins[key];
+  }
+  const prices = {
+    common: 300,
+    uncommon: 500,
+    rare: 750,
+    epic: 1000,
+    legendary: 1500,
+  };
+  for (const [familyIndex, family] of wrapFamilies.entries()) {
+    for (const [colorIndex, [color, hue]] of wrapColors.entries()) {
+      const name = `wrap_${family}_${color}`;
+      const rarity = wrapRarity(familyIndex, colorIndex);
+      cosmetics.skins[name] = {
+        name,
+        url: svgData(wrapSvg(familyIndex, colorIndex, hue)),
+        product: null,
+        priceSoft: prices[rarity],
+        rarity,
+        artist: "OpenBack",
+      };
+    }
+  }
+}
+
+if (process.argv.includes("--wraps-only")) {
+  const cosmetics = JSON.parse(await readFile(cosmeticsPath, "utf8"));
+  replaceWraps(cosmetics);
+  await writeFile(cosmeticsPath, `${JSON.stringify(cosmetics, null, 2)}\n`);
+  console.log("Regenerated 100 individually composed OpenBack wrap skins.");
+  process.exit(0);
 }
 
 const response = await fetch(commonsApi, {
@@ -167,9 +236,6 @@ cosmetics.skins ??= {};
 for (const key of Object.keys(cosmetics.flags)) {
   if (key.startsWith("fictional_")) delete cosmetics.flags[key];
 }
-for (const key of Object.keys(cosmetics.skins)) {
-  if (key.startsWith("wrap_")) delete cosmetics.skins[key];
-}
 
 const usedFlagNames = new Set(Object.keys(cosmetics.flags));
 const creditRows = [];
@@ -203,20 +269,7 @@ for (const [index, page] of pages.entries()) {
   );
 }
 
-for (const [familyIndex, family] of wrapFamilies.entries()) {
-  for (const [colorIndex, [color, hue]] of wrapColors.entries()) {
-    const name = `wrap_${family}_${color}`;
-    const index = familyIndex * wrapColors.length + colorIndex;
-    cosmetics.skins[name] = {
-      name,
-      url: svgData(wrapSvg(familyIndex, hue)),
-      product: null,
-      priceSoft: [300, 500, 750, 1000, 1500][index % 5],
-      rarity: rarityFor(index),
-      artist: "OpenBack",
-    };
-  }
-}
+replaceWraps(cosmetics);
 
 await writeFile(cosmeticsPath, `${JSON.stringify(cosmetics, null, 2)}\n`);
 

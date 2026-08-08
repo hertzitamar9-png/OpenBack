@@ -1,8 +1,8 @@
 [
   {
-    "id": "openback-news-home",
-    "title": "OpenBack News",
-    "description": "Announcements, compatibility notices, and important updates now appear only inside the News page.",
+    "id": "openback-news-summary",
+    "title": "Inside News",
+    "description": "Game updates, new features, balance changes, visual improvements, and important fixes.",
     "type": "announcement"
   }
 ]

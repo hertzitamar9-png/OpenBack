@@ -17,6 +17,8 @@ vi.mock("../../src/client/Utils", () => ({
       "leaderboard_modal.title": "Leaderboard",
       "leaderboard_modal.ranked_tab": "Ranked",
       "leaderboard_modal.ranked_2v2_tab": "2v2 Ranked",
+      "leaderboard_modal.ranked_3v3_tab": "3v3 Ranked",
+      "leaderboard_modal.ranked_4v4_tab": "4v4 Ranked",
       "leaderboard_modal.ranked_no_stats": "No ranked games on this ladder",
       "leaderboard_modal.clans_tab": "Clans",
       "leaderboard_modal.refresh_time": "Refreshed every 1 hour",
@@ -117,7 +119,7 @@ beforeEach(() => {
         return jsonRes({ start: "...", end: "...", clans: [] });
       }
       if (url.includes("/leaderboard/ranked")) {
-        return jsonRes({ "1v1": [], "2v2": [] });
+        return jsonRes({ "1v1": [], "2v2": [], "3v3": [], "4v4": [] });
       }
       if (url.includes("/leaderboard/tribes")) {
         return jsonRes({
@@ -160,7 +162,7 @@ describe("LeaderboardModal", () => {
       currentUserEntry?: { playerId: string } | null;
       showStickyUser: boolean;
     } | null;
-  // The list element is shared by both ladder tabs; the modal drives which
+  // The list element is shared by all ladder tabs; the modal drives which
   // ladder it shows off the active tab.
   const showLadder = async (tab: string) => {
     (modal as unknown as { activeTab: string }).activeTab = tab;
@@ -639,6 +641,39 @@ describe("LeaderboardModal", () => {
       );
       await modal.updateComplete;
       expect(getPlayerList()!.rankedType).toBe(RankedType.TwoVTwo);
+    });
+
+    it.each([
+      ["players3v3", RankedType.ThreeVThree],
+      ["players4v4", RankedType.FourVFour],
+    ])("selects the %s ladder from its tab", async (tabKey, rankedType) => {
+      (global.fetch as ReturnType<typeof vi.fn>).mockImplementation(
+        async (input: any) => {
+          const url =
+            typeof input === "string" ? input : (input?.url ?? String(input));
+          if (url.includes("/leaderboard/ranked")) {
+            return jsonRes({ "1v1": [], "2v2": [], "3v3": [], "4v4": [] });
+          }
+          return jsonRes({}, false, 404);
+        },
+      );
+
+      modal.inline = true;
+      await modal.updateComplete;
+      const oModal = modal.querySelector("o-modal");
+      await (oModal as unknown as { updateComplete: Promise<unknown> })
+        .updateComplete;
+      const tab = oModal!.shadowRoot!.querySelector(
+        `button[role="tab"][data-key="${tabKey}"]`,
+      );
+      expect(tab).toBeTruthy();
+
+      tab!.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      expect((modal as unknown as { activeTab: string }).activeTab).toBe(
+        tabKey,
+      );
+      await modal.updateComplete;
+      expect(getPlayerList()!.rankedType).toBe(rankedType);
     });
   });
 

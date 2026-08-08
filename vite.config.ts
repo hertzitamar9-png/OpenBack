@@ -226,6 +226,10 @@ export default defineConfig(({ mode }) => {
       // Full coverage instrumentation can make the largest deterministic map
       // fixtures briefly exceed Vitest's 5 s default on busy CI runners.
       testTimeout: 20_000,
+      // Server suites import the shared auth stack in beforeAll hooks. Under a
+      // full parallel run that transform can exceed Vitest's 10 s hook default
+      // even though the isolated setup completes in under a second.
+      hookTimeout: 20_000,
     },
     root: "./",
     base: "/",

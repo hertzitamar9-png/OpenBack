@@ -25,6 +25,10 @@ describe("Footer service request", () => {
     expect(composeUrl.searchParams.get("to")).toBe(
       "openback.servegame@gmail.com",
     );
+    const body = composeUrl.searchParams.get("body") ?? "";
+    expect(body).toContain("problem or question");
+    expect(body).toContain("expected to happen");
+    expect(body).not.toMatch(/payment|purchase|billing/i);
     expect(contact!.target).toBe("_blank");
     expect(contact!.rel).toContain("noopener");
   });

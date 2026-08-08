@@ -64,7 +64,7 @@ export class Footer extends LitElement {
             data-i18n="main.privacy_policy"
           ></button>
           <a
-            href="https://mail.google.com/mail/?view=cm&fs=1&to=openback.servegame%40gmail.com&su=OpenBack%20Service%20Request&body=Please%20describe%20what%20happened%2C%20the%20email%20used%20for%20the%20purchase%2C%20and%20any%20payment%20reference%20you%20have.%0A%0ANever%20send%20your%20password%20or%20verification%20code."
+            href="https://mail.google.com/mail/?view=cm&fs=1&to=openback.servegame%40gmail.com&su=OpenBack%20Service%20Request&body=Please%20describe%20your%20problem%20or%20question%2C%20what%20you%20expected%20to%20happen%2C%20and%20any%20details%20that%20may%20help%20us%20assist%20you.%0A%0ANever%20send%20your%20password%20or%20verification%20code."
             target="_blank"
             rel="noopener noreferrer"
             class="shrink-0 hover:text-white transition-colors"

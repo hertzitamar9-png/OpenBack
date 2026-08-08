@@ -1066,6 +1066,8 @@
     "player": "Player",
     "rank": "Rank",
     "ranked_2v2_tab": "2v2 Ranked",
+    "ranked_3v3_tab": "3v3 Ranked",
+    "ranked_4v4_tab": "4v4 Ranked",
     "ranked_no_stats": "No ranked games have been played on this ladder yet",
     "ranked_tab": "1v1 Ranked",
     "ratio": "Ratio",
@@ -1372,7 +1374,9 @@
   },
   "news": {
     "load_failed": "Release notes are temporarily unavailable.",
-    "title": "Release Notes"
+    "summary": "Game updates, new features, balance changes, visual improvements, and important fixes.",
+    "title": "Release Notes",
+    "whats_inside": "Inside News"
   },
   "news_box": {
     "dismiss": "Dismiss",

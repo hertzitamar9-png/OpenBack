@@ -3,7 +3,6 @@ import { customElement, property } from "lit/decorators.js";
 import { translateText } from "../client/Utils";
 import { assetUrl } from "../core/AssetUrls";
 import { BaseModal } from "./components/BaseModal";
-import "./components/NewsBox";
 import { modalHeader } from "./components/ui/ModalHeader";
 import { renderMarkdown } from "./Markdown";
 import { normalizeNewsMarkdown } from "./NewsMarkdown";
@@ -51,7 +50,17 @@ export class NewsModal extends BaseModal {
   protected renderBody() {
     return html`
       <div class="px-4 pt-3 sm:px-6">
-        <news-box class="block"></news-box>
+        <div
+          class="rounded-xl border border-white/10 bg-surface px-4 py-3"
+          role="note"
+        >
+          <p class="text-sm font-bold uppercase tracking-wider text-white">
+            ${translateText("news.whats_inside")}
+          </p>
+          <p class="mt-1 text-xs leading-relaxed text-white/60 sm:text-sm">
+            ${translateText("news.summary")}
+          </p>
+        </div>
       </div>
       <div
         class="prose prose-invert prose-sm max-w-none px-6 py-3

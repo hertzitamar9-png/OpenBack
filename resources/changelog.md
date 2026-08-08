@@ -1,3 +1,14 @@
+## OpenBack v0.34.92 - Complete Ranked and Distinct Cosmetics
+
+- Added dedicated 3v3 and 4v4 Ranked leaderboard tabs beside the existing 1v1 and 2v2 ladders, with each mode showing its own ratings and match history.
+- Kept the verified blue check visible for exactly as long as its highlighted player name remains visible at distance.
+- Replaced the dismissible News-page announcement with a permanent compact header explaining the release notes below it.
+- Rebuilt all 100 wrap skins with individually composed geometry, details, orientation, rarity, and matching wallet price instead of repeated recolors of the same design.
+- Refocused Service Requests on general problems, questions, expectations, and useful troubleshooting details.
+- Removed obsolete locked-map presentation so every map category uses the same direct selection behavior.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.91 - Clean Production Matches
 
 - Removed the failed custom-tribe network request that ran before every public match when no compatible tribe service was configured, eliminating repeated 404 warnings and unnecessary startup work.
@@ -66,8 +77,8 @@ Created by **frootz jhklphy**.
 - Split the right mouse gesture cleanly: a normal right-click opens the gameplay menu while a deliberate right-drag orbits the 3D camera.
 - Reworked the 3D terrain into a cleaner tabletop surface with broader smoothing, restrained ordinary relief, clearly elevated impassable ridges, safer camera angles, and a dark classic-style surround without the detached painted horizon.
 - Kept spawn markers as crisp screen-facing circles and synchronized the increased terrain relief across units, structures, world events, and mouse targeting.
-- Removed Lifetime Access from gameplay: multiplayer, Ranked, parties, invite links, public lobbies, and every Frootz map are available without a purchase gate.
-- Made the blue verified-name mark work for signed-in email accounts, proving that the reserved displayed username belongs to that account without requiring a subscription.
+- Kept multiplayer, Ranked, parties, invite links, public lobbies, and every Frootz map directly available from their normal game menus.
+- Made the blue verified-name mark work for signed-in email accounts, proving that the reserved displayed username belongs to that account.
 - Removed the Source and Licenses homepage news banner while retaining the required notices in OpenBack's legal and source pages.
 - Corrected the 3D map's vertical camera basis so geography, labels, models, spawn markers, effects, mouse targeting, and drag movement preserve the same orientation as the 2D battlefield.
 
@@ -75,10 +86,10 @@ Created by **frootz jhklphy**.
 
 ## OpenBack v0.34.83 - Complete OpenBack Store
 
-- Removed the OpenFront merchandise destination and the unsupported empty Packs, Subscriptions, and Merch sections from the Store.
+- Removed the OpenFront merchandise destination and unsupported empty catalog sections from the Store.
 - Made Cosmetics the Store landing section and added six purchasable OpenBack crowns with clear rarity and price progression.
 - Filled every effects category with purchasable OpenBack visuals, including ship wakes, nuclear trails, Atom Bomb, Hydrogen Bomb, and MIRV explosions, animated structures, and warship finishes.
-- Completed currency-purchase support for crowns and effects and replaced blank effect panels with a clear catalog message if a future category has no available items.
+- Completed wallet support for crowns and effects and replaced blank effect panels with a clear catalog message if a future category has no available items.
 - Corrected the local OpenBack API fallback so Store inventory, profiles, and other self-contained services load through the running game instead of an unused legacy port.
 
 Created by **frootz jhklphy**.
@@ -149,7 +160,7 @@ Created by **frootz jhklphy**.
 
 ## OpenBack v0.34.76 - Restart-Safe Player Data
 
-- Made accounts, Lifetime Access purchases, profiles, ranked progress, cosmetics, clans, friends, chats, and completed match history survive normal server restarts.
+- Made accounts, profiles, ranked progress, cosmetics, clans, friends, chats, and completed match history survive normal server restarts.
 - Kept sign-in sessions stable when OpenBack restarts.
 - Saves pending permanent player-data changes before planned maintenance.
 
@@ -246,47 +257,10 @@ Created by **frootz jhklphy**.
 
 Created by **frootz jhklphy**.
 
-## OpenBack v0.34.61 - Reliable Account Images
-
-- Fixed the OpenBack logo on account choice, verification, and Lifetime Access screens.
-
-Created by **frootz jhklphy**.
-
-## OpenBack v0.34.60 - Clear Purchase Sign-In
-
-- Added a clear Log In or Sign Up choice before buying Lifetime Access.
-- Added separate Back and Cancel actions and restored the official circular OpenBack logo throughout the flow.
-- Fixed first-time account access failures.
-
-Created by **frootz jhklphy**.
-
-## OpenBack v0.34.59 - Guided Lifetime Checkout
-
-- Kept Solo play free of purchase prompts.
-- Showed the Lifetime Access explanation only after selecting a locked multiplayer, ranked, party, invite, or Frootz-map feature.
-- Continued checkout automatically after successful account verification.
-
-Created by **frootz jhklphy**.
-
-## OpenBack v0.34.58 - Account-Owned Lifetime Access
-
-- Made Lifetime Access follow the signed-in account across devices.
-- Restored unlocked features and saved progress whenever the same account signs in again.
-
-Created by **frootz jhklphy**.
-
 ## OpenBack v0.34.57 - Service Requests
 
-- Added a Service Request contact beside the footer links for purchase and account problems.
-- Prepared the troubleshooting message while warning players not to share private sign-in information.
-
-Created by **frootz jhklphy**.
-
-## OpenBack v0.34.56 - Lifetime Access
-
-- Kept Solo free and available without an account.
-- Added a one-time Lifetime Access purchase for Multiplayer, Ranked, parties, invite links, and Frootz maps.
-- Added account-based purchase restoration and clear locked-map indicators.
+- Added a Service Request contact beside the footer links for general problems, questions, and account help.
+- Prepared a useful support message while warning players not to share private sign-in information.
 
 Created by **frootz jhklphy**.
 

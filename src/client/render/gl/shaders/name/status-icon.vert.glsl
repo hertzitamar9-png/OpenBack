@@ -31,6 +31,7 @@ uniform float uStatusOutlinePx; // dark-outline radius in atlas texels (0 = off)
 uniform float uStatusRowOffset;  // row Y offset (multiples of uFontBase * nameWorldScale)
 
 uniform float uFadeOwnerID;    // smallID of player whose name plate the cursor is over (0 = none)
+uniform float uHighlightOwnerID; // smallID whose name is forced visible while highlighted
 uniform float uHoverFadeAlpha; // alpha multiplier applied to that player's name plate
 uniform float uAllianceFlashWindowSec; // seconds before expiry the alliance icon flashes (= renewal prompt offset)
 
@@ -162,7 +163,8 @@ void main() {
     ? length(xHForScale.xy / max(0.0001, xHForScale.z) - anchorForScale)
     : length(vec2(uCamera[0][0], uCamera[1][0]));
   float screenSize  = nameWorldScale * uFontBase * cameraScale;
-  if (screenSize < uCullThreshold) {
+  bool nameIsHighlighted = uHighlightOwnerID > 0.0 && pd4.z == uHighlightOwnerID;
+  if (screenSize < uCullThreshold && !(isVerifiedSlot && nameIsHighlighted)) {
     gl_Position = vec4(0.0);
     vUV = vec2(0.0);
     vLocalUV = vec2(0.0);

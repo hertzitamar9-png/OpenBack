@@ -11,14 +11,23 @@ import type { LeaderboardTribeTable } from "./components/leaderboard/Leaderboard
 import { modalHeader } from "./components/ui/ModalHeader";
 import { translateText } from "./Utils";
 
-const TAB_KEYS = ["players", "players2v2", "clans", "tribes"] as const;
+const TAB_KEYS = [
+  "players",
+  "players2v2",
+  "players3v3",
+  "players4v4",
+  "clans",
+  "tribes",
+] as const;
 
 // Tab key -> ladder. "players" predates the 2v2 ladder and stays the 1v1 tab
-// so existing `#modal=leaderboard&tab=players` links keep working. Both tabs
-// share one <leaderboard-player-list>: a page fetch returns both ladders.
+// so existing `#modal=leaderboard&tab=players` links keep working. All ranked
+// tabs share one <leaderboard-player-list>: a page fetch returns every ladder.
 const PLAYER_TABS: Record<string, RankedType> = {
   players: RankedType.OneVOne,
   players2v2: RankedType.TwoVTwo,
+  players3v3: RankedType.ThreeVThree,
+  players4v4: RankedType.FourVFour,
 };
 
 @customElement("leaderboard-modal")
@@ -49,6 +58,14 @@ export class LeaderboardModal extends BaseModal {
           key: "players2v2",
           label: translateText("leaderboard_modal.ranked_2v2_tab"),
         },
+        {
+          key: "players3v3",
+          label: translateText("leaderboard_modal.ranked_3v3_tab"),
+        },
+        {
+          key: "players4v4",
+          label: translateText("leaderboard_modal.ranked_4v4_tab"),
+        },
         { key: "clans", label: translateText("leaderboard_modal.clans_tab") },
         { key: "tribes", label: translateText("leaderboard_modal.tribes_tab") },
       ],
@@ -70,7 +87,7 @@ export class LeaderboardModal extends BaseModal {
   }
 
   protected onTabEnter(): void {
-    // The player list is one element shared by both ladder tabs, so it needs a
+    // The player list is one element shared by every ladder tab, so it needs a
     // ranked type even while another tab is up: keep showing the last one.
     this.lastRankedType =
       this.rankedTypeFor(this.activeTab) ?? this.lastRankedType;

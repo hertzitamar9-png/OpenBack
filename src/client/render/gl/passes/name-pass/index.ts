@@ -827,6 +827,7 @@ export class NamePass {
       this.settings,
       this.vao,
       fadeOwnerID,
+      this.highlightOwnerID,
       screenFacing,
     );
     this.iconProgram.draw(
