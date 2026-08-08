@@ -42,7 +42,8 @@ uniform float uTanHalfFov;
 uniform float uAspect;
 uniform float uTilt;
 uniform float uYaw;
-uniform vec2 uGroundHalfSize;
+uniform vec2 uGroundOrigin;
+uniform vec2 uGroundSpan;
 uniform float uSampleRadius;
 out vec2 vMapUV;
 out float vHeight;
@@ -51,8 +52,8 @@ out float vViewDepth;
 float heightFor(uint b){
   bool land=(b&128u)!=0u;
   float m=float(b&31u);
-  if(land&&m>30.5)return 26.0;
-  if(land)return 0.15+pow(m/30.0,1.18)*22.0;
+  if(land&&m>30.5)return 38.0;
+  if(land)return 0.15+pow(m/30.0,2.0)*31.0;
   return -min(m,10.0)*0.02;
 }
 float sampledHeight(ivec2 p){
@@ -69,19 +70,24 @@ float smoothHeight(vec2 world){
   float h11=sampledHeight(p+ivec2(1,1));
   float center=mix(mix(h00,h10,f.x),mix(h01,h11,f.x),f.y);
   float r=max(1.5,uSampleRadius);
-  // A small cross-filter bridges the land/water step over several geometry
-  // vertices. Coasts remain crisp in the fragment material, while the solid
-  // floor no longer forms a row of hanging triangular teeth.
-  return (center*4.0+
+  // Stable nine-tap relief keeps real mountain structure while removing the
+  // isolated triangular needles that made models and coastlines look torn.
+  float cardinals=
     sampledHeight(ivec2(floor(samplePos+vec2(r,0.0))))+
     sampledHeight(ivec2(floor(samplePos-vec2(r,0.0))))+
     sampledHeight(ivec2(floor(samplePos+vec2(0.0,r))))+
-    sampledHeight(ivec2(floor(samplePos-vec2(0.0,r))))) / 8.0;
+    sampledHeight(ivec2(floor(samplePos-vec2(0.0,r))));
+  float diagonals=
+    sampledHeight(ivec2(floor(samplePos+vec2(r,r))))+
+    sampledHeight(ivec2(floor(samplePos+vec2(r,-r))))+
+    sampledHeight(ivec2(floor(samplePos+vec2(-r,r))))+
+    sampledHeight(ivec2(floor(samplePos-vec2(r,r))));
+  return (center*8.0+cardinals*2.0+diagonals)/20.0;
 }
 void main(){
   // Tessellate around the camera instead of stretching a fixed mesh over the
   // whole world. Zoomed-in ground therefore gains real local geometry.
-  vec2 world=uCenter+(aUV*2.0-1.0)*uGroundHalfSize;
+  vec2 world=uGroundOrigin+aUV*uGroundSpan;
   vec2 mapUV=world/uMapSize;
   bool inside=all(greaterThanEqual(mapUV,vec2(0.0)))&&all(lessThanEqual(mapUV,vec2(1.0)));
   ivec2 tc=ivec2(clamp(floor(world),vec2(0.0),uMapSize-1.0));
@@ -131,8 +137,8 @@ out vec4 outColor;
 
 float heightFor(uint b){
   bool land=(b&128u)!=0u; float m=float(b&31u);
-  if(land&&m>30.5)return 26.0;
-  if(land)return 0.15+pow(m/30.0,1.18)*22.0;
+  if(land&&m>30.5)return 38.0;
+  if(land)return 0.15+pow(m/30.0,2.0)*31.0;
   return -min(m,10.0)*0.02;
 }
 void main(){
@@ -140,11 +146,20 @@ void main(){
   ivec2 size=textureSize(uTerrain,0);
   ivec2 p=ivec2(clamp(floor(vMapUV*uMapSize),vec2(0.0),uMapSize-1.0));
   uint centerByte=inside?texelFetch(uTerrain,p,0).r:10u;
-  vec2 slope=vec2(dFdx(vHeight),dFdy(vHeight));
-  float relief=clamp(length(slope)*0.13,0.0,1.0);
-  float directional=clamp(0.5+(-slope.x-slope.y)*0.055,0.0,1.0);
-  float lightLevel=clamp(0.76+directional*0.25-relief*0.10,0.68,1.10);
-  float altitude=clamp(vHeight/22.0,0.0,1.0);
+  int radius=max(1,int(round(uSampleRadius)));
+  ivec2 left=ivec2(max(0,p.x-radius),p.y);
+  ivec2 right=ivec2(min(size.x-1,p.x+radius),p.y);
+  ivec2 up=ivec2(p.x,max(0,p.y-radius));
+  ivec2 down=ivec2(p.x,min(size.y-1,p.y+radius));
+  float hl=heightFor(texelFetch(uTerrain,left,0).r);
+  float hr=heightFor(texelFetch(uTerrain,right,0).r);
+  float hu=heightFor(texelFetch(uTerrain,up,0).r);
+  float hd=heightFor(texelFetch(uTerrain,down,0).r);
+  vec2 stableSlope=vec2(hl-hr,hu-hd)/max(1.0,float(radius)*2.0);
+  float relief=clamp(length(stableSlope)*0.32,0.0,1.0);
+  float directional=clamp(0.5+dot(stableSlope,vec2(-0.68,-0.42))*0.16,0.0,1.0);
+  float lightLevel=clamp(0.70+directional*0.38-relief*0.08,0.62,1.14);
+  float altitude=clamp(vHeight/31.0,0.0,1.0);
   vec3 lowGround=vec3(0.27,0.43,0.19);
   vec3 highGround=vec3(0.43,0.35,0.23);
   vec3 terrainMaterial=mix(lowGround,highGround,smoothstep(0.18,0.66,altitude));
@@ -164,13 +179,13 @@ void main(){
     color=max(color,max(boardMaterial*0.68,vec3(0.12,0.15,0.09)));
   }
   if((centerByte&128u)!=0u&&owner>0u){
-    ivec2 left=ivec2(max(0,p.x-1),p.y),right=ivec2(min(size.x-1,p.x+1),p.y);
-    ivec2 up=ivec2(p.x,max(0,p.y-1)),down=ivec2(p.x,min(size.y-1,p.y+1));
+    ivec2 ownerLeft=ivec2(max(0,p.x-1),p.y),ownerRight=ivec2(min(size.x-1,p.x+1),p.y);
+    ivec2 ownerUp=ivec2(p.x,max(0,p.y-1)),ownerDown=ivec2(p.x,min(size.y-1,p.y+1));
     vec2 f=fract(vMapUV*uMapSize);
-    bool edge=(f.x<0.10&&(texelFetch(uTileState,left,0).r&4095u)!=owner)||
-              (f.x>0.90&&(texelFetch(uTileState,right,0).r&4095u)!=owner)||
-              (f.y<0.10&&(texelFetch(uTileState,up,0).r&4095u)!=owner)||
-              (f.y>0.90&&(texelFetch(uTileState,down,0).r&4095u)!=owner);
+    bool edge=(f.x<0.10&&(texelFetch(uTileState,ownerLeft,0).r&4095u)!=owner)||
+              (f.x>0.90&&(texelFetch(uTileState,ownerRight,0).r&4095u)!=owner)||
+              (f.y<0.10&&(texelFetch(uTileState,ownerUp,0).r&4095u)!=owner)||
+              (f.y>0.90&&(texelFetch(uTileState,ownerDown,0).r&4095u)!=owner);
     if(edge)color*=0.36;
   }
   uint trailRaw=inside?texelFetch(uTrailState,p,0).r:0u;
@@ -187,6 +202,7 @@ interface TerrainMesh {
   vertexBuffer: WebGLBuffer;
   indexBuffer: WebGLBuffer;
   indexCount: number;
+  segmentsX: number;
   segmentsY: number;
 }
 
@@ -226,14 +242,15 @@ export class ThreeDCompositePass {
         "uTilt",
         "uYaw",
         "uTime",
-        "uGroundHalfSize",
+        "uGroundOrigin",
+        "uGroundSpan",
         "uSampleRadius",
       ].map((name) => [name, gl.getUniformLocation(this.terrainProgram, name)]),
     );
     this.skyVao = createFullscreenQuad(gl);
     // One stable topology avoids visible LOD popping while orbiting or
     // scrolling. Perspective already supplies more local detail when zoomed.
-    this.meshes = [384].map((detail) => this.createMesh(detail));
+    this.meshes = [448].map((detail) => this.createMesh(detail));
     gl.useProgram(this.terrainProgram);
     gl.uniform1i(this.uniforms.uTerrain, 0);
     gl.uniform1i(this.uniforms.uTileState, 1);
@@ -286,6 +303,7 @@ export class ThreeDCompositePass {
       vertexBuffer: vb,
       indexBuffer: ib,
       indexCount: indices.length,
+      segmentsX: sx,
       segmentsY: sy,
     };
   }
@@ -331,13 +349,25 @@ export class ThreeDCompositePass {
     gl.activeTexture(gl.TEXTURE3);
     gl.bindTexture(gl.TEXTURE_2D, this.palette);
     const mesh = this.meshes[0];
-    const groundHalfY = halfVisibleHeight * 2.75;
-    const groundHalfX = groundHalfY * (width / Math.max(1, height));
-    const sampleRadius = Math.max(
-      2,
-      (groundHalfY * 2 * 0.5) / Math.max(1, mesh.segmentsY),
+    const desiredHalfY = halfVisibleHeight * 2.75;
+    const desiredHalfX = desiredHalfY * (width / Math.max(1, height));
+    const desiredStep = Math.max(
+      (desiredHalfX * 2) / Math.max(1, mesh.segmentsX),
+      (desiredHalfY * 2) / Math.max(1, mesh.segmentsY),
     );
-    gl.uniform2f(this.uniforms.uGroundHalfSize, groundHalfX, groundHalfY);
+    // Use a power-of-two world grid and align its origin to that grid. Moving
+    // the camera now reveals existing geometry instead of resampling every
+    // vertex at a new position and making hills visibly swim beneath the UI.
+    const worldStep = Math.max(1, 2 ** Math.ceil(Math.log2(desiredStep)));
+    const groundSpanX = worldStep * mesh.segmentsX;
+    const groundSpanY = worldStep * mesh.segmentsY;
+    const groundOriginX =
+      Math.floor((centerX - groundSpanX / 2) / worldStep) * worldStep;
+    const groundOriginY =
+      Math.floor((centerY - groundSpanY / 2) / worldStep) * worldStep;
+    const sampleRadius = Math.max(1, worldStep);
+    gl.uniform2f(this.uniforms.uGroundOrigin, groundOriginX, groundOriginY);
+    gl.uniform2f(this.uniforms.uGroundSpan, groundSpanX, groundSpanY);
     gl.uniform1f(this.uniforms.uSampleRadius, sampleRadius);
     gl.bindVertexArray(mesh.vao);
     gl.drawElements(gl.TRIANGLES, mesh.indexCount, gl.UNSIGNED_INT, 0);

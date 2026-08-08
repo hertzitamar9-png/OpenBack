@@ -197,6 +197,7 @@ export class GPURenderer {
   private settings: RenderSettings;
   private sceneTarget: RenderTarget;
   private threeDBillboardMatrix = new Float32Array(9);
+  private threeDLabelMatrix = new Float32Array(9);
   private raf: typeof requestAnimationFrame;
   private caf: typeof cancelAnimationFrame;
 
@@ -1384,6 +1385,7 @@ export class GPURenderer {
     if (this.threeDPass) {
       toScreen(this.gl, cw, ch, () => {
         const billboardCamera = this.makeThreeDBillboardCamera(cw, ch, zoom);
+        const labelCamera = this.makeThreeDLabelCamera(cw, ch, zoom);
         this.threeDPass!.draw(
           cw,
           ch,
@@ -1437,7 +1439,7 @@ export class GPURenderer {
         if (this.settings.passEnabled.bar) this.barPass.draw(billboardCamera);
         if (this.settings.passEnabled.name && !this.altView) {
           this.namePass.draw(
-            billboardCamera,
+            labelCamera,
             this.nightCompositePass.getAmbient(),
             true,
           );
@@ -1508,6 +1510,47 @@ export class GPURenderer {
     m[6] = -(this.camera.offsetX * cy - this.camera.offsetY * yawSin) * sx;
     m[7] = -(this.camera.offsetX * yawSin + this.camera.offsetY * cy) * sy;
     m[8] = 1;
+    return m;
+  }
+
+  /**
+   * Exact ground-plane homography used by 3D player labels. Unlike the
+   * tangent approximation used by tactical overlays, this preserves the
+   * perspective anchor while the label shader keeps text and icons upright.
+   */
+  private makeThreeDLabelCamera(
+    width: number,
+    height: number,
+    zoom: number,
+  ): Float32Array {
+    const tanHalfFov = Math.tan((THREE_D_FOV_DEGREES * Math.PI) / 360);
+    const distance = height / Math.max(0.01, zoom * 2) / tanHalfFov;
+    const invX = 1 / (tanHalfFov * (width / Math.max(1, height)));
+    const invY = 1 / tanHalfFov;
+    const cx = this.camera.offsetX;
+    const cyCenter = this.camera.offsetY;
+    const cosYaw = Math.cos(this.threeDYaw);
+    const sinYaw = Math.sin(this.threeDYaw);
+    const cosPitch = Math.cos(this.threeDPitch);
+    const sinPitch = Math.sin(this.threeDPitch);
+    const labelHeight = 0.15;
+    const m = this.threeDLabelMatrix;
+
+    // Column-major mat3 mapping world (x, z, 1) to homogeneous clip (X,Y,W).
+    m[0] = cosYaw * invX;
+    m[1] = -sinYaw * cosPitch * invY;
+    m[2] = -sinYaw * sinPitch;
+    m[3] = -sinYaw * invX;
+    m[4] = -cosYaw * cosPitch * invY;
+    m[5] = -cosYaw * sinPitch;
+    m[6] = (-cosYaw * cx + sinYaw * cyCenter) * invX;
+    m[7] =
+      (sinYaw * cx + cosYaw * cyCenter) * cosPitch * invY +
+      labelHeight * sinPitch * invY;
+    m[8] =
+      distance +
+      (sinYaw * cx + cosYaw * cyCenter) * sinPitch -
+      labelHeight * cosPitch;
     return m;
   }
 

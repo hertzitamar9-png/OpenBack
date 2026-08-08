@@ -1,3 +1,13 @@
+## OpenBack v0.34.86 - Anchored 3D Battlefield
+
+- Locked 3D terrain geometry to the world so hills and coastlines no longer reshape or swim when the camera moves.
+- Increased mountain and high-ground elevation and strengthened stable terrain shading so relief remains readable from overhead views.
+- Kept the camera above the battlefield while allowing vertical orbit to continue past the top-down position instead of stopping there or exposing the underside of the map.
+- Rebuilt composite unit grounding so bodies, turrets, chimneys, wings, and other connected parts stay assembled on sloped terrain, with cleaner matte materials for stronger silhouettes.
+- Reprojected player names, flags, and status icons as straight screen-facing UI anchored by exact 3D perspective, removing skewed text and uneven spacing while the camera moves.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.85 - Stable 3D Terrain and Routes
 
 - Rebuilt the 3D terrain as a continuous opaque floor with stable topology, smoother coast transitions, stronger mountain elevation, matte lighting, and the same readable territory colors as classic 2D.

@@ -110,7 +110,12 @@ void main() {
   // Zoom-based culling: compute screen-space size and skip if too small.
   // Highlighted (hovered) names bypass the cull so they're always visible.
   // uCamera[0][0] is the x-scale component of the camera matrix
-  float cameraScale = length(vec2(uCamera[0][0], uCamera[1][0]));
+  vec3 anchorHForScale = uCamera * vec3(wx, wy, 1.0);
+  vec2 anchorForScale = anchorHForScale.xy / max(0.0001, anchorHForScale.z);
+  vec3 xHForScale = uCamera * vec3(wx + 1.0, wy, 1.0);
+  float cameraScale = (uScreenFacing == 1)
+    ? length(xHForScale.xy / max(0.0001, xHForScale.z) - anchorForScale)
+    : length(vec2(uCamera[0][0], uCamera[1][0]));
   float screenSize = nameWorldScale * uBase * cameraScale;
   if (screenSize < uCullThreshold && !isHighlighted) {
     gl_Position = vec4(0.0);
@@ -166,13 +171,16 @@ void main() {
     // Project the player anchor through the rotating world camera, then keep
     // glyph offsets aligned to the screen. Names therefore follow the board
     // without rotating upside-down or becoming mirrored as the camera orbits.
-    vec3 anchorClip = uCamera * vec3(wx, wy, 1.0);
+    vec3 anchorH = uCamera * vec3(wx, wy, 1.0);
+    vec2 anchorClip = anchorH.xy / max(0.0001, anchorH.z);
+    vec3 xH = uCamera * vec3(wx + 1.0, wy, 1.0);
+    vec3 yH = uCamera * vec3(wx, wy + 1.0, 1.0);
     vec2 localOffset = worldPos - vec2(wx, wy);
     vec2 screenScale = vec2(
-      length(vec2(uCamera[0][0], uCamera[0][1])),
-      -length(vec2(uCamera[1][0], uCamera[1][1]))
+      length(xH.xy / max(0.0001, xH.z) - anchorClip),
+      -length(yH.xy / max(0.0001, yH.z) - anchorClip)
     );
-    clip = vec3(anchorClip.xy + localOffset * screenScale, 1.0);
+    clip = vec3(anchorClip + localOffset * screenScale, 1.0);
   } else {
     clip = uCamera * vec3(worldPos, 1.0);
   }

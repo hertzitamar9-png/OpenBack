@@ -827,8 +827,15 @@ export class NamePass {
       this.settings,
       this.vao,
       fadeOwnerID,
+      screenFacing,
     );
-    this.iconProgram.draw(cameraMatrix, this.settings, this.vao, fadeOwnerID);
+    this.iconProgram.draw(
+      cameraMatrix,
+      this.settings,
+      this.vao,
+      fadeOwnerID,
+      screenFacing,
+    );
 
     if (this.settings.passEnabled.nameDebug) {
       this.debugProgram.draw(cameraMatrix, this.settings, this.vao);

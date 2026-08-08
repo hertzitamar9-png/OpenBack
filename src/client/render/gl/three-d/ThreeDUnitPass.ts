@@ -8,7 +8,7 @@ import {
 } from "./ThreeDModelRegistry";
 import { THREE_D_FOV_DEGREES } from "./ThreeDWorldMath";
 
-const STRIDE = 14;
+const STRIDE = 16;
 const MATERIAL = {
   owner: 0,
   dark: 1,
@@ -46,13 +46,14 @@ layout(location=2) in vec3 iWorld;
 layout(location=3) in vec3 iScale;
 layout(location=4) in vec4 iAngles;
 layout(location=5) in vec4 iMeta;
+layout(location=6) in vec2 iAnchor;
 uniform usampler2D uTerrain;
 uniform vec2 uMapSize,uCenter;
 uniform float uDistance,uTanHalfFov,uAspect,uTilt,uYaw,uTime;
 out vec3 vNormal;
 out vec3 vMeta;
 
-float heightFor(uint b){bool land=(b&128u)!=0u;float m=float(b&31u);if(land&&m>30.5)return 26.0;if(land)return 0.15+pow(m/30.0,1.18)*22.0;return -min(m,10.0)*0.02;}
+float heightFor(uint b){bool land=(b&128u)!=0u;float m=float(b&31u);if(land&&m>30.5)return 38.0;if(land)return 0.15+pow(m/30.0,2.0)*31.0;return -min(m,10.0)*0.02;}
 mat3 rx(float a){float c=cos(a),s=sin(a);return mat3(1,0,0,0,c,s,0,-s,c);}
 mat3 ry(float a){float c=cos(a),s=sin(a);return mat3(c,0,-s,0,1,0,s,0,c);}
 mat3 rz(float a){float c=cos(a),s=sin(a);return mat3(c,s,0,-s,c,0,0,0,1);}
@@ -66,7 +67,10 @@ void main(){
   mat3 heading=ry(-iAngles.x);
   float pulse=animation==3?1.0+sin(phase*5.0)*.09:1.0;
   vec3 model=heading*(local*(aPos*iScale*pulse));
-  ivec2 tc=ivec2(clamp(floor(iWorld.xz),vec2(0.0),uMapSize-1.0));
+  // Every primitive in a composite model samples the same unit-center ground
+  // anchor. Sloped terrain can no longer lift chimneys, turrets, or wings away
+  // from the body simply because their local centers land on adjacent tiles.
+  ivec2 tc=ivec2(clamp(floor(iAnchor),vec2(0.0),uMapSize-1.0));
   float ground=heightFor(texelFetch(uTerrain,tc,0).r);
   float flightBob=step(1.5,iWorld.y)*sin(uTime*3.2+iWorld.x*.7+iWorld.z*.4)*.14;
   float hover=animation==5?sin(phase*2.1)*.11:0.0;
@@ -103,11 +107,10 @@ void main(){
   else if(material==5)base=mix(vec3(0.09,0.11,0.14),owner,0.18);
   else if(material==6)base=vec3(0.015,0.02,0.028);
   vec3 light=normalize(vec3(-0.55,0.88,-0.42));
-  float diffuse=0.40+max(0.0,dot(normalize(vNormal),light))*0.72;
-  float spec=pow(max(0.0,dot(reflect(-light,normalize(vNormal)),normalize(vec3(0.2,0.8,0.5)))),18.0);
+  float diffuse=0.54+max(0.0,dot(normalize(vNormal),light))*0.58;
   if(material==4)diffuse=1.35;
   if(material==6){outColor=vec4(base,0.30*vMeta.z);return;}
-  outColor=vec4(base*diffuse+spec*0.24,vMeta.z);
+  outColor=vec4(base*diffuse,vMeta.z);
 }`;
 
 interface Mesh {
@@ -218,6 +221,8 @@ export class ThreeDUnitPass {
           MATERIAL.shadow,
           alpha,
           ANIMATION.none,
+          x,
+          z,
         );
       for (const primitive of model.primitives) {
         const batch = this.batches.get(primitive.kind)!;
@@ -245,6 +250,8 @@ export class ThreeDUnitPass {
           MATERIAL[primitive.material],
           alpha,
           ANIMATION[primitive.animation ?? model.animation ?? "none"],
+          x,
+          z,
         );
       }
     }
@@ -343,6 +350,7 @@ export class ThreeDUnitPass {
       [3, 3, 3],
       [4, 4, 6],
       [5, 4, 10],
+      [6, 2, 14],
     ] as const) {
       gl.enableVertexAttribArray(location);
       gl.vertexAttribPointer(

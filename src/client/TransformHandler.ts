@@ -45,6 +45,7 @@ export class TransformHandler {
   public offsetY: number = -200;
   public threeDYaw = 0;
   public threeDPitch = THREE_D_TILT;
+  private threeDVerticalOrbitDirection = 1;
   private lastGoToCallTime: number | null = null;
 
   private target: Cell | null;
@@ -534,10 +535,18 @@ export class TransformHandler {
     // Pulling the mouse downward lifts the camera toward a top-down view;
     // pushing upward lowers it toward the horizon. This matches physically
     // orbiting a camera over a tabletop and uses the full forward/back range.
-    this.threeDPitch = Math.max(
-      THREE_D_MIN_TILT,
-      Math.min(THREE_D_MAX_TILT, this.threeDPitch - event.deltaY * 0.0045),
-    );
+    let nextPitch =
+      this.threeDPitch -
+      event.deltaY * 0.0045 * this.threeDVerticalOrbitDirection;
+    if (nextPitch > THREE_D_MAX_TILT) {
+      // Continue across the top pole instead of stopping at a straight-down
+      // camera. Reflect the elevation and rotate the azimuth by half a turn;
+      // the camera stays above the board, so its underside is never exposed.
+      nextPitch = THREE_D_MAX_TILT - (nextPitch - THREE_D_MAX_TILT);
+      this.threeDVerticalOrbitDirection *= -1;
+      this.threeDYaw = (this.threeDYaw + Math.PI) % (Math.PI * 2);
+    }
+    this.threeDPitch = Math.max(THREE_D_MIN_TILT, nextPitch);
     this.changed = true;
   }
 
