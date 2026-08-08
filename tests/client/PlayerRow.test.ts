@@ -71,9 +71,7 @@ describe("PlayerRow", () => {
     const flag = row.querySelector<HTMLImageElement>(
       '[data-player-avatar="flag"]',
     );
-    expect(flag?.getAttribute("src")).toBe(
-      "https://cdn.example.test/game-assets/_assets/flags/test.abc123.svg",
-    );
+    expect(flag?.getAttribute("src")).toBe("/flags/test.svg?v=abc123");
     expect(row.querySelector('[data-player-avatar="fallback"]')).toBeNull();
   });
 
