@@ -45,7 +45,7 @@ out float vLife;
 out float vKind;
 
 float hash(float n){return fract(sin(n*91.3458)*47453.5453);}
-float heightFor(uint b){bool land=(b&128u)!=0u;float m=float(b&31u);if(land&&m>30.5)return 24.0;if(land)return 1.8+pow(m/30.0,1.5)*10.5;return -1.1-min(m,10.0)*0.07;}
+float heightFor(uint b){bool land=(b&128u)!=0u;float m=float(b&31u);if(land&&m>30.5)return 26.0;if(land)return 0.15+pow(m/30.0,1.18)*22.0;return -min(m,10.0)*0.02;}
 void main(){
   float id=float(gl_VertexID);
   float h1=hash(id+uEventCenter.x*0.13),h2=hash(id+uEventCenter.y*0.17),h3=hash(id*3.71);

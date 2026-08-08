@@ -424,6 +424,7 @@ export class GPURenderer {
         gl,
         this.terrainBytesTex!,
         this.res.tileTex,
+        this.res.trailTex,
         this.paletteTex,
         mapW,
         mapH,
@@ -519,6 +520,7 @@ export class GPURenderer {
       mapW,
       mapH,
       this.res.tileTex,
+      this.terrainBytesTex!,
       this.settings.spawnOverlay,
     );
 
@@ -651,7 +653,13 @@ export class GPURenderer {
     this.selectionBoxPass = new SelectionBoxPass(gl);
     this.moveIndicatorPass = new MoveIndicatorPass(gl, this.settings);
     this.nukeTrajectoryPass = new NukeTrajectoryPass(gl, this.settings);
-    this.nukeTelegraphPass = new NukeTelegraphPass(gl, this.settings);
+    this.nukeTelegraphPass = new NukeTelegraphPass(
+      gl,
+      this.settings,
+      this.terrainBytesTex!,
+      mapW,
+      mapH,
+    );
 
     // --- Scene capture target (for night composite) ---
     const sceneTex = gl.createTexture()!;
@@ -1399,6 +1407,15 @@ export class GPURenderer {
         // selection feedback, build previews, and combat effects; world
         // objects and environment masks already have dedicated 3D passes.
         this.renderOverlays(billboardCamera, zoom, true, true, true, true);
+        this.nukeTelegraphPass.drawThreeD(
+          this.camera.offsetX,
+          this.camera.offsetY,
+          zoom,
+          cw,
+          ch,
+          this.threeDYaw,
+          this.threeDPitch,
+        );
         // Spawn markers are UI, not paint on the terrain. Keeping them in a
         // screen-facing pass prevents perspective from turning circles into
         // stretched shapes during the placement countdown.
@@ -1576,8 +1593,10 @@ export class GPURenderer {
     this.updateSelectionBox();
     this.selectionBoxPass.draw(cam, this.frameTick);
     this.moveIndicatorPass.draw(cam, zoom);
-    this.nukeTelegraphPass.draw(cam);
-    if (pe.trail) this.trailPass.draw(cam);
+    if (!threeDCompatibleOnly) this.nukeTelegraphPass.draw(cam);
+    // In 3D the terrain compositor samples the live trail texture directly so
+    // paths follow the raised floor. The flat overlay remains the 2D path.
+    if (pe.trail && !threeDCompatibleOnly) this.trailPass.draw(cam);
     // Spiral vortexes sit above the plain trails, below the missiles that
     // trail them. Skipped in alt view — the strategic overlay stays effects-free.
     if (!this.altView) this.spiralRibbonPass.draw(cam);

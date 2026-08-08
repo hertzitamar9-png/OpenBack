@@ -813,6 +813,18 @@ export class InputHandler {
       if (wasCameraDrag) {
         this.suppressNextContextMenu = true;
         setTimeout(() => (this.suppressNextContextMenu = false), 100);
+      } else {
+        // Some browsers suppress the native contextmenu event after a
+        // prevented pointer gesture. Dispatch the game's menu directly for a
+        // short right-click, then swallow any native duplicate that follows.
+        this.onContextMenu(
+          new MouseEvent("contextmenu", {
+            clientX: event.clientX,
+            clientY: event.clientY,
+          }),
+        );
+        this.suppressNextContextMenu = true;
+        setTimeout(() => (this.suppressNextContextMenu = false), 100);
       }
       this.canvas.style.cursor = "";
       event.preventDefault();

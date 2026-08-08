@@ -531,9 +531,12 @@ export class TransformHandler {
     if (!this.isThreeD()) return;
     this.clearTarget();
     this.threeDYaw = (this.threeDYaw - event.deltaX * 0.006) % (Math.PI * 2);
+    // Pulling the mouse downward lifts the camera toward a top-down view;
+    // pushing upward lowers it toward the horizon. This matches physically
+    // orbiting a camera over a tabletop and uses the full forward/back range.
     this.threeDPitch = Math.max(
       THREE_D_MIN_TILT,
-      Math.min(THREE_D_MAX_TILT, this.threeDPitch + event.deltaY * 0.0045),
+      Math.min(THREE_D_MAX_TILT, this.threeDPitch - event.deltaY * 0.0045),
     );
     this.changed = true;
   }

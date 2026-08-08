@@ -76,6 +76,7 @@ export class SpawnOverlayPass {
   private mapW: number;
   private mapH: number;
   private tileTex: WebGLTexture;
+  private terrainTex: WebGLTexture;
 
   // State
   private active = false;
@@ -88,12 +89,14 @@ export class SpawnOverlayPass {
     mapW: number,
     mapH: number,
     tileTex: WebGLTexture,
+    terrainTex: WebGLTexture,
     settings: RenderSettings["spawnOverlay"],
   ) {
     this.gl = gl;
     this.mapW = mapW;
     this.mapH = mapH;
     this.tileTex = tileTex;
+    this.terrainTex = terrainTex;
     this.settings = settings;
 
     this.program = createProgram(
@@ -131,6 +134,7 @@ export class SpawnOverlayPass {
 
     gl.useProgram(this.program);
     gl.uniform1i(gl.getUniformLocation(this.program, "uTileTex"), 0);
+    gl.uniform1i(gl.getUniformLocation(this.program, "uTerrain"), 1);
 
     // VAO
     this.vao = gl.createVertexArray()!;
@@ -258,6 +262,8 @@ export class SpawnOverlayPass {
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.tileTex);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, this.terrainTex);
 
     gl.bindVertexArray(this.vao);
     gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, this.instanceCount);
@@ -308,6 +314,8 @@ export class SpawnOverlayPass {
     gl.uniform2f(this.uGradientStops, s.gradientInnerEdge, s.gradientSolidEnd);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.tileTex);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, this.terrainTex);
     gl.bindVertexArray(this.vao);
     gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, this.instanceCount);
     gl.bindVertexArray(null);

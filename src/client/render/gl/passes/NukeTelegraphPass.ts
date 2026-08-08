@@ -9,6 +9,7 @@
 import type { NukeTelegraphData } from "../../types";
 import { DynamicInstanceBuffer } from "../DynamicBuffer";
 import type { RenderSettings } from "../RenderSettings";
+import { THREE_D_FOV_DEGREES } from "../three-d/ThreeDWorldMath";
 import { createProgram } from "../utils/GlUtils";
 
 import fragSrc from "../shaders/nuke-telegraph/nuke-telegraph.frag.glsl?raw";
@@ -31,11 +32,24 @@ export class NukeTelegraphPass {
   private uColorSelf: WebGLUniformLocation;
   private uColorAlly: WebGLUniformLocation;
   private uColorEnemy: WebGLUniformLocation;
+  private uThreeD: WebGLUniformLocation;
+  private uThreeDCenter: WebGLUniformLocation;
+  private uDistance: WebGLUniformLocation;
+  private uTanHalfFov: WebGLUniformLocation;
+  private uAspect: WebGLUniformLocation;
+  private uTilt: WebGLUniformLocation;
+  private uYaw: WebGLUniformLocation;
 
   private instanceCount = 0;
   private startTime = performance.now();
 
-  constructor(gl: WebGL2RenderingContext, settings: RenderSettings) {
+  constructor(
+    gl: WebGL2RenderingContext,
+    settings: RenderSettings,
+    private terrain: WebGLTexture,
+    private mapW: number,
+    private mapH: number,
+  ) {
     this.gl = gl;
     this.settings = settings;
     this.program = createProgram(gl, vertSrc, fragSrc);
@@ -53,6 +67,15 @@ export class NukeTelegraphPass {
     this.uColorSelf = gl.getUniformLocation(this.program, "uColorSelf")!;
     this.uColorAlly = gl.getUniformLocation(this.program, "uColorAlly")!;
     this.uColorEnemy = gl.getUniformLocation(this.program, "uColorEnemy")!;
+    this.uThreeD = gl.getUniformLocation(this.program, "uThreeD")!;
+    this.uThreeDCenter = gl.getUniformLocation(this.program, "uThreeDCenter")!;
+    this.uDistance = gl.getUniformLocation(this.program, "uDistance")!;
+    this.uTanHalfFov = gl.getUniformLocation(this.program, "uTanHalfFov")!;
+    this.uAspect = gl.getUniformLocation(this.program, "uAspect")!;
+    this.uTilt = gl.getUniformLocation(this.program, "uTilt")!;
+    this.uYaw = gl.getUniformLocation(this.program, "uYaw")!;
+    gl.useProgram(this.program);
+    gl.uniform1i(gl.getUniformLocation(this.program, "uTerrain"), 0);
 
     // VAO
     this.vao = gl.createVertexArray()!;
@@ -131,6 +154,7 @@ export class NukeTelegraphPass {
     const time = (performance.now() - this.startTime) / 1000;
 
     gl.useProgram(this.program);
+    gl.uniform1i(this.uThreeD, 0);
     gl.uniformMatrix3fv(this.uCamera, false, cameraMatrix);
     gl.uniform1f(this.uTime, time);
     gl.uniform4f(
@@ -151,6 +175,64 @@ export class NukeTelegraphPass {
     gl.uniform3f(this.uColorAlly, s.allyColorR, s.allyColorG, s.allyColorB);
     gl.uniform3f(this.uColorEnemy, s.colorR, s.colorG, s.colorB);
 
+    gl.bindVertexArray(this.vao);
+    gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, this.instanceCount);
+  }
+
+  drawThreeD(
+    centerX: number,
+    centerY: number,
+    zoom: number,
+    width: number,
+    height: number,
+    yaw: number,
+    pitch: number,
+  ): void {
+    if (this.instanceCount === 0) return;
+    const gl = this.gl;
+    const tanHalfFov = Math.tan((THREE_D_FOV_DEGREES * Math.PI) / 360);
+    gl.useProgram(this.program);
+    gl.uniform1i(this.uThreeD, 1);
+    gl.uniform2f(this.uThreeDCenter, centerX, centerY);
+    gl.uniform2f(
+      gl.getUniformLocation(this.program, "uMapSize"),
+      this.mapW,
+      this.mapH,
+    );
+    gl.uniform1f(
+      this.uDistance,
+      height / Math.max(0.01, zoom * 2) / tanHalfFov,
+    );
+    gl.uniform1f(this.uTanHalfFov, tanHalfFov);
+    gl.uniform1f(this.uAspect, width / Math.max(1, height));
+    gl.uniform1f(this.uTilt, pitch);
+    gl.uniform1f(this.uYaw, yaw);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.terrain);
+    this.drawStyleAndInstances();
+  }
+
+  private drawStyleAndInstances(): void {
+    const gl = this.gl;
+    const s = this.settings.nukeTelegraph;
+    gl.uniform1f(this.uTime, (performance.now() - this.startTime) / 1000);
+    gl.uniform4f(
+      this.uTelegraphStyle,
+      s.strokeWidth,
+      s.dashLen,
+      s.gapLen,
+      s.rotationSpeed,
+    );
+    gl.uniform4f(
+      this.uTelegraphAlpha,
+      s.baseAlpha,
+      s.pulseAmplitude,
+      s.pulseSpeed,
+      s.fillAlphaOffset,
+    );
+    gl.uniform3f(this.uColorSelf, s.selfColorR, s.selfColorG, s.selfColorB);
+    gl.uniform3f(this.uColorAlly, s.allyColorR, s.allyColorG, s.allyColorB);
+    gl.uniform3f(this.uColorEnemy, s.colorR, s.colorG, s.colorB);
     gl.bindVertexArray(this.vao);
     gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, this.instanceCount);
   }
