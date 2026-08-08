@@ -70,7 +70,11 @@ import type { RenderSettings } from "./RenderSettings";
 import { ThreeDFogPass } from "./three-d/ThreeDFogPass";
 import { ThreeDUnitPass } from "./three-d/ThreeDUnitPass";
 import { ThreeDWorldEventPass } from "./three-d/ThreeDWorldEventPass";
-import { THREE_D_FOV_DEGREES, THREE_D_TILT } from "./three-d/ThreeDWorldMath";
+import {
+  THREE_D_FOV_DEGREES,
+  THREE_D_TILT,
+  threeDCameraDistance,
+} from "./three-d/ThreeDWorldMath";
 import { AffiliationPalette } from "./utils/Affiliation";
 import {
   EFFECT_PALETTE_BLOCKS,
@@ -1495,7 +1499,7 @@ export class GPURenderer {
     zoom: number,
   ): Float32Array {
     const tanHalfFov = Math.tan((THREE_D_FOV_DEGREES * Math.PI) / 360);
-    const distance = height / Math.max(0.01, zoom * 2) / tanHalfFov;
+    const distance = threeDCameraDistance(height, zoom, this.threeDPitch);
     const sx = 1 / (distance * tanHalfFov * (width / Math.max(1, height)));
     const sy = -Math.cos(this.threeDPitch) / (distance * tanHalfFov);
     const cy = Math.cos(this.threeDYaw);
@@ -1524,7 +1528,7 @@ export class GPURenderer {
     zoom: number,
   ): Float32Array {
     const tanHalfFov = Math.tan((THREE_D_FOV_DEGREES * Math.PI) / 360);
-    const distance = height / Math.max(0.01, zoom * 2) / tanHalfFov;
+    const distance = threeDCameraDistance(height, zoom, this.threeDPitch);
     const invX = 1 / (tanHalfFov * (width / Math.max(1, height)));
     const invY = 1 / tanHalfFov;
     const cx = this.camera.offsetX;

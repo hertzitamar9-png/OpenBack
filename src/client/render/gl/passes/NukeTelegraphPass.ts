@@ -9,7 +9,10 @@
 import type { NukeTelegraphData } from "../../types";
 import { DynamicInstanceBuffer } from "../DynamicBuffer";
 import type { RenderSettings } from "../RenderSettings";
-import { THREE_D_FOV_DEGREES } from "../three-d/ThreeDWorldMath";
+import {
+  THREE_D_FOV_DEGREES,
+  threeDCameraDistance,
+} from "../three-d/ThreeDWorldMath";
 import { createProgram } from "../utils/GlUtils";
 
 import fragSrc from "../shaders/nuke-telegraph/nuke-telegraph.frag.glsl?raw";
@@ -199,10 +202,7 @@ export class NukeTelegraphPass {
       this.mapW,
       this.mapH,
     );
-    gl.uniform1f(
-      this.uDistance,
-      height / Math.max(0.01, zoom * 2) / tanHalfFov,
-    );
+    gl.uniform1f(this.uDistance, threeDCameraDistance(height, zoom, pitch));
     gl.uniform1f(this.uTanHalfFov, tanHalfFov);
     gl.uniform1f(this.uAspect, width / Math.max(1, height));
     gl.uniform1f(this.uTilt, pitch);

@@ -17,7 +17,10 @@
 
 import { DynamicInstanceBuffer } from "../DynamicBuffer";
 import type { RenderSettings } from "../RenderSettings";
-import { THREE_D_FOV_DEGREES } from "../three-d/ThreeDWorldMath";
+import {
+  THREE_D_FOV_DEGREES,
+  threeDCameraDistance,
+} from "../three-d/ThreeDWorldMath";
 import { createProgram, shaderSrc } from "../utils/GlUtils";
 import { TILE_DEFINES } from "../utils/TileCodec";
 
@@ -282,7 +285,7 @@ export class SpawnOverlayPass {
     if (!this.active || this.instanceCount === 0) return;
     const gl = this.gl;
     const tanHalfFov = Math.tan((THREE_D_FOV_DEGREES * Math.PI) / 360);
-    const distance = height / Math.max(0.01, zoom * 2) / tanHalfFov;
+    const distance = threeDCameraDistance(height, zoom, pitch);
     gl.useProgram(this.program);
     gl.uniform1i(this.uThreeD, 1);
     gl.uniform2f(this.uThreeDCenter, centerX, centerY);

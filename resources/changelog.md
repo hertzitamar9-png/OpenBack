@@ -1,3 +1,11 @@
+## OpenBack v0.34.95 - Stable 3D Zoom
+
+- Prevented close 3D zoom from clipping the battlefield and leaving only flags or UI markers on a flat background.
+- Rebalanced 3D fog particle density, size, and transparency so fog remains visible without merging into an opaque full-screen sheet.
+- Synchronized raised terrain height across buildings, units, spawn markers, trajectories, and world-event effects so every layer stays attached to the same surface while zooming.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.94 - Clearer 3D Battlefield
 
 - Kept the 3D camera above the battlefield across its full forward and backward tilt range, removing the pole-crossing flip that could turn the map upside down.

@@ -5,7 +5,10 @@
  * supplies territory ownership, and the player palette supplies board-piece
  * colors. No flat screenshot is bent over the mesh.
  */
-import { THREE_D_FOV_DEGREES } from "../three-d/ThreeDWorldMath";
+import {
+  THREE_D_FOV_DEGREES,
+  threeDCameraDistance,
+} from "../three-d/ThreeDWorldMath";
 import { createFullscreenQuad, createProgram } from "../utils/GlUtils";
 
 const skyVert = `#version 300 es
@@ -341,9 +344,10 @@ export class ThreeDCompositePass {
     gl.useProgram(this.terrainProgram);
     const halfVisibleHeight = height / Math.max(0.01, zoom * 2);
     const tanHalfFov = Math.tan((THREE_D_FOV_DEGREES * Math.PI) / 360);
+    const distance = threeDCameraDistance(height, zoom, pitch);
     gl.uniform2f(this.uniforms.uMapSize, this.mapWidth, this.mapHeight);
     gl.uniform2f(this.uniforms.uCenter, centerX, centerY);
-    gl.uniform1f(this.uniforms.uDistance, halfVisibleHeight / tanHalfFov);
+    gl.uniform1f(this.uniforms.uDistance, distance);
     gl.uniform1f(this.uniforms.uTanHalfFov, tanHalfFov);
     gl.uniform1f(this.uniforms.uAspect, width / Math.max(1, height));
     gl.uniform1f(this.uniforms.uTilt, pitch);
@@ -358,7 +362,13 @@ export class ThreeDCompositePass {
     gl.activeTexture(gl.TEXTURE3);
     gl.bindTexture(gl.TEXTURE_2D, this.palette);
     const mesh = this.meshes[0];
-    const desiredHalfY = halfVisibleHeight * 2.75;
+    // Size coverage from the effective camera distance, including its terrain
+    // clearance floor. The mesh therefore cannot shrink away beneath a close
+    // camera while flags and other screen-facing UI remain visible.
+    const desiredHalfY = Math.max(
+      halfVisibleHeight * 2.75,
+      distance * tanHalfFov * 3.5,
+    );
     const desiredHalfX = desiredHalfY * (width / Math.max(1, height));
     const desiredStep = Math.max(
       (desiredHalfX * 2) / Math.max(1, mesh.segmentsX),

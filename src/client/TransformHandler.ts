@@ -12,6 +12,7 @@ import {
   THREE_D_MAX_TILT,
   THREE_D_MIN_TILT,
   THREE_D_TILT,
+  threeDCameraDistance,
   threeDHeightForTerrainByte,
 } from "./render/gl/three-d/ThreeDWorldMath";
 import { GameView, PlayerView, UnitView } from "./view";
@@ -239,7 +240,7 @@ export class TransformHandler {
       centerX,
       centerY,
       tanHalfFov,
-      distance: height / Math.max(0.01, this.scale * 2) / tanHalfFov,
+      distance: threeDCameraDistance(height, this.scale, this.threeDPitch),
       pitch: this.threeDPitch,
       yaw: this.threeDYaw,
     };

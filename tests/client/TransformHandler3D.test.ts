@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import { RotateCameraEvent } from "../../src/client/InputHandler";
 import { TransformHandler } from "../../src/client/TransformHandler";
 import {
+  THREE_D_MAX_TERRAIN_HEIGHT,
   THREE_D_MAX_TILT,
   THREE_D_MIN_TILT,
+  threeDCameraDistance,
   threeDHeightForTerrainByte,
 } from "../../src/client/render/gl/three-d/ThreeDWorldMath";
 import type { GameView } from "../../src/client/view";
@@ -43,5 +45,13 @@ describe("TransformHandler 3D camera", () => {
 
     expect(mountain).toBeGreaterThan(lowland + 20);
     expect(peak).toBeGreaterThan(mountain + 20);
+  });
+
+  it("keeps the camera above the highest terrain at maximum zoom", () => {
+    const distance = threeDCameraDistance(400, 20, THREE_D_MIN_TILT);
+    const projectedPeak =
+      THREE_D_MAX_TERRAIN_HEIGHT * Math.cos(THREE_D_MIN_TILT);
+
+    expect(distance).toBeGreaterThan(projectedPeak + 9);
   });
 });

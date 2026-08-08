@@ -1,6 +1,6 @@
 import { createProgram, shaderSrc } from "../utils/GlUtils";
 import { TILE_DEFINES } from "../utils/TileCodec";
-import { THREE_D_FOV_DEGREES } from "./ThreeDWorldMath";
+import { THREE_D_FOV_DEGREES, threeDCameraDistance } from "./ThreeDWorldMath";
 
 const vert = `#version 300 es
 precision highp float;
@@ -34,7 +34,7 @@ void main(){
   float nearPlane=0.5,farPlane=max(nearPlane+1.0,uDistance*8.0+50.0);
   float clipZ=((farPlane+nearPlane)/(farPlane-nearPlane))*viewZ-(2.0*farPlane*nearPlane)/(farPlane-nearPlane);
   gl_Position=vec4(d.x/(uTanHalfFov*uAspect),viewY/uTanHalfFov,clipZ,viewZ);
-  gl_PointSize=clamp((42.0+layer*54.0)*(uDistance/max(viewZ,.5)),24.0,112.0);
+  gl_PointSize=clamp((18.0+layer*28.0)*(uDistance/max(viewZ,.5)),12.0,58.0);
   vDensity=.18+.16*hash(id+uTime*.01);
 }`;
 
@@ -52,7 +52,7 @@ void main(){
   float soft=pow(max(a,max(b*.72,c*.68)),2.4);
   if(soft<.006)discard;
   vec3 mist=mix(vec3(.12,.18,.24),vec3(.64,.72,.77),soft);
-  outColor=vec4(mist,soft*vDensity*.42);
+  outColor=vec4(mist,soft*vDensity*.18);
 }`;
 
 export class ThreeDFogPass {
@@ -120,13 +120,14 @@ export class ThreeDFogPass {
     const tanHalfFov = Math.tan((THREE_D_FOV_DEGREES * Math.PI) / 360);
     gl.enable(gl.DEPTH_TEST);
     gl.enable(gl.BLEND);
+    gl.depthMask(false);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.useProgram(this.program);
     gl.uniform2f(this.uniforms.uMapSize, this.mapWidth, this.mapHeight);
     gl.uniform2f(this.uniforms.uCenter, centerX, centerY);
     gl.uniform1f(
       this.uniforms.uDistance,
-      height / Math.max(0.01, zoom * 2) / tanHalfFov,
+      threeDCameraDistance(height, zoom, pitch),
     );
     gl.uniform1f(this.uniforms.uTanHalfFov, tanHalfFov);
     gl.uniform1f(this.uniforms.uAspect, width / Math.max(1, height));
@@ -139,8 +140,9 @@ export class ThreeDFogPass {
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.tileTex);
     gl.bindVertexArray(this.vao);
-    gl.drawArrays(gl.POINTS, 0, Math.min(width, height) < 700 ? 480 : 900);
+    gl.drawArrays(gl.POINTS, 0, Math.min(width, height) < 700 ? 180 : 320);
     gl.bindVertexArray(null);
+    gl.depthMask(true);
     gl.disable(gl.DEPTH_TEST);
   }
 
