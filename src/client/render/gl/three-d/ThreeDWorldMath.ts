@@ -22,6 +22,29 @@ export function threeDCameraDistance(
   return Math.max(requested, terrainClearance);
 }
 
+export function threeDGroundHalfExtents(
+  viewportWidth: number,
+  viewportHeight: number,
+  zoom: number,
+  pitch: number,
+  yaw: number,
+): { x: number; y: number } {
+  const tanHalfFov = Math.tan((THREE_D_FOV_DEGREES * Math.PI) / 360);
+  const distance = threeDCameraDistance(viewportHeight, zoom, pitch);
+  const aspect = viewportWidth / Math.max(1, viewportHeight);
+  // The ground mesh is axis-aligned in map space while the camera can orbit
+  // freely. Rotate the view-aligned coverage rectangle into a map-space AABB
+  // so no yaw or zoom can expose an edge of the generated terrain.
+  const viewHalfX = distance * tanHalfFov * aspect * 3.5;
+  const viewHalfY = distance * tanHalfFov * 3.5;
+  const cosYaw = Math.abs(Math.cos(yaw));
+  const sinYaw = Math.abs(Math.sin(yaw));
+  return {
+    x: cosYaw * viewHalfX + sinYaw * viewHalfY,
+    y: sinYaw * viewHalfX + cosYaw * viewHalfY,
+  };
+}
+
 export function threeDHeightForTerrainByte(value: number): number {
   const land = (value & 0x80) !== 0;
   const magnitude = value & 0x1f;

@@ -8,6 +8,7 @@
 import {
   THREE_D_FOV_DEGREES,
   threeDCameraDistance,
+  threeDGroundHalfExtents,
 } from "../three-d/ThreeDWorldMath";
 import { createFullscreenQuad, createProgram } from "../utils/GlUtils";
 
@@ -342,7 +343,6 @@ export class ThreeDCompositePass {
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
     gl.useProgram(this.terrainProgram);
-    const halfVisibleHeight = height / Math.max(0.01, zoom * 2);
     const tanHalfFov = Math.tan((THREE_D_FOV_DEGREES * Math.PI) / 360);
     const distance = threeDCameraDistance(height, zoom, pitch);
     gl.uniform2f(this.uniforms.uMapSize, this.mapWidth, this.mapHeight);
@@ -362,14 +362,18 @@ export class ThreeDCompositePass {
     gl.activeTexture(gl.TEXTURE3);
     gl.bindTexture(gl.TEXTURE_2D, this.palette);
     const mesh = this.meshes[0];
-    // Size coverage from the effective camera distance, including its terrain
-    // clearance floor. The mesh therefore cannot shrink away beneath a close
-    // camera while flags and other screen-facing UI remain visible.
-    const desiredHalfY = Math.max(
-      halfVisibleHeight * 2.75,
-      distance * tanHalfFov * 3.5,
+    // Cover the rotated camera frustum in map space. A non-square viewport
+    // needs its wide axis transferred to Y as the camera yaws; otherwise a
+    // zoom at quarter turns can reveal the mesh edge while labels remain.
+    const groundExtents = threeDGroundHalfExtents(
+      width,
+      height,
+      zoom,
+      pitch,
+      yaw,
     );
-    const desiredHalfX = desiredHalfY * (width / Math.max(1, height));
+    const desiredHalfX = groundExtents.x;
+    const desiredHalfY = groundExtents.y;
     const desiredStep = Math.max(
       (desiredHalfX * 2) / Math.max(1, mesh.segmentsX),
       (desiredHalfY * 2) / Math.max(1, mesh.segmentsY),

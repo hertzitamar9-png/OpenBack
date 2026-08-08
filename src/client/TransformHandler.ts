@@ -431,9 +431,7 @@ export class TransformHandler {
 
   onZoom(event: ZoomEvent) {
     this.clearTarget();
-    const threeDFocus = this.isThreeD()
-      ? this.screenToWorldCoordinatesFloat(event.x, event.y)
-      : null;
+    const threeD = this.isThreeD();
     const oldScale = this.scale;
     const zoomFactor = 1 + event.delta / ZOOM_DELTA_DIVISOR;
     this.scale /= zoomFactor;
@@ -441,14 +439,19 @@ export class TransformHandler {
     // Clamp the scale to prevent extreme zooming
     this.scale = Math.max(0.2, Math.min(20, this.scale));
 
-    if (threeDFocus !== null) {
-      // Re-intersect the mouse ray with the horizontal world after changing
-      // camera distance, then move the focus point by the difference. Wheel
-      // zoom therefore travels toward the ground under the cursor instead of
-      // using the old 2D-map approximation and making the board slide.
-      const afterZoom = this.screenToWorldCoordinatesFloat(event.x, event.y);
-      this.offsetX += threeDFocus.x - afterZoom.x;
-      this.offsetY += threeDFocus.y - afterZoom.y;
+    if (threeD) {
+      // A 3D orbit camera zooms along its viewing axis. Do not retarget it to
+      // the mouse ray: scrolling over ocean, fog, UI, or the sky used to drag
+      // the camera target into empty space until the entire board vanished.
+      // Panning remains explicit through left-drag, while wheel zoom now keeps
+      // the currently viewed ground locked for the complete zoom range.
+      const { width: canvasWidth, height: canvasHeight } = this.boundingRect();
+      this.offsetX +=
+        (canvasWidth - this.game.width()) *
+        (1 / (2 * oldScale) - 1 / (2 * this.scale));
+      this.offsetY +=
+        (canvasHeight - this.game.height()) *
+        (1 / (2 * oldScale) - 1 / (2 * this.scale));
       this.clampOffsets();
       this.changed = true;
       return;

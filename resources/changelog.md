@@ -1,3 +1,11 @@
+## OpenBack v0.34.96 - Continuous 3D Zoom
+
+- Kept the current battlefield target locked while zooming in 3D, so scrolling over water, fog, interface panels, or sky can no longer pull the entire map out of view.
+- Expanded terrain coverage for every camera rotation and viewport shape, preventing the ground from disappearing at intermediate, close, or distant zoom levels.
+- Added full-range zoom and rotated-camera regression coverage for the 3D renderer.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.95 - Stable 3D Zoom
 
 - Prevented close 3D zoom from clipping the battlefield and leaving only flags or UI markers on a flat background.
