@@ -1,3 +1,12 @@
+## OpenBack v0.34.93 - Distinct Store Collection
+
+- Extended the Store uniqueness pass across every catalog section instead of limiting it to wraps.
+- Rebuilt all six crowns as separate silhouettes with their own shapes, symbols, gems, detailing, rarity, and wallet price.
+- Curated item-specific rarity and pricing across the fictional-flag collection while preserving every flag's original artwork and attribution.
+- Verified that every flag, skin, crown, and effect has distinct artwork or behavior and added protection against future recolor-only duplicates.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.92 - Complete Ranked and Distinct Cosmetics
 
 - Added dedicated 3v3 and 4v4 Ranked leaderboard tabs beside the existing 1v1 and 2v2 ladders, with each mode showing its own ratings and match history.

@@ -34,6 +34,7 @@ export default [
             "eslint.config.js",
             "scripts/generate-icon-atlas.mjs",
             "scripts/import-fictional-shop-cosmetics.mjs",
+            "scripts/refresh-shop-catalog.mjs",
             "scripts/sync-assets.mjs",
             "tests/matchmaking/*.mjs",
           ],
