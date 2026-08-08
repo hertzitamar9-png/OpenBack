@@ -112,6 +112,96 @@ body {
     env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
+/* Phone and tablet ergonomics are centralized here so every current and future
+   menu page inherits the same safe sizing, touch behavior and keyboard rules. */
+@media (max-width: 1023px) {
+  body.openback-subpage-open page-footer,
+  body.openback-modal-open page-footer {
+    display: none !important;
+  }
+
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+
+  button,
+  [role="button"],
+  a {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  o-modal [data-modal-scroll] {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 639px) {
+  o-modal .p-8 {
+    padding: 1rem !important;
+  }
+
+  o-modal .p-6 {
+    padding: 0.875rem !important;
+  }
+
+  o-modal .px-6 {
+    padding-left: 0.875rem !important;
+    padding-right: 0.875rem !important;
+  }
+
+  o-modal .py-6 {
+    padding-top: 0.875rem !important;
+    padding-bottom: 0.875rem !important;
+  }
+
+  o-modal .gap-6,
+  o-modal .space-y-6 {
+    gap: 1rem !important;
+  }
+
+  o-modal .pt-\[14vh\],
+  o-modal .pt-\[16vh\] {
+    padding-top: 1rem !important;
+  }
+}
+
+@media (max-width: 374px) {
+  .modal-header-right {
+    display: flex !important;
+    width: 100%;
+    min-width: 0;
+    padding-left: 3.25rem;
+  }
+
+  .modal-header-right > * {
+    max-width: 100%;
+  }
+
+  page-footer footer {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
+}
+
+@media (max-width: 1023px) and (max-height: 700px) {
+  mobile-nav-bar > div:last-child {
+    gap: 0.35rem !important;
+    padding-top: max(0.75rem, env(safe-area-inset-top)) !important;
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom)) !important;
+  }
+
+  mobile-nav-bar .nav-menu-item,
+  mobile-nav-bar .nav-menu-item button {
+    font-size: clamp(16px, 2.5vh, 22px) !important;
+    padding-top: 0.15rem !important;
+    padding-bottom: 0.15rem !important;
+  }
+}
+
 /* 3D World keeps the same UI language while giving HUD surfaces physical
    separation from the perspective battlefield. No layout dimensions change. */
 html.openback-3d-mode button,
@@ -527,14 +617,20 @@ label.option-card:hover {
 
 #error-modal {
   position: fixed;
-  padding: 20px;
-  background: white;
-  border: 1px solid black;
+  padding: 1rem;
+  background: #070c14;
+  color: #fff;
+  border: 1px solid rgb(255 255 255 / 0.15);
+  border-radius: 1rem;
+  box-shadow: 0 24px 70px rgb(0 0 0 / 0.65);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 9999;
-  width: 87%;
+  z-index: 10020;
+  width: calc(100% - 1.5rem);
+  max-width: 575px;
+  max-height: calc(100dvh - 1.5rem);
+  overflow-y: auto;
   box-sizing: border-box;
 }
 
@@ -543,13 +639,16 @@ label.option-card:hover {
   overflow-y: auto;
   white-space: pre-wrap;
   word-wrap: break-word;
-  max-height: 400px;
+  max-height: min(400px, 55dvh);
+  color: rgb(255 255 255 / 0.78);
+  font-size: 0.75rem;
 }
 
 #error-modal button.copy-btn {
+  min-height: 44px;
   padding: 8px 16px;
   margin-top: 10px;
-  background: #4caf50;
+  background: var(--color-malibu-blue);
   color: white;
   border: none;
   border-radius: 4px;
@@ -558,13 +657,15 @@ label.option-card:hover {
 
 #error-modal button.close-btn {
   color: white;
-  top: 0px;
-  right: 0px;
+  top: 0.5rem;
+  right: 0.5rem;
   cursor: pointer;
-  background: red;
+  background: rgb(255 255 255 / 0.08);
   margin-right: 0px;
-  position: fixed;
-  width: 40px;
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: 0.75rem;
 }
 
 .start-game-button-container {

@@ -39,6 +39,10 @@ function restoreEmbeddedPage(target: HTMLElement): void {
 
 export function showPage(pageId: string) {
   window.currentPageId = pageId;
+  document.body.classList.toggle(
+    "openback-subpage-open",
+    pageId !== "page-play",
+  );
 
   // Close mobile sidebar if a nav item was clicked
   closeMobileSidebar();

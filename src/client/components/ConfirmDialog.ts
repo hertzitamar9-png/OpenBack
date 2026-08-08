@@ -91,17 +91,18 @@ export class ConfirmDialog extends LitElement {
 
     return html`
       <div
-        class="fixed inset-0 z-[10020] flex items-center justify-center bg-black/80"
+        class="fixed inset-0 z-[10020] flex items-center justify-center bg-black/80 p-3 sm:p-4"
       >
         <div
-          class="relative mx-4 w-full ${this.wide
+          class="relative w-full max-h-[calc(100dvh-1.5rem)] overflow-y-auto ${this
+            .wide
             ? "max-w-md"
-            : "max-w-sm"} p-6 rounded-2xl border ${borderColor} ${cardBg} shadow-2xl"
+            : "max-w-sm"} p-4 sm:p-6 rounded-2xl border ${borderColor} ${cardBg} shadow-2xl"
         >
           ${this.showClose
             ? html`<button
                 @click=${() => this.handleCancel()}
-                class="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-lg text-xl leading-none text-white/50 hover:bg-white/10 hover:text-white transition-all"
+                class="absolute top-2 right-2 flex h-11 w-11 items-center justify-center rounded-xl text-xl leading-none text-white/50 hover:bg-white/10 hover:text-white transition-all"
               >
                 ×
               </button>`
@@ -125,12 +126,12 @@ export class ConfirmDialog extends LitElement {
             : ""}
           ${this.buttons === "none"
             ? ""
-            : html`<div class="flex gap-3">
+            : html`<div class="flex flex-col min-[340px]:flex-row gap-3">
                 ${this.buttons === "confirmCancel"
                   ? html`<button
                       @click=${() => this.handleCancel()}
                       ?disabled=${this.disabled}
-                      class="flex-1 px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 hover:text-white/80 transition-all disabled:opacity-50 disabled:pointer-events-none"
+                      class="min-h-11 flex-1 px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 hover:text-white/80 transition-all disabled:opacity-50 disabled:pointer-events-none"
                     >
                       ${translateText("common.cancel")}
                     </button>`
@@ -138,7 +139,7 @@ export class ConfirmDialog extends LitElement {
                 <button
                   @click=${() => this.handleConfirm()}
                   ?disabled=${this.disabled}
-                  class="flex-1 px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl ${btnClass} transition-all disabled:opacity-50 disabled:pointer-events-none border-0"
+                  class="min-h-11 flex-1 px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl ${btnClass} transition-all disabled:opacity-50 disabled:pointer-events-none border-0"
                 >
                   ${this.confirmText || translateText("common.confirm")}
                 </button>

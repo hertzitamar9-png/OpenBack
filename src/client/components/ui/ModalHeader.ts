@@ -13,16 +13,17 @@ export interface ModalHeaderProps {
   showDivider?: boolean;
 }
 
-const DEFAULT_WRAPPER_CLASS = "flex flex-wrap items-center gap-2 shrink-0";
+const DEFAULT_WRAPPER_CLASS =
+  "flex flex-wrap items-center gap-2 min-w-0 shrink-0";
 const DEFAULT_DIVIDER_CLASS = "border-b border-white/10";
-const DEFAULT_PADDING_CLASS = "p-4 lg:p-6";
-const DEFAULT_LEFT_CLASS = "flex items-center gap-4 flex-1";
+const DEFAULT_PADDING_CLASS = "p-3 sm:p-4 lg:p-6";
+const DEFAULT_LEFT_CLASS = "flex min-w-0 items-center gap-3 sm:gap-4 flex-1";
 const DEFAULT_BUTTON_CLASS =
   "group flex items-center justify-center w-10 h-10 rounded-full shrink-0 " +
   "bg-white/5 hover:bg-white/10 transition-all border border-white/10";
 const DEFAULT_TITLE_CLASS =
-  "text-white text-xl lg:text-2xl font-bold uppercase " +
-  "tracking-widest break-words hyphens-auto";
+  "min-w-0 text-white text-lg sm:text-xl lg:text-2xl font-bold uppercase " +
+  "tracking-wider sm:tracking-widest break-words hyphens-auto leading-tight";
 
 const withClasses = (...classes: Array<string | undefined>) =>
   classes.filter(Boolean).join(" ");
@@ -74,7 +75,9 @@ export const modalHeader = ({
         ${titleContent ??
         html`<span class="${resolvedTitleClass}">${title}</span>`}
       </div>
-      ${rightContent ?? ""}
+      ${rightContent
+        ? html`<div class="modal-header-right contents">${rightContent}</div>`
+        : ""}
     </div>
   `;
 };

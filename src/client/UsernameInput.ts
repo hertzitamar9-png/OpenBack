@@ -329,7 +329,7 @@ export class UsernameInput extends LitElement {
 
   render() {
     return html`
-      <div class="flex items-center w-full h-full gap-2">
+      <div class="flex items-center w-full h-full gap-1.5 sm:gap-2">
         <div class="no-crazygames relative flex items-center shrink-0">
           <input
             type="text"
@@ -340,7 +340,7 @@ export class UsernameInput extends LitElement {
             maxlength="${MAX_CLAN_TAG_LENGTH}"
             aria-busy=${this.clanCheckPending ? "true" : "false"}
             aria-invalid=${this.clanTagOwnershipError ? "true" : "false"}
-            class="w-[4rem] sm:w-[6rem] text-base sm:text-xl font-medium tracking-wider text-center uppercase bg-transparent text-white placeholder-white/70 focus:placeholder-transparent border-0 border-b border-white/40 focus:outline-none focus:border-white/60 [text-shadow:0_1px_2px_rgba(0,0,0,0.9),0_0_4px_rgba(0,0,0,0.7)]"
+            class="w-12 min-[390px]:w-14 sm:w-[6rem] text-sm min-[390px]:text-base sm:text-xl font-medium tracking-wide sm:tracking-wider text-center uppercase bg-transparent text-white placeholder-white/70 focus:placeholder-transparent border-0 border-b border-white/40 focus:outline-none focus:border-white/60 [text-shadow:0_1px_2px_rgba(0,0,0,0.9),0_0_4px_rgba(0,0,0,0.7)]"
           />
           ${this.clanCheckPending
             ? html`<span
@@ -362,7 +362,7 @@ export class UsernameInput extends LitElement {
           title=${this.verifiedActive
             ? translateText("username.verified_heading")
             : ""}
-          class="flex-1 min-w-0 border-0 text-lg sm:text-2xl font-medium tracking-wide sm:tracking-wider text-left text-white placeholder-white/70 focus:outline-none focus:ring-0 overflow-x-auto whitespace-nowrap text-ellipsis pr-1 sm:pr-2 bg-transparent disabled:text-blue-400 disabled:cursor-not-allowed [text-shadow:0_1px_2px_rgba(0,0,0,0.9),0_0_4px_rgba(0,0,0,0.7)]"
+          class="flex-1 min-w-0 border-0 text-base min-[390px]:text-lg sm:text-2xl font-medium tracking-normal sm:tracking-wider text-left text-white placeholder-white/70 focus:outline-none focus:ring-0 whitespace-nowrap text-ellipsis pr-0.5 sm:pr-2 bg-transparent disabled:text-blue-400 disabled:cursor-not-allowed [text-shadow:0_1px_2px_rgba(0,0,0,0.9),0_0_4px_rgba(0,0,0,0.7)]"
         />
         <button
           type="button"
@@ -373,7 +373,8 @@ export class UsernameInput extends LitElement {
         >
           <svg
             viewBox="0 0 24 24"
-            class="w-5 h-5 transition-colors ${this.verifiedActive
+            class="w-[18px] h-[18px] min-[390px]:w-5 min-[390px]:h-5 transition-colors ${this
+              .verifiedActive
               ? "text-blue-400"
               : "text-white/30 group-hover:text-white/50"}"
             aria-hidden="true"

@@ -1,3 +1,12 @@
+## OpenBack v0.34.88 - Mobile Everywhere
+
+- Reworked every menu page and modal for phones and tablets with compact responsive headers, horizontally scrollable tabs, safe-area-aware full-height panels, touch-friendly controls, and smoother contained scrolling.
+- Fixed narrow-phone clipping in player names and clan tags, prevented lobby modifiers from colliding with start timers, and made public-game cards easier to read without hiding their details.
+- Rebuilt the mobile footer and language placement so legal links and controls wrap cleanly without overlap, and removed the footer from focused setup, account, store, clan, Ranked, and content pages to restore the full usable screen.
+- Improved short-screen navigation, iOS keyboard behavior, tap responsiveness, and modal spacing while preserving the existing desktop layout and gameplay quality.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.87 - Clean Mobile Home
 
 - Removed homepage announcement and warning banners and moved compatibility notices and important announcements into the dedicated News page.

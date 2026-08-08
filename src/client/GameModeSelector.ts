@@ -130,7 +130,7 @@ export class GameModeSelector extends LitElement {
 
     return html`
       <div
-        class="flex flex-col gap-3 sm:gap-4 w-full px-3 sm:px-0 mx-auto pb-3 sm:pb-0"
+        class="flex flex-col gap-3 sm:gap-4 w-full px-3 sm:px-0 mx-auto pb-3 sm:pb-0 touch-pan-y"
       >
         <!-- Solo: mobile only, top -->
         <div class="sm:hidden h-14">
@@ -382,22 +382,25 @@ export class GameModeSelector extends LitElement {
         </div>
         <!-- Top row: modifiers + timer -->
         <div
-          class="absolute inset-x-2 top-2 flex items-start justify-between gap-2"
+          class="absolute inset-x-2 top-2 flex items-start justify-between gap-1.5"
         >
           ${modifierLabels.length > 0
-            ? html`<div class="flex flex-col items-start gap-1 mt-[2px]">
+            ? html`<div
+                class="flex max-w-[64%] flex-col items-start gap-1 mt-[2px]"
+              >
                 ${modifierLabels.map(
                   (label) =>
                     html`<span
-                      class="px-2 py-1 rounded text-xs font-bold uppercase tracking-widest bg-malibu-blue text-white shadow-[var(--shadow-malibu-blue-pill)]"
+                      class="max-w-full truncate px-2 py-1 rounded text-[10px] sm:text-xs font-bold uppercase tracking-wider sm:tracking-widest bg-malibu-blue text-white shadow-[var(--shadow-malibu-blue-pill)]"
+                      title=${label}
                       >${label}</span
                     >`,
                 )}
               </div>`
             : html`<div></div>`}
-          <div class="shrink-0">
+          <div class="min-w-0 max-w-[36%] shrink-0">
             <span
-              class="text-xs font-bold tracking-widest ${timeDisplayUppercase
+              class="block max-w-full truncate text-[10px] sm:text-xs font-bold tracking-wider sm:tracking-widest ${timeDisplayUppercase
                 ? "uppercase"
                 : "normal-case"} bg-malibu-blue text-white px-2 py-1 rounded"
               >${timeDisplay}</span

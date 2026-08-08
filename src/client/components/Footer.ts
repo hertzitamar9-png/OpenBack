@@ -11,7 +11,7 @@ export class Footer extends LitElement {
   render() {
     return html`
       <footer
-        class="[.in-game_&]:hidden bg-zinc-900/95 backdrop-blur-md flex flex-col items-center justify-center gap-0 py-2 lg:gap-1 lg:pt-1 lg:pb-3 text-white/50 w-full border-t border-white/10 shrink-0 relative z-50"
+        class="[.in-game_&]:hidden bg-zinc-900/95 backdrop-blur-md flex flex-col items-center justify-center gap-1 py-2 lg:gap-1 lg:pt-1 lg:pb-3 text-white/50 w-full border-t border-white/10 shrink-0 relative z-30"
       >
         <div
           class="flex h-7 lg:h-auto items-center justify-center gap-6 lg:pt-2 w-full relative"
@@ -32,11 +32,11 @@ export class Footer extends LitElement {
             />
           </a>
           <lang-selector
-            class="absolute right-3 top-0 lg:right-4"
+            class="relative lg:absolute lg:right-4 lg:top-0"
           ></lang-selector>
         </div>
         <div
-          class="w-full text-[10px] lg:text-xs lg:mt-2 flex flex-wrap items-center justify-center gap-x-3 lg:gap-x-4 gap-y-1 lg:gap-y-2 px-3 lg:px-4 whitespace-nowrap"
+          class="w-full text-[10px] leading-4 lg:text-xs lg:mt-2 flex flex-wrap items-center justify-center gap-x-3 lg:gap-x-4 gap-y-1 lg:gap-y-2 px-3 lg:px-4"
         >
           <button
             type="button"
