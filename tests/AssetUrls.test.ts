@@ -2,12 +2,12 @@ import { describe, expect, test } from "vitest";
 import { buildAssetUrl, rewriteAssetsForCdn } from "../src/core/AssetUrls";
 
 describe("AssetUrls", () => {
-  test("returns hashed URLs for direct asset matches", () => {
+  test("returns stable versioned URLs for image asset matches", () => {
     expect(
       buildAssetUrl("images/Favicon.svg", {
         "images/Favicon.svg": "/_assets/images/Favicon.hash.svg",
       }),
-    ).toBe("/_assets/images/Favicon.hash.svg");
+    ).toBe("/images/Favicon.svg?v=hash");
   });
 
   test("resolves leading-slash cosmetic paths through the asset manifest", () => {
@@ -15,7 +15,7 @@ describe("AssetUrls", () => {
       buildAssetUrl("/flags/NATO.svg", {
         "flags/NATO.svg": "/_assets/flags/NATO.hash.svg",
       }),
-    ).toBe("/_assets/flags/NATO.hash.svg");
+    ).toBe("/flags/NATO.svg?v=hash");
   });
 
   test("falls back to the unversioned path when manifest has no match", () => {
@@ -52,24 +52,24 @@ describe("AssetUrls", () => {
     );
   });
 
-  test("prefixes baseUrl onto hashed URLs when provided", () => {
+  test("keeps resilient images same-origin when baseUrl is provided", () => {
     expect(
       buildAssetUrl(
         "images/Favicon.svg",
         { "images/Favicon.svg": "/_assets/images/Favicon.hash.svg" },
         "https://cdn.example.com",
       ),
-    ).toBe("https://cdn.example.com/_assets/images/Favicon.hash.svg");
+    ).toBe("/images/Favicon.svg?v=hash");
   });
 
-  test("preserves direct URL when baseUrl is empty string", () => {
+  test("preserves stable versioned image URL when baseUrl is empty", () => {
     expect(
       buildAssetUrl(
         "images/Favicon.svg",
         { "images/Favicon.svg": "/_assets/images/Favicon.hash.svg" },
         "",
       ),
-    ).toBe("/_assets/images/Favicon.hash.svg");
+    ).toBe("/images/Favicon.svg?v=hash");
   });
 
   test("returns absolute http(s) URLs unchanged and ignores baseUrl", () => {
@@ -100,20 +100,33 @@ describe("AssetUrls", () => {
     ).toBe("/images/unknown.svg");
   });
 
-  test("strips trailing slashes on baseUrl to avoid double slash", () => {
+  test("uses same-origin resilient image URLs regardless of trailing base slashes", () => {
     const manifest = {
       "images/Favicon.svg": "/_assets/images/Favicon.hash.svg",
     };
     expect(
       buildAssetUrl("images/Favicon.svg", manifest, "https://cdn.example.com/"),
-    ).toBe("https://cdn.example.com/_assets/images/Favicon.hash.svg");
+    ).toBe("/images/Favicon.svg?v=hash");
     expect(
       buildAssetUrl(
         "images/Favicon.svg",
         manifest,
         "https://cdn.example.com///",
       ),
-    ).toBe("https://cdn.example.com/_assets/images/Favicon.hash.svg");
+    ).toBe("/images/Favicon.svg?v=hash");
+  });
+
+  test("keeps non-image assets on the immutable hashed CDN path", () => {
+    expect(
+      buildAssetUrl(
+        "sounds/effects/ka-ching.mp3",
+        {
+          "sounds/effects/ka-ching.mp3":
+            "/_assets/sounds/effects/ka-ching.hash.mp3",
+        },
+        "https://cdn.example.com/",
+      ),
+    ).toBe("https://cdn.example.com/_assets/sounds/effects/ka-ching.hash.mp3");
   });
 });
 

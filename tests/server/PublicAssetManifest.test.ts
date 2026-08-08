@@ -8,6 +8,7 @@ import {
   clearPublicAssetManifestCache,
   copyRootPublicFiles,
   createHashedPublicAssetFiles,
+  createStablePublicImageFiles,
 } from "../../src/server/PublicAssetManifest";
 
 describe("PublicAssetManifest", () => {
@@ -105,6 +106,24 @@ describe("PublicAssetManifest", () => {
     await expect(
       fs.readFile(path.join(outDir, "changelog.md"), "utf8"),
     ).resolves.toBe(changelog);
+  });
+
+  test("copies every manifested image to its stable fallback URL", async () => {
+    const { resourcesDir, outDir } = await createTempResources();
+    await fs.mkdir(path.join(resourcesDir, "flags"), { recursive: true });
+    await fs.mkdir(path.join(resourcesDir, "sounds"), { recursive: true });
+    await fs.writeFile(path.join(resourcesDir, "flags", "Aceh.svg"), "flag");
+    await fs.writeFile(path.join(resourcesDir, "sounds", "theme.mp3"), "sound");
+
+    const manifest = buildPublicAssetManifest([resourcesDir]);
+    createStablePublicImageFiles([resourcesDir], outDir, manifest);
+
+    await expect(
+      fs.readFile(path.join(outDir, "flags", "Aceh.svg"), "utf8"),
+    ).resolves.toBe("flag");
+    await expect(
+      fs.access(path.join(outDir, "sounds", "theme.mp3")),
+    ).rejects.toThrow();
   });
 
   test("hashes manifest.json from its rewritten content", async () => {

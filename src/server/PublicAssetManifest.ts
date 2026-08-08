@@ -5,6 +5,7 @@ import path from "node:path";
 import {
   type AssetManifest,
   encodeAssetPath,
+  isImageAssetPath,
   normalizeAssetPath,
 } from "../core/AssetUrls";
 
@@ -373,6 +374,21 @@ export function createHashedPublicAssetFiles(
       continue;
     }
 
+    fs.copyFileSync(sourcePath, outputPath);
+  }
+}
+
+export function createStablePublicImageFiles(
+  sourceDirs: string[],
+  outDir: string,
+  assetManifest: AssetManifest,
+): void {
+  for (const relativePath of Object.keys(assetManifest)) {
+    if (!isImageAssetPath(relativePath)) continue;
+
+    const sourcePath = resolveSourceFile(relativePath, sourceDirs);
+    const outputPath = path.join(outDir, relativePath);
+    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
     fs.copyFileSync(sourcePath, outputPath);
   }
 }

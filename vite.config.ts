@@ -15,6 +15,7 @@ import {
   buildPublicAssetManifest,
   copyRootPublicFiles,
   createHashedPublicAssetFiles,
+  createStablePublicImageFiles,
   getProprietaryDir,
   getResourcesDir,
   writePublicAssetManifest,
@@ -182,6 +183,10 @@ export default defineConfig(({ mode }) => {
       // or proprietary/. Vite's bundle output (assets/...) doesn't, so it's
       // merged in after.
       createHashedPublicAssetFiles(sourceDirs, outDir, assetManifest);
+      // Images additionally keep a versioned stable path. Unlike maps and
+      // audio, these files are visible throughout the menus and must survive
+      // stale mobile tabs during rolling deployments without broken artwork.
+      createStablePublicImageFiles(sourceDirs, outDir, assetManifest);
       // Track Vite's own bundle output (vendor chunks, JS, CSS, workers under
       // static/assets/) in the manifest so the deploy-time R2 upload covers
       // them alongside the hashed source assets. Skip non-assets/ emits like

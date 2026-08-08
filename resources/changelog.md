@@ -1,3 +1,11 @@
+## OpenBack v0.34.90 - Reliable Artwork
+
+- Fixed broken flag thumbnails, Help illustrations, icons, map previews, and other bundled images after deployments or in older mobile browser tabs.
+- Added stable versioned image delivery while preserving the existing high-performance hashed pipeline for maps, audio, and game data.
+- Made every Help illustration load as soon as the Help page opens so images no longer remain blank inside mobile scrolling panels.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.89 - Clean Fast Mobile
 
 - Removed the remaining homepage, in-game, live-stream, Steam, Discord, tutorial, and upstream store-prompt surfaces so the play screen stays focused entirely on OpenBack.

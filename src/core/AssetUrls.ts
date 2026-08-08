@@ -48,6 +48,39 @@ function isAbsoluteUrl(path: string): boolean {
   return /^(?:https?:\/\/|data:|blob:)/i.test(path);
 }
 
+const RESILIENT_IMAGE_EXTENSIONS = new Set([
+  ".avif",
+  ".gif",
+  ".ico",
+  ".jpeg",
+  ".jpg",
+  ".png",
+  ".svg",
+  ".webp",
+]);
+
+export function isImageAssetPath(path: string): boolean {
+  const normalizedPath = normalizeAssetPath(path);
+  const extensionStart = normalizedPath.lastIndexOf(".");
+  return (
+    extensionStart !== -1 &&
+    RESILIENT_IMAGE_EXTENSIONS.has(
+      normalizedPath.slice(extensionStart).toLowerCase(),
+    )
+  );
+}
+
+function getManifestAssetVersion(manifestUrl: string): string | null {
+  const fileName = manifestUrl.split("?", 1)[0].split("/").pop();
+  if (!fileName) return null;
+
+  const extensionStart = fileName.lastIndexOf(".");
+  const versionStart = fileName.lastIndexOf(".", extensionStart - 1);
+  if (versionStart === -1 || extensionStart === -1) return null;
+
+  return fileName.slice(versionStart + 1, extensionStart) || null;
+}
+
 export function buildAssetUrl(
   path: string,
   assetManifest: AssetManifest = {},
@@ -61,6 +94,18 @@ export function buildAssetUrl(
 
   const directUrl = assetManifest[normalizedPath];
   if (directUrl) {
+    // Image files are also emitted at a stable same-origin path. The manifest
+    // hash is retained as a cache key, but an older app bundle can still load
+    // the current file after a rolling deploy removes its old hashed copy.
+    // This prevents broken flags, Help illustrations, icons, and thumbnails
+    // without moving large maps/audio off the immutable asset pipeline.
+    if (isImageAssetPath(normalizedPath)) {
+      const stableUrl = `/${encodeAssetPath(normalizedPath)}`;
+      const version = getManifestAssetVersion(directUrl);
+      return version
+        ? `${stableUrl}?v=${encodeURIComponent(version)}`
+        : stableUrl;
+    }
     return baseUrl ? `${baseUrl.replace(/\/+$/, "")}${directUrl}` : directUrl;
   }
 
