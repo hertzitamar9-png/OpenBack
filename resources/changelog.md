@@ -1,3 +1,12 @@
+## OpenBack v0.34.89 - Clean Fast Mobile
+
+- Removed the remaining homepage, in-game, live-stream, Steam, Discord, tutorial, and upstream store-prompt surfaces so the play screen stays focused entirely on OpenBack.
+- Removed the obsolete injected mobile-logo layer that could leave oversized or broken branding over the phone interface.
+- Added adaptive phone and tablet render resolution plus stable 60 FPS pacing on high-refresh touch screens, keeping every gameplay system and visual effect while reducing GPU load, heat, and frame spikes.
+- Shipped the complete responsive phone layout with compact controls, safe-area support, readable cards, and touch-friendly menus instead of the stale desktop-scaled interface.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.88 - Mobile Everywhere
 
 - Reworked every menu page and modal for phones and tablets with compact responsive headers, horizontally scrollable tabs, safe-area-aware full-height panels, touch-friendly controls, and smoother contained scrolling.

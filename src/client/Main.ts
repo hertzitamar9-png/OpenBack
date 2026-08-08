@@ -28,9 +28,7 @@ import { GameInfoModal } from "./GameInfoModal";
 import "./GameModeSelector";
 import { GameModeSelector } from "./GameModeSelector";
 import { GameStartingModal } from "./GameStartingModal";
-import "./GoogleAdElement";
 import { HelpModal } from "./HelpModal";
-import "./HomepagePromos";
 import { HostLobbyModal as HostPrivateLobbyModal } from "./HostLobbyModal";
 import { showInGameAlert, showInGameConfirm } from "./InGameModal";
 import { JoinLobbyModal } from "./JoinLobbyModal";
@@ -1003,7 +1001,6 @@ class Client {
         "matchmaking-modal",
         "clan-modal",
         "lang-selector",
-        "homepage-promos",
       ].forEach((tag) => {
         const modal = document.querySelector(tag) as HTMLElement & {
           close?: () => void;

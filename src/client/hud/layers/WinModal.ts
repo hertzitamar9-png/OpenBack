@@ -1,25 +1,11 @@
-import { html, LitElement, TemplateResult } from "lit";
+import { html, LitElement } from "lit";
 import { customElement, state } from "lit/decorators.js";
-import {
-  getGamesPlayed,
-  isInIframe,
-  translateText,
-  TUTORIAL_VIDEO_URL,
-} from "../../../client/Utils";
+import { translateText } from "../../../client/Utils";
 import { EventBus } from "../../../core/EventBus";
 import { RankedType } from "../../../core/game/Game";
 import { GameUpdateType } from "../../../core/game/GameUpdates";
-import { getUserMe } from "../../Api";
-import "../../components/CosmeticButton";
-import "../../components/SteamWishlist";
 import { Controller } from "../../Controller";
-import {
-  fetchCosmetics,
-  purchaseCosmetic,
-  resolveCosmetics,
-} from "../../Cosmetics";
 import { crazyGamesSDK } from "../../CrazyGamesSDK";
-import { steamSDK } from "../../SteamSDK";
 import { SendWinnerEvent } from "../../Transport";
 import { GameView } from "../../view";
 
@@ -42,12 +28,7 @@ export class WinModal extends LitElement implements Controller {
   @state()
   private isRankedGame = false;
 
-  @state()
-  private patternContent: TemplateResult | null = null;
-
   private _title: string;
-
-  private rand = Math.random();
 
   // Override to prevent shadow DOM creation
   createRenderRoot() {
@@ -68,9 +49,6 @@ export class WinModal extends LitElement implements Controller {
         <h2 class="m-0 mb-4 text-[26px] text-center text-white shrink-0">
           ${this._title || ""}
         </h2>
-        <div class="min-h-0 flex-1 overflow-y-auto pr-0.5">
-          ${this.innerHtml()}
-        </div>
         <div
           class="${this.showButtons
             ? "mt-4 flex justify-between gap-2.5 shrink-0"
@@ -108,137 +86,8 @@ export class WinModal extends LitElement implements Controller {
     `;
   }
 
-  innerHtml() {
-    // The Steam desktop build has nothing to wishlist — fall through to the
-    // other promos so the box is never empty.
-    const canWishlist = !steamSDK.isOnSteam();
-
-    if (isInIframe()) {
-      return canWishlist ? this.steamWishlist() : this.discordDisplay();
-    }
-
-    if (!this.isWin && getGamesPlayed() < 3) {
-      return this.renderYoutubeTutorial();
-    }
-    if (this.rand < 0.25 && canWishlist) {
-      return this.steamWishlist();
-    } else if (this.rand < 0.5) {
-      return this.discordDisplay();
-    } else {
-      return this.renderPatternButton();
-    }
-  }
-
-  renderYoutubeTutorial() {
-    return html`
-      <div class="text-center mb-6 bg-black/30 p-2.5 rounded-sm">
-        <h3 class="text-xl font-semibold text-white mb-3">
-          ${translateText("win_modal.youtube_tutorial")}
-        </h3>
-        <!-- 56.25% = 9:16 -->
-        <div class="relative w-full pb-[56.25%]">
-          <iframe
-            class="absolute top-0 left-0 w-full h-full rounded-sm"
-            src="${this.isVisible ? TUTORIAL_VIDEO_URL : ""}"
-            title="YouTube video player"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowfullscreen
-          ></iframe>
-        </div>
-      </div>
-    `;
-  }
-
-  renderPatternButton() {
-    return html`
-      <div class="text-center mb-6 bg-black/30 p-2.5 rounded-sm">
-        <h3 class="text-xl font-semibold text-white mb-3">
-          ${translateText("win_modal.support_openfront")}
-        </h3>
-        <p class="text-white mb-3">
-          ${translateText("win_modal.territory_pattern")}
-        </p>
-        <div
-          class="mx-auto w-full overflow-x-auto overflow-y-visible rounded-sm"
-        >
-          <div class="flex min-w-max items-start justify-start gap-4 px-1 py-1">
-            ${this.patternContent}
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  async loadPatternContent() {
-    const me = await getUserMe();
-    const cosmetics = await fetchCosmetics();
-
-    const purchasable = resolveCosmetics(cosmetics, me, null).filter(
-      (r) => r.type === "pattern" && r.relationship === "purchasable",
-    );
-
-    if (purchasable.length === 0) {
-      this.patternContent = html``;
-      return;
-    }
-
-    // Shuffle the array and take patterns. Will always be 3 wide to allow scrolling
-    const shuffled = [...purchasable].sort(() => Math.random() - 0.5);
-    const selected = shuffled.slice(0, Math.min(3, shuffled.length));
-
-    this.patternContent = html`
-      <div class="flex gap-4 flex-nowrap justify-start items-start">
-        ${selected.map(
-          (r) => html`
-            <cosmetic-button
-              .resolved=${r}
-              .onPurchase=${purchaseCosmetic}
-            ></cosmetic-button>
-          `,
-        )}
-      </div>
-    `;
-  }
-
-  steamWishlist(): TemplateResult {
-    return html`
-      <div class="text-center mb-6 bg-black/30 p-2.5 rounded-sm">
-        <h3 class="text-xl font-semibold text-white mb-3">
-          ${translateText("steam_wishlist.title")}
-        </h3>
-        <steam-wishlist
-          campaign="win_modal"
-          .active=${this.isVisible}
-        ></steam-wishlist>
-      </div>
-    `;
-  }
-
-  discordDisplay(): TemplateResult {
-    return html`
-      <div class="text-center mb-6 bg-black/30 p-2.5 rounded-sm">
-        <h3 class="text-xl font-semibold text-white mb-3">
-          ${translateText("win_modal.join_discord")}
-        </h3>
-        <p class="text-white mb-3">
-          ${translateText("win_modal.discord_description")}
-        </p>
-        <a
-          href="https://discord.com/invite/openfront"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-block px-6 py-3 bg-indigo-600 text-white rounded-sm font-semibold transition-all duration-200 hover:bg-indigo-700 hover:-translate-y-px no-underline"
-        >
-          ${translateText("win_modal.join_server")}
-        </a>
-      </div>
-    `;
-  }
-
-  async show() {
+  show() {
     crazyGamesSDK.gameplayStop();
-    await this.loadPatternContent();
     // Check if this is a ranked game
     this.isRankedGame =
       this.game.config().gameConfig().rankedType !== undefined;

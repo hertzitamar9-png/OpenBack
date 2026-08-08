@@ -8,6 +8,49 @@
  * must go through this so the canvas size, camera math, and text scaling stay
  * on the same coordinate system.
  */
+export interface RenderDeviceProfile {
+  devicePixelRatio: number;
+  viewportWidth: number;
+  hardwareConcurrency: number;
+  deviceMemory?: number;
+  coarsePointer: boolean;
+}
+
+export function renderDprForProfile(profile: RenderDeviceProfile): number {
+  const dpr = profile.devicePixelRatio || 1;
+  if (
+    profile.viewportWidth <= 767 ||
+    (profile.coarsePointer && profile.viewportWidth <= 1024)
+  ) {
+    const lowEnd =
+      profile.hardwareConcurrency <= 4 ||
+      (profile.deviceMemory !== undefined && profile.deviceMemory <= 4);
+    return Math.min(dpr, lowEnd ? 1.25 : 1.5);
+  }
+  if (profile.viewportWidth <= 1023) {
+    return Math.min(dpr, 1.75);
+  }
+  return Math.min(dpr, 2);
+}
+
 export function renderDpr(): number {
-  return Math.min(window.devicePixelRatio || 2, 2);
+  const memory = (navigator as Navigator & { deviceMemory?: number })
+    .deviceMemory;
+  return renderDprForProfile({
+    devicePixelRatio: window.devicePixelRatio || 1,
+    viewportWidth: window.innerWidth,
+    hardwareConcurrency: navigator.hardwareConcurrency || 4,
+    deviceMemory: memory,
+    coarsePointer:
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(pointer: coarse)").matches,
+  });
+}
+
+export function mobileRenderFrameIntervalMs(): number {
+  const isTouchPhoneOrTablet =
+    window.innerWidth <= 1024 &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(pointer: coarse)").matches;
+  return isTouchPhoneOrTablet ? 1000 / 60 : 0;
 }

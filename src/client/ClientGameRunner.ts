@@ -75,6 +75,7 @@ import {
   deepAssign,
   GLUnavailableError,
   MapRenderer,
+  mobileRenderFrameIntervalMs,
   preloadAtlasData,
   renderDpr,
   type RenderSettings,
@@ -470,8 +471,24 @@ function mountWebGLFrameLoop(
   // renderer's captured frame callback (which draws). One RAF = one
   // synchronized camera-update + WebGL render.
   let rafId: number | null = null;
-  const driveFrame = (): void => {
-    syncCamera();
+  const minimumFrameInterval = mobileRenderFrameIntervalMs();
+  let lastFrameAt = -Infinity;
+  const driveFrame = (now: number): void => {
+    if (
+      minimumFrameInterval === 0 ||
+      now - lastFrameAt >= minimumFrameInterval - 0.5
+    ) {
+      if (
+        minimumFrameInterval === 0 ||
+        !Number.isFinite(lastFrameAt) ||
+        now - lastFrameAt > minimumFrameInterval * 2
+      ) {
+        lastFrameAt = now;
+      } else {
+        lastFrameAt += minimumFrameInterval;
+      }
+      syncCamera();
+    }
     rafId = requestAnimationFrame(driveFrame);
   };
   rafId = requestAnimationFrame(driveFrame);
@@ -712,7 +729,6 @@ async function createClientGame(
       "alert-frame",
       "spawn-timer",
       "immunity-timer",
-      "in-game-promo",
     ];
     for (let attempt = 0; attempt < 120; attempt++) {
       if (
