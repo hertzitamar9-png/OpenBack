@@ -29,11 +29,11 @@ describe("getApiBase localhost fallback", () => {
     setConfig("localhost");
   });
 
-  // API_DOMAIN is forced empty under vitest via the vite.config `define`, so this
-  // regression test exercises the fallback branch deterministically regardless of
-  // any API_DOMAIN in the host shell / CI.
-  it("falls back to http://localhost:8787 on localhost when apiHost is not set and API_DOMAIN is empty", () => {
-    expect(getApiBase()).toBe("http://localhost:8787");
+  // API_DOMAIN is forced empty under vitest via the Vite config. OpenBack's
+  // unified server handles API routes on the current origin unless a local
+  // developer explicitly overrides apiHost.
+  it("falls back to the current origin on localhost when apiHost is not set", () => {
+    expect(getApiBase()).toBe(window.location.origin);
   });
 });
 
