@@ -10,7 +10,7 @@ export const THREE_D_FOV_DEGREES = 42;
 export function threeDHeightForTerrainByte(value: number): number {
   const land = (value & 0x80) !== 0;
   const magnitude = value & 0x1f;
-  if (land && magnitude === 31) return 38;
-  if (land) return 0.15 + Math.pow(magnitude / 30, 2) * 31;
+  if (land && magnitude === 31) return 52;
+  if (land) return 0.15 + Math.pow(magnitude / 30, 2) * 43;
   return -Math.min(magnitude, 10) * 0.02;
 }

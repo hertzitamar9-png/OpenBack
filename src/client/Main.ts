@@ -18,6 +18,7 @@ import { reauthAfterCrazyGamesChange, userAuth } from "./Auth";
 import "./ClanModal";
 import type { JoinLobbyResult } from "./ClientGameRunner";
 import { getPlayerCosmeticsRefs } from "./Cosmetics";
+import "./CosmeticsInput";
 import { updateCrazyGamesNavButton } from "./CrazyGamesAccountButton";
 import { crazyGamesSDK } from "./CrazyGamesSDK";
 import "./FlagInput";
@@ -488,6 +489,13 @@ class Client {
       patternInput.addEventListener("pattern-input-click", () => {
         patternsModal?.open();
       });
+    });
+
+    // The compact identity-row control is rendered dynamically by PlayPage.
+    // Its event bubbles, so one listener keeps it functional across responsive
+    // rerenders and takes the player directly to the complete cosmetics store.
+    document.addEventListener("cosmetics-input-click", () => {
+      window.showPage?.("page-item-store");
     });
 
     if (isInIframe()) {

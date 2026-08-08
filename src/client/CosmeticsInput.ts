@@ -79,14 +79,14 @@ export class CosmeticsInput extends LitElement {
     return this;
   }
 
-  private getIsDefaultPattern(): boolean {
-    return (
-      this.pattern === null && this.skin === null && this.selectedColor === null
-    );
+  private hasVisiblePreview(): boolean {
+    // Older settings can deserialize an unset cosmetic as an empty string.
+    // Treat only a real cosmetic object as a drawable preview.
+    return Boolean(this.pattern) || Boolean(this.skin);
   }
 
   private shouldShowSelectLabel(): boolean {
-    return this.showSelectLabel && this.getIsDefaultPattern();
+    return this.showSelectLabel && !this.hasVisiblePreview();
   }
 
   private applyAdaptiveSize(): void {
@@ -96,7 +96,7 @@ export class CosmeticsInput extends LitElement {
       return;
     }
 
-    const showSelect = this.showSelectLabel && this.getIsDefaultPattern();
+    const showSelect = this.showSelectLabel && !this.hasVisiblePreview();
     this.style.setProperty("height", "2.5rem");
     this.style.setProperty(
       "width",
@@ -167,7 +167,7 @@ export class CosmeticsInput extends LitElement {
                 ? "text-[7px] leading-tight px-0.5"
                 : "text-[10px] leading-none break-words px-1"} font-black text-white uppercase w-full text-center"
             >
-              ${translateText("cosmetics.title")}
+              ${translateText("cosmetics.select")}
             </span>`
           : null}
       </button>

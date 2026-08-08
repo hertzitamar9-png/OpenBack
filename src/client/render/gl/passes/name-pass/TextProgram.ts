@@ -194,12 +194,18 @@ export class TextProgram {
     gl.uniform1f(this.uHighlightOwnerID, highlightOwnerID);
     gl.uniform1f(this.uFadeOwnerID, fadeOwnerID);
     gl.uniform1f(this.uHoverFadeAlpha, ns.hoverFadeAlpha);
-    gl.uniform1f(this.uOutlineWidth, ns.outlineWidth);
+    // Perspective makes the colored MTSDF outline read as blocky rectangles
+    // around small glyphs. A restrained neutral edge keeps 3D labels as clean
+    // screen UI while retaining the classic styling in 2D.
+    gl.uniform1f(
+      this.uOutlineWidth,
+      screenFacing ? Math.min(ns.outlineWidth, 0.7) : ns.outlineWidth,
+    );
     gl.uniform1f(this.uNightAmbient, ambient);
     gl.uniform3f(this.uOutlineColor, ns.outlineR, ns.outlineG, ns.outlineB);
     gl.uniform1f(
       this.uOutlineUsePlayerColor,
-      ns.outlineUsePlayerColor ? 1.0 : 0.0,
+      !screenFacing && ns.outlineUsePlayerColor ? 1.0 : 0.0,
     );
     gl.uniform1f(this.uFillUsePlayerColor, ns.fillUsePlayerColor ? 1.0 : 0.0);
     gl.uniform1f(this.uHoverGlowWidth, ns.hoverGlowWidth);

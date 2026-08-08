@@ -52,8 +52,8 @@ out float vViewDepth;
 float heightFor(uint b){
   bool land=(b&128u)!=0u;
   float m=float(b&31u);
-  if(land&&m>30.5)return 38.0;
-  if(land)return 0.15+pow(m/30.0,2.0)*31.0;
+  if(land&&m>30.5)return 52.0;
+  if(land)return 0.15+pow(m/30.0,2.0)*43.0;
   return -min(m,10.0)*0.02;
 }
 float sampledHeight(ivec2 p){
@@ -137,8 +137,8 @@ out vec4 outColor;
 
 float heightFor(uint b){
   bool land=(b&128u)!=0u; float m=float(b&31u);
-  if(land&&m>30.5)return 38.0;
-  if(land)return 0.15+pow(m/30.0,2.0)*31.0;
+  if(land&&m>30.5)return 52.0;
+  if(land)return 0.15+pow(m/30.0,2.0)*43.0;
   return -min(m,10.0)*0.02;
 }
 void main(){
@@ -156,18 +156,27 @@ void main(){
   float hu=heightFor(texelFetch(uTerrain,up,0).r);
   float hd=heightFor(texelFetch(uTerrain,down,0).r);
   vec2 stableSlope=vec2(hl-hr,hu-hd)/max(1.0,float(radius)*2.0);
-  float relief=clamp(length(stableSlope)*0.32,0.0,1.0);
+  float relief=clamp(length(stableSlope)*0.28,0.0,1.0);
   float directional=clamp(0.5+dot(stableSlope,vec2(-0.68,-0.42))*0.16,0.0,1.0);
   float lightLevel=clamp(0.70+directional*0.38-relief*0.08,0.62,1.14);
-  float altitude=clamp(vHeight/31.0,0.0,1.0);
-  vec3 lowGround=vec3(0.27,0.43,0.19);
-  vec3 highGround=vec3(0.43,0.35,0.23);
-  vec3 terrainMaterial=mix(lowGround,highGround,smoothstep(0.18,0.66,altitude));
-  terrainMaterial=mix(terrainMaterial,vec3(0.82,0.84,0.83),smoothstep(0.70,0.96,altitude));
+  float altitude=clamp(vHeight/43.0,0.0,1.0);
+  vec3 lowGround=vec3(0.25,0.44,0.18);
+  vec3 exposedRock=vec3(0.42,0.39,0.34);
+  vec3 snow=vec3(0.91,0.94,0.96);
+  float rockMask=max(smoothstep(0.25,0.58,altitude),smoothstep(0.16,0.62,relief));
+  float snowMask=smoothstep(0.66,0.88,altitude)*(1.0-smoothstep(0.72,1.0,relief)*0.22);
+  vec3 terrainMaterial=mix(lowGround,exposedRock,rockMask);
+  terrainMaterial=mix(terrainMaterial,snow,snowMask);
   uint tileState=inside?texelFetch(uTileState,p,0).r:0u;
   uint owner=tileState&4095u;
   vec3 ownerColor=texture(uPalette,vec2((float(owner)+0.5)/4096.0,0.25)).rgb;
-  vec3 boardMaterial=owner>0u?ownerColor:terrainMaterial;
+  // Ownership stays unmistakable, while the underlying rock and snow remain
+  // visible instead of every claimed mountain becoming one flat green slab.
+  vec3 boardMaterial=owner>0u?mix(terrainMaterial,ownerColor,0.68):terrainMaterial;
+  if(owner>0u){
+    boardMaterial=mix(boardMaterial,exposedRock,mix(0.0,0.34,rockMask));
+    boardMaterial=mix(boardMaterial,snow,mix(0.0,0.72,snowMask));
+  }
   vec3 color=boardMaterial*lightLevel;
   if((centerByte&128u)==0u){
     float depth=clamp(float(centerByte&31u)/10.0,0.0,1.0);

@@ -1,3 +1,12 @@
+## OpenBack v0.34.94 - Clearer 3D Battlefield
+
+- Kept the 3D camera above the battlefield across its full forward and backward tilt range, removing the pole-crossing flip that could turn the map upside down.
+- Made 3D country names and troop counts clean, screen-facing labels without the heavy colored blocks around each character.
+- Increased visible elevation and restored distinct green lowlands, exposed rocky slopes, and snowy high peaks even inside player territory.
+- Added a clear, working **Select Cosmetic** control that opens the Store, so the identity row no longer contains an unexplained blank square.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.93 - Distinct Store Collection
 
 - Extended the Store uniqueness pass across every catalog section instead of limiting it to wraps.
