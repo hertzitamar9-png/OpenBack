@@ -73,7 +73,7 @@ export class FlagInput extends LitElement {
     return html`
       <button
         id="flag-input"
-        class="flag-btn p-0 m-0 border-0 w-full h-full flex cursor-pointer justify-center items-center focus:outline-none focus:ring-0 focus-visible:ring-2 focus-visible:ring-white/70 transition-all duration-200 hover:-translate-y-0.5 hover:scale-110 hover:brightness-[1.12] active:translate-y-0 active:scale-100 hover:shadow-[var(--shadow-action-card-hover)] rounded-lg overflow-hidden"
+        class="flag-btn p-0 m-0 border-0 w-full h-full flex cursor-pointer justify-center items-center focus:outline-none focus:ring-0 transition-all duration-200 hover:-translate-y-0.5 hover:scale-110 hover:brightness-[1.12] active:translate-y-0 active:scale-100 hover:shadow-[var(--shadow-action-card-hover)] rounded-lg overflow-hidden"
         title=${buttonTitle}
         @click=${this.onInputClick}
       >

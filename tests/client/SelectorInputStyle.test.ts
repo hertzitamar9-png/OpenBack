@@ -22,7 +22,16 @@ describe("home selector input styling", () => {
     for (const selector of [flag, cosmetic]) {
       expect(selector).toContain("hover:-translate-y-0.5");
       expect(selector).toContain("hover:scale-110");
-      expect(selector).toContain("focus-visible:ring-2");
+    }
+  });
+
+  it("never draws a focus ring or blue outline around either selector", () => {
+    const flag = source("FlagInput.ts");
+    const cosmetic = source("CosmeticsInput.ts");
+
+    for (const selector of [flag, cosmetic]) {
+      expect(selector).not.toContain("focus-visible:ring");
+      expect(selector).not.toContain("focus-visible:outline");
     }
   });
 });

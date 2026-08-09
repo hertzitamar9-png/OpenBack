@@ -1,3 +1,9 @@
+## OpenBack v0.34.103 - Clean Home Selectors
+
+- Removed the blue focus outline from Select Flag and Select Cosmetic while preserving their matching hover and press feedback.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.102 - Real 3D Battlefield Models
 
 - Replaced the temporary primitive unit bodies in 3D World with locally bundled low-poly models for every ship, projectile, bomb, building, train, runway, aircraft, launcher, tank, and mine.
