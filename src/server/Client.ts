@@ -24,5 +24,6 @@ export class Client {
     public readonly publicId: string | undefined,
     public readonly friends: string[],
     public readonly infiniteGold: boolean = false,
+    public readonly profilePictureUrl: string | undefined = undefined,
   ) {}
 }

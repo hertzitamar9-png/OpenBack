@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { updateAccountNavButton } from "../../src/client/NavAccountButton";
+import {
+  finishAccountNavLoading,
+  updateAccountNavButton,
+} from "../../src/client/NavAccountButton";
 import { getDiscordAvatarUrl } from "../../src/client/Utils";
 import type { DiscordUser, UserMeResponse } from "../../src/core/ApiSchemas";
 
@@ -65,14 +68,15 @@ describe("updateAccountNavButton", () => {
       }),
     );
     // The core regression: a Steam-authed user must read as logged in.
-    expect(hidden(nav.signInText)).toBe(true);
+    expect(hidden(nav.signInText)).toBe(false);
+    expect(nav.signInText.textContent).toContain("Jish");
     expect(hidden(nav.avatar)).toBe(false);
     expect(nav.avatar.getAttribute("src")).toBe(
       "https://avatars.steamstatic.com/abc_full.jpg",
     );
   });
 
-  it("shows the logged-in person icon for a Steam session with no avatar", () => {
+  it("shows the OB fallback for a Steam session with no avatar", () => {
     updateAccountNavButton(
       userMe({
         steam: {
@@ -84,15 +88,33 @@ describe("updateAccountNavButton", () => {
     );
     // No avatar to show, but still logged in — never the sign-in prompt.
     expect(hidden(nav.signInText)).toBe(true);
-    expect(hidden(nav.avatar)).toBe(true);
-    expect(hidden(nav.personIcon)).toBe(false);
+    expect(hidden(nav.avatar)).toBe(false);
+    expect(nav.avatar.getAttribute("src")).toContain(
+      "/images/OpenBackMark512.png",
+    );
+    expect(hidden(nav.personIcon)).toBe(true);
     expect(hidden(nav.emailBadge)).toBe(true);
   });
 
-  it("shows the email badge for an email session", () => {
+  it("shows the OB profile fallback for an email session", () => {
     updateAccountNavButton(userMe({ email: "player@example.com" }));
     expect(hidden(nav.signInText)).toBe(true);
-    expect(hidden(nav.emailBadge)).toBe(false);
+    expect(hidden(nav.avatar)).toBe(false);
+    expect(nav.avatar.getAttribute("src")).toContain(
+      "/images/OpenBackMark512.png",
+    );
+    expect(hidden(nav.emailBadge)).toBe(true);
+  });
+
+  it("prefers the OpenBack profile picture over provider avatars", () => {
+    updateAccountNavButton(
+      userMe({
+        email: "player@example.com",
+        profilePictureUrl: "/profile-images/player?v=9",
+        discord: discordUser,
+      }),
+    );
+    expect(nav.avatar.getAttribute("src")).toBe("/profile-images/player?v=9");
   });
 
   it("prefers the Discord avatar over Steam for a linked account", () => {
@@ -119,7 +141,24 @@ describe("updateAccountNavButton", () => {
     vi.mocked(getDiscordAvatarUrl).mockReturnValueOnce(null);
     updateAccountNavButton(userMe({ discord: discordUser }));
     expect(hidden(nav.signInText)).toBe(true);
-    expect(hidden(nav.personIcon)).toBe(false);
-    expect(hidden(nav.avatar)).toBe(true);
+    expect(hidden(nav.personIcon)).toBe(true);
+    expect(hidden(nav.avatar)).toBe(false);
+    expect(nav.avatar.getAttribute("src")).toContain(
+      "/images/OpenBackMark512.png",
+    );
+  });
+});
+
+describe("finishAccountNavLoading", () => {
+  it("hides the account spinner after authentication resolves", () => {
+    mountNav();
+
+    finishAccountNavLoading();
+
+    expect(
+      document
+        .getElementById("nav-account-loading-spinner")
+        ?.classList.contains("hidden"),
+    ).toBe(true);
   });
 });

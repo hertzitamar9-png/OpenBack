@@ -41,6 +41,7 @@ import { requireLifetimeAccess } from "./LifetimeAccess";
 import "./Matchmaking";
 import { MatchmakingModal } from "./Matchmaking";
 import { modalRouter } from "./ModalRouter";
+import { updateAccountNavButton } from "./NavAccountButton";
 import { initNavigation } from "./Navigation";
 import "./NewsModal";
 import "./PatternInput";
@@ -62,12 +63,7 @@ import {
 import { UserSettingModal } from "./UserSettingModal";
 import "./UsernameInput";
 import { genAnonUsername, UsernameInput } from "./UsernameInput";
-import {
-  getDiscordAvatarUrl,
-  incrementGamesPlayed,
-  isInIframe,
-  translateText,
-} from "./Utils";
+import { incrementGamesPlayed, isInIframe, translateText } from "./Utils";
 import "./components/SocialInvitePopup";
 import { installSafariPinchZoomBlocker } from "./utilities/DisableSafariPinchZoom";
 
@@ -86,141 +82,6 @@ import "./styles/core/variables.css";
 import "./styles/layout/container.css";
 import "./styles/layout/header.css";
 import "./styles/modal/chat.css";
-
-function updateAccountNavButton(userMeResponse: UserMeResponse | false) {
-  const button = document.getElementById("nav-account-button");
-  const mobileButton = document.getElementById("mobile-nav-account-button");
-  if (!button && !mobileButton) return;
-
-  const avatarEl = document.getElementById("nav-account-avatar") as
-    | (HTMLImageElement & { _navToken?: symbol })
-    | null;
-  const personIconEl = document.getElementById(
-    "nav-account-person-icon",
-  ) as SVGElement | null;
-  const emailBadgeEl = document.getElementById(
-    "nav-account-email-badge",
-  ) as HTMLElement | null;
-  const signInTextEl = document.getElementById(
-    "nav-account-signin-text",
-  ) as HTMLSpanElement | null;
-
-  // Unique token for this update call
-  const navToken = Symbol();
-  if (avatarEl) avatarEl._navToken = navToken;
-
-  const showAvatar = (src: string, alt?: string) => {
-    if (mobileButton) {
-      mobileButton.removeAttribute("data-i18n");
-      mobileButton.textContent = translateText("main.profile");
-    }
-    if (avatarEl) {
-      avatarEl.alt = alt ?? translateText("main.discord_avatar_alt");
-      // If the avatar fails to load (bad URL / CDN issue / offline), fall back
-      // to the default sign-in UI instead of leaving a broken image.
-      avatarEl.onerror = () => {
-        if (avatarEl._navToken !== navToken) return;
-        avatarEl.onerror = null;
-        avatarEl.src = "https://cdn.discordapp.com/embed/avatars/0.png";
-      };
-      avatarEl.onload = () => {
-        // Only handle if this is the latest update
-        if (avatarEl._navToken !== navToken) return;
-        // Clear error handler after a successful load.
-        avatarEl.onerror = null;
-      };
-      avatarEl.src = src;
-      avatarEl.classList.remove("hidden");
-    }
-    personIconEl?.classList.add("hidden");
-    emailBadgeEl?.classList.add("hidden");
-    signInTextEl?.classList.add("hidden");
-    button?.classList.remove("border", "border-white/20");
-  };
-
-  const showSignIn = () => {
-    if (mobileButton) {
-      mobileButton.setAttribute("data-i18n", "main.sign_in");
-      mobileButton.textContent = translateText("main.sign_in");
-    }
-    avatarEl?.classList.add("hidden");
-    personIconEl?.classList.remove("hidden");
-    emailBadgeEl?.classList.add("hidden");
-    if (signInTextEl) {
-      // Undo the logged-in two-line layout and restore the translated label.
-      signInTextEl.classList.remove(
-        "flex",
-        "flex-col",
-        "items-start",
-        "leading-none",
-      );
-      signInTextEl.innerHTML = "";
-      signInTextEl.setAttribute("data-i18n", "main.sign_in");
-      signInTextEl.textContent = translateText("main.sign_in");
-      signInTextEl.classList.remove("hidden");
-    }
-    // Restore border when showing signin state
-    button?.classList.add("border", "border-white/20");
-  };
-
-  const showEmailLoggedIn = (name: string) => {
-    if (mobileButton) {
-      mobileButton.removeAttribute("data-i18n");
-      mobileButton.textContent = `${translateText("main.profile")} - ${name}`;
-    }
-    avatarEl?.classList.add("hidden");
-    personIconEl?.classList.add("hidden");
-    emailBadgeEl?.classList.add("hidden");
-    if (signInTextEl) {
-      signInTextEl.classList.remove("hidden");
-      signInTextEl.removeAttribute("data-i18n");
-      // Two-line layout: a small "Profile" label with the player's name below.
-      signInTextEl.classList.add(
-        "flex",
-        "flex-col",
-        "items-start",
-        "leading-none",
-      );
-      const profileLabel = translateText("main.profile");
-      signInTextEl.innerHTML = "";
-      const labelEl = document.createElement("span");
-      labelEl.className =
-        "text-[10px] font-bold uppercase tracking-widest text-white/60";
-      labelEl.textContent = profileLabel;
-      const nameEl = document.createElement("span");
-      nameEl.className =
-        "text-xs font-bold tracking-wide max-w-[10rem] truncate";
-      nameEl.textContent = name;
-      signInTextEl.append(labelEl, nameEl);
-    }
-    button?.classList.add("border", "border-white/20");
-  };
-
-  const discord =
-    userMeResponse !== false ? userMeResponse.user.discord : undefined;
-  if (discord && avatarEl) {
-    const avatarAlt = translateText("main.user_avatar_alt", {
-      username: discord.username,
-    });
-    const url = getDiscordAvatarUrl(discord);
-    if (url) {
-      showAvatar(url, avatarAlt);
-      return;
-    }
-  }
-
-  if (userMeResponse !== false) {
-    const trimmedName = userMeResponse.user.displayName?.trim();
-    // A session/game ID is not a profile name. Keep the Log in label until
-    // the player deliberately saves a display name.
-    if (trimmedName) {
-      showEmailLoggedIn(trimmedName);
-      return;
-    }
-  }
-
-  showSignIn();
-}
 
 declare global {
   interface Window {

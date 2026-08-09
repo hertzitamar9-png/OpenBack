@@ -582,6 +582,7 @@ export async function startWorker() {
 
         let flares: string[] | undefined;
         let publicId: string | undefined;
+        let profilePictureUrl: string | undefined;
         let friends: string[] = [];
         let ownedClanTags: string[] = [];
         let accountUsername:
@@ -609,6 +610,7 @@ export async function startWorker() {
           }
           flares = result.response.player.flares;
           publicId = result.response.player.publicId;
+          profilePictureUrl = result.response.user.profilePictureUrl;
           friends = result.response.player.friends;
           infiniteGold = result.response.player.infiniteGold ?? false;
           ownedClanTags = result.response.player.clans?.map((c) => c.tag) ?? [];
@@ -685,6 +687,7 @@ export async function startWorker() {
           publicId,
           friends,
           infiniteGold,
+          profilePictureUrl,
         );
 
         const joinResult = gm.joinClient(client, clientMsg.gameID);

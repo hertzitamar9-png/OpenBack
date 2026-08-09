@@ -55,6 +55,68 @@ async function postJson(pathname: string, body: unknown, cookie?: string) {
 }
 
 describe("email account lifecycle", () => {
+  test("stores profile pictures and first-death state on the signed-in account", async () => {
+    const email = `presentation-${Date.now()}@example.com`;
+    const requested = await postJson("/auth/request-code", {
+      email,
+      mode: "signup",
+    });
+    const { devCode } = (await requested.json()) as { devCode: string };
+    const verified = await postJson("/auth/verify-code", {
+      email,
+      code: devCode,
+      mode: "signup",
+    });
+    const { jwt } = (await verified.json()) as { jwt: string };
+    const authorization = `Bearer ${jwt}`;
+    const bytes = Buffer.from([
+      0x52, 0x49, 0x46, 0x46, 0x08, 0, 0, 0, 0x57, 0x45, 0x42, 0x50, 0x56, 0x50,
+      0x38, 0x20,
+    ]);
+
+    const upload = await fetch(`${origin}/users/@me/profile-picture`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: authorization,
+      },
+      body: JSON.stringify({
+        dataUrl: `data:image/webp;base64,${bytes.toString("base64")}`,
+      }),
+    });
+    expect(upload.status).toBe(200);
+    const uploaded = (await upload.json()) as {
+      user: { profilePictureUrl: string; deathTutorialSeen: boolean };
+    };
+    expect(uploaded.user.profilePictureUrl).toMatch(
+      /^\/profile-images\/.+\?v=1$/,
+    );
+    expect(uploaded.user.deathTutorialSeen).toBe(false);
+
+    const image = await fetch(`${origin}${uploaded.user.profilePictureUrl}`);
+    expect(image.status).toBe(200);
+    expect(image.headers.get("content-type")).toContain("image/webp");
+    expect(image.headers.get("cache-control")).toContain("immutable");
+    expect(Buffer.from(await image.arrayBuffer())).toEqual(bytes);
+
+    const marked = await fetch(`${origin}/users/@me/death-tutorial-seen`, {
+      method: "POST",
+      headers: { Authorization: authorization },
+    });
+    expect(marked.status).toBe(200);
+    await expect(marked.json()).resolves.toEqual({ deathTutorialSeen: true });
+
+    const me = await fetch(`${origin}/users/@me`, {
+      headers: { Authorization: authorization },
+    });
+    await expect(me.json()).resolves.toMatchObject({
+      user: {
+        profilePictureUrl: uploaded.user.profilePictureUrl,
+        deathTutorialSeen: true,
+      },
+    });
+  });
+
   test("reports whether a purchase email already has an account", async () => {
     const email = `purchase-status-${Date.now()}@example.com`;
     const before = await postJson("/purchase/account-status", { email });

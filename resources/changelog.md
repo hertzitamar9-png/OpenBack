@@ -1,3 +1,19 @@
+## OpenBack v0.34.98 - Persistent Player Identity
+
+- Added optional account profile pictures with automatic square cropping, persistent storage, and the updated circular OB logo as the reliable default everywhere.
+- Showed profile pictures beside player names across the Profile button, public profiles, friends, clans, Ranked ladders, lobbies, and live match leaderboards without affecting deterministic gameplay.
+- Made the first recorded death on a signed-in account show the Need Help tutorial once across every device; all later deaths show the OpenBack battle artwork in the same 16:9 frame.
+- Made guests see the tutorial once per open page, resetting naturally when OpenBack is closed and reopened.
+- Removed the Profile button's permanent loading spinner and kept the profile name visible beside the resolved avatar.
+
+Created by **frootz jhklphy**.
+
+## OpenBack v0.34.97 - Accurate Profile Status
+
+- Removed the stuck loading indicator from the Profile button as soon as account authentication finishes, so signed-in profiles no longer appear to be loading forever.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.96 - Continuous 3D Zoom
 
 - Kept the current battlefield target locked while zooming in 3D, so scrolling over water, fog, interface panels, or sky can no longer pull the entire map out of view.

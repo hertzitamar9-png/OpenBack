@@ -133,6 +133,7 @@ export const ClanMemberSchema = z.object({
   // responses from an API without the field still parse.
   username: z.string().nullable().optional(),
   displayName: z.string().optional(),
+  profilePictureUrl: z.string().optional(),
   stats: ClanMemberStatsSchema.optional(),
 });
 export type ClanMember = z.infer<typeof ClanMemberSchema>;
@@ -151,6 +152,7 @@ export const ClanJoinRequestSchema = z.object({
   // Requester's account username (null = never set).
   username: z.string().nullable().optional(),
   displayName: z.string().optional(),
+  profilePictureUrl: z.string().optional(),
   createdAt: z.iso.datetime(),
 });
 export type ClanJoinRequest = z.infer<typeof ClanJoinRequestSchema>;
@@ -168,6 +170,7 @@ export const ClanBanSchema = z.object({
   // Banned player's account username (null = never set).
   username: z.string().nullable().optional(),
   displayName: z.string().optional(),
+  profilePictureUrl: z.string().optional(),
   bannedBy: z.string(),
   // Account username of the officer who issued the ban.
   bannedByUsername: z.string().nullable().optional(),

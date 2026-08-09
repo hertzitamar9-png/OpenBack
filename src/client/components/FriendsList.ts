@@ -17,6 +17,7 @@ import { showInGameConfirm } from "../InGameModal";
 import { socialClient, type PendingSocialInvite } from "../SocialClient";
 import { showToast, translateText } from "../Utils";
 import "./CopyButton";
+import "./PlayerAvatar";
 import "./SocialChat";
 
 const PAGE_LIMIT = 20;
@@ -562,6 +563,11 @@ export class FriendsList extends LitElement {
       <div
         class="flex items-center gap-3 bg-white/5 rounded-lg border border-white/10 p-3"
       >
+        <player-avatar
+          size="2.5rem"
+          .src=${entry.profilePictureUrl}
+          .label=${this.displayName(entry)}
+        ></player-avatar>
         <div class="flex-1 min-w-0">
           <div class="truncate text-sm font-bold text-white">
             ${this.displayName(entry)}
@@ -636,6 +642,11 @@ export class FriendsList extends LitElement {
               <div
                 class="flex items-center gap-3 bg-white/5 rounded-lg border border-white/10 p-3"
               >
+                <player-avatar
+                  size="2.5rem"
+                  .src=${f.profilePictureUrl}
+                  .label=${this.displayName(f)}
+                ></player-avatar>
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-2">
                     <span

@@ -1,6 +1,13 @@
 import { UserMeResponse } from "../core/ApiSchemas";
+import { assetUrl } from "../core/AssetUrls";
 import { hasLinkedIdentity } from "./AccountIdentity";
 import { getDiscordAvatarUrl, translateText } from "./Utils";
+
+export function finishAccountNavLoading(): void {
+  document
+    .getElementById("nav-account-loading-spinner")
+    ?.classList.add("hidden");
+}
 
 // Renders the persistent top-nav account button from the resolved /users/@me
 // response: a linked identity shows its avatar/badge, everything else shows the
@@ -8,7 +15,8 @@ import { getDiscordAvatarUrl, translateText } from "./Utils";
 // now includes Steam — is unit-testable in jsdom.
 export function updateAccountNavButton(userMeResponse: UserMeResponse | false) {
   const button = document.getElementById("nav-account-button");
-  if (!button) return;
+  const mobileButton = document.getElementById("mobile-nav-account-button");
+  if (!button && !mobileButton) return;
 
   const avatarEl = document.getElementById("nav-account-avatar") as
     | (HTMLImageElement & { _navToken?: symbol })
@@ -24,26 +32,19 @@ export function updateAccountNavButton(userMeResponse: UserMeResponse | false) {
   ) as HTMLSpanElement | null;
 
   // Auth state is resolved, so the button no longer shows the loading spinner.
-  document
-    .getElementById("nav-account-loading-spinner")
-    ?.classList.add("hidden");
+  finishAccountNavLoading();
 
   // Unique token for this update call
   const navToken = Symbol();
   if (avatarEl) avatarEl._navToken = navToken;
 
-  // Logged in, but with no avatar or badge to show (e.g. Steam without a
-  // cached avatar, or an avatar that failed to load): the person icon alone,
-  // minus the signed-out prompt.
-  const showLoggedInPlain = () => {
-    avatarEl?.classList.add("hidden");
-    personIconEl?.classList.remove("hidden");
-    emailBadgeEl?.classList.add("hidden");
-    signInTextEl?.classList.add("hidden");
-    button?.classList.add("border", "border-white/20");
-  };
-
-  const showAvatar = (src: string, alt?: string) => {
+  const showAvatar = (src: string, alt?: string, displayName?: string) => {
+    if (mobileButton) {
+      mobileButton.removeAttribute("data-i18n");
+      mobileButton.textContent = displayName
+        ? `${translateText("main.profile")} - ${displayName}`
+        : translateText("main.profile");
+    }
     if (avatarEl) {
       avatarEl.alt = alt ?? translateText("main.discord_avatar_alt");
       // If the avatar fails to load (bad URL / CDN issue / offline), fall back
@@ -52,7 +53,7 @@ export function updateAccountNavButton(userMeResponse: UserMeResponse | false) {
       avatarEl.onerror = () => {
         if (avatarEl._navToken !== navToken) return;
         avatarEl.onerror = null;
-        showLoggedInPlain();
+        avatarEl.src = assetUrl("images/OpenBackMark512.png");
       };
       avatarEl.onload = () => {
         // Only handle if this is the latest update
@@ -65,26 +66,67 @@ export function updateAccountNavButton(userMeResponse: UserMeResponse | false) {
     }
     personIconEl?.classList.add("hidden");
     emailBadgeEl?.classList.add("hidden");
-    signInTextEl?.classList.add("hidden");
+    if (signInTextEl && displayName) {
+      signInTextEl.className =
+        "flex flex-col items-start leading-none text-xs font-bold tracking-widest";
+      signInTextEl.removeAttribute("data-i18n");
+      signInTextEl.replaceChildren();
+      const label = document.createElement("span");
+      label.className =
+        "text-[10px] font-bold uppercase tracking-widest text-white/60";
+      label.textContent = translateText("main.profile");
+      const name = document.createElement("span");
+      name.className = "max-w-[10rem] truncate text-xs font-bold tracking-wide";
+      name.textContent = displayName;
+      signInTextEl.append(label, name);
+    } else {
+      signInTextEl?.classList.add("hidden");
+    }
     button?.classList.remove("border", "border-white/20");
   };
 
+  const showOpenBackAvatar = () =>
+    showAvatar(
+      assetUrl("images/OpenBackMark512.png"),
+      "OpenBack profile",
+      userMeResponse !== false
+        ? userMeResponse.user.displayName?.trim()
+        : undefined,
+    );
+
   const showSignIn = () => {
+    if (mobileButton) {
+      mobileButton.setAttribute("data-i18n", "main.sign_in");
+      mobileButton.textContent = translateText("main.sign_in");
+    }
     avatarEl?.classList.add("hidden");
     personIconEl?.classList.remove("hidden");
     emailBadgeEl?.classList.add("hidden");
-    signInTextEl?.classList.remove("hidden");
+    if (signInTextEl) {
+      signInTextEl.className = "text-xs font-bold tracking-widest";
+      signInTextEl.setAttribute("data-i18n", "main.sign_in");
+      signInTextEl.textContent = translateText("main.sign_in");
+    }
     // Restore border when showing signin state
     button?.classList.add("border", "border-white/20");
   };
 
-  const showEmailLoggedIn = () => {
-    avatarEl?.classList.add("hidden");
-    personIconEl?.classList.remove("hidden");
-    emailBadgeEl?.classList.remove("hidden");
-    signInTextEl?.classList.add("hidden");
-    button?.classList.add("border", "border-white/20");
-  };
+  const profilePictureUrl =
+    userMeResponse !== false
+      ? userMeResponse.user.profilePictureUrl
+      : undefined;
+  if (profilePictureUrl) {
+    showAvatar(
+      profilePictureUrl,
+      userMeResponse !== false
+        ? (userMeResponse.user.displayName ?? "OpenBack profile")
+        : "OpenBack profile",
+      userMeResponse !== false
+        ? userMeResponse.user.displayName?.trim()
+        : undefined,
+    );
+    return;
+  }
 
   const discord =
     userMeResponse !== false ? userMeResponse.user.discord : undefined;
@@ -94,7 +136,13 @@ export function updateAccountNavButton(userMeResponse: UserMeResponse | false) {
     });
     const url = getDiscordAvatarUrl(discord);
     if (url) {
-      showAvatar(url, avatarAlt);
+      showAvatar(
+        url,
+        avatarAlt,
+        userMeResponse !== false
+          ? (userMeResponse.user.displayName?.trim() ?? discord.username)
+          : discord.username,
+      );
       return;
     }
   }
@@ -113,9 +161,17 @@ export function updateAccountNavButton(userMeResponse: UserMeResponse | false) {
         username:
           steam.personaName ?? translateText("steam_user_header.default_name"),
       });
-      showAvatar(steam.avatarUrl, avatarAlt);
+      showAvatar(
+        steam.avatarUrl,
+        avatarAlt,
+        userMeResponse !== false
+          ? (userMeResponse.user.displayName?.trim() ??
+              steam.personaName ??
+              undefined)
+          : undefined,
+      );
     } else {
-      showLoggedInPlain();
+      showOpenBackAvatar();
     }
     return;
   }
@@ -123,7 +179,7 @@ export function updateAccountNavButton(userMeResponse: UserMeResponse | false) {
   const email =
     userMeResponse !== false ? userMeResponse.user.email : undefined;
   if (email) {
-    showEmailLoggedIn();
+    showOpenBackAvatar();
     return;
   }
 
@@ -131,7 +187,7 @@ export function updateAccountNavButton(userMeResponse: UserMeResponse | false) {
   const google =
     userMeResponse !== false ? userMeResponse.user.google : undefined;
   if (google) {
-    showEmailLoggedIn();
+    showOpenBackAvatar();
     return;
   }
 
@@ -140,7 +196,7 @@ export function updateAccountNavButton(userMeResponse: UserMeResponse | false) {
   // user is still authenticated, so show the logged-in person icon. Only a
   // session with no linked identity at all gets the sign-in prompt.
   if (userMeResponse !== false && hasLinkedIdentity(userMeResponse.user)) {
-    showLoggedInPlain();
+    showOpenBackAvatar();
     return;
   }
 

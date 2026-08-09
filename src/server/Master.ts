@@ -46,7 +46,7 @@ const social = new SocialService(log);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-app.use(express.json());
+app.use(express.json({ limit: "256kb" }));
 
 // Local, self-contained auth (email code + optional Google). Served from the
 // same origin as the SPA so the browser can call it without CORS.

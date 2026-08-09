@@ -229,6 +229,66 @@ export async function updateMyProfile(profile: {
   }
 }
 
+async function changeMyProfilePicture(
+  method: "PUT" | "DELETE",
+  dataUrl?: string,
+): Promise<UserMeResponse | false> {
+  try {
+    const auth = await userAuth();
+    if (!auth) return false;
+    const response = await fetch(getApiBase() + "/users/@me/profile-picture", {
+      method,
+      headers: {
+        ...(dataUrl ? { "Content-Type": "application/json" } : {}),
+        authorization: `Bearer ${auth.jwt}`,
+      },
+      body: dataUrl ? JSON.stringify({ dataUrl }) : undefined,
+    });
+    if (!response.ok) return false;
+    const parsed = UserMeResponseSchema.safeParse(await response.json());
+    if (!parsed.success) return false;
+    setLastUserMe(parsed.data);
+    invalidateUserMe();
+    return parsed.data;
+  } catch {
+    return false;
+  }
+}
+
+export function uploadMyProfilePicture(
+  dataUrl: string,
+): Promise<UserMeResponse | false> {
+  return changeMyProfilePicture("PUT", dataUrl);
+}
+
+export function deleteMyProfilePicture(): Promise<UserMeResponse | false> {
+  return changeMyProfilePicture("DELETE");
+}
+
+export async function markDeathTutorialSeen(): Promise<boolean> {
+  try {
+    const auth = await userAuth();
+    if (!auth) return false;
+    const response = await fetch(
+      getApiBase() + "/users/@me/death-tutorial-seen",
+      {
+        method: "POST",
+        headers: { authorization: `Bearer ${auth.jwt}` },
+      },
+    );
+    if (!response.ok) return false;
+    const body = (await response.json()) as { deathTutorialSeen?: boolean };
+    if (body.deathTutorialSeen !== true) return false;
+    if (__lastUserMe) {
+      __lastUserMe.user.deathTutorialSeen = true;
+    }
+    invalidateUserMe();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function updateMyIdentityPreferences(preferences: {
   selectedFlag?: string | null;
   selectedCosmetic?: string | null;

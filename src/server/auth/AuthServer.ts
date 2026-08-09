@@ -37,6 +37,12 @@ import {
   getPrivateKey,
   getPublicJwk,
 } from "./keys";
+import {
+  createFileProfileImageStore,
+  createPostgresProfileImageStore,
+  ProfileImageError,
+  validateProfileImageDataUrl,
+} from "./ProfileImageStore";
 
 // ---------------------------------------------------------------------------
 // Self-contained auth for OpenBack. OpenFront's auth lives in a closed-source
@@ -65,6 +71,8 @@ interface StoredUser {
   bannerColor?: string;
   selectedFlag?: string;
   selectedCosmetic?: string;
+  profilePictureRevision?: number;
+  deathTutorialSeen?: boolean;
   // Ranked 1v1 progression.
   elo?: number;
   peakElo?: number;
@@ -213,6 +221,11 @@ const database = databaseUrl
         : { rejectUnauthorized: false },
     })
   : null;
+const profileImageStoreReady = database
+  ? createPostgresProfileImageStore(database)
+  : Promise.resolve(
+      createFileProfileImageStore(`${DATA_DIR}/openback-profile-images.json`),
+    );
 
 function hydrate(raw: PersistShape) {
   usersByEmail.clear();
@@ -420,6 +433,8 @@ function userMeFor(user: StoredUser): UserMeResponse {
       bannerColor: user.bannerColor,
       selectedFlag: user.selectedFlag,
       selectedCosmetic: user.selectedCosmetic,
+      profilePictureUrl: profilePictureUrlFor(user),
+      deathTutorialSeen: user.deathTutorialSeen ?? false,
     },
     player: {
       publicId: user.publicId,
@@ -459,6 +474,12 @@ function userMeFor(user: StoredUser): UserMeResponse {
       subscription: null,
     },
   });
+}
+
+function profilePictureUrlFor(user: StoredUser): string | undefined {
+  return user.profilePictureRevision === undefined
+    ? undefined
+    : `/profile-images/${encodeURIComponent(user.publicId)}?v=${user.profilePictureRevision}`;
 }
 
 function userByPublicId(publicId: string): StoredUser | null {
@@ -836,10 +857,12 @@ function memberFor(clan: StoredClan, user: StoredUser) {
 // UI can show a friendly name. The publicId stays on the object for friending.
 function withDisplayName<T extends { publicId: string }>(
   entry: T,
-): T & { displayName?: string } {
+): T & { displayName?: string; profilePictureUrl?: string } {
+  const user = userByPublicId(entry.publicId);
   return {
     ...entry,
-    displayName: usersByPid.get(entry.publicId)?.displayName,
+    displayName: user?.displayName,
+    profilePictureUrl: user ? profilePictureUrlFor(user) : undefined,
   };
 }
 
@@ -1138,11 +1161,26 @@ export function authRouter(): express.Router {
 
   router.use(async (_req, res, next) => {
     try {
-      await persistenceReady;
+      await Promise.all([persistenceReady, profileImageStoreReady]);
       next();
     } catch {
       res.status(503).json({ error: "persistent_storage_unavailable" });
     }
+  });
+
+  router.get("/profile-images/:publicId", async (req, res) => {
+    const publicId = Array.isArray(req.params.publicId)
+      ? req.params.publicId[0]
+      : req.params.publicId;
+    const image = await (await profileImageStoreReady).get(publicId);
+    if (!image) {
+      res.status(404).end();
+      return;
+    }
+    res.setHeader("Content-Type", image.mimeType);
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    res.send(image.bytes);
   });
 
   router.get("/auth/health", async (_req, res) => {
@@ -1613,6 +1651,7 @@ export function authRouter(): express.Router {
     const rollback = structuredClone(persistenceSnapshot());
     deleteUser(user);
     try {
+      await (await profileImageStoreReady).delete(user.publicId);
       await persistImmediately();
     } catch (error) {
       hydrate(rollback);
@@ -1659,6 +1698,60 @@ export function authRouter(): express.Router {
     res.json(userMeFor(user));
   });
 
+  router.put("/users/@me/profile-picture", async (req, res) => {
+    const user = await userFromBearer(req);
+    if (!user?.email) {
+      res.status(401).json({ error: "email_account_required" });
+      return;
+    }
+    const parsed = z.object({ dataUrl: z.string() }).safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "invalid_profile_image" });
+      return;
+    }
+    try {
+      const image = validateProfileImageDataUrl(parsed.data.dataUrl);
+      const stored = await (
+        await profileImageStoreReady
+      ).put(user.publicId, image.bytes);
+      user.profilePictureRevision = stored.revision;
+      await persistImmediately();
+      res.json(userMeFor(user));
+    } catch (error) {
+      if (error instanceof ProfileImageError) {
+        res.status(400).json({ error: error.message });
+        return;
+      }
+      console.error("[auth] profile image upload failed", error);
+      res.status(503).json({ error: "persistent_storage_unavailable" });
+    }
+  });
+
+  router.delete("/users/@me/profile-picture", async (req, res) => {
+    const user = await userFromBearer(req);
+    if (!user?.email) {
+      res.status(401).json({ error: "email_account_required" });
+      return;
+    }
+    await (await profileImageStoreReady).delete(user.publicId);
+    user.profilePictureRevision = undefined;
+    await persistImmediately();
+    res.json(userMeFor(user));
+  });
+
+  router.post("/users/@me/death-tutorial-seen", async (req, res) => {
+    const user = await userFromBearer(req);
+    if (!user?.email) {
+      res.status(401).json({ error: "email_account_required" });
+      return;
+    }
+    if (!user.deathTutorialSeen) {
+      user.deathTutorialSeen = true;
+      await persistImmediately();
+    }
+    res.json({ deathTutorialSeen: true });
+  });
+
   const friendEntry = (publicId: string, createdAt: string) => {
     const target = userByPublicId(publicId);
     return {
@@ -1667,6 +1760,7 @@ export function authRouter(): express.Router {
       createdAt,
       online: isPlayerOnline(publicId),
       lastSeenAt: target?.lastSeenAt,
+      profilePictureUrl: target ? profilePictureUrlFor(target) : undefined,
     };
   };
 
@@ -2168,7 +2262,7 @@ export function authRouter(): express.Router {
   // Public player profile by publicId. It intentionally contains only the
   // identity fields players chose to show; private email/session data never
   // leaves the account endpoint.
-  router.get("/player/:id", async (req, res) => {
+  router.get(["/player/:id", "/public/player/:id"], async (req, res) => {
     const rawId = req.params.id;
     const id = Array.isArray(rawId) ? rawId[0] : rawId;
     const target = userByPublicId(id);
@@ -2189,6 +2283,7 @@ export function authRouter(): express.Router {
         bannerColor: target.bannerColor,
         selectedFlag: target.selectedFlag,
         selectedCosmetic: target.selectedCosmetic,
+        profilePictureUrl: profilePictureUrlFor(target),
         elo: target.elo,
         rank: rankedPosition >= 0 ? rankedPosition + 1 : undefined,
         clanTag: clanTagFor(target) ?? undefined,
@@ -2233,8 +2328,9 @@ export function authRouter(): express.Router {
           losses,
           total,
           public_id: u.publicId,
-          username: usernameFor(u),
+          accountUsername: usernameFor(u),
           clanTag: clanTagFor(u),
+          profilePictureUrl: profilePictureUrlFor(u),
         };
       });
     res.json(

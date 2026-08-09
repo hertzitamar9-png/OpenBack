@@ -7,6 +7,7 @@ import {
 import { RankedType } from "../../../core/game/Game";
 import { fetchPlayerLeaderboard, getUserMe } from "../../Api";
 import { translateText } from "../../Utils";
+import "../PlayerAvatar";
 import "../PlayerName";
 
 /** One ranked ladder's loaded rows. */
@@ -31,6 +32,7 @@ const toPlayerEntry = (
   rank: entry.rank,
   playerId: entry.public_id,
   accountUsername: entry.accountUsername,
+  profilePictureUrl: entry.profilePictureUrl,
   elo: entry.elo,
   games: entry.total,
   wins: entry.wins,
@@ -306,17 +308,24 @@ export class LeaderboardPlayerList extends LitElement {
             </div>
           </td>
           <td class="py-3 px-4">
-            <div class="flex flex-col">
-              <span
-                class="text-[10px] uppercase font-bold text-blue-200/80 leading-tight"
-                >${translateText("leaderboard_modal.your_ranking")}</span
-              >
-              <player-name
-                .username=${entry.accountUsername}
-                .publicId=${entry.playerId}
-                .nameClass=${"font-bold text-white truncate text-base hover:underline"}
-                .onNameClick=${() => this.openProfile(entry.playerId)}
-              ></player-name>
+            <div class="flex items-center gap-2">
+              <player-avatar
+                size="2rem"
+                .src=${entry.profilePictureUrl}
+                .label=${entry.accountUsername ?? entry.playerId}
+              ></player-avatar>
+              <div class="flex min-w-0 flex-col">
+                <span
+                  class="text-[10px] uppercase font-bold text-blue-200/80 leading-tight"
+                  >${translateText("leaderboard_modal.your_ranking")}</span
+                >
+                <player-name
+                  .username=${entry.accountUsername}
+                  .publicId=${entry.playerId}
+                  .nameClass=${"font-bold text-white truncate text-base hover:underline"}
+                  .onNameClick=${() => this.openProfile(entry.playerId)}
+                ></player-name>
+              </div>
             </div>
           </td>
           <td class="py-3 px-4 text-right">
@@ -375,6 +384,11 @@ export class LeaderboardPlayerList extends LitElement {
         </td>
         <td class="py-3 px-4">
           <div class="flex items-center gap-2">
+            <player-avatar
+              size="2rem"
+              .src=${player.profilePictureUrl}
+              .label=${player.accountUsername ?? player.playerId}
+            ></player-avatar>
             <player-name
               .username=${player.accountUsername}
               .publicId=${player.playerId}

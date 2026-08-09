@@ -171,16 +171,12 @@ export class DesktopNavBar extends LitElement {
         >
           <img
             id="nav-account-avatar"
-            class="hidden w-8 h-8 rounded-full object-cover"
-            alt=""
+            class="w-8 h-8 rounded-full object-cover"
+            src=${assetUrl("images/OpenBackMark512.png")}
+            alt="OpenBack profile"
             data-i18n-alt="main.discord_avatar_alt"
             referrerpolicy="no-referrer"
           />
-          <span
-            id="nav-account-loading-spinner"
-            class="w-4 h-4 border-2 border-white/30 border-t-white/80 rounded-full animate-spin"
-            aria-hidden="true"
-          ></span>
           <svg
             id="nav-account-person-icon"
             class="hidden w-5 h-5"

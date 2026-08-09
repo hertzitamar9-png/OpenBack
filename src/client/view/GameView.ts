@@ -171,6 +171,7 @@ export class GameView implements GameMap {
 
   private _cosmetics: Map<string, PlayerCosmetics> = new Map();
   private _publicIdsByClientID = new Map<ClientID, string>();
+  private _profilePicturesByClientID = new Map<ClientID, string>();
 
   private _map: GameMap;
 
@@ -193,6 +194,12 @@ export class GameView implements GameMap {
     for (const human of humans) {
       if (human.publicId) {
         this._publicIdsByClientID.set(human.clientID, human.publicId);
+      }
+      if (human.profilePictureUrl) {
+        this._profilePicturesByClientID.set(
+          human.clientID,
+          human.profilePictureUrl,
+        );
       }
     }
     for (const nation of this._mapData.nations) {
@@ -1309,6 +1316,18 @@ export class GameView implements GameMap {
     }
     const clientID = player.clientID();
     return clientID ? (this._publicIdsByClientID.get(clientID) ?? null) : null;
+  }
+
+  profilePictureForPlayer(player: PlayerView): string | null {
+    const controller = player.static.controllerClientIDs?.[0];
+    if (controller) {
+      const value = this._profilePicturesByClientID.get(controller);
+      if (value) return value;
+    }
+    const clientID = player.clientID();
+    return clientID
+      ? (this._profilePicturesByClientID.get(clientID) ?? null)
+      : null;
   }
   hasPlayer(id: PlayerID): boolean {
     return false;

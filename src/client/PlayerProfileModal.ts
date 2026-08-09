@@ -12,6 +12,7 @@ import type { PlayerGameHistoryCache } from "./components/baseComponents/stats/P
 import "./components/baseComponents/stats/PlayerStatsTree";
 import { BaseModal } from "./components/BaseModal";
 import "./components/clan/ClanCard";
+import "./components/PlayerAvatar";
 import "./components/PlayerName";
 import { modalHeader } from "./components/ui/ModalHeader";
 import { usernameText } from "./components/ui/UsernameText";
@@ -32,6 +33,7 @@ export class PlayerProfileModal extends BaseModal {
 
   @state() private publicId: string | null = null;
   @state() private username: string | null = null;
+  @state() private profilePictureUrl: string | null = null;
   @state() private statsTree: PlayerStatsTree | null = null;
   @state() private clans: NonNullable<PlayerProfile["clans"]> = [];
   @state() private loading = false;
@@ -62,16 +64,24 @@ export class PlayerProfileModal extends BaseModal {
       // The account username takes over the title when set — not uppercased
       // like the default title, since name casing is meaningful — and the
       // right chip then always shows the publicId.
-      titleContent: this.username
-        ? html`<span
-            class="text-white text-xl lg:text-2xl font-bold tracking-wide break-words hyphens-auto min-w-0 inline-flex items-center gap-2"
-          >
-            ${usernameText(this.username)}
-            ${isVerifiedUsername(this.username)
-              ? verifiedBadge("w-5 h-5")
-              : nothing}
-          </span>`
-        : undefined,
+      titleContent:
+        this.username || this.profilePictureUrl
+          ? html`<span
+              class="text-white text-xl lg:text-2xl font-bold tracking-wide break-words hyphens-auto min-w-0 inline-flex items-center gap-2"
+            >
+              <player-avatar
+                size="2rem"
+                .src=${this.profilePictureUrl ?? undefined}
+                .label=${this.username ?? translateText("player_profile.title")}
+              ></player-avatar>
+              ${this.username
+                ? usernameText(this.username)
+                : translateText("player_profile.title")}
+              ${this.username && isVerifiedUsername(this.username)
+                ? verifiedBadge("w-5 h-5")
+                : nothing}
+            </span>`
+          : undefined,
       onBack: () => this.back(),
       ariaLabel: translateText("common.back"),
       rightContent: this.publicId
@@ -263,6 +273,7 @@ export class PlayerProfileModal extends BaseModal {
     this.openedFrom = null;
     this.publicId = publicId;
     this.username = null;
+    this.profilePictureUrl = null;
     this.statsTree = null;
     this.clans = [];
     this.gameHistoryCache = null;
@@ -284,6 +295,8 @@ export class PlayerProfileModal extends BaseModal {
     this.loading = false;
     this.statsTree = profile === false ? null : profile.stats;
     this.username = profile === false ? null : (profile.username ?? null);
+    this.profilePictureUrl =
+      profile === false ? null : (profile.profilePictureUrl ?? null);
     this.clans = profile === false ? [] : (profile.clans ?? []);
   }
 

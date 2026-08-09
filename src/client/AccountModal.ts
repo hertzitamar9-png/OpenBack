@@ -5,11 +5,13 @@ import { PlayerStatsTree, UserMeResponse } from "../core/ApiSchemas";
 import { assetUrl } from "../core/AssetUrls";
 import { Cosmetics } from "../core/CosmeticSchemas";
 import {
+  deleteMyProfilePicture,
   fetchPlayerById,
   getUserMe,
   invalidateUserMe,
   setLastUserMe,
   updateMyProfile,
+  uploadMyProfilePicture,
 } from "./Api";
 import {
   deleteAccount,
@@ -29,10 +31,12 @@ import "./components/CopyButton";
 import "./components/CurrencyDisplay";
 import "./components/Difficulties";
 import "./components/FriendsList";
+import "./components/PlayerAvatar";
 import "./components/SubscriptionPanel";
 import { modalHeader } from "./components/ui/ModalHeader";
 import { fetchCosmetics, SUBSCRIPTIONS_ENABLED } from "./Cosmetics";
 import { crazyGamesSDK, type CrazyGamesUser } from "./CrazyGamesSDK";
+import { prepareProfileImage } from "./ProfileImage";
 import { socialAttention, type SocialAttentionStage } from "./SocialAttention";
 import { translateText } from "./Utils";
 
@@ -50,6 +54,8 @@ export class AccountModal extends BaseModal {
   @state() private profileDisplayName = "";
   @state() private profileBio = "";
   @state() private profileBannerColor = "#1689d8";
+  @state() private pendingProfilePicture: string | null = null;
+  @state() private removeProfilePicture = false;
   @state() private profileSaving = false;
   @state() private profileMessage = "";
   @state() private profileMessageError = false;
@@ -283,17 +289,24 @@ export class AccountModal extends BaseModal {
             style=${`background-color:${this.profileBannerColor}`}
           >
             <div class="flex min-h-24 items-end justify-between gap-4">
-              <div class="min-w-0">
-                <div
-                  class="truncate text-2xl font-black text-white drop-shadow"
-                >
-                  ${this.profileDisplayName ||
-                  translateText("account_modal.profile_name_preview")}
+              <div class="flex min-w-0 items-center gap-4">
+                <player-avatar
+                  size="4.5rem"
+                  .src=${this.profilePicturePreview()}
+                  .label=${this.profileDisplayName || "OpenBack player"}
+                ></player-avatar>
+                <div class="min-w-0">
+                  <div
+                    class="truncate text-2xl font-black text-white drop-shadow"
+                  >
+                    ${this.profileDisplayName ||
+                    translateText("account_modal.profile_name_preview")}
+                  </div>
+                  <p class="mt-1 max-w-xl text-sm text-white/80">
+                    ${this.profileBio ||
+                    translateText("account_modal.profile_bio_preview")}
+                  </p>
                 </div>
-                <p class="mt-1 max-w-xl text-sm text-white/80">
-                  ${this.profileBio ||
-                  translateText("account_modal.profile_bio_preview")}
-                </p>
               </div>
               <div class="shrink-0 text-right text-xs font-bold text-white/80">
                 ${this.userMeResponse?.user.selectedFlag
@@ -322,6 +335,53 @@ export class AccountModal extends BaseModal {
               <p class="text-xs text-white/40">
                 ${translateText("account_modal.profile_customization_desc")}
               </p>
+            </div>
+            <div
+              class="flex flex-wrap items-center gap-4 rounded-xl border border-white/10 bg-black/15 p-4"
+            >
+              <player-avatar
+                size="4rem"
+                .src=${this.profilePicturePreview()}
+                .label=${this.profileDisplayName || "OpenBack player"}
+              ></player-avatar>
+              <div class="min-w-0 flex-1">
+                <div class="text-sm font-bold text-white">
+                  ${translateText("account_modal.profile_picture")}
+                </div>
+                <div class="text-xs text-white/40">
+                  ${translateText("account_modal.profile_picture_desc")}
+                </div>
+              </div>
+              <input
+                id="profile-picture-input"
+                class="hidden"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                @change=${this.handleProfilePictureSelection}
+              />
+              <button
+                type="button"
+                class="rounded-lg border border-malibu-blue/40 bg-malibu-blue/10 px-4 py-2 text-xs font-bold text-malibu-blue hover:bg-malibu-blue/20"
+                @click=${() =>
+                  this.querySelector<HTMLInputElement>(
+                    "#profile-picture-input",
+                  )?.click()}
+              >
+                ${translateText(
+                  this.profilePicturePreview()
+                    ? "account_modal.replace_profile_picture"
+                    : "account_modal.select_profile_picture",
+                )}
+              </button>
+              ${this.profilePicturePreview()
+                ? html`<button
+                    type="button"
+                    class="rounded-lg border border-white/15 px-4 py-2 text-xs font-bold text-white/60 hover:bg-white/10"
+                    @click=${this.handleRemoveProfilePicture}
+                  >
+                    ${translateText("account_modal.remove_profile_picture")}
+                  </button>`
+                : null}
             </div>
             <label class="block">
               <span
@@ -581,7 +641,41 @@ export class AccountModal extends BaseModal {
     this.profileDisplayName = userMe.user.displayName ?? "";
     this.profileBio = userMe.user.bio ?? "";
     this.profileBannerColor = userMe.user.bannerColor ?? "#1689d8";
+    this.pendingProfilePicture = null;
+    this.removeProfilePicture = false;
   }
+
+  private profilePicturePreview(): string | undefined {
+    if (this.removeProfilePicture) return undefined;
+    return (
+      this.pendingProfilePicture ??
+      this.userMeResponse?.user.profilePictureUrl ??
+      undefined
+    );
+  }
+
+  private handleProfilePictureSelection = async (event: Event) => {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = "";
+    if (!file) return;
+    try {
+      this.pendingProfilePicture = await prepareProfileImage(file);
+      this.removeProfilePicture = false;
+      this.profileMessage = "";
+    } catch {
+      this.profileMessageError = true;
+      this.profileMessage = translateText(
+        "account_modal.profile_picture_invalid",
+      );
+    }
+  };
+
+  private handleRemoveProfilePicture = () => {
+    this.pendingProfilePicture = null;
+    this.removeProfilePicture = true;
+    this.profileMessage = "";
+  };
 
   private handleSaveProfile = async () => {
     if (this.profileSaving) return;
@@ -594,11 +688,22 @@ export class AccountModal extends BaseModal {
     }
     this.profileSaving = true;
     this.profileMessage = "";
-    const updated = await updateMyProfile({
+    let updated = await updateMyProfile({
       displayName: this.profileDisplayName.trim(),
       bio: this.profileBio.trim(),
       bannerColor: this.profileBannerColor,
     });
+    if (!updated) {
+      this.profileSaving = false;
+      this.profileMessageError = true;
+      this.profileMessage = translateText("account_modal.profile_save_failed");
+      return;
+    }
+    if (this.pendingProfilePicture) {
+      updated = await uploadMyProfilePicture(this.pendingProfilePicture);
+    } else if (this.removeProfilePicture) {
+      updated = await deleteMyProfilePicture();
+    }
     this.profileSaving = false;
     if (!updated) {
       this.profileMessageError = true;
@@ -615,7 +720,10 @@ export class AccountModal extends BaseModal {
     this.propagateLogin(updated);
     window.dispatchEvent(
       new CustomEvent("openback-profile-updated", {
-        detail: { displayName: updated.user.displayName },
+        detail: {
+          displayName: updated.user.displayName,
+          profilePictureUrl: updated.user.profilePictureUrl,
+        },
       }),
     );
     this.close();

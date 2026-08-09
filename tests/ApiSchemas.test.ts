@@ -90,6 +90,14 @@ describe("PlayerProfileSchema", () => {
     }
   });
 
+  it("preserves a public profile picture URL", () => {
+    const result = PlayerProfileSchema.parse({
+      ...base,
+      profilePictureUrl: "/profile-images/p1?v=3",
+    });
+    expect(result.profilePictureUrl).toBe("/profile-images/p1?v=3");
+  });
+
   it("accepts username: null (player never set one)", () => {
     const result = PlayerProfileSchema.safeParse({ ...base, username: null });
     expect(result.success).toBe(true);
@@ -207,6 +215,14 @@ describe("FriendEntrySchema", () => {
       username: "bob.4821",
     });
     expect(result.success).toBe(true);
+  });
+
+  it("preserves a friend's profile picture URL", () => {
+    const result = FriendEntrySchema.parse({
+      ...base,
+      profilePictureUrl: "/profile-images/abc123?v=8",
+    });
+    expect(result.profilePictureUrl).toBe("/profile-images/abc123?v=8");
   });
 
   it("accepts username: null (friend never set one)", () => {
@@ -550,6 +566,30 @@ describe("UserMeResponseSchema unlimitedRanked", () => {
     expect(
       UserMeResponseSchema.safeParse({ user: {}, player: basePlayer }).success,
     ).toBe(false);
+  });
+});
+
+describe("UserMeResponseSchema profile presentation", () => {
+  const basePlayer = {
+    publicId: "p1",
+    adfree: false,
+    unlimitedRanked: true,
+    canCreatePublicLobbies: true,
+    achievements: { singleplayerMap: [] },
+    friends: [],
+    subscription: null,
+  };
+
+  it("preserves the revisioned profile picture and death tutorial state", () => {
+    const result = UserMeResponseSchema.parse({
+      user: {
+        profilePictureUrl: "/profile-images/p1?v=2",
+        deathTutorialSeen: true,
+      },
+      player: basePlayer,
+    });
+    expect(result.user.profilePictureUrl).toBe("/profile-images/p1?v=2");
+    expect(result.user.deathTutorialSeen).toBe(true);
   });
 });
 

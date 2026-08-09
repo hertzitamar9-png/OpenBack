@@ -4,6 +4,7 @@ import { repeat } from "lit/directives/repeat.js";
 import { renderTroops, showToast, translateText } from "../../../client/Utils";
 import { EventBus } from "../../../core/EventBus";
 import { PlayerType } from "../../../core/game/Game";
+import "../../components/PlayerAvatar";
 import { Controller } from "../../Controller";
 import { blockPlayer, sendFriendRequest } from "../../FriendsApi";
 import { GoToPlayerEvent } from "../../TransformHandler";
@@ -19,6 +20,7 @@ interface Entry {
   isMyPlayer: boolean;
   isOnSameTeam: boolean;
   player: PlayerView;
+  profilePictureUrl: string | null;
 }
 
 @customElement("leader-board")
@@ -134,6 +136,7 @@ export class Leaderboard extends LitElement implements Controller {
           myPlayer !== null &&
           (player === myPlayer || player.isOnSameTeam(myPlayer)),
         player: player,
+        profilePictureUrl: this.game!.profilePictureForPlayer(player),
       };
     });
 
@@ -163,6 +166,7 @@ export class Leaderboard extends LitElement implements Controller {
           isMyPlayer: true,
           isOnSameTeam: true,
           player: myPlayer,
+          profilePictureUrl: this.game!.profilePictureForPlayer(myPlayer),
         });
       }
     }
@@ -347,7 +351,14 @@ export class Leaderboard extends LitElement implements Controller {
                     ? "border-b border-slate-500"
                     : ""} truncate"
                 >
-                  ${player.name}
+                  <span class="inline-flex max-w-full items-center gap-1.5">
+                    <player-avatar
+                      size="1.5rem"
+                      .src=${player.profilePictureUrl ?? undefined}
+                      .label=${player.name}
+                    ></player-avatar>
+                    <span class="truncate">${player.name}</span>
+                  </span>
                 </div>
                 <div
                   class="py-1 md:py-2 text-center ${index <

@@ -1207,6 +1207,7 @@ export class GameServer {
     this.activeClients.forEach((c) => {
       this.log.info("sending prestart message", {
         clientID: c.clientID,
+        publicId: c.publicId,
         persistentID: c.persistentID,
       });
       if (c.ws.readyState === WebSocket.OPEN) {
@@ -1345,6 +1346,8 @@ export class GameServer {
         username: c.username,
         clanTag: c.clanTag ?? null,
         clientID: c.clientID,
+        publicId: c.publicId,
+        profilePictureUrl: c.profilePictureUrl,
         cosmetics: c.cosmetics,
         isLobbyCreator: this.lobbyCreatorID === c.clientID,
         friends: friendsFor(c),
@@ -1653,6 +1656,8 @@ export class GameServer {
               username: c.username,
               clanTag: hideClanTags ? null : (c.clanTag ?? null),
               clientID: c.clientID,
+              publicId: c.publicId,
+              profilePictureUrl: c.profilePictureUrl,
               friends: friendsFor(c),
               verified: c.cosmetics?.verified,
               selectedTeam: this.selectedTeams.get(c.clientID) ?? null,

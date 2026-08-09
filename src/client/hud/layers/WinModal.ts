@@ -1,11 +1,14 @@
 import { html, LitElement } from "lit";
 import { customElement, state } from "lit/decorators.js";
-import { translateText } from "../../../client/Utils";
+import { translateText, TUTORIAL_VIDEO_URL } from "../../../client/Utils";
+import { assetUrl } from "../../../core/AssetUrls";
 import { EventBus } from "../../../core/EventBus";
 import { RankedType } from "../../../core/game/Game";
 import { GameUpdateType } from "../../../core/game/GameUpdates";
+import { getUserMe, markDeathTutorialSeen } from "../../Api";
 import { Controller } from "../../Controller";
 import { crazyGamesSDK } from "../../CrazyGamesSDK";
+import { DeathMedia, selectDeathMedia } from "../../DeathMedia";
 import { SendWinnerEvent } from "../../Transport";
 import { GameView } from "../../view";
 
@@ -28,6 +31,9 @@ export class WinModal extends LitElement implements Controller {
   @state()
   private isRankedGame = false;
 
+  @state()
+  private deathMedia: DeathMedia | null = null;
+
   private _title: string;
 
   // Override to prevent shadow DOM creation
@@ -49,6 +55,7 @@ export class WinModal extends LitElement implements Controller {
         <h2 class="m-0 mb-4 text-[26px] text-center text-white shrink-0">
           ${this._title || ""}
         </h2>
+        ${this.renderDeathMedia()}
         <div
           class="${this.showButtons
             ? "mt-4 flex justify-between gap-2.5 shrink-0"
@@ -86,6 +93,41 @@ export class WinModal extends LitElement implements Controller {
     `;
   }
 
+  private renderDeathMedia() {
+    if (!this.deathMedia) return null;
+    return html`
+      <div
+        class="relative mb-4 aspect-video w-full shrink-0 overflow-hidden rounded-md bg-black"
+      >
+        ${this.deathMedia === "tutorial"
+          ? html`
+              <iframe
+                class="absolute inset-0 h-full w-full border-0"
+                src=${this.isVisible ? TUTORIAL_VIDEO_URL : ""}
+                title=${translateText("win_modal.youtube_tutorial")}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+              ></iframe>
+            `
+          : html`
+              <img
+                class="absolute inset-0 h-full w-full object-cover"
+                src=${assetUrl("images/OpenBackSocialPreview.png")}
+                alt="OpenBack battle"
+              />
+            `}
+      </div>
+    `;
+  }
+
+  private async showDeath() {
+    this.deathMedia = await selectDeathMedia(
+      await getUserMe(),
+      markDeathTutorialSeen,
+    );
+    this.show();
+  }
+
   show() {
     crazyGamesSDK.gameplayStop();
     // Check if this is a ranked game
@@ -102,6 +144,7 @@ export class WinModal extends LitElement implements Controller {
   hide() {
     this.isVisible = false;
     this.showButtons = false;
+    this.deathMedia = null;
     this.requestUpdate();
   }
 
@@ -140,7 +183,7 @@ export class WinModal extends LitElement implements Controller {
     ) {
       this.hasShownDeathModal = true;
       this._title = translateText("win_modal.died");
-      this.show();
+      void this.showDeath();
     }
     const updates = this.game.updatesSinceLastTick();
     const winUpdates = updates !== null ? updates[GameUpdateType.Win] : [];

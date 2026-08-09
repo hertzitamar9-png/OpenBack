@@ -7,6 +7,7 @@ import type {
   ClanMemberStats,
 } from "../../ClanApi";
 import { showToast, translateText } from "../../Utils";
+import "../PlayerAvatar";
 import "../PlayerName";
 import "./ClanStatsBreakdown";
 export { renderLoadingSpinner } from "../BaseModal";
@@ -390,6 +391,11 @@ export function renderMemberRow(
         : "bg-white/5 border-white/10"}"
     >
       <div class="flex items-center gap-3">
+        <player-avatar
+          size="2rem"
+          .src=${member.profilePictureUrl}
+          .label=${member.username ?? member.publicId}
+        ></player-avatar>
         <div
           class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0
             ${isMe

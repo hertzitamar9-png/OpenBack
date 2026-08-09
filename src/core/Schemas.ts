@@ -200,6 +200,7 @@ export const ClanTagSchema = z
 const ClientInfoSchema = z.object({
   clientID: z.string(),
   publicId: z.string().optional(),
+  profilePictureUrl: z.string().optional(),
   username: UsernameSchema,
   clanTag: ClanTagSchema,
   friends: z.array(z.string()).optional(),
@@ -743,6 +744,7 @@ export const PlayerCosmeticsSchema = z.object({
 export const PlayerSchema = z.object({
   clientID: ID,
   publicId: z.string().optional(),
+  profilePictureUrl: z.string().optional(),
   username: UsernameSchema,
   clanTag: ClanTagSchema,
   cosmetics: PlayerCosmeticsSchema.optional(),

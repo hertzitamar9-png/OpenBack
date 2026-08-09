@@ -157,6 +157,8 @@ export const UserMeResponseSchema = z.object({
       .optional(),
     selectedFlag: z.string().max(80).optional(),
     selectedCosmetic: z.string().max(160).optional(),
+    profilePictureUrl: z.string().optional(),
+    deathTutorialSeen: z.boolean().optional(),
   }),
   player: z.object({
     publicId: z.string(),
@@ -444,6 +446,7 @@ export const PlayerProfileSchema = z.object({
     .optional(),
   selectedFlag: z.string().max(80).optional(),
   selectedCosmetic: z.string().max(160).optional(),
+  profilePictureUrl: z.string().optional(),
   elo: z.number().optional(),
   rank: z.number().int().positive().optional(),
   clanTag: RequiredClanTagSchema.optional(),
@@ -527,6 +530,7 @@ export const PlayerLeaderboardEntrySchema = z.object({
   // the playerId.
   accountUsername: z.string().nullable(),
   flag: z.string().optional(),
+  profilePictureUrl: z.string().optional(),
   elo: z.number(),
   games: z.number(),
   wins: z.number(),
@@ -555,6 +559,7 @@ export const RankedLeaderboardEntrySchema = z.object({
   // Account username (null = never set). The client displays
   // `accountUsername ?? public_id`.
   accountUsername: z.string().nullable(),
+  profilePictureUrl: z.string().optional(),
 });
 export type RankedLeaderboardEntry = z.infer<
   typeof RankedLeaderboardEntrySchema
@@ -579,6 +584,7 @@ export const FriendEntrySchema = z.object({
   // `username ?? publicId`; identify players by publicId only.
   username: z.string().nullable().optional(),
   displayName: z.string().optional(),
+  profilePictureUrl: z.string().optional(),
   createdAt: z.iso.datetime(),
   online: z.boolean().optional(),
   lastSeenAt: z.iso.datetime().optional(),
