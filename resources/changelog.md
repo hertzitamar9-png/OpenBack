@@ -1,3 +1,12 @@
+## OpenBack v0.34.101 - Visible 3D Construction
+
+- Restored every structure to the 3D battlefield alongside mobile units, including stacked structure levels and construction or reload progress bars.
+- Added the live 3D placement model at the exact validated build tile, using a bright white preview for valid placement and a gray preview where placement is blocked.
+- Made structures visibly pulse while they are being assembled instead of appearing as silent transparent placeholders.
+- Matched the Select Flag and Select Cosmetic controls with borderless styling, consistent hover lift, and keyboard-visible focus feedback.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.100 - Precise 3D Control and Territory Locator
 
 - Expanded the 3D tactical zoom range and made the camera follow local terrain height, allowing much closer inspection without clipping peaks or exposing the board underside.

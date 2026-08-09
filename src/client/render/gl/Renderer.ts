@@ -975,13 +975,7 @@ export class GPURenderer {
     this.lastUnits = units;
     this.frameTick++;
     this.unitPass.updateUnits(units, this.frameTick);
-    this.threeDUnitPass?.update(units, {
-      centerX: this.camera.offsetX,
-      centerY: this.camera.offsetY,
-      zoom: this.camera.zoom,
-      width: this.canvas.width,
-      height: this.canvas.height,
-    });
+    this.refreshThreeDUnits();
     this.barPass.updateBars(units, this.lastStructures, gameTick);
     this.pointLightPass.updateLights(units);
     this.heatManager.decayHeat();
@@ -1026,6 +1020,7 @@ export class GPURenderer {
     this.structureLevelPass.updateStructures(units);
     this.samRadiusPass.updateStructures(units);
     this.unitPass.setStructures(units);
+    this.refreshThreeDUnits();
     const posts: { x: number; y: number; ownerID: number }[] = [];
     const w = this.mapW;
     for (const u of units.values()) {
@@ -1167,6 +1162,8 @@ export class GPURenderer {
   }
 
   updateGhostPreview(data: GhostPreviewData | null): void {
+    this.threeDUnitPass?.updateGhostPreview(data);
+    this.refreshThreeDUnits();
     this.structurePass.updateGhostPreview(data);
     this.railroadPass.updateGhostPreview(data);
     this.rangeCirclePass.updateGhostPreview(data);
@@ -1186,6 +1183,20 @@ export class GPURenderer {
       data !== null && SAM_RADIUS_GHOST_TYPES.has(data.ghostType);
     this.samRadiusPass.setVisible(
       this.samGhostVisible || this.samHighlightVisible,
+    );
+  }
+
+  private refreshThreeDUnits(): void {
+    this.threeDUnitPass?.update(
+      this.lastUnits,
+      {
+        centerX: this.camera.offsetX,
+        centerY: this.camera.offsetY,
+        zoom: this.camera.zoom,
+        width: this.canvas.width,
+        height: this.canvas.height,
+      },
+      this.lastStructures,
     );
   }
 

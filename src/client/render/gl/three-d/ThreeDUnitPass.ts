@@ -1,5 +1,5 @@
 import { UnitType } from "../../../../core/game/Game";
-import type { UnitState } from "../../types";
+import type { GhostPreviewData, UnitState } from "../../types";
 import { createProgram } from "../utils/GlUtils";
 import { ThreeDCameraState } from "./ThreeDCamera";
 import {
@@ -26,6 +26,8 @@ const MATERIAL = {
   emissive: 4,
   ground: 5,
   shadow: 6,
+  ghostValid: 7,
+  ghostInvalid: 8,
 } as const;
 const ANIMATION: Record<ThreeDAnimation, number> = {
   none: 0,
@@ -35,6 +37,28 @@ const ANIMATION: Record<ThreeDAnimation, number> = {
   wheel: 4,
   hover: 5,
 };
+
+export function* collectThreeDRenderableUnits(
+  mobileUnits: ReadonlyMap<number, UnitState>,
+  structures: ReadonlyMap<number, UnitState>,
+): Generator<UnitState> {
+  yield* mobileUnits.values();
+  yield* structures.values();
+}
+
+export function threeDGhostPresentation(data: GhostPreviewData): {
+  unitType: UnitType;
+  x: number;
+  z: number;
+  valid: boolean;
+} {
+  return {
+    unitType: data.ghostType as UnitType,
+    x: data.tileX,
+    z: data.tileY,
+    valid: data.canBuild || data.canUpgrade,
+  };
+}
 
 export function rotateThreeDModelOffset(
   x: number,
@@ -108,6 +132,8 @@ void main(){
   else if(material==4)base=vec3(1.0,0.46,0.08);
   else if(material==5)base=mix(vec3(0.09,0.11,0.14),owner,0.18);
   else if(material==6)base=vec3(0.015,0.02,0.028);
+  else if(material==7)base=vec3(0.96,0.99,1.0);
+  else if(material==8)base=vec3(0.34,0.37,0.41);
   vec3 light=normalize(vec3(-0.55,0.88,-0.42));
   float diffuse=0.54+max(0.0,dot(normalize(vNormal),light))*0.58;
   if(material==4)diffuse=1.35;
@@ -131,6 +157,7 @@ export class ThreeDUnitPass {
   private batches = new Map<ThreeDPrimitiveKind, number[]>();
   private uniforms: Record<string, WebGLUniformLocation | null>;
   private distantDetail = 1;
+  private ghostPreview: GhostPreviewData | null = null;
 
   constructor(
     private gl: WebGL2RenderingContext,
@@ -166,7 +193,7 @@ export class ThreeDUnitPass {
   }
 
   update(
-    units: Map<number, UnitState>,
+    units: ReadonlyMap<number, UnitState>,
     view?: {
       centerX: number;
       centerY: number;
@@ -174,6 +201,7 @@ export class ThreeDUnitPass {
       width: number;
       height: number;
     },
+    structures: ReadonlyMap<number, UnitState> = new Map(),
   ): void {
     for (const batch of this.batches.values()) batch.length = 0;
     const halfHeight = view
@@ -182,7 +210,29 @@ export class ThreeDUnitPass {
     const halfWidth = view
       ? halfHeight * (view.width / Math.max(1, view.height))
       : Number.POSITIVE_INFINITY;
-    for (const unit of units.values()) {
+    const ghost = this.ghostPreview
+      ? threeDGhostPresentation(this.ghostPreview)
+      : null;
+    const ghostUnit = ghost
+      ? ({
+          id: -1,
+          unitType: ghost.unitType,
+          pos: ghost.z * this.mapWidth + ghost.x,
+          lastPos: ghost.z * this.mapWidth + ghost.x,
+          ownerID: this.ghostPreview!.ownerID,
+          isActive: true,
+          visibleToLocal: true,
+          underConstruction: false,
+        } as UnitState)
+      : null;
+    const renderables = collectThreeDRenderableUnits(units, structures);
+    const allUnits = ghostUnit
+      ? (function* (): Generator<UnitState> {
+          yield* renderables;
+          yield ghostUnit;
+        })()
+      : renderables;
+    for (const unit of allUnits) {
       if (!unit.isActive || unit.visibleToLocal === false) continue;
       const model = THREE_D_MODELS[unit.unitType as UnitType];
       if (!model) continue;
@@ -203,7 +253,9 @@ export class ThreeDUnitPass {
         const lz = (unit.lastPos - lx) / this.mapWidth;
         heading = Math.atan2(z - lz, x - lx);
       }
-      const alpha = unit.underConstruction ? 0.58 : 1;
+      const isGhost = unit === ghostUnit;
+      const ghostValid = ghost?.valid ?? false;
+      const alpha = isGhost ? 0.72 : unit.underConstruction ? 0.72 : 1;
       // A shared flattened cylinder anchors every model to the terrain and
       // makes altitude/motion immediately readable without custom shadow data
       // in each registry entry.
@@ -221,8 +273,12 @@ export class ThreeDUnitPass {
           0,
           0,
           unit.ownerID,
-          MATERIAL.shadow,
-          alpha,
+          isGhost
+            ? ghostValid
+              ? MATERIAL.ghostValid
+              : MATERIAL.ghostInvalid
+            : MATERIAL.shadow,
+          isGhost ? 0.22 : alpha,
           ANIMATION.none,
           x,
           z,
@@ -260,9 +316,17 @@ export class ThreeDUnitPass {
           rotation[1],
           rotation[2],
           unit.ownerID,
-          MATERIAL[primitive.material],
+          isGhost
+            ? ghostValid
+              ? MATERIAL.ghostValid
+              : MATERIAL.ghostInvalid
+            : MATERIAL[primitive.material],
           alpha,
-          ANIMATION[primitive.animation ?? model.animation ?? "none"],
+          ANIMATION[
+            unit.underConstruction
+              ? "pulse"
+              : (primitive.animation ?? model.animation ?? "none")
+          ],
           x,
           z,
         );
@@ -285,6 +349,10 @@ export class ThreeDUnitPass {
         gl.DYNAMIC_DRAW,
       );
     }
+  }
+
+  updateGhostPreview(data: GhostPreviewData | null): void {
+    this.ghostPreview = data;
   }
 
   setQuality(distantDetail: number): void {
