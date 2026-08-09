@@ -12,6 +12,11 @@ describe("3D model registry", () => {
       expect(model, `${type} is missing a 3D model`).toBeDefined();
       expect(model.footprint).toBeGreaterThan(0);
       expect(model.primitives.length).toBeGreaterThan(0);
+      expect(model.lods).toHaveLength(2);
+      expect(model.lods[0].maxScreenSize).toBeGreaterThan(
+        model.lods[1].maxScreenSize,
+      );
+      expect(model.signature).toContain(type);
     }
     expect(Object.keys(THREE_D_MODELS)).toHaveLength(
       Object.values(UnitType).length,
@@ -30,6 +35,14 @@ describe("3D model registry", () => {
         ).toBe(true);
       }
     }
+  });
+
+  it("uses silhouette geometry instead of generic boxes for major vehicles", () => {
+    expect(threeDModel(UnitType.Tank).primitives[0].kind).toBe(
+      "trackedChassis",
+    );
+    expect(threeDModel(UnitType.Plane).primitives[0].kind).toBe("hull");
+    expect(threeDModel(UnitType.Warship).primitives[0].kind).toBe("hull");
   });
 });
 

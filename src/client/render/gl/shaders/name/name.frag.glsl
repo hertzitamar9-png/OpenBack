@@ -1,5 +1,6 @@
 #version 300 es
 precision highp float;
+precision highp int;
 
 uniform sampler2D uAtlas;
 uniform float uDistRange;
@@ -10,6 +11,7 @@ uniform float uOutlineUsePlayerColor;
 uniform float uFillUsePlayerColor;
 uniform float uHoverGlowWidth; // px the white hover glow extends past the outline
 uniform float uHoverGlowAlpha; // peak opacity of the hover glow
+uniform int uScreenFacing;
 
 in vec2 vUV;
 in vec4 vPlayerColor;   // player territory color (rgb) + alpha
@@ -32,7 +34,7 @@ void main() {
 
   // Compute fill color: player color, or per-type grayscale shade
   // (black for human, grayer for nation/bot). Applies in day and night.
-  vec3 defaultFill = vec3(vNameShade);
+  vec3 defaultFill = uScreenFacing == 1 ? vec3(0.96) : vec3(vNameShade);
   vec3 fillColor = mix(defaultFill, vPlayerColor.rgb, uFillUsePlayerColor);
 
   vec3 msd = texture(uAtlas, vUV).rgb;

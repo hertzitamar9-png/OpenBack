@@ -3,6 +3,11 @@
 - Rebuilt the 3D camera around one finite perspective projection shared by pointer picking and world positioning, preventing inverted views and unstable near-plane behavior.
 - Kept the camera physically above the highest terrain across the full orbit and zoom range while preserving short right-click menus.
 - Made left-dragging follow the picked ground point instead of using angle-dependent screen deltas, so movement stays attached to the tabletop at shallow and steep views.
+- Replaced the moving terrain sheet with fixed world-anchored chunks, stable level-of-detail transitions, a solid underside, and protected map edges so terrain no longer flickers, tears, or disappears while moving and zooming.
+- Rebuilt the complete unit catalog as reusable stylized 3D geometry matching OpenBack's silhouettes, owner colors, proportions, and animated parts, with cheaper distant versions that preserve gameplay visibility.
+- Unified names, flags, troop counts, paths, ranges, spawn markers, fog, nuclear warnings, and world events under the same 3D projection so tactical information stays attached to its real map position.
+- Added adaptive 3D rendering that reduces only terrain subdivision, distant model detail, and particle density during heavy frames while retaining full simulation, visibility, labels, paths, ranges, and effects.
+- Capped 3D labels, flags, and status icons to a readable screen size and kept them upright through every camera angle without changing the established 2D presentation.
 
 Created by **frootz jhklphy**.
 

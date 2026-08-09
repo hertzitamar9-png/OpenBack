@@ -9,10 +9,7 @@
 import type { NukeTelegraphData } from "../../types";
 import { DynamicInstanceBuffer } from "../DynamicBuffer";
 import type { RenderSettings } from "../RenderSettings";
-import {
-  THREE_D_FOV_DEGREES,
-  threeDCameraDistance,
-} from "../three-d/ThreeDWorldMath";
+import { ThreeDCameraState } from "../three-d/ThreeDCamera";
 import { createProgram } from "../utils/GlUtils";
 
 import fragSrc from "../shaders/nuke-telegraph/nuke-telegraph.frag.glsl?raw";
@@ -42,6 +39,7 @@ export class NukeTelegraphPass {
   private uAspect: WebGLUniformLocation;
   private uTilt: WebGLUniformLocation;
   private uYaw: WebGLUniformLocation;
+  private uViewProjection: WebGLUniformLocation;
 
   private instanceCount = 0;
   private startTime = performance.now();
@@ -77,6 +75,10 @@ export class NukeTelegraphPass {
     this.uAspect = gl.getUniformLocation(this.program, "uAspect")!;
     this.uTilt = gl.getUniformLocation(this.program, "uTilt")!;
     this.uYaw = gl.getUniformLocation(this.program, "uYaw")!;
+    this.uViewProjection = gl.getUniformLocation(
+      this.program,
+      "uViewProjection",
+    )!;
     gl.useProgram(this.program);
     gl.uniform1i(gl.getUniformLocation(this.program, "uTerrain"), 0);
 
@@ -193,7 +195,17 @@ export class NukeTelegraphPass {
   ): void {
     if (this.instanceCount === 0) return;
     const gl = this.gl;
-    const tanHalfFov = Math.tan((THREE_D_FOV_DEGREES * Math.PI) / 360);
+    const camera = ThreeDCameraState.create({
+      viewportWidth: width,
+      viewportHeight: height,
+      mapWidth: this.mapW,
+      mapHeight: this.mapH,
+      centerX,
+      centerZ: centerY,
+      zoom,
+      yaw,
+      pitch,
+    });
     gl.useProgram(this.program);
     gl.uniform1i(this.uThreeD, 1);
     gl.uniform2f(this.uThreeDCenter, centerX, centerY);
@@ -202,11 +214,16 @@ export class NukeTelegraphPass {
       this.mapW,
       this.mapH,
     );
-    gl.uniform1f(this.uDistance, threeDCameraDistance(height, zoom, pitch));
-    gl.uniform1f(this.uTanHalfFov, tanHalfFov);
+    gl.uniform1f(this.uDistance, camera.distance);
+    gl.uniform1f(this.uTanHalfFov, camera.tanHalfFov);
     gl.uniform1f(this.uAspect, width / Math.max(1, height));
     gl.uniform1f(this.uTilt, pitch);
     gl.uniform1f(this.uYaw, yaw);
+    gl.uniformMatrix4fv(
+      this.uViewProjection,
+      false,
+      new Float32Array(camera.viewProjection),
+    );
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.terrain);
     this.drawStyleAndInstances();

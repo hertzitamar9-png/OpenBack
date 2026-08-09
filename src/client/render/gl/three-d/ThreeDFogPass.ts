@@ -1,13 +1,14 @@
 import { createProgram, shaderSrc } from "../utils/GlUtils";
 import { TILE_DEFINES } from "../utils/TileCodec";
-import { THREE_D_FOV_DEGREES, threeDCameraDistance } from "./ThreeDWorldMath";
+import { ThreeDCameraState } from "./ThreeDCamera";
 
 const vert = `#version 300 es
 precision highp float;
 precision highp usampler2D;
 uniform usampler2D uTileTex;
 uniform vec2 uMapSize,uCenter;
-uniform float uDistance,uTanHalfFov,uAspect,uTilt,uYaw,uTime;
+uniform mat4 uViewProjection;
+uniform float uDistance,uTanHalfFov,uAspect,uTime;
 uniform uint uLocalOwner;
 uniform int uRadarCount;
 uniform vec3 uRadar[8];
@@ -25,15 +26,9 @@ void main(){
   float drift=sin(uTime*.14+id*.31)*viewH*.08;
   world+=vec2(drift,-drift*.36);
   float height=2.0+layer*15.0+sin(uTime*.22+id)*1.4;
-  vec2 d=world-uCenter;
-  float cy=cos(uYaw),sy=sin(uYaw);
-  d=vec2(d.x*cy-d.y*sy,d.x*sy+d.y*cy);
-  float ct=cos(uTilt),st=sin(uTilt),viewY=-d.y*ct+height*st;
-  float viewZ=uDistance-d.y*st-height*ct;
-  if(viewZ<=0.5){gl_Position=vec4(2.0);gl_PointSize=0.0;vDensity=0.0;return;}
-  float nearPlane=0.5,farPlane=max(nearPlane+1.0,uDistance*8.0+50.0);
-  float clipZ=((farPlane+nearPlane)/(farPlane-nearPlane))*viewZ-(2.0*farPlane*nearPlane)/(farPlane-nearPlane);
-  gl_Position=vec4(d.x/(uTanHalfFov*uAspect),viewY/uTanHalfFov,clipZ,viewZ);
+  gl_Position=uViewProjection*vec4(world.x,height,world.y,1.0);
+  float viewZ=gl_Position.w;
+  if(viewZ<=0.0){gl_Position=vec4(2.0);gl_PointSize=0.0;vDensity=0.0;return;}
   gl_PointSize=clamp((18.0+layer*28.0)*(uDistance/max(viewZ,.5)),12.0,58.0);
   vDensity=.18+.16*hash(id+uTime*.01);
 }`;
@@ -62,6 +57,7 @@ export class ThreeDFogPass {
   private localOwner = 0;
   private radarData = new Float32Array(24);
   private radarCount = 0;
+  private particleScale = 1;
 
   constructor(
     private gl: WebGL2RenderingContext,
@@ -76,11 +72,10 @@ export class ThreeDFogPass {
         "uTileTex",
         "uMapSize",
         "uCenter",
+        "uViewProjection",
         "uDistance",
         "uTanHalfFov",
         "uAspect",
-        "uTilt",
-        "uYaw",
         "uTime",
         "uLocalOwner",
         "uRadarCount",
@@ -117,7 +112,17 @@ export class ThreeDFogPass {
   ): void {
     if (this.localOwner === 0) return;
     const gl = this.gl;
-    const tanHalfFov = Math.tan((THREE_D_FOV_DEGREES * Math.PI) / 360);
+    const camera = ThreeDCameraState.create({
+      viewportWidth: width,
+      viewportHeight: height,
+      mapWidth: this.mapWidth,
+      mapHeight: this.mapHeight,
+      centerX,
+      centerZ: centerY,
+      zoom,
+      yaw,
+      pitch,
+    });
     gl.enable(gl.DEPTH_TEST);
     gl.enable(gl.BLEND);
     gl.depthMask(false);
@@ -125,14 +130,14 @@ export class ThreeDFogPass {
     gl.useProgram(this.program);
     gl.uniform2f(this.uniforms.uMapSize, this.mapWidth, this.mapHeight);
     gl.uniform2f(this.uniforms.uCenter, centerX, centerY);
-    gl.uniform1f(
-      this.uniforms.uDistance,
-      threeDCameraDistance(height, zoom, pitch),
-    );
-    gl.uniform1f(this.uniforms.uTanHalfFov, tanHalfFov);
+    gl.uniform1f(this.uniforms.uDistance, camera.distance);
+    gl.uniform1f(this.uniforms.uTanHalfFov, camera.tanHalfFov);
     gl.uniform1f(this.uniforms.uAspect, width / Math.max(1, height));
-    gl.uniform1f(this.uniforms.uTilt, pitch);
-    gl.uniform1f(this.uniforms.uYaw, yaw);
+    gl.uniformMatrix4fv(
+      this.uniforms.uViewProjection,
+      false,
+      new Float32Array(camera.viewProjection),
+    );
     gl.uniform1f(this.uniforms.uTime, performance.now() / 1000);
     gl.uniform1ui(this.uniforms.uLocalOwner, this.localOwner);
     gl.uniform1i(this.uniforms.uRadarCount, this.radarCount);
@@ -140,10 +145,19 @@ export class ThreeDFogPass {
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.tileTex);
     gl.bindVertexArray(this.vao);
-    gl.drawArrays(gl.POINTS, 0, Math.min(width, height) < 700 ? 180 : 320);
+    const baseCount = Math.min(width, height) < 700 ? 180 : 320;
+    gl.drawArrays(
+      gl.POINTS,
+      0,
+      Math.max(80, Math.round(baseCount * this.particleScale)),
+    );
     gl.bindVertexArray(null);
     gl.depthMask(true);
     gl.disable(gl.DEPTH_TEST);
+  }
+
+  setQuality(particleScale: number): void {
+    this.particleScale = Math.max(0.4, Math.min(1, particleScale));
   }
 
   dispose(): void {

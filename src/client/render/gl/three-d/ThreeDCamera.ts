@@ -339,3 +339,23 @@ export class ThreeDCameraState {
     return add(ray.origin, scale(ray.direction, distance));
   }
 }
+
+/** Column-major mat3 that projects the horizontal world plane through the
+ * exact same view-projection matrix as terrain and models. */
+export function threeDGroundHomography(
+  camera: ThreeDCameraState,
+  height = 0,
+): Float32Array {
+  const m = camera.viewProjection;
+  return new Float32Array([
+    m[0],
+    m[1],
+    m[3],
+    m[8],
+    m[9],
+    m[11],
+    m[12] + m[4] * height,
+    m[13] + m[5] * height,
+    m[15] + m[7] * height,
+  ]);
+}

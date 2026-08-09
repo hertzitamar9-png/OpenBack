@@ -1,6 +1,7 @@
 #version 300 es
 precision highp float;
 precision highp int;
+precision highp int;
 precision highp usampler2D;
 
 // Unit quad vertex position [0,0]→[1,1]
@@ -117,6 +118,12 @@ void main() {
     ? length(xHForScale.xy / max(0.0001, xHForScale.z) - anchorForScale)
     : length(vec2(uCamera[0][0], uCamera[1][0]));
   float screenSize = nameWorldScale * uBase * cameraScale;
+  if (uScreenFacing == 1 && screenSize > 0.085) {
+    float scaleCorrection = 0.085 / screenSize;
+    nameWorldScale *= scaleCorrection;
+    worldScale *= scaleCorrection;
+    screenSize = 0.085;
+  }
   if (screenSize < uCullThreshold && !isHighlighted) {
     gl_Position = vec4(0.0);
     vUV = vec2(0.0);

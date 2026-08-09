@@ -93,6 +93,10 @@ void main() {
     ? length(xHForScale.xy / max(0.0001, xHForScale.z) - anchorForScale)
     : length(vec2(uCamera[0][0], uCamera[1][0]));
   float screenSize  = nameWorldScale * uFontBase * cameraScale;
+  if (uScreenFacing == 1 && screenSize > 0.085) {
+    nameWorldScale *= 0.085 / screenSize;
+    screenSize = 0.085;
+  }
   if (screenSize < uCullThreshold) {
     gl_Position = vec4(0.0);
     vUV = vec2(0.0);

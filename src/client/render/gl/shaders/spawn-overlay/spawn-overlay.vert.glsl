@@ -10,6 +10,7 @@ layout(location = 1) in vec4 aInstance;
 layout(location = 2) in vec3 aColor;
 
 uniform mat3 uCamera;
+uniform mat4 uViewProjection;
 uniform int uThreeD;
 uniform vec2 uThreeDCenter;
 uniform vec2 uViewport;
@@ -47,22 +48,14 @@ void main() {
   vWorldPos = worldPos;
 
   if (uThreeD == 1) {
-    vec2 d = center - uThreeDCenter;
-    float cy = cos(uYaw), sy = sin(uYaw);
-    d = vec2(d.x * cy - d.y * sy, d.x * sy + d.y * cy);
-    float ct = cos(uTilt), st = sin(uTilt);
     ivec2 terrainCell = ivec2(clamp(floor(center), vec2(0.0), uMapSize - 1.0));
     float groundHeight = heightFor(texelFetch(uTerrain, terrainCell, 0).r) + 0.35;
-    float viewY = -d.y * ct + groundHeight * st;
-    float viewZ = uDistance - d.y * st - groundHeight * ct;
-    if (viewZ <= 0.5) {
+    vec4 centerClip4 = uViewProjection * vec4(center.x, groundHeight, center.y, 1.0);
+    if (centerClip4.w <= 0.0) {
       gl_Position = vec4(2.0);
       return;
     }
-    vec2 centerClip = vec2(
-      d.x / (viewZ * uTanHalfFov * uAspect),
-      viewY / (viewZ * uTanHalfFov)
-    );
+    vec2 centerClip = centerClip4.xy / centerClip4.w;
     // Marker geometry is screen-facing UI: its center follows the 3D ground,
     // while its local X/Y radius stays circular and selectable.
     vec2 clipOffset = local * r * uZoom * vec2(2.0) / uViewport;

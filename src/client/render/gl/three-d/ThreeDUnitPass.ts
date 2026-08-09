@@ -1,12 +1,21 @@
 import { UnitType } from "../../../../core/game/Game";
 import type { UnitState } from "../../types";
 import { createProgram } from "../utils/GlUtils";
+import { ThreeDCameraState } from "./ThreeDCamera";
+import {
+  barrel,
+  beveledBox,
+  hull,
+  roof,
+  trackedChassis,
+  wedge,
+  type ThreeDMeshData,
+} from "./ThreeDGeometry";
 import {
   THREE_D_MODELS,
   type ThreeDAnimation,
   type ThreeDPrimitiveKind,
 } from "./ThreeDModelRegistry";
-import { THREE_D_FOV_DEGREES, threeDCameraDistance } from "./ThreeDWorldMath";
 
 const STRIDE = 16;
 const MATERIAL = {
@@ -48,8 +57,9 @@ layout(location=4) in vec4 iAngles;
 layout(location=5) in vec4 iMeta;
 layout(location=6) in vec2 iAnchor;
 uniform usampler2D uTerrain;
-uniform vec2 uMapSize,uCenter;
-uniform float uDistance,uTanHalfFov,uAspect,uTilt,uYaw,uTime;
+uniform vec2 uMapSize;
+uniform mat4 uViewProjection;
+uniform float uTime;
 out vec3 vNormal;
 out vec3 vMeta;
 
@@ -75,15 +85,7 @@ void main(){
   float flightBob=step(1.5,iWorld.y)*sin(uTime*3.2+iWorld.x*.7+iWorld.z*.4)*.14;
   float hover=animation==5?sin(phase*2.1)*.11:0.0;
   vec3 world=vec3(iWorld.x,ground+iWorld.y+flightBob+hover,iWorld.z)+model;
-  vec2 d=world.xz-uCenter;
-  float cy=cos(uYaw),sy=sin(uYaw);
-  d=vec2(d.x*cy-d.y*sy,d.x*sy+d.y*cy);
-  float ct=cos(uTilt),st=sin(uTilt);
-  float viewY=-d.y*ct+world.y*st;
-  float viewZ=uDistance-d.y*st-world.y*ct;
-  float nearPlane=0.5,farPlane=max(nearPlane+1.0,uDistance*8.0+50.0);
-  float clipZ=((farPlane+nearPlane)/(farPlane-nearPlane))*viewZ-(2.0*farPlane*nearPlane)/(farPlane-nearPlane);
-  gl_Position=vec4(d.x/(uTanHalfFov*uAspect),viewY/uTanHalfFov,clipZ,viewZ);
+  gl_Position=uViewProjection*vec4(world,1.0);
   vNormal=normalize(heading*local*aNormal);
   vMeta=iMeta.xyz;
 }`;
@@ -128,6 +130,7 @@ export class ThreeDUnitPass {
   private meshes = new Map<ThreeDPrimitiveKind, Mesh>();
   private batches = new Map<ThreeDPrimitiveKind, number[]>();
   private uniforms: Record<string, WebGLUniformLocation | null>;
+  private distantDetail = 1;
 
   constructor(
     private gl: WebGL2RenderingContext,
@@ -138,24 +141,24 @@ export class ThreeDUnitPass {
   ) {
     this.program = createProgram(gl, vert, frag);
     this.uniforms = Object.fromEntries(
-      [
-        "uTerrain",
-        "uPalette",
-        "uMapSize",
-        "uCenter",
-        "uDistance",
-        "uTanHalfFov",
-        "uAspect",
-        "uTilt",
-        "uYaw",
-        "uTime",
-      ].map((name) => [name, gl.getUniformLocation(this.program, name)]),
+      ["uTerrain", "uPalette", "uMapSize", "uViewProjection", "uTime"].map(
+        (name) => [name, gl.getUniformLocation(this.program, name)],
+      ),
     );
     this.meshes.set("box", this.createMesh(this.boxGeometry()));
     this.meshes.set("wing", this.createMesh(this.wingGeometry()));
     this.meshes.set("cylinder", this.createMesh(this.radialGeometry(false)));
     this.meshes.set("cone", this.createMesh(this.radialGeometry(true)));
     this.meshes.set("sphere", this.createMesh(this.sphereGeometry()));
+    this.meshes.set("beveledBox", this.createMesh(this.geometry(beveledBox())));
+    this.meshes.set("wedge", this.createMesh(this.geometry(wedge())));
+    this.meshes.set("hull", this.createMesh(this.geometry(hull())));
+    this.meshes.set(
+      "trackedChassis",
+      this.createMesh(this.geometry(trackedChassis())),
+    );
+    this.meshes.set("roof", this.createMesh(this.geometry(roof())));
+    this.meshes.set("barrel", this.createMesh(this.geometry(barrel())));
     for (const kind of this.meshes.keys()) this.batches.set(kind, []);
     gl.useProgram(this.program);
     gl.uniform1i(this.uniforms.uTerrain, 0);
@@ -224,7 +227,17 @@ export class ThreeDUnitPass {
           x,
           z,
         );
-      for (const primitive of model.primitives) {
+      const screenSize = view
+        ? model.footprint * view.zoom
+        : Number.POSITIVE_INFINITY;
+      const primitiveLimit =
+        screenSize <= model.lods[1].maxScreenSize
+          ? Math.max(
+              1,
+              Math.ceil(model.lods[1].primitiveLimit * this.distantDetail),
+            )
+          : model.lods[0].primitiveLimit;
+      for (const primitive of model.primitives.slice(0, primitiveLimit)) {
         const batch = this.batches.get(primitive.kind)!;
         const rotation = primitive.rotation ?? [0, 0, 0];
         // Keep every primitive in one rigid model. The old path rotated each
@@ -274,6 +287,10 @@ export class ThreeDUnitPass {
     }
   }
 
+  setQuality(distantDetail: number): void {
+    this.distantDetail = Math.max(0.25, Math.min(1, distantDetail));
+  }
+
   draw(
     centerX: number,
     centerY: number,
@@ -288,17 +305,23 @@ export class ThreeDUnitPass {
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.useProgram(this.program);
-    const tanHalfFov = Math.tan((THREE_D_FOV_DEGREES * Math.PI) / 360);
+    const camera = ThreeDCameraState.create({
+      viewportWidth: width,
+      viewportHeight: height,
+      mapWidth: this.mapWidth,
+      mapHeight: this.mapHeight,
+      centerX,
+      centerZ: centerY,
+      zoom,
+      yaw,
+      pitch,
+    });
     gl.uniform2f(this.uniforms.uMapSize, this.mapWidth, this.mapHeight);
-    gl.uniform2f(this.uniforms.uCenter, centerX, centerY);
-    gl.uniform1f(
-      this.uniforms.uDistance,
-      threeDCameraDistance(height, zoom, pitch),
+    gl.uniformMatrix4fv(
+      this.uniforms.uViewProjection,
+      false,
+      new Float32Array(camera.viewProjection),
     );
-    gl.uniform1f(this.uniforms.uTanHalfFov, tanHalfFov);
-    gl.uniform1f(this.uniforms.uAspect, width / Math.max(1, height));
-    gl.uniform1f(this.uniforms.uTilt, pitch);
-    gl.uniform1f(this.uniforms.uYaw, yaw);
     gl.uniform1f(this.uniforms.uTime, performance.now() / 1000);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.terrain);
@@ -373,6 +396,24 @@ export class ThreeDUnitPass {
       instanceCount: 0,
       upload: new Float32Array(STRIDE * 32),
     };
+  }
+
+  private geometry(data: ThreeDMeshData): {
+    vertices: number[];
+    indices: number[];
+  } {
+    const vertices: number[] = [];
+    for (let index = 0; index < data.positions.length; index += 3) {
+      vertices.push(
+        data.positions[index],
+        data.positions[index + 1],
+        data.positions[index + 2],
+        data.normals[index],
+        data.normals[index + 1],
+        data.normals[index + 2],
+      );
+    }
+    return { vertices, indices: Array.from(data.indices) };
   }
 
   private boxGeometry() {

@@ -67,14 +67,15 @@ import { UnitPass } from "./passes/UnitPass";
 import { WorldEventPass } from "./passes/WorldEventPass";
 import { WorldTextPass } from "./passes/WorldTextPass";
 import type { RenderSettings } from "./RenderSettings";
+import {
+  ThreeDCameraState,
+  threeDGroundHomography,
+} from "./three-d/ThreeDCamera";
 import { ThreeDFogPass } from "./three-d/ThreeDFogPass";
+import { ThreeDQualityController } from "./three-d/ThreeDQuality";
 import { ThreeDUnitPass } from "./three-d/ThreeDUnitPass";
 import { ThreeDWorldEventPass } from "./three-d/ThreeDWorldEventPass";
-import {
-  THREE_D_FOV_DEGREES,
-  THREE_D_TILT,
-  threeDCameraDistance,
-} from "./three-d/ThreeDWorldMath";
+import { THREE_D_TILT } from "./three-d/ThreeDWorldMath";
 import { AffiliationPalette } from "./utils/Affiliation";
 import {
   EFFECT_PALETTE_BLOCKS,
@@ -169,6 +170,8 @@ export class GPURenderer {
   private smallPlayerGlowPass: SmallPlayerGlowPass;
   private inSpawnPhase = false;
   private threeDModeActive = false;
+  private threeDQuality = new ThreeDQualityController("high");
+  private lastThreeDFrameAt = 0;
 
   // Map-layer passes keyed by layer id, drawn between terrain and territory.
   private mapLayerPasses: Map<string, MapLayerPass> = new Map();
@@ -200,8 +203,6 @@ export class GPURenderer {
   private canvas: HTMLCanvasElement;
   private settings: RenderSettings;
   private sceneTarget: RenderTarget;
-  private threeDBillboardMatrix = new Float32Array(9);
-  private threeDLabelMatrix = new Float32Array(9);
   private raf: typeof requestAnimationFrame;
   private caf: typeof cancelAnimationFrame;
 
@@ -1387,9 +1388,19 @@ export class GPURenderer {
     const compositingActive = this.isLightCompositingActive();
 
     if (this.threeDPass) {
+      const now = performance.now();
+      if (this.lastThreeDFrameAt > 0) {
+        this.threeDQuality.sample(now - this.lastThreeDFrameAt, now);
+      }
+      this.lastThreeDFrameAt = now;
+      const quality = this.threeDQuality.settings;
+      this.threeDPass.setQuality(quality.terrainLodBias);
+      this.threeDUnitPass?.setQuality(quality.distantModelDetail);
+      this.threeDFogPass?.setQuality(quality.particleScale);
+      this.threeDWorldEventPass?.setQuality(quality.particleScale);
       toScreen(this.gl, cw, ch, () => {
-        const billboardCamera = this.makeThreeDBillboardCamera(cw, ch, zoom);
-        const labelCamera = this.makeThreeDLabelCamera(cw, ch, zoom);
+        const billboardCamera = this.makeThreeDGroundCamera(cw, ch, zoom, 0.15);
+        const labelCamera = billboardCamera;
         this.threeDPass!.draw(
           cw,
           ch,
@@ -1493,69 +1504,26 @@ export class GPURenderer {
    * world itself uses full perspective; UI billboards deliberately keep a
    * stable pixel size so distant player names remain readable.
    */
-  private makeThreeDBillboardCamera(
+  private makeThreeDGroundCamera(
     width: number,
     height: number,
     zoom: number,
+    worldHeight: number,
   ): Float32Array {
-    const tanHalfFov = Math.tan((THREE_D_FOV_DEGREES * Math.PI) / 360);
-    const distance = threeDCameraDistance(height, zoom, this.threeDPitch);
-    const sx = 1 / (distance * tanHalfFov * (width / Math.max(1, height)));
-    const sy = -Math.cos(this.threeDPitch) / (distance * tanHalfFov);
-    const cy = Math.cos(this.threeDYaw);
-    const yawSin = Math.sin(this.threeDYaw);
-    const m = this.threeDBillboardMatrix;
-    m[0] = cy * sx;
-    m[1] = yawSin * sy;
-    m[2] = 0;
-    m[3] = -yawSin * sx;
-    m[4] = cy * sy;
-    m[5] = 0;
-    m[6] = -(this.camera.offsetX * cy - this.camera.offsetY * yawSin) * sx;
-    m[7] = -(this.camera.offsetX * yawSin + this.camera.offsetY * cy) * sy;
-    m[8] = 1;
-    return m;
-  }
-
-  /**
-   * Exact ground-plane homography used by 3D player labels. Unlike the
-   * tangent approximation used by tactical overlays, this preserves the
-   * perspective anchor while the label shader keeps text and icons upright.
-   */
-  private makeThreeDLabelCamera(
-    width: number,
-    height: number,
-    zoom: number,
-  ): Float32Array {
-    const tanHalfFov = Math.tan((THREE_D_FOV_DEGREES * Math.PI) / 360);
-    const distance = threeDCameraDistance(height, zoom, this.threeDPitch);
-    const invX = 1 / (tanHalfFov * (width / Math.max(1, height)));
-    const invY = 1 / tanHalfFov;
-    const cx = this.camera.offsetX;
-    const cyCenter = this.camera.offsetY;
-    const cosYaw = Math.cos(this.threeDYaw);
-    const sinYaw = Math.sin(this.threeDYaw);
-    const cosPitch = Math.cos(this.threeDPitch);
-    const sinPitch = Math.sin(this.threeDPitch);
-    const labelHeight = 0.15;
-    const m = this.threeDLabelMatrix;
-
-    // Column-major mat3 mapping world (x, z, 1) to homogeneous clip (X,Y,W).
-    m[0] = cosYaw * invX;
-    m[1] = -sinYaw * cosPitch * invY;
-    m[2] = -sinYaw * sinPitch;
-    m[3] = -sinYaw * invX;
-    m[4] = -cosYaw * cosPitch * invY;
-    m[5] = -cosYaw * sinPitch;
-    m[6] = (-cosYaw * cx + sinYaw * cyCenter) * invX;
-    m[7] =
-      (sinYaw * cx + cosYaw * cyCenter) * cosPitch * invY +
-      labelHeight * sinPitch * invY;
-    m[8] =
-      distance +
-      (sinYaw * cx + cosYaw * cyCenter) * sinPitch -
-      labelHeight * cosPitch;
-    return m;
+    return threeDGroundHomography(
+      ThreeDCameraState.create({
+        viewportWidth: width,
+        viewportHeight: height,
+        mapWidth: this.mapW,
+        mapHeight: this.mapH,
+        centerX: this.camera.offsetX,
+        centerZ: this.camera.offsetY,
+        zoom,
+        yaw: this.threeDYaw,
+        pitch: this.threeDPitch,
+      }),
+      worldHeight,
+    );
   }
 
   private isLightCompositingActive(): boolean {

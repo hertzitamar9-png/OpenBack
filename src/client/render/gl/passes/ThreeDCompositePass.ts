@@ -5,11 +5,12 @@
  * supplies territory ownership, and the player palette supplies board-piece
  * colors. No flat screenshot is bent over the mesh.
  */
+import { ThreeDCameraState } from "../three-d/ThreeDCamera";
+import { ThreeDTerrainChunks } from "../three-d/ThreeDTerrainChunks";
 import {
-  THREE_D_FOV_DEGREES,
-  threeDCameraDistance,
-  threeDGroundHalfExtents,
-} from "../three-d/ThreeDWorldMath";
+  buildSolidMapBase,
+  buildTerrainGrid,
+} from "../three-d/ThreeDTerrainMesh";
 import { createFullscreenQuad, createProgram } from "../utils/GlUtils";
 
 const skyVert = `#version 300 es
@@ -40,12 +41,7 @@ precision highp usampler2D;
 layout(location=0) in vec2 aUV;
 uniform usampler2D uTerrain;
 uniform vec2 uMapSize;
-uniform vec2 uCenter;
-uniform float uDistance;
-uniform float uTanHalfFov;
-uniform float uAspect;
-uniform float uTilt;
-uniform float uYaw;
+uniform mat4 uViewProjection;
 uniform vec2 uGroundOrigin;
 uniform vec2 uGroundSpan;
 uniform float uSampleRadius;
@@ -97,31 +93,22 @@ void main(){
   ivec2 tc=ivec2(clamp(floor(world),vec2(0.0),uMapSize-1.0));
   uint terrainByte=inside?texelFetch(uTerrain,tc,0).r:10u;
   float h=inside?smoothHeight(world):heightFor(terrainByte);
-  vec2 d=world-uCenter;
-  float cy=cos(uYaw),sy=sin(uYaw);
-  d=vec2(d.x*cy-d.y*sy,d.x*sy+d.y*cy);
-  float ct=cos(uTilt),st=sin(uTilt);
-  // A real camera above the XZ floor: positive terrain height moves toward
-  // the camera and upward on screen; distant ground converges upward toward
-  // the horizon rather than hanging below it like an inverted map.
-  float viewY=-d.y*ct+h*st;
-  float viewZ=uDistance-d.y*st-h*ct;
-  float nearPlane=0.5,farPlane=max(nearPlane+1.0,uDistance*8.0+50.0);
-  float clipZ=((farPlane+nearPlane)/(farPlane-nearPlane))*viewZ
-    -(2.0*farPlane*nearPlane)/(farPlane-nearPlane);
-  // Preserve viewZ as clip-space W. WebGL now performs real perspective
-  // interpolation and clips geometry at the near plane, preventing terrain
-  // and player models from stretching into giant screen-sized triangles.
-  gl_Position=vec4(
-    d.x/(uTanHalfFov*uAspect),
-    viewY/uTanHalfFov,
-    clipZ,
-    viewZ
-  );
+  gl_Position=uViewProjection*vec4(world.x,h,world.y,1.0);
   vMapUV=mapUV;
   vHeight=h;
-  vViewDepth=viewZ;
+  vViewDepth=gl_Position.w;
 }`;
+
+const baseVert = `#version 300 es
+precision highp float;
+layout(location=0) in vec3 aPos;
+uniform mat4 uViewProjection;
+void main(){gl_Position=uViewProjection*vec4(aPos,1.0);}`;
+
+const baseFrag = `#version 300 es
+precision highp float;
+out vec4 outColor;
+void main(){outColor=vec4(0.018,0.028,0.042,1.0);}`;
 
 const terrainFrag = `#version 300 es
 precision highp float;
@@ -222,8 +209,16 @@ interface TerrainMesh {
 export class ThreeDCompositePass {
   private skyProgram: WebGLProgram;
   private terrainProgram: WebGLProgram;
+  private baseProgram: WebGLProgram;
   private skyVao: WebGLVertexArrayObject;
+  private baseVao: WebGLVertexArrayObject;
+  private baseVertexBuffer: WebGLBuffer;
+  private baseIndexBuffer: WebGLBuffer;
+  private baseIndexCount: number;
+  private baseViewProjection: WebGLUniformLocation | null;
   private meshes: TerrainMesh[];
+  private chunks: ThreeDTerrainChunks;
+  private lodBias = 0;
   private skyTime: WebGLUniformLocation | null;
   private skyTilt: WebGLUniformLocation | null;
   private uniforms: Record<string, WebGLUniformLocation | null>;
@@ -239,6 +234,7 @@ export class ThreeDCompositePass {
   ) {
     this.skyProgram = createProgram(gl, skyVert, skyFrag);
     this.terrainProgram = createProgram(gl, terrainVert, terrainFrag);
+    this.baseProgram = createProgram(gl, baseVert, baseFrag);
     this.skyTime = gl.getUniformLocation(this.skyProgram, "uTime");
     this.skyTilt = gl.getUniformLocation(this.skyProgram, "uTilt");
     this.uniforms = Object.fromEntries(
@@ -248,12 +244,7 @@ export class ThreeDCompositePass {
         "uTrailState",
         "uPalette",
         "uMapSize",
-        "uCenter",
-        "uDistance",
-        "uTanHalfFov",
-        "uAspect",
-        "uTilt",
-        "uYaw",
+        "uViewProjection",
         "uTime",
         "uGroundOrigin",
         "uGroundSpan",
@@ -261,9 +252,25 @@ export class ThreeDCompositePass {
       ].map((name) => [name, gl.getUniformLocation(this.terrainProgram, name)]),
     );
     this.skyVao = createFullscreenQuad(gl);
-    // One stable topology avoids visible LOD popping while orbiting or
-    // scrolling. Perspective already supplies more local detail when zoomed.
-    this.meshes = [448].map((detail) => this.createMesh(detail));
+    this.meshes = [128, 64, 32, 16].map((detail) => this.createMesh(detail));
+    this.chunks = new ThreeDTerrainChunks(mapWidth, mapHeight);
+    const base = buildSolidMapBase(mapWidth, mapHeight);
+    this.baseVao = gl.createVertexArray()!;
+    gl.bindVertexArray(this.baseVao);
+    this.baseVertexBuffer = gl.createBuffer()!;
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.baseVertexBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, base.positions, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+    this.baseIndexBuffer = gl.createBuffer()!;
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.baseIndexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, base.indices, gl.STATIC_DRAW);
+    this.baseIndexCount = base.indices.length;
+    this.baseViewProjection = gl.getUniformLocation(
+      this.baseProgram,
+      "uViewProjection",
+    );
+    gl.bindVertexArray(null);
     gl.useProgram(this.terrainProgram);
     gl.uniform1i(this.uniforms.uTerrain, 0);
     gl.uniform1i(this.uniforms.uTileState, 1);
@@ -273,33 +280,9 @@ export class ThreeDCompositePass {
 
   private createMesh(maxSegments: number): TerrainMesh {
     const gl = this.gl;
-    const aspect = this.mapWidth / this.mapHeight;
-    const sx = Math.max(8, Math.round(maxSegments * Math.min(1, aspect)));
-    const sy = Math.max(8, Math.round(maxSegments / Math.max(1, aspect)));
-    const vertices = new Float32Array((sx + 1) * (sy + 1) * 2);
-    let vi = 0;
-    for (let y = 0; y <= sy; y++) {
-      for (let x = 0; x <= sx; x++) {
-        vertices[vi++] = x / sx;
-        vertices[vi++] = y / sy;
-      }
-    }
-    const indices = new Uint32Array(sx * sy * 6);
-    let ii = 0;
-    for (let y = 0; y < sy; y++) {
-      for (let x = 0; x < sx; x++) {
-        const a = y * (sx + 1) + x;
-        const b = a + 1;
-        const c = a + sx + 1;
-        const d = c + 1;
-        indices[ii++] = a;
-        indices[ii++] = c;
-        indices[ii++] = b;
-        indices[ii++] = b;
-        indices[ii++] = c;
-        indices[ii++] = d;
-      }
-    }
+    const sx = maxSegments;
+    const sy = maxSegments;
+    const { positions: vertices, indices } = buildTerrainGrid(sx, sy);
     const vao = gl.createVertexArray()!;
     gl.bindVertexArray(vao);
     const vb = gl.createBuffer()!;
@@ -342,16 +325,26 @@ export class ThreeDCompositePass {
 
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
+    const camera = ThreeDCameraState.create({
+      viewportWidth: width,
+      viewportHeight: height,
+      mapWidth: this.mapWidth,
+      mapHeight: this.mapHeight,
+      centerX,
+      centerZ: centerY,
+      zoom,
+      yaw,
+      pitch,
+    });
+    const viewProjection = new Float32Array(camera.viewProjection);
+    gl.useProgram(this.baseProgram);
+    gl.uniformMatrix4fv(this.baseViewProjection, false, viewProjection);
+    gl.bindVertexArray(this.baseVao);
+    gl.drawElements(gl.TRIANGLES, this.baseIndexCount, gl.UNSIGNED_INT, 0);
+
     gl.useProgram(this.terrainProgram);
-    const tanHalfFov = Math.tan((THREE_D_FOV_DEGREES * Math.PI) / 360);
-    const distance = threeDCameraDistance(height, zoom, pitch);
     gl.uniform2f(this.uniforms.uMapSize, this.mapWidth, this.mapHeight);
-    gl.uniform2f(this.uniforms.uCenter, centerX, centerY);
-    gl.uniform1f(this.uniforms.uDistance, distance);
-    gl.uniform1f(this.uniforms.uTanHalfFov, tanHalfFov);
-    gl.uniform1f(this.uniforms.uAspect, width / Math.max(1, height));
-    gl.uniform1f(this.uniforms.uTilt, pitch);
-    gl.uniform1f(this.uniforms.uYaw, yaw);
+    gl.uniformMatrix4fv(this.uniforms.uViewProjection, false, viewProjection);
     gl.uniform1f(this.uniforms.uTime, performance.now() / 1000);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.terrain);
@@ -361,47 +354,30 @@ export class ThreeDCompositePass {
     gl.bindTexture(gl.TEXTURE_2D, this.trailState);
     gl.activeTexture(gl.TEXTURE3);
     gl.bindTexture(gl.TEXTURE_2D, this.palette);
-    const mesh = this.meshes[0];
-    // Cover the rotated camera frustum in map space. A non-square viewport
-    // needs its wide axis transferred to Y as the camera yaws; otherwise a
-    // zoom at quarter turns can reveal the mesh edge while labels remain.
-    const groundExtents = threeDGroundHalfExtents(
-      width,
-      height,
-      zoom,
-      pitch,
-      yaw,
-    );
-    const desiredHalfX = groundExtents.x;
-    const desiredHalfY = groundExtents.y;
-    const desiredStep = Math.max(
-      (desiredHalfX * 2) / Math.max(1, mesh.segmentsX),
-      (desiredHalfY * 2) / Math.max(1, mesh.segmentsY),
-    );
-    // Use a power-of-two world grid and align its origin to that grid. Moving
-    // the camera now reveals existing geometry instead of resampling every
-    // vertex at a new position and making hills visibly swim beneath the UI.
-    const worldStep = Math.max(1, 2 ** Math.ceil(Math.log2(desiredStep)));
-    const groundSpanX = worldStep * mesh.segmentsX;
-    const groundSpanY = worldStep * mesh.segmentsY;
-    const groundOriginX =
-      Math.floor((centerX - groundSpanX / 2) / worldStep) * worldStep;
-    const groundOriginY =
-      Math.floor((centerY - groundSpanY / 2) / worldStep) * worldStep;
-    const sampleRadius = Math.max(1, worldStep);
-    gl.uniform2f(this.uniforms.uGroundOrigin, groundOriginX, groundOriginY);
-    gl.uniform2f(this.uniforms.uGroundSpan, groundSpanX, groundSpanY);
-    gl.uniform1f(this.uniforms.uSampleRadius, sampleRadius);
-    gl.bindVertexArray(mesh.vao);
-    gl.drawElements(gl.TRIANGLES, mesh.indexCount, gl.UNSIGNED_INT, 0);
+    for (const chunk of this.chunks.visible(camera)) {
+      const mesh = this.meshes[Math.min(3, chunk.lod + this.lodBias)];
+      gl.uniform2f(this.uniforms.uGroundOrigin, chunk.x, chunk.y);
+      gl.uniform2f(this.uniforms.uGroundSpan, chunk.width, chunk.height);
+      gl.uniform1f(this.uniforms.uSampleRadius, 1);
+      gl.bindVertexArray(mesh.vao);
+      gl.drawElements(gl.TRIANGLES, mesh.indexCount, gl.UNSIGNED_INT, 0);
+    }
     gl.bindVertexArray(null);
     gl.disable(gl.DEPTH_TEST);
+  }
+
+  setQuality(lodBias: number): void {
+    this.lodBias = Math.max(0, Math.min(2, Math.floor(lodBias)));
   }
 
   dispose(): void {
     this.gl.deleteProgram(this.skyProgram);
     this.gl.deleteProgram(this.terrainProgram);
+    this.gl.deleteProgram(this.baseProgram);
     this.gl.deleteVertexArray(this.skyVao);
+    this.gl.deleteVertexArray(this.baseVao);
+    this.gl.deleteBuffer(this.baseVertexBuffer);
+    this.gl.deleteBuffer(this.baseIndexBuffer);
     for (const mesh of this.meshes) {
       this.gl.deleteVertexArray(mesh.vao);
       this.gl.deleteBuffer(mesh.vertexBuffer);

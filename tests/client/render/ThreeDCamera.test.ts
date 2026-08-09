@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   ThreeDCameraState,
+  threeDGroundHomography,
   type ThreeDCameraInput,
 } from "../../../src/client/render/gl/three-d/ThreeDCamera";
 import {
@@ -45,6 +46,15 @@ describe("ThreeDCameraState", () => {
     expect(world!.z).toBeCloseTo(400, 4);
   });
 
+  it("round-trips off-center terrain points while yawed", () => {
+    const camera = ThreeDCameraState.create(fixture({ yaw: -0.6 }));
+    const expected = { x: 830, y: 6, z: 470 };
+    const screen = camera.project(expected)!;
+    const world = camera.intersectHeightField(screen.x, screen.y, () => 6)!;
+    expect(world.x).toBeCloseTo(expected.x, 4);
+    expect(world.z).toBeCloseTo(expected.z, 4);
+  });
+
   it("uses finite clipping planes that contain every padded map corner", () => {
     const camera = ThreeDCameraState.create(fixture());
     expect(camera.near).toBeGreaterThan(0);
@@ -84,5 +94,23 @@ describe("ThreeDCameraState", () => {
       ).toBeCloseTo(1, 8);
       expect(Object.values(ray.direction).every(Number.isFinite)).toBe(true);
     }
+  });
+
+  it("projects tactical ground anchors through the canonical camera", () => {
+    const camera = ThreeDCameraState.create(fixture());
+    const matrix = threeDGroundHomography(camera, 6);
+    const world = { x: 830, y: 6, z: 470 };
+    const projected = camera.project(world)!;
+    const clipX = matrix[0] * world.x + matrix[3] * world.z + matrix[6];
+    const clipY = matrix[1] * world.x + matrix[4] * world.z + matrix[7];
+    const clipW = matrix[2] * world.x + matrix[5] * world.z + matrix[8];
+    expect(((clipX / clipW + 1) * camera.viewportWidth) / 2).toBeCloseTo(
+      projected.x,
+      4,
+    );
+    expect(((1 - clipY / clipW) * camera.viewportHeight) / 2).toBeCloseTo(
+      projected.y,
+      4,
+    );
   });
 });

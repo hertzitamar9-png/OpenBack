@@ -69,17 +69,17 @@
     "profile_picture": "Profile Picture (Optional)",
     "profile_picture_desc": "Shown beside your name in profiles, friends, clans, rankings, and matches. Images are cropped to a square.",
     "profile_picture_invalid": "Choose a valid PNG, JPEG, or WebP image.",
-    "remove_profile_picture": "Use OB Logo",
-    "replace_profile_picture": "Replace",
-    "select_profile_picture": "Choose Image",
     "profile_save_failed": "Could not save your profile. Please try again.",
     "profile_saved": "Profile saved.",
     "public_player_id": "Friend Code:",
     "reactivate_subscription": "Reactivate",
+    "remove_profile_picture": "Use OB Logo",
+    "replace_profile_picture": "Replace",
     "resend_code": "Resend code",
     "reward_daily": "Daily subscription reward",
     "reward_signup_bonus": "Subscription signup bonus",
     "save_profile": "Save Changes",
+    "select_profile_picture": "Choose Image",
     "send_login_code": "Send Log In Code",
     "send_signup_code": "Send Sign Up Code",
     "sign_in_desc": "Sign in to save your stats and progress",
@@ -1982,6 +1982,7 @@
     "requeue": "Play Again",
     "spectate": "Spectate",
     "you_won": "You Won!",
-    "your_team": "Your team won!"
+    "your_team": "Your team won!",
+    "youtube_tutorial": "Need help? Watch the tutorial"
   }
 }
