@@ -76,6 +76,8 @@ export class DragEvent implements GameEvent {
   constructor(
     public readonly deltaX: number,
     public readonly deltaY: number,
+    public readonly x?: number,
+    public readonly y?: number,
   ) {}
 }
 
@@ -1082,7 +1084,9 @@ export class InputHandler {
           ),
         );
       } else {
-        this.eventBus.emit(new DragEvent(deltaX, deltaY));
+        this.eventBus.emit(
+          new DragEvent(deltaX, deltaY, event.clientX, event.clientY),
+        );
       }
 
       this.lastPointerX = event.clientX;

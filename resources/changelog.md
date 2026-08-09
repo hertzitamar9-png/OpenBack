@@ -1,3 +1,11 @@
+## OpenBack v0.34.99 - Tabletop Camera Foundation
+
+- Rebuilt the 3D camera around one finite perspective projection shared by pointer picking and world positioning, preventing inverted views and unstable near-plane behavior.
+- Kept the camera physically above the highest terrain across the full orbit and zoom range while preserving short right-click menus.
+- Made left-dragging follow the picked ground point instead of using angle-dependent screen deltas, so movement stays attached to the tabletop at shallow and steep views.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.98 - Persistent Player Identity
 
 - Added optional account profile pictures with automatic square cropping, persistent storage, and the updated circular OB logo as the reliable default everywhere.

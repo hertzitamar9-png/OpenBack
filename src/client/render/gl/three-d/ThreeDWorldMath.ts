@@ -18,7 +18,8 @@ export function threeDCameraDistance(
   // A raised peak must never pass through the camera's near plane at close
   // zoom. Keep enough clearance for terrain plus the tallest unit effects.
   const terrainClearance =
-    THREE_D_MAX_TERRAIN_HEIGHT * Math.max(0, Math.cos(pitch)) + 10;
+    (THREE_D_MAX_TERRAIN_HEIGHT + 20) /
+    Math.max(0.1, Math.sin(Math.max(THREE_D_MIN_TILT, pitch)));
   return Math.max(requested, terrainClearance);
 }
 

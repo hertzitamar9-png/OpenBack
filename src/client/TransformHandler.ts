@@ -7,12 +7,11 @@ import {
   ZOOM_DELTA_DIVISOR,
   ZoomEvent,
 } from "./InputHandler";
+import { ThreeDCameraState } from "./render/gl/three-d/ThreeDCamera";
 import {
-  THREE_D_FOV_DEGREES,
   THREE_D_MAX_TILT,
   THREE_D_MIN_TILT,
   THREE_D_TILT,
-  threeDCameraDistance,
   threeDHeightForTerrainByte,
 } from "./render/gl/three-d/ThreeDWorldMath";
 import { GameView, PlayerView, UnitView } from "./view";
@@ -223,7 +222,7 @@ export class TransformHandler {
     return this.game.config().worldMechanics().threeDMode;
   }
 
-  private threeDCamera() {
+  private threeDCamera(): ThreeDCameraState {
     const { width, height } = this.boundingRect();
     const centerX =
       this.offsetX +
@@ -233,81 +232,41 @@ export class TransformHandler {
       this.offsetY +
       this.game.height() / 2 +
       (height - this.game.height()) / (2 * this.scale);
-    const tanHalfFov = Math.tan((THREE_D_FOV_DEGREES * Math.PI) / 360);
-    return {
-      width,
-      height,
+    return ThreeDCameraState.create({
+      viewportWidth: width,
+      viewportHeight: height,
+      mapWidth: this.game.width(),
+      mapHeight: this.game.height(),
       centerX,
-      centerY,
-      tanHalfFov,
-      distance: threeDCameraDistance(height, this.scale, this.threeDPitch),
+      centerZ: centerY,
+      zoom: this.scale,
       pitch: this.threeDPitch,
       yaw: this.threeDYaw,
-    };
+    });
   }
 
   private threeDCanvasToWorld(canvasX: number, canvasY: number) {
     const c = this.threeDCamera();
-    const clipX = (canvasX / Math.max(1, c.width)) * 2 - 1;
-    const clipY = 1 - (canvasY / Math.max(1, c.height)) * 2;
-    const ct = Math.cos(c.pitch);
-    const st = Math.sin(c.pitch);
-    const cy = Math.cos(c.yaw);
-    const sy = Math.sin(c.yaw);
-    const ky = clipY * c.tanHalfFov;
-    let height = 0;
-    let denominator = ct - ky * st;
-    let localZ =
-      (-ky * c.distance) /
-      (Math.abs(denominator) < 0.001 ? 0.001 : denominator);
-    // Intersect the pointer ray with the actual height field. Two iterations
-    // are enough because terrain is tile-stepped and keeps clicks aligned with
-    // raised land and impassable walls instead of the hidden sea-level plane.
-    for (let i = 0; i < 2; i++) {
-      const sampleViewZ = c.distance - localZ * st - height * ct;
-      const localX =
-        clipX * sampleViewZ * c.tanHalfFov * (c.width / Math.max(1, c.height));
-      const worldDx = localX * cy + localZ * sy;
-      const worldDy = -localX * sy + localZ * cy;
-      const sampleX = Math.floor(c.centerX + worldDx);
-      const sampleY = Math.floor(c.centerY + worldDy);
-      height = this.threeDHeightAt(sampleX, sampleY);
-      const numerator = height * (ky * ct + st) - ky * c.distance;
-      denominator = ct - ky * st;
-      localZ =
-        numerator / (Math.abs(denominator) < 0.001 ? 0.001 : denominator);
-    }
-    const viewZ = c.distance - localZ * st - height * ct;
-    const localX =
-      clipX * viewZ * c.tanHalfFov * (c.width / Math.max(1, c.height));
-    return {
-      x: c.centerX + localX * cy + localZ * sy,
-      y: c.centerY - localX * sy + localZ * cy,
-    };
+    const point = c.intersectHeightField(canvasX, canvasY, (x, z) =>
+      this.threeDHeightAt(Math.floor(x), Math.floor(z)),
+    );
+    return point
+      ? { x: point.x, y: point.z }
+      : { x: c.center.x, y: c.center.z };
   }
 
   private worldToThreeDCanvas(worldX: number, worldY: number) {
     const c = this.threeDCamera();
-    const dx = worldX - c.centerX;
-    const dy = worldY - c.centerY;
-    const ct = Math.cos(c.pitch);
-    const st = Math.sin(c.pitch);
-    const cy = Math.cos(c.yaw);
-    const sy = Math.sin(c.yaw);
-    const localX = dx * cy - dy * sy;
-    const localZ = dx * sy + dy * cy;
     const terrainHeight = this.threeDHeightAt(
       Math.floor(worldX),
       Math.floor(worldY),
     );
-    const viewZ = Math.max(1, c.distance - localZ * st - terrainHeight * ct);
-    const clipX =
-      localX / (viewZ * c.tanHalfFov * (c.width / Math.max(1, c.height)));
-    const clipY = (-localZ * ct + terrainHeight * st) / (viewZ * c.tanHalfFov);
-    return {
-      x: ((clipX + 1) * c.width) / 2,
-      y: ((1 - clipY) * c.height) / 2,
-    };
+    return (
+      c.project({ x: worldX, y: terrainHeight, z: worldY }) ?? {
+        x: Number.NEGATIVE_INFINITY,
+        y: Number.NEGATIVE_INFINITY,
+      }
+    );
   }
 
   private threeDHeightAt(x: number, y: number): number {
@@ -513,6 +472,18 @@ export class TransformHandler {
   onMove(event: DragEvent) {
     this.clearTarget();
     if (this.isThreeD()) {
+      if (event.x !== undefined && event.y !== undefined) {
+        const before = this.screenToWorldCoordinatesFloat(
+          event.x - event.deltaX,
+          event.y - event.deltaY,
+        );
+        const after = this.screenToWorldCoordinatesFloat(event.x, event.y);
+        this.offsetX += before.x - after.x;
+        this.offsetY += before.y - after.y;
+        this.clampOffsets();
+        this.changed = true;
+        return;
+      }
       const localX = -event.deltaX / this.scale;
       // The floor is foreshortened as the camera lowers. Compensating for the
       // angle keeps left-drag attached to the ground at every orbit angle.

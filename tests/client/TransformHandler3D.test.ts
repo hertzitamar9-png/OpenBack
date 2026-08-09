@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { RotateCameraEvent, ZoomEvent } from "../../src/client/InputHandler";
+import {
+  DragEvent,
+  RotateCameraEvent,
+  ZoomEvent,
+} from "../../src/client/InputHandler";
 import { TransformHandler } from "../../src/client/TransformHandler";
 import {
   THREE_D_MAX_TERRAIN_HEIGHT,
@@ -11,12 +15,14 @@ import {
 } from "../../src/client/render/gl/three-d/ThreeDWorldMath";
 import type { GameView } from "../../src/client/view";
 import { EventBus } from "../../src/core/EventBus";
+import { Cell } from "../../src/core/game/Game";
 
 function createHandler(): TransformHandler {
   const game = {
     config: () => ({ worldMechanics: () => ({ threeDMode: true }) }),
     width: () => 2048,
     height: () => 1024,
+    isValidCoord: () => false,
   } as unknown as GameView;
   const canvas = document.createElement("div");
   Object.defineProperty(canvas, "getBoundingClientRect", {
@@ -116,5 +122,18 @@ describe("TransformHandler 3D camera", () => {
     expect(landscape.x).toBeCloseTo(quarterTurn.y);
     expect(landscape.y).toBeCloseTo(quarterTurn.x);
     expect(quarterTurn.y).toBeGreaterThan(quarterTurn.x);
+  });
+
+  it("keeps the picked ground under the pointer during left drag", () => {
+    const handler = createHandler();
+    const picked = handler.screenToWorldCoordinatesFloat(300, 220);
+
+    handler.onMove(new DragEvent(60, 35, 360, 255));
+
+    const projected = handler.worldToScreenCoordinates(
+      new Cell(picked.x, picked.y),
+    );
+    expect(projected.x).toBeCloseTo(360, 0);
+    expect(projected.y).toBeCloseTo(255, 0);
   });
 });
