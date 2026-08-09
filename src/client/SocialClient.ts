@@ -101,8 +101,13 @@ class OpenBackSocialClient {
   }
 
   private reconnect(): void {
-    this.socket?.close();
+    if (this.reconnectTimer !== null) {
+      window.clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+    const socket = this.socket;
     this.socket = null;
+    socket?.close();
     this.connect();
   }
 
@@ -126,7 +131,8 @@ class OpenBackSocialClient {
     };
     socket.onmessage = (event) => this.handleMessage(event);
     socket.onclose = () => {
-      if (this.socket === socket) this.socket = null;
+      if (socket !== this.socket) return;
+      this.socket = null;
       if (this.reconnectTimer !== null) return;
       this.reconnectTimer = window.setTimeout(() => {
         this.reconnectTimer = null;

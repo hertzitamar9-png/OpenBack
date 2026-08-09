@@ -1,3 +1,10 @@
+## OpenBack v0.34.105 - Reliable Social Connection
+
+- Connected Friends, parties, invitations, presence, and chat through the local OpenBack gateway so those features no longer fail while the rest of the game remains connected.
+- Prevented account refreshes from leaving duplicate social reconnect attempts behind.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.104 - Stable 3D Battlefield
 
 - Stopped the 3D camera from shaking over changing terrain and made left-drag movement use the same direct screen translation as the regular battlefield, rotated only when the player rotates the board.

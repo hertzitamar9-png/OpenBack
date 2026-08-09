@@ -323,6 +323,11 @@ export default defineConfig(({ mode }) => {
       // Automatically open the browser when the server starts
       open: process.env.SKIP_BROWSER_OPEN !== "true",
       proxy: {
+        "/social": {
+          target: "ws://localhost:3000",
+          ws: true,
+          changeOrigin: true,
+        },
         "/lobbies": {
           target: "ws://localhost:3000",
           ws: true,
