@@ -1,7 +1,7 @@
 # OpenBack Production 3D Assets and Full Visual Parity Design
 
-**Date:** 2026-08-09  
-**Owner:** frootz jhklphy  
+**Date:** 2026-08-09
+**Owner:** frootz jhklphy
 **Status:** Approved direction; implementation specification
 
 ## Objective
