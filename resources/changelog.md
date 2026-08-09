@@ -1,3 +1,12 @@
+## OpenBack v0.34.104 - Stable 3D Battlefield
+
+- Stopped the 3D camera from shaking over changing terrain and made left-drag movement use the same direct screen translation as the regular battlefield, rotated only when the player rotates the board.
+- Restored the earlier balanced terrain relief, kept complete partial map edges such as Antarctica, removed ocean chunk seams, and retained automatic 3D terrain generation for every map size.
+- Fixed 3D perspective projection for fallout, nuclear effects, trajectories, ranges, selection markers, movement indicators, and combat effects so local effects can no longer stretch across the entire screen.
+- Kept player names, flags, verification marks, troop counts, structure levels, and world text at readable screen sizes across the complete zoom range.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.103 - Clean Home Selectors
 
 - Removed the blue focus outline from Select Flag and Select Cosmetic while preserving their matching hover and press feedback.

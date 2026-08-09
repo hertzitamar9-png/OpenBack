@@ -35,6 +35,7 @@ uniform float uEmojiRowOffset;
 
 uniform float uFadeOwnerID;    // smallID of player whose name plate the cursor is over (0 = none)
 uniform float uHoverFadeAlpha; // alpha multiplier applied to that player's name plate
+const float MAX_SCREEN_SIZE = 0.085;
 
 out vec2 vUV;
 flat out int vIconType;  // 0 = flag, 1 = emoji, -1 = discard
@@ -93,6 +94,11 @@ void main() {
     ? abs(uScreenFacingScale.x)
     : length(vec2(uCamera[0][0], uCamera[1][0]));
   float screenSize  = nameWorldScale * uFontBase * cameraScale;
+  if (uScreenFacing == 1 && screenSize > MAX_SCREEN_SIZE) {
+    float scaleCorrection = MAX_SCREEN_SIZE / screenSize;
+    nameWorldScale *= scaleCorrection;
+    screenSize = MAX_SCREEN_SIZE;
+  }
   if (screenSize < uCullThreshold) {
     gl_Position = vec4(0.0);
     vUV = vec2(0.0);

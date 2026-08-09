@@ -39,6 +39,37 @@ describe("ThreeDTerrainChunks", () => {
     expect(visible.every((chunk) => chunk.worldBottom <= 2049)).toBe(true);
   });
 
+  it("covers irregular map dimensions without dropping partial edge chunks", () => {
+    const width = 731;
+    const height = 413;
+    const chunks = new ThreeDTerrainChunks(width, height);
+    const customCamera = ThreeDCameraState.create({
+      viewportWidth: 1280,
+      viewportHeight: 720,
+      mapWidth: width,
+      mapHeight: height,
+      centerX: width / 2,
+      centerZ: height / 2,
+      zoom: 0.2,
+      yaw: 0.4,
+      pitch: 1.05,
+    });
+    const visible = chunks.visible(customCamera);
+
+    expect(visible.some((chunk) => chunk.x === 0 && chunk.y === 0)).toBe(true);
+    expect(visible.some((chunk) => chunk.worldRight === width)).toBe(true);
+    expect(visible.some((chunk) => chunk.worldBottom === height)).toBe(true);
+    expect(
+      visible.every(
+        (chunk) =>
+          chunk.x >= 0 &&
+          chunk.y >= 0 &&
+          chunk.worldRight <= width &&
+          chunk.worldBottom <= height,
+      ),
+    ).toBe(true);
+  });
+
   it("holds the previous LOD inside the hysteresis band", () => {
     const selector = new ThreeDLODSelector();
     expect(selector.choose(1.55, 1)).toBe(1);

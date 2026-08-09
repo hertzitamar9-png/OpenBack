@@ -239,7 +239,6 @@ export class TransformHandler {
       mapHeight: this.game.height(),
       centerX,
       centerZ: centerY,
-      centerHeight: this.threeDHeightAtFloat(centerX, centerY),
       zoom: this.scale,
       pitch: this.threeDPitch,
       yaw: this.threeDYaw,
@@ -275,20 +274,6 @@ export class TransformHandler {
     return threeDHeightForTerrainByte(
       this.game.terrainByte(this.game.ref(x, y)),
     );
-  }
-
-  private threeDHeightAtFloat(x: number, y: number): number {
-    const x0 = Math.floor(x);
-    const y0 = Math.floor(y);
-    const tx = x - x0;
-    const ty = y - y0;
-    const h00 = this.threeDHeightAt(x0, y0);
-    const h10 = this.threeDHeightAt(x0 + 1, y0);
-    const h01 = this.threeDHeightAt(x0, y0 + 1);
-    const h11 = this.threeDHeightAt(x0 + 1, y0 + 1);
-    const top = h00 + (h10 - h00) * tx;
-    const bottom = h01 + (h11 - h01) * tx;
-    return top + (bottom - top) * ty;
   }
 
   isOnScreen(cell: Cell): boolean {
@@ -491,31 +476,12 @@ export class TransformHandler {
   onMove(event: DragEvent) {
     this.clearTarget();
     if (this.isThreeD()) {
-      if (event.x !== undefined && event.y !== undefined) {
-        const camera = this.threeDCamera();
-        const before = camera.intersectHorizontalPlane(
-          event.x - event.deltaX,
-          event.y - event.deltaY,
-          camera.center.y,
-        );
-        const after = camera.intersectHorizontalPlane(
-          event.x,
-          event.y,
-          camera.center.y,
-        );
-        if (!before || !after) return;
-        this.offsetX += before.x - after.x;
-        this.offsetY += before.z - after.z;
-        this.clampOffsets();
-        this.changed = true;
-        return;
-      }
+      // Match the established 2D drag exactly at the default yaw. When the
+      // board is rotated, rotate that same screen-space translation into map
+      // space without ray/terrain sampling, which otherwise changes from one
+      // tile to the next and shakes the camera.
       const localX = -event.deltaX / this.scale;
-      // The floor is foreshortened as the camera lowers. Compensating for the
-      // angle keeps left-drag attached to the ground at every orbit angle.
-      const localZ =
-        event.deltaY /
-        (this.scale * Math.max(0.22, Math.cos(this.threeDPitch)));
+      const localZ = -event.deltaY / this.scale;
       const cy = Math.cos(this.threeDYaw);
       const sy = Math.sin(this.threeDYaw);
       this.offsetX += localX * cy + localZ * sy;

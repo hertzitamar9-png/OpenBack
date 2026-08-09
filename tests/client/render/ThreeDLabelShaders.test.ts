@@ -15,6 +15,8 @@ describe("3D label shaders", () => {
       const source = shader(name);
       expect(source).toContain("uniform vec2 uScreenFacingScale");
       expect(source).toContain("uScreenFacingScale");
+      expect(source).toContain("MAX_SCREEN_SIZE");
+      expect(source).toContain("scaleCorrection");
       expect(source).not.toContain("xH.xy");
     },
   );
@@ -35,6 +37,7 @@ describe("3D label shaders", () => {
     );
     expect(source).toContain("uniform int uScreenFacing");
     expect(source).toContain("uniform vec2 uScreenFacingScale");
+    expect(source).toContain("MAX_SCREEN_SIZE");
     const levels = readFileSync(
       resolve(
         process.cwd(),
@@ -44,5 +47,6 @@ describe("3D label shaders", () => {
     );
     expect(levels).toContain("uniform int uScreenFacing");
     expect(levels).toContain("uniform vec2 uScreenFacingScale");
+    expect(levels).toContain("MAX_SCREEN_SIZE");
   });
 });

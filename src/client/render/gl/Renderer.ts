@@ -75,10 +75,7 @@ import { ThreeDFogPass } from "./three-d/ThreeDFogPass";
 import { ThreeDQualityController } from "./three-d/ThreeDQuality";
 import { ThreeDUnitPass } from "./three-d/ThreeDUnitPass";
 import { ThreeDWorldEventPass } from "./three-d/ThreeDWorldEventPass";
-import {
-  THREE_D_TILT,
-  threeDHeightForTerrainByte,
-} from "./three-d/ThreeDWorldMath";
+import { THREE_D_TILT } from "./three-d/ThreeDWorldMath";
 import { AffiliationPalette } from "./utils/Affiliation";
 import {
   EFFECT_PALETTE_BLOCKS,
@@ -222,7 +219,6 @@ export class GPURenderer {
   private frameTick = 0;
   private mapW = 0;
   private mapH = 0;
-  private terrainBytesCpu: Uint8Array;
 
   // Last-uploaded unit/structure maps (selection box + bar pass inputs)
   private lastUnits: Map<number, UnitState> = new Map();
@@ -302,7 +298,6 @@ export class GPURenderer {
     // Bake once and let the array go — nothing below retains map-sized
     // terrain bytes; re-bakes call terrainSource again.
     const terrainBytes = terrainSource();
-    this.terrainBytesCpu = terrainBytes.slice();
     this.terrainPass = new TerrainPass(
       gl,
       terrainSource,
@@ -1051,13 +1046,6 @@ export class GPURenderer {
    */
   applyTerrainDelta(refs: readonly number[], terrainBytes: Uint8Array): void {
     if (refs.length === 0) return;
-    if (refs.length === this.mapW * this.mapH) {
-      this.terrainBytesCpu.set(terrainBytes);
-    } else {
-      for (let i = 0; i < refs.length; i++) {
-        this.terrainBytesCpu[refs[i]] = terrainBytes[i];
-      }
-    }
     this.terrainPass.applyTerrainDelta(refs, terrainBytes);
     this.railroadPass.applyTerrainDelta(refs, terrainBytes);
     // Update the shared R8UI terrain-bytes texture used by map-layer passes.
@@ -1446,10 +1434,7 @@ export class GPURenderer {
       this.lastThreeDFrameAt = now;
       const quality = this.threeDQuality.settings;
       const territoryFlash = this.territoryFlash();
-      const centerHeight = this.threeDCenterHeight(
-        this.camera.offsetX,
-        this.camera.offsetY,
-      );
+      const centerHeight = 0;
       this.threeDPass.setQuality(quality.terrainLodBias);
       this.threeDUnitPass?.setQuality(quality.distantModelDetail);
       this.threeDFogPass?.setQuality(quality.particleScale);
@@ -1592,33 +1577,12 @@ export class GPURenderer {
         mapHeight: this.mapH,
         centerX: this.camera.offsetX,
         centerZ: this.camera.offsetY,
-        centerHeight: this.threeDCenterHeight(
-          this.camera.offsetX,
-          this.camera.offsetY,
-        ),
         zoom,
         yaw: this.threeDYaw,
         pitch: this.threeDPitch,
       }),
       worldHeight,
     );
-  }
-
-  private threeDCenterHeight(x: number, y: number): number {
-    const sample = (sx: number, sy: number): number => {
-      const ix = Math.max(0, Math.min(this.mapW - 1, sx));
-      const iy = Math.max(0, Math.min(this.mapH - 1, sy));
-      return threeDHeightForTerrainByte(
-        this.terrainBytesCpu[iy * this.mapW + ix],
-      );
-    };
-    const x0 = Math.floor(x);
-    const y0 = Math.floor(y);
-    const tx = x - x0;
-    const ty = y - y0;
-    const top = sample(x0, y0) * (1 - tx) + sample(x0 + 1, y0) * tx;
-    const bottom = sample(x0, y0 + 1) * (1 - tx) + sample(x0 + 1, y0 + 1) * tx;
-    return top * (1 - ty) + bottom * ty;
   }
 
   private isLightCompositingActive(): boolean {

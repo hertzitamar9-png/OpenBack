@@ -54,8 +54,8 @@ out float vViewDepth;
 float heightFor(uint b){
   bool land=(b&128u)!=0u;
   float m=float(b&31u);
-  if(land&&m>30.5)return 104.0;
-  if(land)return 0.3+pow(m/30.0,2.0)*86.0;
+  if(land&&m>30.5)return 38.0;
+  if(land)return 0.15+pow(m/30.0,2.0)*31.0;
   return -min(m,10.0)*0.02;
 }
 float sampledHeight(ivec2 p){
@@ -132,8 +132,8 @@ out vec4 outColor;
 
 float heightFor(uint b){
   bool land=(b&128u)!=0u; float m=float(b&31u);
-  if(land&&m>30.5)return 104.0;
-  if(land)return 0.3+pow(m/30.0,2.0)*86.0;
+  if(land&&m>30.5)return 38.0;
+  if(land)return 0.15+pow(m/30.0,2.0)*31.0;
   return -min(m,10.0)*0.02;
 }
 void main(){
@@ -154,7 +154,7 @@ void main(){
   float relief=clamp(length(stableSlope)*0.28,0.0,1.0);
   float directional=clamp(0.5+dot(stableSlope,vec2(-0.68,-0.42))*0.16,0.0,1.0);
   float lightLevel=clamp(0.70+directional*0.38-relief*0.08,0.62,1.14);
-  float altitude=clamp(vHeight/86.0,0.0,1.0);
+  float altitude=clamp(vHeight/31.0,0.0,1.0);
   vec3 lowGround=vec3(0.25,0.44,0.18);
   vec3 exposedRock=vec3(0.42,0.39,0.34);
   vec3 snow=vec3(0.91,0.94,0.96);

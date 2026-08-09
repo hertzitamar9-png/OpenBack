@@ -28,9 +28,10 @@ describe("ThreeDTerrainMesh", () => {
     ).toBe(-18);
   });
 
-  it("keeps the default solid base well below the ocean surface", () => {
+  it("keeps the closed board below the ocean depth plane", () => {
     const base = buildSolidMapBase(2048, 1024);
     const heights = base.positions.filter((_, index) => index % 3 === 1);
-    expect(Math.max(...heights)).toBeLessThanOrEqual(-12);
+    expect(Math.max(...heights)).toBeGreaterThanOrEqual(-2);
+    expect(Math.max(...heights)).toBeLessThanOrEqual(-1);
   });
 });

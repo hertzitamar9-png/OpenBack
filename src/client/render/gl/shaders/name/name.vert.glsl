@@ -24,6 +24,7 @@ uniform float uBase;        // atlas baseline height
 
 const int MAX_CHARS_PER_LINE = MAX_CHARS;
 const int LINES = LINES_PER_PLAYER;
+const float MAX_SCREEN_SIZE = 0.085;
 uniform float uLerpSpeed;
 uniform float uCullThreshold;
 uniform float uNameScaleFactor;
@@ -117,6 +118,12 @@ void main() {
     ? abs(uScreenFacingScale.x)
     : length(vec2(uCamera[0][0], uCamera[1][0]));
   float screenSize = nameWorldScale * uBase * cameraScale;
+  if (uScreenFacing == 1 && screenSize > MAX_SCREEN_SIZE) {
+    float scaleCorrection = MAX_SCREEN_SIZE / screenSize;
+    nameWorldScale *= scaleCorrection;
+    worldScale *= scaleCorrection;
+    screenSize = MAX_SCREEN_SIZE;
+  }
   if (screenSize < uCullThreshold && !isHighlighted) {
     gl_Position = vec4(0.0);
     vUV = vec2(0.0);

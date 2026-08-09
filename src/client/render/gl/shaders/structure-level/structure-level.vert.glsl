@@ -26,6 +26,7 @@ uniform float uAtlasScaleH;
 uniform float uBase;
 uniform float uLevelScale;
 uniform float uLevelOffsetY;  // extra height above icon, in halfIconSize units
+const float MAX_SCREEN_SIZE = 0.045;
 
 out vec2 vUV;
 flat out float vAlive;
@@ -59,6 +60,13 @@ void main() {
   vAtlasIdx = aAtlasIdx;
 
   float halfIconSize = uIconSize * iconScale * 0.5 / uZoom;
+  if (uScreenFacing == 1) {
+    float halfIconScreenSize = halfIconSize * abs(uScreenFacingScale.x);
+    if (halfIconScreenSize > MAX_SCREEN_SIZE) {
+      float scaleCorrection = MAX_SCREEN_SIZE / halfIconScreenSize;
+      halfIconSize *= scaleCorrection;
+    }
+  }
 
   // Level text scale: proportional to icon size
   float levelScale = halfIconSize * uLevelScale / uFontSize;

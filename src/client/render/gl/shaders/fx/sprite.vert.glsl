@@ -24,7 +24,7 @@ void main() {
   vec2 worldPos = center + (aPos - 0.5) * vec2(world.x, world.y);
 
   vec3 clip = uCamera * vec3(worldPos, 1.0);
-  gl_Position = vec4(clip.xy, 0.0, 1.0);
+  gl_Position = vec4(clip.xy / max(0.0001, clip.z), 0.0, 1.0);
 
   float u = (frameIdx + aPos.x) * uv.z;
   float v = uv.x + aPos.y * uv.y;

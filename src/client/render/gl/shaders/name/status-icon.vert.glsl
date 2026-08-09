@@ -35,6 +35,7 @@ uniform float uFadeOwnerID;    // smallID of player whose name plate the cursor 
 uniform float uHighlightOwnerID; // smallID whose name is forced visible while highlighted
 uniform float uHoverFadeAlpha; // alpha multiplier applied to that player's name plate
 uniform float uAllianceFlashWindowSec; // seconds before expiry the alliance icon flashes (= renewal prompt offset)
+const float MAX_SCREEN_SIZE = 0.085;
 
 out vec2 vUV;
 out vec2 vLocalUV;               // 0..1 within the icon cell
@@ -163,6 +164,11 @@ void main() {
     ? abs(uScreenFacingScale.x)
     : length(vec2(uCamera[0][0], uCamera[1][0]));
   float screenSize  = nameWorldScale * uFontBase * cameraScale;
+  if (uScreenFacing == 1 && screenSize > MAX_SCREEN_SIZE) {
+    float scaleCorrection = MAX_SCREEN_SIZE / screenSize;
+    nameWorldScale *= scaleCorrection;
+    screenSize = MAX_SCREEN_SIZE;
+  }
   bool nameIsHighlighted = uHighlightOwnerID > 0.0 && pd4.z == uHighlightOwnerID;
   if (screenSize < uCullThreshold && !(isVerifiedSlot && nameIsHighlighted)) {
     gl_Position = vec4(0.0);

@@ -16,7 +16,6 @@ import {
 } from "../../src/client/render/gl/three-d/ThreeDWorldMath";
 import type { GameView } from "../../src/client/view";
 import { EventBus } from "../../src/core/EventBus";
-import { Cell } from "../../src/core/game/Game";
 
 function createHandler(): TransformHandler {
   const game = {
@@ -43,6 +42,24 @@ function createHandler(): TransformHandler {
 }
 
 describe("TransformHandler 3D camera", () => {
+  it("keeps the camera target on a stable plane while terrain moves below it", () => {
+    const transformSource = readFileSync(
+      resolve(process.cwd(), "src/client/TransformHandler.ts"),
+      "utf8",
+    );
+    const rendererSource = readFileSync(
+      resolve(process.cwd(), "src/client/render/gl/Renderer.ts"),
+      "utf8",
+    );
+
+    expect(transformSource).not.toContain(
+      "centerHeight: this.threeDHeightAtFloat",
+    );
+    expect(rendererSource).not.toContain(
+      "centerHeight: this.threeDCenterHeight",
+    );
+  });
+
   it("preserves a manually selected 3D spawn camera", () => {
     const source = readFileSync(
       resolve(process.cwd(), "src/client/ClientGameRunner.ts"),
@@ -70,20 +87,19 @@ describe("TransformHandler 3D camera", () => {
     expect(handler.threeDPitch).toBe(THREE_D_MIN_TILT);
   });
 
-  it("uses visibly separated lowland, mountain, and peak elevations", () => {
+  it("uses readable relief without turning the map into spikes", () => {
     const lowland = threeDHeightForTerrainByte(0x81);
     const mountain = threeDHeightForTerrainByte(0x98);
     const peak = threeDHeightForTerrainByte(0x9f);
 
-    expect(mountain).toBeGreaterThan(lowland + 40);
-    expect(peak).toBeGreaterThan(mountain + 40);
-    expect(peak).toBe(104);
+    expect(mountain).toBeGreaterThan(lowland + 10);
+    expect(peak).toBeGreaterThan(mountain + 10);
+    expect(peak).toBe(38);
   });
 
   it("allows a close tactical camera while retaining surface clearance", () => {
     const distance = threeDCameraDistance(400, 48, THREE_D_MIN_TILT);
-    expect(distance * Math.sin(THREE_D_MIN_TILT)).toBeGreaterThanOrEqual(12);
-    expect(distance).toBeLessThan(24);
+    expect(distance * Math.sin(THREE_D_MIN_TILT)).toBeCloseTo(58, 6);
   });
 
   it("uses the actual 3D camera target as the focus center", () => {
@@ -148,16 +164,13 @@ describe("TransformHandler 3D camera", () => {
     expect(quarterTurn.y).toBeGreaterThan(quarterTurn.x);
   });
 
-  it("keeps the picked ground under the pointer during left drag", () => {
+  it("uses the regular 2D drag translation at the default 3D yaw", () => {
     const handler = createHandler();
-    const picked = handler.screenToWorldCoordinatesFloat(300, 220);
+    handler.scale = 2;
 
     handler.onMove(new DragEvent(60, 35, 360, 255));
 
-    const projected = handler.worldToScreenCoordinates(
-      new Cell(picked.x, picked.y),
-    );
-    expect(projected.x).toBeCloseTo(360, 0);
-    expect(projected.y).toBeCloseTo(255, 0);
+    expect(handler.offsetX).toBeCloseTo(-380, 6);
+    expect(handler.offsetY).toBeCloseTo(-217.5, 6);
   });
 });

@@ -46,7 +46,7 @@ void main() {
 
   vec2 world = aCenter + aPerp * off + n * (aSide * uHalfWidth);
   vec3 clip = uCamera * vec3(world, 1.0);
-  gl_Position = vec4(clip.xy, 0.0, 1.0);
+  gl_Position = vec4(clip.xy / max(0.0001, clip.z), 0.0, 1.0);
   vTheta = theta;
   vLateral = aSide * uHalfWidth;
 }

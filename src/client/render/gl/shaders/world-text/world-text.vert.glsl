@@ -20,6 +20,7 @@ uniform float uAtlasScaleH;
 uniform float uBase;
 uniform float uZoom;
 uniform float uMinScreenScale;  // minimum world-scale factor when zoomed out
+const float MAX_SCREEN_SIZE = 0.055;
 
 out vec2 vUV;
 flat out float vAlpha;
@@ -48,6 +49,11 @@ void main() {
   // footprint.
   float effectiveScale = max(aScaleOutline.x, uMinScreenScale / uZoom);
   float worldScale = effectiveScale / uFontSize;
+  float screenSize = uBase * worldScale * abs(uScreenFacingScale.x);
+  if (uScreenFacing == 1 && screenSize > MAX_SCREEN_SIZE) {
+    float scaleCorrection = MAX_SCREEN_SIZE / screenSize;
+    worldScale *= scaleCorrection;
+  }
 
   // Glyph metrics from data texture
   vec4 m0 = texelFetch(uGlyphMetrics, ivec2(charCode, 0), 0);

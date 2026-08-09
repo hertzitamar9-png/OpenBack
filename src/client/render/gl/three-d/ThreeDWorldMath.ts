@@ -6,7 +6,7 @@ export const THREE_D_TILT = 1.14;
 export const THREE_D_MIN_TILT = 0.68;
 export const THREE_D_MAX_TILT = Math.PI / 2 - 0.045;
 export const THREE_D_FOV_DEGREES = 42;
-export const THREE_D_MAX_TERRAIN_HEIGHT = 104;
+export const THREE_D_MAX_TERRAIN_HEIGHT = 38;
 
 export function threeDCameraDistance(
   viewportHeight: number,
@@ -15,12 +15,13 @@ export function threeDCameraDistance(
 ): number {
   const tanHalfFov = Math.tan((THREE_D_FOV_DEGREES * Math.PI) / 360);
   const requested = viewportHeight / Math.max(0.01, zoom * 2) / tanHalfFov;
-  // The camera target follows the local terrain height, so clearance is
-  // measured above that surface instead of above the tallest peak anywhere
-  // on the map. This keeps mountains safe without blocking tactical zoom.
-  const surfaceClearance =
-    12 / Math.max(0.1, Math.sin(Math.max(THREE_D_MIN_TILT, pitch)));
-  return Math.max(requested, surfaceClearance);
+  // Keep the camera on a stable sea-level target plane. Following the sampled
+  // terrain height makes every tile transition move the entire camera and is
+  // perceived as violent shaking while panning.
+  const terrainClearance =
+    (THREE_D_MAX_TERRAIN_HEIGHT + 20) /
+    Math.max(0.1, Math.sin(Math.max(THREE_D_MIN_TILT, pitch)));
+  return Math.max(requested, terrainClearance);
 }
 
 export function threeDGroundHalfExtents(
@@ -50,6 +51,6 @@ export function threeDHeightForTerrainByte(value: number): number {
   const land = (value & 0x80) !== 0;
   const magnitude = value & 0x1f;
   if (land && magnitude === 31) return THREE_D_MAX_TERRAIN_HEIGHT;
-  if (land) return 0.3 + Math.pow(magnitude / 30, 2) * 86;
+  if (land) return 0.15 + Math.pow(magnitude / 30, 2) * 31;
   return -Math.min(magnitude, 10) * 0.02;
 }
