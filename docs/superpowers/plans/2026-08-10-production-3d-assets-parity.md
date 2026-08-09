@@ -60,11 +60,11 @@ expect(cosmeticsSource).toContain("hover:-translate-y-0.5");
 - Produces: `threeDAsset(type: UnitType): ThreeDAssetDefinition`.
 - `ThreeDAssetDefinition` contains `url`, `sha256`, `license`, `sourceUrl`, `creator`, `scale`, `rotation`, `anchors`, `nodes`, and `animations`.
 
-- [ ] **Step 1: Write a failing test that iterates all `Object.values(UnitType)` and requires one local `.glb`, checksum, source, and redistribution license per type.**
-- [ ] **Step 2: Run the test and confirm all missing entries are reported.**
-- [ ] **Step 3: Download only approved CC0/CC-BY source packs, preserve their original license files, convert selected meshes to GLB, and calculate SHA-256 checksums.**
-- [ ] **Step 4: Populate the manifest for all 22 unit types and expose validated typed accessors.**
-- [ ] **Step 5: Rerun the manifest test and verify every referenced local file exists and its checksum matches.**
+- [x] **Step 1: Write a failing test that iterates all `Object.values(UnitType)` and requires one local `.glb`, checksum, source, and redistribution license per type.**
+- [x] **Step 2: Run the test and confirm all missing entries are reported.**
+- [x] **Step 3: Download only approved CC0/CC-BY source packs, preserve their original license files, convert selected meshes to GLB, and calculate SHA-256 checksums.**
+- [x] **Step 4: Populate the manifest for all 22 unit types and expose validated typed accessors.**
+- [x] **Step 5: Rerun the manifest test and verify every referenced local file exists and its checksum matches.**
 
 ### Task 3: GLB mesh and animation loader
 
@@ -82,7 +82,7 @@ expect(cosmeticsSource).toContain("hover:-translate-y-0.5");
 
 - [ ] **Step 1: Add a tiny licensed fixture GLB and failing tests for header, JSON/BIN chunks, accessors, indices, normals, nodes, and animation channels.**
 - [ ] **Step 2: Run both tests and confirm parser/loader APIs are missing.**
-- [ ] **Step 3: Implement strict GLB 2.0 parsing with bounds checks and typed accessor conversion.**
+- [x] **Step 3: Implement strict GLB 2.0 parsing with bounds checks and typed accessor conversion.**
 - [ ] **Step 4: Implement asset caching, owner-material remapping, node validation, and same-model lower-LOD fallback.**
 - [ ] **Step 5: Rerun tests and confirm corrupt fixtures produce exact asset-specific errors.**
 

@@ -1,5 +1,9 @@
 # Credits
 
+## Optional 3D models
+
+OpenBack's bundled 3D models include CC0 work by Kenney, Quaternius, CreativeTrio, and Kay Lousberg, plus CC BY 3.0 work by Zsky, Poly by Google, jeremy, KolosStudios, and angelo raffaele Catalano. Exact per-file creators, source pages, licenses, and SHA-256 checksums are preserved in `resources/3d/manifest.json` and `resources/3d/THIRD_PARTY_ASSETS.md`.
+
 ## Code
 
 OpenBack modifications by **frootz jhklphy** and contributors.

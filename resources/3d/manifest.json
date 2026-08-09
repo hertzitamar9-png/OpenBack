@@ -1,0 +1,200 @@
+{
+  "Transport": {
+    "url": "3d/models/transport-ship.glb",
+    "sha256": "9ecd83a706781ae61f2760c612604cb01a644ba97be41e2ff7598737209165b1",
+    "license": "CC-BY-3.0",
+    "sourceUrl": "https://poly.pizza/m/wouBxOe3CD",
+    "creator": "Zsky",
+    "scale": 2.7,
+    "rotation": [0, 0, 0]
+  },
+  "Warship": {
+    "url": "3d/models/warship.glb",
+    "sha256": "efcddc7028859990b74905d74257e831aca0ec93848ef06c754e7487ab846366",
+    "license": "CC-BY-3.0",
+    "sourceUrl": "https://poly.pizza/m/cqV6mUkn7Ow",
+    "creator": "angelo raffaele Catalano",
+    "scale": 2.9,
+    "rotation": [0, 0, 0]
+  },
+  "Shell": {
+    "url": "3d/models/shell.glb",
+    "sha256": "28d961b4b74783274a4cd54cf9155066d2e2b7fa2ce209a13d0e216198dcdb71",
+    "license": "CC-BY-3.0",
+    "sourceUrl": "https://poly.pizza/m/2_eJPKc_a_D",
+    "creator": "Poly by Google",
+    "scale": 0.45,
+    "rotation": [0, 0, 0]
+  },
+  "SAMMissile": {
+    "url": "3d/models/sam-missile.glb",
+    "sha256": "b85940e2882924f882aefd6e9b11c1b5186f4768ae325d08c033152d4a1cf033",
+    "license": "CC-BY-3.0",
+    "sourceUrl": "https://poly.pizza/m/dPVCvXP-S58",
+    "creator": "Poly by Google",
+    "scale": 0.85,
+    "rotation": [0, 0, 0]
+  },
+  "Port": {
+    "url": "3d/models/port.glb",
+    "sha256": "e60aed8072719ac20a2b0d9578cb0da22ec0d4b362fc81c97eed21b8739ec296",
+    "license": "CC0-1.0",
+    "sourceUrl": "https://poly.pizza/m/Gjt5yMM4Vw",
+    "creator": "Quaternius",
+    "scale": 3.5,
+    "rotation": [0, 0, 0]
+  },
+  "Atom Bomb": {
+    "url": "3d/models/atom-bomb.glb",
+    "sha256": "7f72112a995cde6d68c6ae891ba9f4ec292ca0a1c38599c73d851a66e66ddf90",
+    "license": "CC0-1.0",
+    "sourceUrl": "https://poly.pizza/m/qGUAks6IHQ",
+    "creator": "Quaternius",
+    "scale": 0.9,
+    "rotation": [0, 0, 0]
+  },
+  "Hydrogen Bomb": {
+    "url": "3d/models/hydrogen-bomb.glb",
+    "sha256": "0aa73758675df406e96f3c1ec6a9982e903a841c183b96125aa773e24b977941",
+    "license": "CC0-1.0",
+    "sourceUrl": "https://poly.pizza/m/zal0xmobqX",
+    "creator": "CreativeTrio",
+    "scale": 1.25,
+    "rotation": [0, 0, 0]
+  },
+  "Trade Ship": {
+    "url": "3d/models/trade-ship.glb",
+    "sha256": "7abf31cda2aecc302e2cda15296c84ddb6e0b156652ccf8cf3724952527a4d4f",
+    "license": "CC0-1.0",
+    "sourceUrl": "https://quaternius.com/packs/ultimateshipspack.html",
+    "creator": "Quaternius",
+    "scale": 2.5,
+    "rotation": [0, 0, 0]
+  },
+  "Missile Silo": {
+    "url": "3d/models/missile-silo.glb",
+    "sha256": "5894991c0371129fa12b858181b60dfb2c732494c07fa2a5b3afbba0f25d4e1d",
+    "license": "CC0-1.0",
+    "sourceUrl": "https://poly.pizza/m/5GhLrv5Ce3",
+    "creator": "Quaternius",
+    "scale": 2.5,
+    "rotation": [0, 0, 0]
+  },
+  "Defense Post": {
+    "url": "3d/models/defense-post.glb",
+    "sha256": "1c731f445be1f70124d666a42fc70c7387de39ed7ad73b3af8604e3e79a8f4bd",
+    "license": "CC0-1.0",
+    "sourceUrl": "https://poly.pizza/m/mNJ6poH7Cp",
+    "creator": "Quaternius",
+    "scale": 2.3,
+    "rotation": [0, 0, 0]
+  },
+  "SAM Launcher": {
+    "url": "3d/models/sam-launcher.glb",
+    "sha256": "98f200d23cbb88aa2ea36f122af8b8008eee825ee4aac8fbc1ad5268f2d764b2",
+    "license": "CC-BY-3.0",
+    "sourceUrl": "https://poly.pizza/m/RqnAj5N9fL",
+    "creator": "Zsky",
+    "scale": 2.7,
+    "rotation": [0, 0, 0]
+  },
+  "City": {
+    "url": "3d/models/city.glb",
+    "sha256": "62b0b9ffbcea8dd914a899cacd10b54629bf7013db7bd221f2708c7ba8b054ea",
+    "license": "CC0-1.0",
+    "sourceUrl": "https://kenney.nl/assets/city-kit-industrial",
+    "creator": "Kenney",
+    "scale": 2.8,
+    "rotation": [0, 0, 0]
+  },
+  "MIRV": {
+    "url": "3d/models/mirv.glb",
+    "sha256": "8648bf49a7f6e3e7985cebe34bb2ed95fe69d44ab5bb21e840011ad809ea856a",
+    "license": "CC-BY-3.0",
+    "sourceUrl": "https://poly.pizza/m/ah8WSBbizA6",
+    "creator": "jeremy",
+    "scale": 1.2,
+    "rotation": [0, 0, 0]
+  },
+  "MIRV Warhead": {
+    "url": "3d/models/mirv-warhead.glb",
+    "sha256": "7f72112a995cde6d68c6ae891ba9f4ec292ca0a1c38599c73d851a66e66ddf90",
+    "license": "CC0-1.0",
+    "sourceUrl": "https://poly.pizza/m/qGUAks6IHQ",
+    "creator": "Quaternius",
+    "scale": 0.65,
+    "rotation": [0, 0, 0]
+  },
+  "Train": {
+    "url": "3d/models/train.glb",
+    "sha256": "8dfe9d20667c1534652286149fb0e1639ff48975a4187d3ad2fd956add0bba2a",
+    "license": "CC0-1.0",
+    "sourceUrl": "https://kenney.nl/assets/train-kit",
+    "creator": "Kenney",
+    "scale": 2.2,
+    "rotation": [0, 0, 0]
+  },
+  "Factory": {
+    "url": "3d/models/factory.glb",
+    "sha256": "e39386a6206ad0c4b97d1c064ed5c62783fe8fad7d9338b89ef3cd6b38795ad3",
+    "license": "CC0-1.0",
+    "sourceUrl": "https://kenney.nl/assets/city-kit-industrial",
+    "creator": "Kenney",
+    "scale": 3.2,
+    "rotation": [0, 0, 0]
+  },
+  "Runway": {
+    "url": "3d/models/runway.glb",
+    "sha256": "3aae0b978b12a5f8188146c79519440223022155d1dc468c86d9840ea9797e61",
+    "license": "CC0-1.0",
+    "sourceUrl": "https://poly.pizza/m/QpDGgpHcH2",
+    "creator": "Kay Lousberg",
+    "scale": 5.2,
+    "rotation": [0, 0, 0]
+  },
+  "Plane": {
+    "url": "3d/models/plane.glb",
+    "sha256": "a1db7e5abeaf0a75cf907dc80b01997b6928105ecd330b47779e6f89ef86b84e",
+    "license": "CC-BY-3.0",
+    "sourceUrl": "https://poly.pizza/m/dukcCKsLDrS",
+    "creator": "Poly by Google",
+    "scale": 3.0,
+    "rotation": [0, 0, 0]
+  },
+  "MANPAD": {
+    "url": "3d/models/manpad.glb",
+    "sha256": "812aef31db0dd6920be57f39513a28f59ee4e109c76f4ab3a50ba9a9398023a0",
+    "license": "CC0-1.0",
+    "sourceUrl": "https://poly.pizza/m/eJNzLpBsEt",
+    "creator": "CreativeTrio",
+    "scale": 1.7,
+    "rotation": [0, 0, 0]
+  },
+  "Military Base": {
+    "url": "3d/models/military-base.glb",
+    "sha256": "3271d1dba8cfc1449b5e8c9d7586cc22fd45048a54553e872ecf233d592b9b9d",
+    "license": "CC-BY-3.0",
+    "sourceUrl": "https://poly.pizza/m/vQANVbSE0v",
+    "creator": "KolosStudios",
+    "scale": 3.7,
+    "rotation": [0, 0, 0]
+  },
+  "Tank": {
+    "url": "3d/models/tank.glb",
+    "sha256": "1decfc7c87ee9aa19a1bce192532e90db4edd4c29d88b8ecd86a8902111f3a12",
+    "license": "CC0-1.0",
+    "sourceUrl": "https://quaternius.com/packs/animatedtank.html",
+    "creator": "Quaternius",
+    "scale": 2.6,
+    "rotation": [0, 0, 0]
+  },
+  "Tank Mine": {
+    "url": "3d/models/tank-mine.glb",
+    "sha256": "5832ba324c2fb93a62c671b3878c2a8f2f0e7958afa0df37c09c906517dcf755",
+    "license": "CC0-1.0",
+    "sourceUrl": "https://poly.pizza/m/PtqkseZo9O",
+    "creator": "Quaternius",
+    "scale": 1.2,
+    "rotation": [0, 0, 0]
+  }
+}

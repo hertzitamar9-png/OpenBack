@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   collectThreeDRenderableUnits,
   threeDGhostPresentation,
+  threeDModelBatchKey,
 } from "../../../src/client/render/gl/three-d/ThreeDUnitPass";
 import type {
   GhostPreviewData,
@@ -24,6 +25,12 @@ function unit(id: number, unitType: UnitType): UnitState {
 }
 
 describe("3D unit parity", () => {
+  it("routes every unit through the real asset batch", () => {
+    for (const type of Object.values(UnitType)) {
+      expect(threeDModelBatchKey(type)).toBe(`asset:${type}`);
+    }
+  });
+
   it("renders structures and mobile units in the same 3D scene", () => {
     const mobile = new Map([[1, unit(1, UnitType.Tank)]]);
     const structures = new Map([[2, unit(2, UnitType.MilitaryBase)]]);

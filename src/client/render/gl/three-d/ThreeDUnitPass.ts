@@ -1,21 +1,10 @@
 import { UnitType } from "../../../../core/game/Game";
 import type { GhostPreviewData, UnitState } from "../../types";
 import { createProgram } from "../utils/GlUtils";
+import { loadThreeDAsset } from "./ThreeDAssetLoader";
+import { THREE_D_ASSET_MANIFEST, threeDAsset } from "./ThreeDAssetManifest";
 import { ThreeDCameraState } from "./ThreeDCamera";
-import {
-  barrel,
-  beveledBox,
-  hull,
-  roof,
-  trackedChassis,
-  wedge,
-  type ThreeDMeshData,
-} from "./ThreeDGeometry";
-import {
-  THREE_D_MODELS,
-  type ThreeDAnimation,
-  type ThreeDPrimitiveKind,
-} from "./ThreeDModelRegistry";
+import { THREE_D_MODELS, type ThreeDAnimation } from "./ThreeDModelRegistry";
 
 const STRIDE = 16;
 const MATERIAL = {
@@ -68,6 +57,10 @@ export function rotateThreeDModelOffset(
   const c = Math.cos(heading);
   const s = Math.sin(heading);
   return [x * c + z * s, -x * s + z * c];
+}
+
+export function threeDModelBatchKey(type: UnitType): string {
+  return `asset:${type}`;
 }
 
 const vert = `#version 300 es
@@ -153,11 +146,11 @@ interface Mesh {
 
 export class ThreeDUnitPass {
   private program: WebGLProgram;
-  private meshes = new Map<ThreeDPrimitiveKind, Mesh>();
-  private batches = new Map<ThreeDPrimitiveKind, number[]>();
+  private meshes = new Map<string, Mesh>();
+  private batches = new Map<string, number[]>();
   private uniforms: Record<string, WebGLUniformLocation | null>;
-  private distantDetail = 1;
   private ghostPreview: GhostPreviewData | null = null;
+  private disposed = false;
 
   constructor(
     private gl: WebGL2RenderingContext,
@@ -172,24 +165,32 @@ export class ThreeDUnitPass {
         (name) => [name, gl.getUniformLocation(this.program, name)],
       ),
     );
-    this.meshes.set("box", this.createMesh(this.boxGeometry()));
-    this.meshes.set("wing", this.createMesh(this.wingGeometry()));
+    // The only generated geometry retained is the soft terrain shadow. Unit
+    // bodies are loaded from the verified local GLB catalog below.
     this.meshes.set("cylinder", this.createMesh(this.radialGeometry(false)));
-    this.meshes.set("cone", this.createMesh(this.radialGeometry(true)));
-    this.meshes.set("sphere", this.createMesh(this.sphereGeometry()));
-    this.meshes.set("beveledBox", this.createMesh(this.geometry(beveledBox())));
-    this.meshes.set("wedge", this.createMesh(this.geometry(wedge())));
-    this.meshes.set("hull", this.createMesh(this.geometry(hull())));
-    this.meshes.set(
-      "trackedChassis",
-      this.createMesh(this.geometry(trackedChassis())),
-    );
-    this.meshes.set("roof", this.createMesh(this.geometry(roof())));
-    this.meshes.set("barrel", this.createMesh(this.geometry(barrel())));
     for (const kind of this.meshes.keys()) this.batches.set(kind, []);
     gl.useProgram(this.program);
     gl.uniform1i(this.uniforms.uTerrain, 0);
     gl.uniform1i(this.uniforms.uPalette, 1);
+    void this.loadModelCatalog();
+  }
+
+  private async loadModelCatalog(): Promise<void> {
+    await Promise.all(
+      Object.values(UnitType).map(async (type) => {
+        const key = threeDModelBatchKey(type);
+        try {
+          const mesh = await loadThreeDAsset(threeDAsset(type));
+          if (this.disposed) return;
+          this.meshes.set(key, this.createMesh(mesh));
+          this.batches.set(key, []);
+        } catch (error) {
+          // A broken asset stays invisible rather than silently returning to
+          // the crude generated cubes that this catalog replaces.
+          console.error(`Unable to load real 3D model for ${type}`, error);
+        }
+      }),
+    );
   }
 
   update(
@@ -283,54 +284,35 @@ export class ThreeDUnitPass {
           x,
           z,
         );
-      const screenSize = view
-        ? model.footprint * view.zoom
-        : Number.POSITIVE_INFINITY;
-      const primitiveLimit =
-        screenSize <= model.lods[1].maxScreenSize
-          ? Math.max(
-              1,
-              Math.ceil(model.lods[1].primitiveLimit * this.distantDetail),
-            )
-          : model.lods[0].primitiveLimit;
-      for (const primitive of model.primitives.slice(0, primitiveLimit)) {
-        const batch = this.batches.get(primitive.kind)!;
-        const rotation = primitive.rotation ?? [0, 0, 0];
-        // Keep every primitive in one rigid model. The old path rotated each
-        // part's geometry but left its center offset in world axes, so a plane
-        // nose or tank barrel could detach from its body while turning.
-        const [offsetX, offsetZ] = rotateThreeDModelOffset(
-          primitive.position[0],
-          primitive.position[2],
-          heading,
-        );
-        batch.push(
-          x + offsetX,
-          (model.altitude ?? 0) + primitive.position[1],
-          z + offsetZ,
-          primitive.scale[0] * model.footprint * 0.34,
-          primitive.scale[1] * model.footprint * 0.34,
-          primitive.scale[2] * model.footprint * 0.34,
-          heading,
-          rotation[0],
-          rotation[1],
-          rotation[2],
-          unit.ownerID,
-          isGhost
-            ? ghostValid
-              ? MATERIAL.ghostValid
-              : MATERIAL.ghostInvalid
-            : MATERIAL[primitive.material],
-          alpha,
-          ANIMATION[
-            unit.underConstruction
-              ? "pulse"
-              : (primitive.animation ?? model.animation ?? "none")
-          ],
-          x,
-          z,
-        );
-      }
+      const key = threeDModelBatchKey(unit.unitType as UnitType);
+      const batch = this.batches.get(key);
+      if (!batch) continue;
+      const definition = THREE_D_ASSET_MANIFEST[unit.unitType as UnitType];
+      const rotation = definition.rotation;
+      batch.push(
+        x,
+        model.altitude ?? 0,
+        z,
+        definition.scale,
+        definition.scale,
+        definition.scale,
+        heading,
+        rotation[0],
+        rotation[1],
+        rotation[2],
+        unit.ownerID,
+        isGhost
+          ? ghostValid
+            ? MATERIAL.ghostValid
+            : MATERIAL.ghostInvalid
+          : MATERIAL.owner,
+        alpha,
+        ANIMATION[
+          unit.underConstruction ? "pulse" : (model.animation ?? "none")
+        ],
+        x,
+        z,
+      );
     }
     const gl = this.gl;
     for (const [kind, values] of this.batches) {
@@ -355,8 +337,10 @@ export class ThreeDUnitPass {
     this.ghostPreview = data;
   }
 
-  setQuality(distantDetail: number): void {
-    this.distantDetail = Math.max(0.25, Math.min(1, distantDetail));
+  setQuality(_distantDetail: number): void {
+    // GLB assets are already normalized, compact low-poly meshes. Keep this
+    // compatibility hook for the shared quality controller; texture/particle
+    // budgets are still adjusted by their owning passes.
   }
 
   draw(
@@ -468,144 +452,6 @@ export class ThreeDUnitPass {
     };
   }
 
-  private geometry(data: ThreeDMeshData): {
-    vertices: number[];
-    indices: number[];
-  } {
-    const vertices: number[] = [];
-    for (let index = 0; index < data.positions.length; index += 3) {
-      vertices.push(
-        data.positions[index],
-        data.positions[index + 1],
-        data.positions[index + 2],
-        data.normals[index],
-        data.normals[index + 1],
-        data.normals[index + 2],
-      );
-    }
-    return { vertices, indices: Array.from(data.indices) };
-  }
-
-  private boxGeometry() {
-    const vertices: number[] = [];
-    const indices: number[] = [];
-    const faces = [
-      [
-        [1, 0, 0],
-        [
-          [0.5, -0.5, -0.5],
-          [0.5, -0.5, 0.5],
-          [0.5, 0.5, 0.5],
-          [0.5, 0.5, -0.5],
-        ],
-      ],
-      [
-        [-1, 0, 0],
-        [
-          [-0.5, -0.5, 0.5],
-          [-0.5, -0.5, -0.5],
-          [-0.5, 0.5, -0.5],
-          [-0.5, 0.5, 0.5],
-        ],
-      ],
-      [
-        [0, 1, 0],
-        [
-          [-0.5, 0.5, -0.5],
-          [0.5, 0.5, -0.5],
-          [0.5, 0.5, 0.5],
-          [-0.5, 0.5, 0.5],
-        ],
-      ],
-      [
-        [0, -1, 0],
-        [
-          [-0.5, -0.5, 0.5],
-          [0.5, -0.5, 0.5],
-          [0.5, -0.5, -0.5],
-          [-0.5, -0.5, -0.5],
-        ],
-      ],
-      [
-        [0, 0, 1],
-        [
-          [0.5, -0.5, 0.5],
-          [-0.5, -0.5, 0.5],
-          [-0.5, 0.5, 0.5],
-          [0.5, 0.5, 0.5],
-        ],
-      ],
-      [
-        [0, 0, -1],
-        [
-          [-0.5, -0.5, -0.5],
-          [0.5, -0.5, -0.5],
-          [0.5, 0.5, -0.5],
-          [-0.5, 0.5, -0.5],
-        ],
-      ],
-    ] as const;
-    for (const [normal, corners] of faces) {
-      const base = vertices.length / 6;
-      for (const c of corners) vertices.push(...c, ...normal);
-      indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
-    }
-    return { vertices, indices };
-  }
-
-  private wingGeometry() {
-    const vertices: number[] = [];
-    const indices: number[] = [];
-    const corners = [
-      [-0.5, -0.5],
-      [0.5, -0.12],
-      [0.5, 0.12],
-      [-0.5, 0.5],
-    ] as const;
-    for (const [x, z] of corners) vertices.push(x, 0.08, z, 0, 1, 0);
-    for (const [x, z] of corners) vertices.push(x, -0.08, z, 0, -1, 0);
-    indices.push(0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6);
-    for (let i = 0; i < corners.length; i++) {
-      const j = (i + 1) % corners.length;
-      const [x0, z0] = corners[i];
-      const [x1, z1] = corners[j];
-      const dx = x1 - x0;
-      const dz = z1 - z0;
-      const length = Math.hypot(dx, dz) || 1;
-      const nx = dz / length;
-      const nz = -dx / length;
-      const base = vertices.length / 6;
-      vertices.push(
-        x0,
-        -0.08,
-        z0,
-        nx,
-        0,
-        nz,
-        x1,
-        -0.08,
-        z1,
-        nx,
-        0,
-        nz,
-        x1,
-        0.08,
-        z1,
-        nx,
-        0,
-        nz,
-        x0,
-        0.08,
-        z0,
-        nx,
-        0,
-        nz,
-      );
-      indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
-    }
-    return { vertices, indices };
-  }
-
   private radialGeometry(cone: boolean) {
     const vertices: number[] = [];
     const indices: number[] = [];
@@ -659,33 +505,8 @@ export class ThreeDUnitPass {
     return { vertices, indices };
   }
 
-  private sphereGeometry() {
-    const vertices: number[] = [];
-    const indices: number[] = [];
-    const latitudes = 12;
-    const longitudes = 20;
-    for (let y = 0; y <= latitudes; y++) {
-      const phi = (y * Math.PI) / latitudes;
-      const ny = Math.cos(phi);
-      const ring = Math.sin(phi);
-      for (let x = 0; x <= longitudes; x++) {
-        const theta = (x * Math.PI * 2) / longitudes;
-        const nx = Math.cos(theta) * ring;
-        const nz = Math.sin(theta) * ring;
-        vertices.push(nx, ny, nz, nx, ny, nz);
-      }
-    }
-    for (let y = 0; y < latitudes; y++) {
-      for (let x = 0; x < longitudes; x++) {
-        const a = y * (longitudes + 1) + x;
-        const b = a + longitudes + 1;
-        indices.push(a, b, a + 1, a + 1, b, b + 1);
-      }
-    }
-    return { vertices, indices };
-  }
-
   dispose(): void {
+    this.disposed = true;
     this.gl.deleteProgram(this.program);
     for (const mesh of this.meshes.values()) {
       this.gl.deleteVertexArray(mesh.vao);

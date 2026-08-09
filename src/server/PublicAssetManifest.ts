@@ -14,6 +14,7 @@ const HASHED_PUBLIC_ASSET_GLOBS = [
   "manifest.json",
   "atlases/**/*",
   "cosmetics/**/*",
+  "3d/**/*",
   "flags/**/*",
   "fonts/**/*",
   "icons/**/*",

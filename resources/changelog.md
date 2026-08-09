@@ -1,3 +1,12 @@
+## OpenBack v0.34.102 - Real 3D Battlefield Models
+
+- Replaced the temporary primitive unit bodies in 3D World with locally bundled low-poly models for every ship, projectile, bomb, building, train, runway, aircraft, launcher, tank, and mine.
+- Made placement previews use the same real model that is placed on the battlefield, while keeping white valid and gray blocked placement feedback.
+- Added a validated model loader with cached downloads, strict GLB parsing, local hashed assets, and deterministic missing-asset handling instead of silently restoring crude cube-like bodies.
+- Preserved owner colors, unit heading, terrain anchoring, construction pulses, plane banking, ship movement, and the existing 2D simulation and multiplayer behavior.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.101 - Visible 3D Construction
 
 - Restored every structure to the 3D battlefield alongside mobile units, including stacked structure levels and construction or reload progress bars.
