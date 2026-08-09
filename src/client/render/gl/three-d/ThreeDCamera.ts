@@ -30,6 +30,7 @@ export interface ThreeDCameraInput {
   mapHeight: number;
   centerX: number;
   centerZ: number;
+  centerHeight?: number;
   zoom: number;
   yaw: number;
   pitch: number;
@@ -180,13 +181,13 @@ export class ThreeDCameraState {
     );
     this.center = {
       x: finite(input.centerX, this.mapWidth / 2),
-      y: 0,
+      y: finite(input.centerHeight ?? 0, 0),
       z: finite(input.centerZ, this.mapHeight / 2),
     };
     const horizontal = this.distance * Math.cos(this.pitch);
     this.position = {
       x: this.center.x + Math.sin(this.yaw) * horizontal,
-      y: this.distance * Math.sin(this.pitch),
+      y: this.center.y + this.distance * Math.sin(this.pitch),
       z: this.center.z + Math.cos(this.yaw) * horizontal,
     };
     this.forward = normalize({
@@ -228,10 +229,10 @@ export class ThreeDCameraState {
       viewMatrix(this.position, this.right, this.up, this.forward),
     );
     const groundCorners = [
-      this.intersectPlane(0, 0, 0),
-      this.intersectPlane(this.viewportWidth, 0, 0),
-      this.intersectPlane(0, this.viewportHeight, 0),
-      this.intersectPlane(this.viewportWidth, this.viewportHeight, 0),
+      this.intersectHorizontalPlane(0, 0, 0),
+      this.intersectHorizontalPlane(this.viewportWidth, 0, 0),
+      this.intersectHorizontalPlane(0, this.viewportHeight, 0),
+      this.intersectHorizontalPlane(this.viewportWidth, this.viewportHeight, 0),
     ].filter((point): point is Vec3 => point !== null);
     this.frustum = {
       groundCorners,
@@ -324,7 +325,7 @@ export class ThreeDCameraState {
     return point;
   }
 
-  private intersectPlane(
+  intersectHorizontalPlane(
     screenX: number,
     screenY: number,
     height: number,

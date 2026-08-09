@@ -187,6 +187,7 @@ export class NukeTelegraphPass {
   drawThreeD(
     centerX: number,
     centerY: number,
+    centerHeight: number,
     zoom: number,
     width: number,
     height: number,
@@ -202,6 +203,7 @@ export class NukeTelegraphPass {
       mapHeight: this.mapH,
       centerX,
       centerZ: centerY,
+      centerHeight,
       zoom,
       yaw,
       pitch,

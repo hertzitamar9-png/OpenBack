@@ -13,6 +13,8 @@ layout(location = 3) in vec2 aScaleOutline;
 uniform sampler2D uGlyphMetrics;  // CHAR_RANGE x 2, RGBA32F
 
 uniform mat3  uCamera;
+uniform int uScreenFacing;
+uniform vec2 uScreenFacingScale;
 uniform float uFontSize;
 uniform float uAtlasScaleH;
 uniform float uBase;
@@ -79,7 +81,14 @@ void main() {
 
   vec2 worldPos = center + glyphOrigin + aPos * glyphSize;
 
-  vec3 clip = uCamera * vec3(worldPos, 1.0);
+  vec3 clip;
+  if (uScreenFacing == 1) {
+    vec3 anchorH = uCamera * vec3(center, 1.0);
+    vec2 anchor = anchorH.xy / max(0.0001, anchorH.z);
+    clip = vec3(anchor + (worldPos - center) * uScreenFacingScale, 1.0);
+  } else {
+    clip = uCamera * vec3(worldPos, 1.0);
+  }
   gl_Position = vec4(clip.xy, 0.0, 1.0);
 
   vUV = vec2(mix(u0, u1, aPos.x), mix(v0, v1, aPos.y));

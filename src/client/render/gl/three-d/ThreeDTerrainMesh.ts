@@ -57,8 +57,8 @@ export function terrainEdgeCoordinates(
 export function buildSolidMapBase(
   width: number,
   height: number,
-  top = -0.5,
-  bottom = -18,
+  top = -12,
+  bottom = -40,
 ): ThreeDTerrainMeshData {
   const positions = new Float32Array([
     0,

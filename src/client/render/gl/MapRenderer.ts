@@ -363,6 +363,9 @@ export class MapRenderer {
   setHighlightOwner(ownerID: number): void {
     this.renderer?.setHighlightOwner(ownerID);
   }
+  flashTerritory(ownerID: number, durationMs: number): void {
+    this.renderer?.flashTerritory(ownerID, durationMs);
+  }
   setMouseWorldPos(x: number, y: number): void {
     this.renderer?.setMouseWorldPos(x, y);
   }

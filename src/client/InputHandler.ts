@@ -54,6 +54,13 @@ export class MouseMoveEvent implements GameEvent {
   ) {}
 }
 
+export class TerritoryFlashEvent implements GameEvent {
+  constructor(
+    public readonly ownerID: number,
+    public readonly durationMs: number,
+  ) {}
+}
+
 export class ContextMenuEvent implements GameEvent {
   constructor(
     public readonly x: number,

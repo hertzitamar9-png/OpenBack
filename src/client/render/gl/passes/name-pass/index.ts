@@ -759,6 +759,7 @@ export class NamePass {
     cameraMatrix: Float32Array,
     ambient: number,
     screenFacing = false,
+    screenFacingScale: readonly [number, number] = [0, 0],
   ): void {
     if (!this.textProgram.ready) return;
     if (this.slots.size === 0) return;
@@ -821,6 +822,7 @@ export class NamePass {
       this.highlightOwnerID,
       fadeOwnerID,
       screenFacing,
+      screenFacingScale,
     );
     this.statusIconProgram.draw(
       cameraMatrix,
@@ -829,6 +831,7 @@ export class NamePass {
       fadeOwnerID,
       this.highlightOwnerID,
       screenFacing,
+      screenFacingScale,
     );
     this.iconProgram.draw(
       cameraMatrix,
@@ -836,6 +839,7 @@ export class NamePass {
       this.vao,
       fadeOwnerID,
       screenFacing,
+      screenFacingScale,
     );
 
     if (this.settings.passEnabled.nameDebug) {

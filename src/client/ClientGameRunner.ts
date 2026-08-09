@@ -1054,7 +1054,8 @@ export class ClientGameRunner {
           !this.gameView.inSpawnPhase() &&
           !hasGoneToPlayer &&
           this.gameView.myPlayer() &&
-          this.userSettings.goToPlayer()
+          this.userSettings.goToPlayer() &&
+          !this.gameView.config().worldMechanics().threeDMode
         ) {
           hasGoneToPlayer = true;
           this.eventBus.emit(new GoToPlayerEvent(this.gameView.myPlayer()!, 8));

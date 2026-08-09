@@ -7,6 +7,7 @@ import { PlayerType } from "../../../core/game/Game";
 import "../../components/PlayerAvatar";
 import { Controller } from "../../Controller";
 import { blockPlayer, sendFriendRequest } from "../../FriendsApi";
+import { TerritoryFlashEvent } from "../../InputHandler";
 import { GoToPlayerEvent } from "../../TransformHandler";
 import { formatPercentage, renderNumber } from "../../Utils";
 import { GameView, PlayerView } from "../../view";
@@ -178,6 +179,7 @@ export class Leaderboard extends LitElement implements Controller {
     this.contextMenu = null;
     if (this.eventBus === null) return;
     this.eventBus.emit(new GoToPlayerEvent(player));
+    this.eventBus.emit(new TerritoryFlashEvent(player.smallID(), 3000));
   }
 
   private openPlayerMenu(event: MouseEvent, player: PlayerView) {

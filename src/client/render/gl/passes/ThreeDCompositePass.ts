@@ -45,6 +45,8 @@ uniform mat4 uViewProjection;
 uniform vec2 uGroundOrigin;
 uniform vec2 uGroundSpan;
 uniform float uSampleRadius;
+uniform int uFlashOwner;
+uniform float uFlashAmount;
 out vec2 vMapUV;
 out float vHeight;
 out float vViewDepth;
@@ -52,8 +54,8 @@ out float vViewDepth;
 float heightFor(uint b){
   bool land=(b&128u)!=0u;
   float m=float(b&31u);
-  if(land&&m>30.5)return 52.0;
-  if(land)return 0.15+pow(m/30.0,2.0)*43.0;
+  if(land&&m>30.5)return 104.0;
+  if(land)return 0.3+pow(m/30.0,2.0)*86.0;
   return -min(m,10.0)*0.02;
 }
 float sampledHeight(ivec2 p){
@@ -124,12 +126,14 @@ uniform vec2 uMapSize;
 uniform float uTime;
 uniform float uDistance;
 uniform float uSampleRadius;
+uniform int uFlashOwner;
+uniform float uFlashAmount;
 out vec4 outColor;
 
 float heightFor(uint b){
   bool land=(b&128u)!=0u; float m=float(b&31u);
-  if(land&&m>30.5)return 52.0;
-  if(land)return 0.15+pow(m/30.0,2.0)*43.0;
+  if(land&&m>30.5)return 104.0;
+  if(land)return 0.3+pow(m/30.0,2.0)*86.0;
   return -min(m,10.0)*0.02;
 }
 void main(){
@@ -150,7 +154,7 @@ void main(){
   float relief=clamp(length(stableSlope)*0.28,0.0,1.0);
   float directional=clamp(0.5+dot(stableSlope,vec2(-0.68,-0.42))*0.16,0.0,1.0);
   float lightLevel=clamp(0.70+directional*0.38-relief*0.08,0.62,1.14);
-  float altitude=clamp(vHeight/43.0,0.0,1.0);
+  float altitude=clamp(vHeight/86.0,0.0,1.0);
   vec3 lowGround=vec3(0.25,0.44,0.18);
   vec3 exposedRock=vec3(0.42,0.39,0.34);
   vec3 snow=vec3(0.91,0.94,0.96);
@@ -186,7 +190,10 @@ void main(){
               (f.x>0.90&&(texelFetch(uTileState,ownerRight,0).r&4095u)!=owner)||
               (f.y<0.10&&(texelFetch(uTileState,ownerUp,0).r&4095u)!=owner)||
               (f.y>0.90&&(texelFetch(uTileState,ownerDown,0).r&4095u)!=owner);
-    if(edge)color*=0.36;
+    if(edge){
+      color*=0.36;
+      if(int(owner)==uFlashOwner) color=mix(color,vec3(0.30,0.84,1.0),uFlashAmount);
+    }
   }
   uint trailRaw=inside?texelFetch(uTrailState,p,0).r:0u;
   uint trailOwner=trailRaw&4095u;
@@ -249,6 +256,8 @@ export class ThreeDCompositePass {
         "uGroundOrigin",
         "uGroundSpan",
         "uSampleRadius",
+        "uFlashOwner",
+        "uFlashAmount",
       ].map((name) => [name, gl.getUniformLocation(this.terrainProgram, name)]),
     );
     this.skyVao = createFullscreenQuad(gl);
@@ -309,9 +318,12 @@ export class ThreeDCompositePass {
     height: number,
     centerX: number,
     centerY: number,
+    centerHeight: number,
     zoom: number,
     yaw: number,
     pitch: number,
+    flashOwner = 0,
+    flashAmount = 0,
   ): void {
     const gl = this.gl;
     gl.disable(gl.BLEND);
@@ -332,6 +344,7 @@ export class ThreeDCompositePass {
       mapHeight: this.mapHeight,
       centerX,
       centerZ: centerY,
+      centerHeight,
       zoom,
       yaw,
       pitch,
@@ -346,6 +359,8 @@ export class ThreeDCompositePass {
     gl.uniform2f(this.uniforms.uMapSize, this.mapWidth, this.mapHeight);
     gl.uniformMatrix4fv(this.uniforms.uViewProjection, false, viewProjection);
     gl.uniform1f(this.uniforms.uTime, performance.now() / 1000);
+    gl.uniform1i(this.uniforms.uFlashOwner, flashOwner);
+    gl.uniform1f(this.uniforms.uFlashAmount, flashAmount);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.terrain);
     gl.activeTexture(gl.TEXTURE1);

@@ -26,8 +26,8 @@ uniform vec2 uMapSize;
 float heightFor(uint b) {
   bool land = (b & 128u) != 0u;
   float m = float(b & 31u);
-  if (land && m > 30.5) return 52.0;
-  if (land) return 0.15 + pow(m / 30.0, 2.0) * 43.0;
+  if (land && m > 30.5) return 104.0;
+  if (land) return 0.3 + pow(m / 30.0, 2.0) * 86.0;
   return -min(m, 10.0) * 0.02;
 }
 

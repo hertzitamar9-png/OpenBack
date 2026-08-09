@@ -11,7 +11,7 @@
 import { EventBus } from "../../core/EventBus";
 import { UnitType } from "../../core/game/Game";
 import { Controller } from "../Controller";
-import { MouseMoveEvent } from "../InputHandler";
+import { MouseMoveEvent, TerritoryFlashEvent } from "../InputHandler";
 import { MapRenderer } from "../render/gl";
 import { OWNER_MASK } from "../render/gl/utils/TileCodec";
 import { TransformHandler } from "../TransformHandler";
@@ -29,6 +29,9 @@ export class HoverHighlightController implements Controller {
 
   init() {
     this.eventBus.on(MouseMoveEvent, (e) => this.onMouseMove(e));
+    this.eventBus.on(TerritoryFlashEvent, (e) =>
+      this.view.flashTerritory(e.ownerID, e.durationMs),
+    );
   }
 
   private navalHighlightEnabled(): boolean {

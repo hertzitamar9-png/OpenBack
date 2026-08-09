@@ -1,3 +1,15 @@
+## OpenBack v0.34.100 - Precise 3D Control and Territory Locator
+
+- Expanded the 3D tactical zoom range and made the camera follow local terrain height, allowing much closer inspection without clipping peaks or exposing the board underside.
+- Stabilized close-range left-drag movement on a fixed camera plane so detailed terrain can no longer shake the camera while panning.
+- Removed visible cracks and distant z-fighting bands by keeping neighboring mesh edges compatible and separating the solid board base from the playable terrain, while retaining zoom-adaptive quality.
+- Doubled 3D terrain relief while keeping terrain, units, effects, spawn markers, and pointer targeting synchronized to the same height model.
+- Restored the established 2D presentation for names, troop counts, flags, status icons, structure levels, and world numbers while keeping every label anchored to its 3D position.
+- Preserved the chosen camera position after manual 3D spawning instead of automatically pulling the view elsewhere.
+- Made leaderboard selection blink the chosen player's territory outline for three seconds in both 2D and 3D, making the local player and other nations easy to identify.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.99 - Tabletop Camera Foundation
 
 - Rebuilt the 3D camera around one finite perspective projection shared by pointer picking and world positioning, preventing inverted views and unstable near-plane behavior.

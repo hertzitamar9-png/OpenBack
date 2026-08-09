@@ -75,7 +75,10 @@ import { ThreeDFogPass } from "./three-d/ThreeDFogPass";
 import { ThreeDQualityController } from "./three-d/ThreeDQuality";
 import { ThreeDUnitPass } from "./three-d/ThreeDUnitPass";
 import { ThreeDWorldEventPass } from "./three-d/ThreeDWorldEventPass";
-import { THREE_D_TILT } from "./three-d/ThreeDWorldMath";
+import {
+  THREE_D_TILT,
+  threeDHeightForTerrainByte,
+} from "./three-d/ThreeDWorldMath";
 import { AffiliationPalette } from "./utils/Affiliation";
 import {
   EFFECT_PALETTE_BLOCKS,
@@ -172,6 +175,9 @@ export class GPURenderer {
   private threeDModeActive = false;
   private threeDQuality = new ThreeDQualityController("high");
   private lastThreeDFrameAt = 0;
+  private territoryFlashOwner = 0;
+  private territoryFlashStartedAt = 0;
+  private territoryFlashEndsAt = 0;
 
   // Map-layer passes keyed by layer id, drawn between terrain and territory.
   private mapLayerPasses: Map<string, MapLayerPass> = new Map();
@@ -216,6 +222,7 @@ export class GPURenderer {
   private frameTick = 0;
   private mapW = 0;
   private mapH = 0;
+  private terrainBytesCpu: Uint8Array;
 
   // Last-uploaded unit/structure maps (selection box + bar pass inputs)
   private lastUnits: Map<number, UnitState> = new Map();
@@ -295,6 +302,7 @@ export class GPURenderer {
     // Bake once and let the array go — nothing below retains map-sized
     // terrain bytes; re-bakes call terrainSource again.
     const terrainBytes = terrainSource();
+    this.terrainBytesCpu = terrainBytes.slice();
     this.terrainPass = new TerrainPass(
       gl,
       terrainSource,
@@ -1048,6 +1056,13 @@ export class GPURenderer {
    */
   applyTerrainDelta(refs: readonly number[], terrainBytes: Uint8Array): void {
     if (refs.length === 0) return;
+    if (refs.length === this.mapW * this.mapH) {
+      this.terrainBytesCpu.set(terrainBytes);
+    } else {
+      for (let i = 0; i < refs.length; i++) {
+        this.terrainBytesCpu[refs[i]] = terrainBytes[i];
+      }
+    }
     this.terrainPass.applyTerrainDelta(refs, terrainBytes);
     this.railroadPass.applyTerrainDelta(refs, terrainBytes);
     // Update the shared R8UI terrain-bytes texture used by map-layer passes.
@@ -1206,6 +1221,31 @@ export class GPURenderer {
     this.territoryPass.setHighlightOwner(ownerID);
     this.namePass.setHighlightOwner(ownerID);
     this.structurePass.setHighlightOwner(ownerID);
+  }
+
+  flashTerritory(ownerID: number, durationMs: number): void {
+    const now = performance.now();
+    this.territoryFlashOwner = ownerID;
+    this.territoryFlashStartedAt = now;
+    this.territoryFlashEndsAt = now + Math.max(0, durationMs);
+  }
+
+  private territoryFlash(now = performance.now()): {
+    owner: number;
+    amount: number;
+  } {
+    if (this.territoryFlashOwner === 0 || now >= this.territoryFlashEndsAt) {
+      this.territoryFlashOwner = 0;
+      return { owner: 0, amount: 0 };
+    }
+    const pulse =
+      0.5 +
+      0.5 *
+        Math.cos(((now - this.territoryFlashStartedAt) * Math.PI * 2) / 440);
+    return {
+      owner: this.territoryFlashOwner,
+      amount: 0.45 + pulse * 0.55,
+    };
   }
   setMouseWorldPos(x: number, y: number): void {
     this.namePass.setMouseWorldPos(x, y);
@@ -1394,11 +1434,20 @@ export class GPURenderer {
       }
       this.lastThreeDFrameAt = now;
       const quality = this.threeDQuality.settings;
+      const territoryFlash = this.territoryFlash();
+      const centerHeight = this.threeDCenterHeight(
+        this.camera.offsetX,
+        this.camera.offsetY,
+      );
       this.threeDPass.setQuality(quality.terrainLodBias);
       this.threeDUnitPass?.setQuality(quality.distantModelDetail);
       this.threeDFogPass?.setQuality(quality.particleScale);
       this.threeDWorldEventPass?.setQuality(quality.particleScale);
       toScreen(this.gl, cw, ch, () => {
+        const screenFacingScale: readonly [number, number] = [
+          (2 * zoom) / cw,
+          (-2 * zoom) / ch,
+        ];
         const billboardCamera = this.makeThreeDGroundCamera(cw, ch, zoom, 0.15);
         const labelCamera = billboardCamera;
         this.threeDPass!.draw(
@@ -1406,13 +1455,17 @@ export class GPURenderer {
           ch,
           this.camera.offsetX,
           this.camera.offsetY,
+          centerHeight,
           zoom,
           this.threeDYaw,
           this.threeDPitch,
+          territoryFlash.owner,
+          territoryFlash.amount,
         );
         this.threeDUnitPass?.draw(
           this.camera.offsetX,
           this.camera.offsetY,
+          centerHeight,
           zoom,
           cw,
           ch,
@@ -1427,6 +1480,7 @@ export class GPURenderer {
         this.nukeTelegraphPass.drawThreeD(
           this.camera.offsetX,
           this.camera.offsetY,
+          centerHeight,
           zoom,
           cw,
           ch,
@@ -1439,6 +1493,7 @@ export class GPURenderer {
         this.spawnOverlayPass.drawThreeD(
           this.camera.offsetX,
           this.camera.offsetY,
+          centerHeight,
           zoom,
           cw,
           ch,
@@ -1449,7 +1504,12 @@ export class GPURenderer {
         // and distorted by the terrain material. It is still positioned in
         // world space and therefore follows the perspective battlefield.
         if (this.settings.passEnabled.structure) {
-          this.structureLevelPass.draw(billboardCamera, zoom);
+          this.structureLevelPass.draw(
+            billboardCamera,
+            zoom,
+            true,
+            screenFacingScale,
+          );
         }
         if (this.settings.passEnabled.bar) this.barPass.draw(billboardCamera);
         if (this.settings.passEnabled.name && !this.altView) {
@@ -1457,13 +1517,15 @@ export class GPURenderer {
             labelCamera,
             this.nightCompositePass.getAmbient(),
             true,
+            screenFacingScale,
           );
         }
         this.worldTextPass.tick(zoom);
-        this.worldTextPass.draw(billboardCamera, zoom);
+        this.worldTextPass.draw(billboardCamera, zoom, true, screenFacingScale);
         this.threeDFogPass?.draw(
           this.camera.offsetX,
           this.camera.offsetY,
+          centerHeight,
           zoom,
           cw,
           ch,
@@ -1473,6 +1535,7 @@ export class GPURenderer {
         this.threeDWorldEventPass?.draw(
           this.camera.offsetX,
           this.camera.offsetY,
+          centerHeight,
           zoom,
           cw,
           ch,
@@ -1518,12 +1581,33 @@ export class GPURenderer {
         mapHeight: this.mapH,
         centerX: this.camera.offsetX,
         centerZ: this.camera.offsetY,
+        centerHeight: this.threeDCenterHeight(
+          this.camera.offsetX,
+          this.camera.offsetY,
+        ),
         zoom,
         yaw: this.threeDYaw,
         pitch: this.threeDPitch,
       }),
       worldHeight,
     );
+  }
+
+  private threeDCenterHeight(x: number, y: number): number {
+    const sample = (sx: number, sy: number): number => {
+      const ix = Math.max(0, Math.min(this.mapW - 1, sx));
+      const iy = Math.max(0, Math.min(this.mapH - 1, sy));
+      return threeDHeightForTerrainByte(
+        this.terrainBytesCpu[iy * this.mapW + ix],
+      );
+    };
+    const x0 = Math.floor(x);
+    const y0 = Math.floor(y);
+    const tx = x - x0;
+    const ty = y - y0;
+    const top = sample(x0, y0) * (1 - tx) + sample(x0 + 1, y0) * tx;
+    const bottom = sample(x0, y0 + 1) * (1 - tx) + sample(x0 + 1, y0 + 1) * tx;
+    return top * (1 - ty) + bottom * ty;
   }
 
   private isLightCompositingActive(): boolean {
@@ -1591,7 +1675,14 @@ export class GPURenderer {
     // Tile-edge stamps and rail geometry require terrain projection. Drawing
     // them through the label tangent plane creates the floating polygon webs
     // seen near the 3D horizon, so dedicated 3D geometry owns those features.
-    if (pe.borderStamp && !threeDCompatibleOnly) this.borderStampPass.draw(cam);
+    if (pe.borderStamp && !threeDCompatibleOnly) {
+      const territoryFlash = this.territoryFlash();
+      this.borderStampPass.draw(
+        cam,
+        territoryFlash.owner,
+        territoryFlash.amount,
+      );
+    }
     if (pe.railroad && !threeDCompatibleOnly) this.railroadPass.draw(cam, zoom);
     if (pe.unit && !omitWorldObjects) this.unitPass.drawGround(cam);
     if (pe.falloutBloom) this.bloomPass.draw(cam, this.frameTick);

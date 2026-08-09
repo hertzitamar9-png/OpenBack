@@ -67,6 +67,12 @@ describe("ThreeDTerrainChunks", () => {
     }
   });
 
+  it("uses one edge-compatible LOD across a visible frame", () => {
+    const chunks = new ThreeDTerrainChunks(4096, 2049);
+    const visible = chunks.visible(camera(2048, 1024, 1));
+    expect(new Set(visible.map((chunk) => chunk.lod)).size).toBe(1);
+  });
+
   it("tracks dirty world regions by stable chunk key", () => {
     const chunks = new ThreeDTerrainChunks(4096, 2049);
     chunks.markDirty({ left: 127, top: 127, right: 129, bottom: 129 });

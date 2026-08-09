@@ -27,4 +27,10 @@ describe("ThreeDTerrainMesh", () => {
       Math.min(...base.positions.filter((_, index) => index % 3 === 1)),
     ).toBe(-18);
   });
+
+  it("keeps the default solid base well below the ocean surface", () => {
+    const base = buildSolidMapBase(2048, 1024);
+    const heights = base.positions.filter((_, index) => index % 3 === 1);
+    expect(Math.max(...heights)).toBeLessThanOrEqual(-12);
+  });
 });

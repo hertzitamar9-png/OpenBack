@@ -30,6 +30,8 @@ export class BorderStampPass {
   private uEmbargoTint: WebGLUniformLocation;
   private uFriendlyTint: WebGLUniformLocation;
   private uAltView: WebGLUniformLocation;
+  private uFlashOwner: WebGLUniformLocation;
+  private uFlashAmount: WebGLUniformLocation;
 
   private vao: WebGLVertexArrayObject;
   private tileTex: WebGLTexture;
@@ -85,6 +87,8 @@ export class BorderStampPass {
     this.uEmbargoTint = gl.getUniformLocation(this.program, "uEmbargoTint")!;
     this.uFriendlyTint = gl.getUniformLocation(this.program, "uFriendlyTint")!;
     this.uAltView = gl.getUniformLocation(this.program, "uAltView")!;
+    this.uFlashOwner = gl.getUniformLocation(this.program, "uFlashOwner")!;
+    this.uFlashAmount = gl.getUniformLocation(this.program, "uFlashAmount")!;
 
     gl.useProgram(this.program);
     gl.uniform1i(gl.getUniformLocation(this.program, "uTileTex"), 0);
@@ -107,7 +111,7 @@ export class BorderStampPass {
   }
 
   /** Draw borders + defense checkerboard. Blending must be enabled. */
-  draw(cameraMatrix: Float32Array): void {
+  draw(cameraMatrix: Float32Array, flashOwner = 0, flashAmount = 0): void {
     const gl = this.gl;
     const mo = this.settings.mapOverlay;
 
@@ -131,6 +135,8 @@ export class BorderStampPass {
       mo.friendlyTintB,
     );
     gl.uniform1i(this.uAltView, this.altView ? 1 : 0);
+    gl.uniform1i(this.uFlashOwner, flashOwner);
+    gl.uniform1f(this.uFlashAmount, flashAmount);
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.tileTex);

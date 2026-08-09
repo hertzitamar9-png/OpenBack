@@ -99,15 +99,21 @@ export class ThreeDTerrainChunks {
     );
     const projectedTilePixels =
       camera.viewportHeight / (2 * camera.distance * camera.tanHalfFov);
+    // Every neighboring grid must share the same edge subdivisions. Mixing
+    // per-chunk LODs creates T-junctions that expose the dark board base as
+    // horizontal or vertical cracks. A frame-wide LOD still scales with zoom:
+    // close views retain full detail while distant views stay inexpensive.
+    const frameLod = this.selector.choose(
+      projectedTilePixels,
+      this.previousLOD.get("frame"),
+    );
+    this.previousLOD.set("frame", frameLod);
     const chunks: TerrainChunkKey[] = [];
 
     for (let y = startY; y < endY; y += THREE_D_TERRAIN_CHUNK_SIZE) {
       for (let x = startX; x < endX; x += THREE_D_TERRAIN_CHUNK_SIZE) {
         const key = `${x}:${y}`;
-        const lod = this.selector.choose(
-          projectedTilePixels,
-          this.previousLOD.get(key),
-        );
+        const lod = frameLod;
         this.previousLOD.set(key, lod);
         const worldRight = Math.min(
           this.mapWidth,
@@ -130,7 +136,6 @@ export class ThreeDTerrainChunks {
       }
     }
 
-    this.balanceNeighbors(chunks);
     return chunks;
   }
 

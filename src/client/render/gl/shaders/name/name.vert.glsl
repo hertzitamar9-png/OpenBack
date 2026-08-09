@@ -1,7 +1,6 @@
 #version 300 es
 precision highp float;
 precision highp int;
-precision highp int;
 precision highp usampler2D;
 
 // Unit quad vertex position [0,0]→[1,1]
@@ -16,6 +15,7 @@ uniform sampler2D  uPlayerData;    // 4 × MAX_PLAYERS, RGBA32F
 // Uniforms
 uniform mat3  uCamera;
 uniform int uScreenFacing;
+uniform vec2 uScreenFacingScale;
 uniform float uTime;
 uniform float uFontSize;    // atlas reference font size
 uniform float uAtlasScaleW; // atlas texture width
@@ -113,17 +113,10 @@ void main() {
   // uCamera[0][0] is the x-scale component of the camera matrix
   vec3 anchorHForScale = uCamera * vec3(wx, wy, 1.0);
   vec2 anchorForScale = anchorHForScale.xy / max(0.0001, anchorHForScale.z);
-  vec3 xHForScale = uCamera * vec3(wx + 1.0, wy, 1.0);
   float cameraScale = (uScreenFacing == 1)
-    ? length(xHForScale.xy / max(0.0001, xHForScale.z) - anchorForScale)
+    ? abs(uScreenFacingScale.x)
     : length(vec2(uCamera[0][0], uCamera[1][0]));
   float screenSize = nameWorldScale * uBase * cameraScale;
-  if (uScreenFacing == 1 && screenSize > 0.085) {
-    float scaleCorrection = 0.085 / screenSize;
-    nameWorldScale *= scaleCorrection;
-    worldScale *= scaleCorrection;
-    screenSize = 0.085;
-  }
   if (screenSize < uCullThreshold && !isHighlighted) {
     gl_Position = vec4(0.0);
     vUV = vec2(0.0);
@@ -180,14 +173,8 @@ void main() {
     // without rotating upside-down or becoming mirrored as the camera orbits.
     vec3 anchorH = uCamera * vec3(wx, wy, 1.0);
     vec2 anchorClip = anchorH.xy / max(0.0001, anchorH.z);
-    vec3 xH = uCamera * vec3(wx + 1.0, wy, 1.0);
-    vec3 yH = uCamera * vec3(wx, wy + 1.0, 1.0);
     vec2 localOffset = worldPos - vec2(wx, wy);
-    vec2 screenScale = vec2(
-      length(xH.xy / max(0.0001, xH.z) - anchorClip),
-      -length(yH.xy / max(0.0001, yH.z) - anchorClip)
-    );
-    clip = vec3(anchorClip + localOffset * screenScale, 1.0);
+    clip = vec3(anchorClip + localOffset * uScreenFacingScale, 1.0);
   } else {
     clip = uCamera * vec3(worldPos, 1.0);
   }

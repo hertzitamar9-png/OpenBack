@@ -25,12 +25,17 @@ function fixture(override: Partial<ThreeDCameraInput> = {}): ThreeDCameraInput {
 }
 
 describe("ThreeDCameraState", () => {
-  it("keeps shallow forward and backward views above the board", () => {
+  it("keeps shallow forward and backward views above the focused surface", () => {
     for (const yaw of [0, Math.PI]) {
       const camera = ThreeDCameraState.create(
-        fixture({ yaw, pitch: THREE_D_MIN_TILT, zoom: 20 }),
+        fixture({
+          yaw,
+          pitch: THREE_D_MIN_TILT,
+          zoom: 48,
+          centerHeight: 72,
+        }),
       );
-      expect(camera.position.y).toBeGreaterThan(THREE_D_MAX_TERRAIN_HEIGHT);
+      expect(camera.position.y).toBeGreaterThan(72);
       expect(camera.up.y).toBeGreaterThan(0);
     }
   });

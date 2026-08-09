@@ -239,6 +239,7 @@ export class TransformHandler {
       mapHeight: this.game.height(),
       centerX,
       centerZ: centerY,
+      centerHeight: this.threeDHeightAtFloat(centerX, centerY),
       zoom: this.scale,
       pitch: this.threeDPitch,
       yaw: this.threeDYaw,
@@ -276,6 +277,20 @@ export class TransformHandler {
     );
   }
 
+  private threeDHeightAtFloat(x: number, y: number): number {
+    const x0 = Math.floor(x);
+    const y0 = Math.floor(y);
+    const tx = x - x0;
+    const ty = y - y0;
+    const h00 = this.threeDHeightAt(x0, y0);
+    const h10 = this.threeDHeightAt(x0 + 1, y0);
+    const h01 = this.threeDHeightAt(x0, y0 + 1);
+    const h11 = this.threeDHeightAt(x0 + 1, y0 + 1);
+    const top = h00 + (h10 - h00) * tx;
+    const bottom = h01 + (h11 - h01) * tx;
+    return top + (bottom - top) * ty;
+  }
+
   isOnScreen(cell: Cell): boolean {
     const [topLeft, bottomRight] = this.screenBoundingRect();
     return (
@@ -287,6 +302,10 @@ export class TransformHandler {
   }
 
   screenCenter(): { screenX: number; screenY: number } {
+    if (this.isThreeD()) {
+      const camera = this.threeDCamera();
+      return { screenX: camera.center.x, screenY: camera.center.z };
+    }
     const [upperLeft, bottomRight] = this.screenBoundingRect();
     return {
       screenX: upperLeft.x + Math.floor((bottomRight.x - upperLeft.x) / 2),
@@ -396,7 +415,7 @@ export class TransformHandler {
     this.scale /= zoomFactor;
 
     // Clamp the scale to prevent extreme zooming
-    this.scale = Math.max(0.2, Math.min(20, this.scale));
+    this.scale = Math.max(0.2, Math.min(threeD ? 48 : 20, this.scale));
 
     if (threeD) {
       // A 3D orbit camera zooms along its viewing axis. Do not retarget it to
@@ -473,13 +492,20 @@ export class TransformHandler {
     this.clearTarget();
     if (this.isThreeD()) {
       if (event.x !== undefined && event.y !== undefined) {
-        const before = this.screenToWorldCoordinatesFloat(
+        const camera = this.threeDCamera();
+        const before = camera.intersectHorizontalPlane(
           event.x - event.deltaX,
           event.y - event.deltaY,
+          camera.center.y,
         );
-        const after = this.screenToWorldCoordinatesFloat(event.x, event.y);
+        const after = camera.intersectHorizontalPlane(
+          event.x,
+          event.y,
+          camera.center.y,
+        );
+        if (!before || !after) return;
         this.offsetX += before.x - after.x;
-        this.offsetY += before.y - after.y;
+        this.offsetY += before.z - after.z;
         this.clampOffsets();
         this.changed = true;
         return;

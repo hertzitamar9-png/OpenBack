@@ -15,6 +15,8 @@ uniform float uEmbargoTintRatio;
 uniform float uFriendlyTintRatio;
 uniform vec3 uEmbargoTint;
 uniform vec3 uFriendlyTint;
+uniform int uFlashOwner;
+uniform float uFlashAmount;
 
 in vec2 vWorldPos;
 out vec4 fragColor;
@@ -46,6 +48,9 @@ void main() {
       bc = texture(uPalette, vec2(u, 0.75)).rgb;
       if (isHighlightBorder) {
         bc = mix(bc, vec3(1.0), uHighlightBrighten);
+      }
+      if (int(owner) == uFlashOwner) {
+        bc = mix(bc, vec3(0.30, 0.84, 1.0), uFlashAmount);
       }
       // Relationship tint (applied BEFORE defense checkerboard, matching game)
       if (relation > 0.75) {

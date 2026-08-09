@@ -11,6 +11,7 @@ uniform sampler2D uPlayerData; // PLAYER_DATA_COLS × MAX_PLAYERS, RGBA32F
 // Uniforms
 uniform mat3  uCamera;
 uniform int uScreenFacing;
+uniform vec2 uScreenFacingScale;
 uniform float uTime;
 uniform float uLerpSpeed;
 uniform float uCullThreshold;
@@ -88,15 +89,10 @@ void main() {
   // Zoom-based culling (same as name shader)
   vec3 anchorHForScale = uCamera * vec3(wx, wy, 1.0);
   vec2 anchorForScale = anchorHForScale.xy / max(0.0001, anchorHForScale.z);
-  vec3 xHForScale = uCamera * vec3(wx + 1.0, wy, 1.0);
   float cameraScale = (uScreenFacing == 1)
-    ? length(xHForScale.xy / max(0.0001, xHForScale.z) - anchorForScale)
+    ? abs(uScreenFacingScale.x)
     : length(vec2(uCamera[0][0], uCamera[1][0]));
   float screenSize  = nameWorldScale * uFontBase * cameraScale;
-  if (uScreenFacing == 1 && screenSize > 0.085) {
-    nameWorldScale *= 0.085 / screenSize;
-    screenSize = 0.085;
-  }
   if (screenSize < uCullThreshold) {
     gl_Position = vec4(0.0);
     vUV = vec2(0.0);
@@ -176,13 +172,7 @@ void main() {
   if (uScreenFacing == 1) {
     vec3 anchorH = uCamera * vec3(wx, wy, 1.0);
     vec2 anchor = anchorH.xy / max(0.0001, anchorH.z);
-    vec3 xH = uCamera * vec3(wx + 1.0, wy, 1.0);
-    vec3 yH = uCamera * vec3(wx, wy + 1.0, 1.0);
-    vec2 scale = vec2(
-      length(xH.xy / max(0.0001, xH.z) - anchor),
-      -length(yH.xy / max(0.0001, yH.z) - anchor)
-    );
-    clip = vec3(anchor + (worldPos - vec2(wx, wy)) * scale, 1.0);
+    clip = vec3(anchor + (worldPos - vec2(wx, wy)) * uScreenFacingScale, 1.0);
   } else {
     clip = uCamera * vec3(worldPos, 1.0);
   }

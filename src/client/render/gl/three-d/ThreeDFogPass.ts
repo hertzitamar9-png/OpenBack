@@ -104,6 +104,7 @@ export class ThreeDFogPass {
   draw(
     centerX: number,
     centerY: number,
+    centerHeight: number,
     zoom: number,
     width: number,
     height: number,
@@ -119,6 +120,7 @@ export class ThreeDFogPass {
       mapHeight: this.mapHeight,
       centerX,
       centerZ: centerY,
+      centerHeight,
       zoom,
       yaw,
       pitch,

@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   DragEvent,
@@ -6,7 +8,6 @@ import {
 } from "../../src/client/InputHandler";
 import { TransformHandler } from "../../src/client/TransformHandler";
 import {
-  THREE_D_MAX_TERRAIN_HEIGHT,
   THREE_D_MAX_TILT,
   THREE_D_MIN_TILT,
   threeDCameraDistance,
@@ -42,6 +43,15 @@ function createHandler(): TransformHandler {
 }
 
 describe("TransformHandler 3D camera", () => {
+  it("preserves a manually selected 3D spawn camera", () => {
+    const source = readFileSync(
+      resolve(process.cwd(), "src/client/ClientGameRunner.ts"),
+      "utf8",
+    );
+    expect(source).toContain(
+      "!this.gameView.config().worldMechanics().threeDMode",
+    );
+  });
   it("clamps vertical orbit without flipping yaw across the top pole", () => {
     const handler = createHandler();
     handler.threeDYaw = 0.4;
@@ -65,16 +75,30 @@ describe("TransformHandler 3D camera", () => {
     const mountain = threeDHeightForTerrainByte(0x98);
     const peak = threeDHeightForTerrainByte(0x9f);
 
-    expect(mountain).toBeGreaterThan(lowland + 20);
-    expect(peak).toBeGreaterThan(mountain + 20);
+    expect(mountain).toBeGreaterThan(lowland + 40);
+    expect(peak).toBeGreaterThan(mountain + 40);
+    expect(peak).toBe(104);
   });
 
-  it("keeps the camera above the highest terrain at maximum zoom", () => {
-    const distance = threeDCameraDistance(400, 20, THREE_D_MIN_TILT);
-    const projectedPeak =
-      THREE_D_MAX_TERRAIN_HEIGHT * Math.cos(THREE_D_MIN_TILT);
+  it("allows a close tactical camera while retaining surface clearance", () => {
+    const distance = threeDCameraDistance(400, 48, THREE_D_MIN_TILT);
+    expect(distance * Math.sin(THREE_D_MIN_TILT)).toBeGreaterThanOrEqual(12);
+    expect(distance).toBeLessThan(24);
+  });
 
-    expect(distance).toBeGreaterThan(projectedPeak + 9);
+  it("uses the actual 3D camera target as the focus center", () => {
+    const handler = createHandler();
+    handler.offsetX = 123;
+    handler.offsetY = -77;
+
+    const center = handler.screenCenter();
+    const expectedX =
+      handler.offsetX + 2048 / 2 + (1280 - 2048) / (2 * handler.scale);
+    const expectedY =
+      handler.offsetY + 1024 / 2 + (720 - 1024) / (2 * handler.scale);
+
+    expect(center.screenX).toBeCloseTo(expectedX, 6);
+    expect(center.screenY).toBeCloseTo(expectedY, 6);
   });
 
   it("keeps the 3D ground target fixed through the complete zoom range", () => {
@@ -90,7 +114,7 @@ describe("TransformHandler 3D camera", () => {
       handler.onZoom(new ZoomEvent(20 + i * 13, 40 + i * 7, -100));
     }
 
-    expect(handler.scale).toBe(20);
+    expect(handler.scale).toBe(48);
     expect(cameraCenter().x).toBeCloseTo(700);
     expect(cameraCenter().y).toBeCloseTo(400);
 

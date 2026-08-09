@@ -46,7 +46,7 @@ out float vLife;
 out float vKind;
 
 float hash(float n){return fract(sin(n*91.3458)*47453.5453);}
-float heightFor(uint b){bool land=(b&128u)!=0u;float m=float(b&31u);if(land&&m>30.5)return 52.0;if(land)return 0.15+pow(m/30.0,2.0)*43.0;return -min(m,10.0)*0.02;}
+float heightFor(uint b){bool land=(b&128u)!=0u;float m=float(b&31u);if(land&&m>30.5)return 104.0;if(land)return 0.3+pow(m/30.0,2.0)*86.0;return -min(m,10.0)*0.02;}
 void main(){
   float id=float(gl_VertexID);
   float h1=hash(id+uEventCenter.x*0.13),h2=hash(id+uEventCenter.y*0.17),h3=hash(id*3.71);
@@ -145,6 +145,7 @@ export class ThreeDWorldEventPass {
   draw(
     centerX: number,
     centerY: number,
+    centerHeight: number,
     zoom: number,
     width: number,
     height: number,
@@ -168,6 +169,7 @@ export class ThreeDWorldEventPass {
       mapHeight: this.mapHeight,
       centerX,
       centerZ: centerY,
+      centerHeight,
       zoom,
       yaw,
       pitch,

@@ -121,6 +121,8 @@ export class StructureLevelPass {
   private program: WebGLProgram;
   // Uniform locations
   private uCamera: WebGLUniformLocation;
+  private uScreenFacing: WebGLUniformLocation;
+  private uScreenFacingScale: WebGLUniformLocation;
   private uZoom: WebGLUniformLocation;
   private uIconSize: WebGLUniformLocation;
   private uDotsThreshold: WebGLUniformLocation;
@@ -225,6 +227,11 @@ export class StructureLevelPass {
 
     // Uniform locations
     this.uCamera = gl.getUniformLocation(this.program, "uCamera")!;
+    this.uScreenFacing = gl.getUniformLocation(this.program, "uScreenFacing")!;
+    this.uScreenFacingScale = gl.getUniformLocation(
+      this.program,
+      "uScreenFacingScale",
+    )!;
     this.uZoom = gl.getUniformLocation(this.program, "uZoom")!;
     this.uIconSize = gl.getUniformLocation(this.program, "uIconSize")!;
     this.uDotsThreshold = gl.getUniformLocation(
@@ -365,7 +372,12 @@ export class StructureLevelPass {
     }
   }
 
-  draw(cameraMatrix: Float32Array, zoom: number): void {
+  draw(
+    cameraMatrix: Float32Array,
+    zoom: number,
+    screenFacing = false,
+    screenFacingScale: readonly [number, number] = [0, 0],
+  ): void {
     const classic = this.settings.structureLevel.classicFont;
     // Re-layout if the font toggled since the buffer was built — digit advances
     // (and so cursor positions) differ between the two fonts.
@@ -382,6 +394,12 @@ export class StructureLevelPass {
 
     gl.useProgram(this.program);
     gl.uniformMatrix3fv(this.uCamera, false, cameraMatrix);
+    gl.uniform1i(this.uScreenFacing, screenFacing ? 1 : 0);
+    gl.uniform2f(
+      this.uScreenFacingScale,
+      screenFacingScale[0],
+      screenFacingScale[1],
+    );
     gl.uniform1f(this.uZoom, zoom);
     gl.uniform1f(this.uIconSize, ss.iconSize);
     gl.uniform1f(this.uDotsThreshold, ss.dotsZoomThreshold);

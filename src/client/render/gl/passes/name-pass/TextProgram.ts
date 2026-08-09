@@ -35,6 +35,7 @@ export class TextProgram {
   // Uniform locations
   private uCamera: WebGLUniformLocation;
   private uScreenFacing: WebGLUniformLocation;
+  private uScreenFacingScale: WebGLUniformLocation;
   private uTime: WebGLUniformLocation;
   private uDistRange: WebGLUniformLocation;
   private uLerpSpeed: WebGLUniformLocation;
@@ -96,6 +97,10 @@ export class TextProgram {
     // Dynamic uniform locations
     this.uCamera = gl.getUniformLocation(this.program, "uCamera")!;
     this.uScreenFacing = gl.getUniformLocation(this.program, "uScreenFacing")!;
+    this.uScreenFacingScale = gl.getUniformLocation(
+      this.program,
+      "uScreenFacingScale",
+    )!;
     this.uTime = gl.getUniformLocation(this.program, "uTime")!;
     this.uDistRange = gl.getUniformLocation(this.program, "uDistRange")!;
     this.uLerpSpeed = gl.getUniformLocation(this.program, "uLerpSpeed")!;
@@ -175,6 +180,7 @@ export class TextProgram {
     highlightOwnerID: number,
     fadeOwnerID: number,
     screenFacing = false,
+    screenFacingScale: readonly [number, number] = [0, 0],
   ): void {
     if (!this.atlasReady) return;
 
@@ -184,6 +190,11 @@ export class TextProgram {
 
     gl.uniformMatrix3fv(this.uCamera, false, cameraMatrix);
     gl.uniform1i(this.uScreenFacing, screenFacing ? 1 : 0);
+    gl.uniform2f(
+      this.uScreenFacingScale,
+      screenFacingScale[0],
+      screenFacingScale[1],
+    );
     gl.uniform1f(this.uTime, performance.now() / 1000);
     gl.uniform1f(this.uDistRange, this.distanceRange);
     gl.uniform1f(this.uLerpSpeed, ns.lerpSpeed);
@@ -194,18 +205,12 @@ export class TextProgram {
     gl.uniform1f(this.uHighlightOwnerID, highlightOwnerID);
     gl.uniform1f(this.uFadeOwnerID, fadeOwnerID);
     gl.uniform1f(this.uHoverFadeAlpha, ns.hoverFadeAlpha);
-    // Perspective makes the colored MTSDF outline read as blocky rectangles
-    // around small glyphs. A restrained neutral edge keeps 3D labels as clean
-    // screen UI while retaining the classic styling in 2D.
-    gl.uniform1f(
-      this.uOutlineWidth,
-      screenFacing ? Math.min(ns.outlineWidth, 0.7) : ns.outlineWidth,
-    );
+    gl.uniform1f(this.uOutlineWidth, ns.outlineWidth);
     gl.uniform1f(this.uNightAmbient, ambient);
     gl.uniform3f(this.uOutlineColor, ns.outlineR, ns.outlineG, ns.outlineB);
     gl.uniform1f(
       this.uOutlineUsePlayerColor,
-      !screenFacing && ns.outlineUsePlayerColor ? 1.0 : 0.0,
+      ns.outlineUsePlayerColor ? 1.0 : 0.0,
     );
     gl.uniform1f(this.uFillUsePlayerColor, ns.fillUsePlayerColor ? 1.0 : 0.0);
     gl.uniform1f(this.uHoverGlowWidth, ns.hoverGlowWidth);

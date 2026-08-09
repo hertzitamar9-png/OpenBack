@@ -10,18 +10,39 @@ const shader = (name: string) =>
 
 describe("3D label shaders", () => {
   it.each(["name.vert.glsl", "icon.vert.glsl", "status-icon.vert.glsl"])(
-    "caps %s in screen-facing mode",
+    "renders %s with the same fixed screen scale as 2D",
     (name) => {
       const source = shader(name);
-      expect(source).toContain("uScreenFacing == 1 && screenSize > 0.085");
-      expect(source).toContain("screenSize = 0.085");
+      expect(source).toContain("uniform vec2 uScreenFacingScale");
+      expect(source).toContain("uScreenFacingScale");
+      expect(source).not.toContain("xH.xy");
     },
   );
 
-  it("uses a legible light name fill only for the 3D screen-facing path", () => {
+  it("keeps the established 2D name fill in 3D", () => {
     const source = shader("name.frag.glsl");
-    expect(source).toContain(
-      "uScreenFacing == 1 ? vec3(0.96) : vec3(vNameShade)",
+    expect(source).toContain("vec3 defaultFill = vec3(vNameShade)");
+    expect(source).not.toContain("uScreenFacing == 1 ?");
+  });
+
+  it("keeps world numbers screen-facing in 3D", () => {
+    const source = readFileSync(
+      resolve(
+        process.cwd(),
+        "src/client/render/gl/shaders/world-text/world-text.vert.glsl",
+      ),
+      "utf8",
     );
+    expect(source).toContain("uniform int uScreenFacing");
+    expect(source).toContain("uniform vec2 uScreenFacingScale");
+    const levels = readFileSync(
+      resolve(
+        process.cwd(),
+        "src/client/render/gl/shaders/structure-level/structure-level.vert.glsl",
+      ),
+      "utf8",
+    );
+    expect(levels).toContain("uniform int uScreenFacing");
+    expect(levels).toContain("uniform vec2 uScreenFacingScale");
   });
 });

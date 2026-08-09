@@ -97,6 +97,8 @@ export class WorldTextPass {
 
   // Uniform locations
   private uCamera: WebGLUniformLocation;
+  private uScreenFacing: WebGLUniformLocation;
+  private uScreenFacingScale: WebGLUniformLocation;
   private uZoom: WebGLUniformLocation;
   private uMinScreenScale: WebGLUniformLocation;
   private uDistRange: WebGLUniformLocation;
@@ -190,6 +192,11 @@ export class WorldTextPass {
 
     // Dynamic uniform locations
     this.uCamera = gl.getUniformLocation(this.program, "uCamera")!;
+    this.uScreenFacing = gl.getUniformLocation(this.program, "uScreenFacing")!;
+    this.uScreenFacingScale = gl.getUniformLocation(
+      this.program,
+      "uScreenFacingScale",
+    )!;
     this.uZoom = gl.getUniformLocation(this.program, "uZoom")!;
     this.uMinScreenScale = gl.getUniformLocation(
       this.program,
@@ -534,13 +541,24 @@ export class WorldTextPass {
   // Draw
   // -------------------------------------------------------------------------
 
-  draw(cameraMatrix: Float32Array, zoom: number): void {
+  draw(
+    cameraMatrix: Float32Array,
+    zoom: number,
+    screenFacing = false,
+    screenFacingScale: readonly [number, number] = [0, 0],
+  ): void {
     if (!this.atlasReady || this.instanceCount === 0) return;
     if (zoom < this.settings.bonusPopup.cullZoom) return;
 
     const gl = this.gl;
     gl.useProgram(this.program);
     gl.uniformMatrix3fv(this.uCamera, false, cameraMatrix);
+    gl.uniform1i(this.uScreenFacing, screenFacing ? 1 : 0);
+    gl.uniform2f(
+      this.uScreenFacingScale,
+      screenFacingScale[0],
+      screenFacingScale[1],
+    );
     gl.uniform1f(this.uZoom, zoom);
     const dpr = renderDpr();
     gl.uniform1f(

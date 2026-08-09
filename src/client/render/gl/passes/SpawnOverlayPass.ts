@@ -278,6 +278,7 @@ export class SpawnOverlayPass {
   drawThreeD(
     centerX: number,
     centerY: number,
+    centerHeight: number,
     zoom: number,
     width: number,
     height: number,
@@ -293,6 +294,7 @@ export class SpawnOverlayPass {
       mapHeight: this.mapH,
       centerX,
       centerZ: centerY,
+      centerHeight,
       zoom,
       yaw,
       pitch,

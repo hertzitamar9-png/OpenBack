@@ -63,7 +63,7 @@ uniform float uTime;
 out vec3 vNormal;
 out vec3 vMeta;
 
-float heightFor(uint b){bool land=(b&128u)!=0u;float m=float(b&31u);if(land&&m>30.5)return 52.0;if(land)return 0.15+pow(m/30.0,2.0)*43.0;return -min(m,10.0)*0.02;}
+float heightFor(uint b){bool land=(b&128u)!=0u;float m=float(b&31u);if(land&&m>30.5)return 104.0;if(land)return 0.3+pow(m/30.0,2.0)*86.0;return -min(m,10.0)*0.02;}
 mat3 rx(float a){float c=cos(a),s=sin(a);return mat3(1,0,0,0,c,s,0,-s,c);}
 mat3 ry(float a){float c=cos(a),s=sin(a);return mat3(c,0,-s,0,1,0,s,0,c);}
 mat3 rz(float a){float c=cos(a),s=sin(a);return mat3(c,s,0,-s,c,0,0,0,1);}
@@ -294,6 +294,7 @@ export class ThreeDUnitPass {
   draw(
     centerX: number,
     centerY: number,
+    centerHeight: number,
     zoom: number,
     width: number,
     height: number,
@@ -312,6 +313,7 @@ export class ThreeDUnitPass {
       mapHeight: this.mapHeight,
       centerX,
       centerZ: centerY,
+      centerHeight,
       zoom,
       yaw,
       pitch,
