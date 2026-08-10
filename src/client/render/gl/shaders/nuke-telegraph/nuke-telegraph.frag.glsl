@@ -65,9 +65,28 @@ void main() {
   // Keep those warnings outlined so they never become a giant opaque surface.
   // Aircraft and tank destination reticles retain their subtle fill.
   float routeFill = step(0.5, vRouteKind);
+  float isNuke = 1.0 - routeFill;
   float fillAlpha = routeFill * innerFill * max(0.0, baseAlpha - fillAlphaOff);
   float strokeAlpha = innerStroke * baseAlpha;
   float outerAlpha = outerRing * dashAlpha * baseAlpha;
+
+  // Removing the enormous bomb fill must not remove the destination itself.
+  // Draw a compact center reticle whose size remains readable for Atom Bombs,
+  // Hydrogen Bombs, and MIRV warheads without covering their blast area.
+  float targetReticleRadius = clamp(vInnerRadius * 0.1, 2.25, 4.0);
+  float targetReticleRing = smoothstep(
+    targetReticleRadius - strokeWidth - 0.35,
+    targetReticleRadius - strokeWidth,
+    dist
+  ) * (1.0 - smoothstep(
+    targetReticleRadius + strokeWidth,
+    targetReticleRadius + strokeWidth + 0.35,
+    dist
+  ));
+  float targetReticleDot = 1.0 - smoothstep(0.55, 1.15, dist);
+  float targetReticleAlpha = isNuke
+    * max(targetReticleRing, targetReticleDot)
+    * min(1.0, baseAlpha + 0.12);
 
   // Every client sees the aircraft's strategic route as a red dashed line.
   vec2 ab = vTarget - vSource;
@@ -78,7 +97,10 @@ void main() {
   float hasRoute = step(0.5, vRouteKind);
   float routeAlpha = hasRoute * (1.0 - smoothstep(0.25, 0.65, lineDist)) * lineDash * 0.9;
 
-  float alpha = max(max(max(fillAlpha, strokeAlpha), outerAlpha), routeAlpha);
+  float alpha = max(
+    max(max(max(fillAlpha, strokeAlpha), outerAlpha), targetReticleAlpha),
+    routeAlpha
+  );
   if (alpha < 0.01) discard;
 
   vec3 routeColor = vRouteKind > 1.5 ? vec3(0.2, 1.0, 0.32) : vec3(1.0, 0.08, 0.04);

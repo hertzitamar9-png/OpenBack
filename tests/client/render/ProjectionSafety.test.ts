@@ -100,4 +100,14 @@ describe("nuke warning readability", () => {
     expect(shader).toContain("float routeFill = step(0.5, vRouteKind)");
     expect(shader).toContain("float fillAlpha = routeFill * innerFill");
   });
+
+  it("keeps a compact final-destination reticle visible for outlined nukes", () => {
+    const shader = readFileSync(
+      "src/client/render/gl/shaders/nuke-telegraph/nuke-telegraph.frag.glsl",
+      "utf8",
+    );
+    expect(shader).toContain("float isNuke = 1.0 - routeFill");
+    expect(shader).toContain("float targetReticleAlpha");
+    expect(shader).toContain("targetReticleAlpha");
+  });
 });

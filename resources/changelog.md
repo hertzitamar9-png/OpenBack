@@ -1,3 +1,11 @@
+## OpenBack v0.34.114 - Restored Bomb Destinations
+
+- Restored a compact, clearly visible final-destination reticle for every in-flight Atom Bomb, Hydrogen Bomb, and MIRV warhead.
+- Kept real blast radii as readable outlines so large Hydrogen Bomb warnings no longer cover the battlefield with an opaque surface.
+- Kept destination colors tied to player relations while preserving the distinct aircraft and tank targeting visuals.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.113 - Stable Railroad Rendering
 
 - Fixed an invalid railroad terrain-texture connection that could fail every WebGL frame after railroads appeared, causing severe slowdown and eventually leaving the battlefield frozen while match time continued.
