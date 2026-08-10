@@ -51,6 +51,7 @@ describe("3D model registry", () => {
       expect(Math.abs(threeDModel(type).forwardYaw ?? 0)).toBeCloseTo(
         Math.PI / 2,
       );
+      expect(threeDModel(type).surface).toBe("water");
     },
   );
 });

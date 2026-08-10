@@ -28,21 +28,35 @@ export class ThreeDSurfaceSampler {
   ) {}
 
   heightAt(x: number, z: number): number {
-    const px = this.clamp(x, this.width);
-    const pz = this.clamp(z, this.height);
+    const px = this.clamp(x - 0.5, this.width);
+    const pz = this.clamp(z - 0.5, this.height);
     const x0 = Math.floor(px);
     const z0 = Math.floor(pz);
     const x1 = Math.min(this.width - 1, x0 + 1);
     const z1 = Math.min(this.height - 1, z0 + 1);
-    const tx = px - x0;
-    const tz = pz - z0;
+    const tx = this.smoothstep(px - x0);
+    const tz = this.smoothstep(pz - z0);
     const h00 = this.sample(x0, z0);
     const h10 = this.sample(x1, z0);
     const h01 = this.sample(x0, z1);
     const h11 = this.sample(x1, z1);
     const top = h00 + (h10 - h00) * tx;
     const bottom = h01 + (h11 - h01) * tx;
-    return top + (bottom - top) * tz;
+    const center = top + (bottom - top) * tz;
+    const radius = 1.5;
+    const sampleOffset = (dx: number, dz: number) =>
+      this.sample(Math.floor(px + dx), Math.floor(pz + dz));
+    const cardinals =
+      sampleOffset(radius, 0) +
+      sampleOffset(-radius, 0) +
+      sampleOffset(0, radius) +
+      sampleOffset(0, -radius);
+    const diagonals =
+      sampleOffset(radius, radius) +
+      sampleOffset(radius, -radius) +
+      sampleOffset(-radius, radius) +
+      sampleOffset(-radius, -radius);
+    return (center * 8 + cardinals * 2 + diagonals) / 20;
   }
 
   normalAt(x: number, z: number): ThreeDSurfaceNormal {
@@ -88,7 +102,17 @@ export class ThreeDSurfaceSampler {
   }
 
   private sample(x: number, z: number): number {
-    return threeDHeightForTerrainByte(this.terrainByteAt(x, z));
+    return threeDHeightForTerrainByte(
+      this.terrainByteAt(
+        Math.floor(this.clamp(x, this.width)),
+        Math.floor(this.clamp(z, this.height)),
+      ),
+    );
+  }
+
+  private smoothstep(value: number): number {
+    const t = Math.max(0, Math.min(1, value));
+    return t * t * (3 - 2 * t);
   }
 
   private clamp(value: number, size: number): number {

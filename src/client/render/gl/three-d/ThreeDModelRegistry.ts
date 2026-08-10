@@ -32,6 +32,8 @@ export interface ThreeDPrimitive {
 export interface ThreeDModelDefinition {
   footprint: number;
   altitude?: number;
+  /** Surface that owns this model's vertical anchor. */
+  surface?: "ground" | "water";
   /** Corrects the source asset's forward axis before gameplay heading. */
   forwardYaw?: number;
   animation?: ThreeDAnimation;
@@ -248,6 +250,7 @@ const RAW_MODELS: Readonly<
   },
   [UnitType.TransportShip]: {
     footprint: 2.7,
+    surface: "water",
     forwardYaw: Math.PI / 2,
     animation: "hover",
     primitives: [
@@ -262,6 +265,7 @@ const RAW_MODELS: Readonly<
   },
   [UnitType.Warship]: {
     footprint: 3.2,
+    surface: "water",
     forwardYaw: Math.PI / 2,
     animation: "hover",
     primitives: [
@@ -277,6 +281,7 @@ const RAW_MODELS: Readonly<
   },
   [UnitType.TradeShip]: {
     footprint: 2.7,
+    surface: "water",
     forwardYaw: Math.PI / 2,
     animation: "hover",
     primitives: [

@@ -45,7 +45,6 @@ uniform vec2 uMapSize;
 uniform mat4 uViewProjection;
 uniform vec2 uGroundOrigin;
 uniform vec2 uGroundSpan;
-uniform float uSampleRadius;
 uniform int uFlashOwner;
 uniform float uFlashAmount;
 out vec2 vMapUV;
@@ -74,7 +73,7 @@ float smoothHeight(vec2 world){
   float h01=sampledHeight(p+ivec2(0,1));
   float h11=sampledHeight(p+ivec2(1,1));
   float center=mix(mix(h00,h10,f.x),mix(h01,h11,f.x),f.y);
-  float r=max(1.5,uSampleRadius);
+  float r=1.5;
   // Stable nine-tap relief keeps real mountain structure while removing the
   // isolated triangular needles that made models and coastlines look torn.
   float cardinals=
@@ -162,7 +161,6 @@ uniform sampler2D uPalette;
 uniform vec2 uMapSize;
 uniform float uTime;
 uniform float uDistance;
-uniform float uSampleRadius;
 uniform int uFlashOwner;
 uniform float uFlashAmount;
 out vec4 outColor;
@@ -292,7 +290,6 @@ export class ThreeDCompositePass {
         "uTime",
         "uGroundOrigin",
         "uGroundSpan",
-        "uSampleRadius",
         "uFlashOwner",
         "uFlashAmount",
       ].map((name) => [name, gl.getUniformLocation(this.terrainProgram, name)]),
@@ -441,7 +438,6 @@ export class ThreeDCompositePass {
       const mesh = this.meshes[Math.min(3, chunk.lod + this.lodBias)];
       gl.uniform2f(this.uniforms.uGroundOrigin, chunk.x, chunk.y);
       gl.uniform2f(this.uniforms.uGroundSpan, chunk.width, chunk.height);
-      gl.uniform1f(this.uniforms.uSampleRadius, 1);
       gl.bindVertexArray(mesh.vao);
       gl.drawElements(gl.TRIANGLES, mesh.indexCount, gl.UNSIGNED_INT, 0);
     }

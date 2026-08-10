@@ -28,4 +28,9 @@ describe("3D terrain material parity", () => {
     expect(source).toContain("vWorld");
     expect(source).toContain("smoothHeight(world+vec2(1.0,0.0))");
   });
+
+  it("keeps the relief kernel fixed so chunk LOD boundaries cannot form bands", () => {
+    expect(source).toContain("float r=1.5;");
+    expect(source).not.toContain("float r=max(1.5,uSampleRadius)");
+  });
 });

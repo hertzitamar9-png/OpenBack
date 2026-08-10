@@ -26,6 +26,10 @@ const ANIMATION: Record<ThreeDAnimation, number> = {
   wheel: 4,
   hover: 5,
 };
+const SURFACE = {
+  ground: 0,
+  water: 1,
+} as const;
 
 export function* collectThreeDRenderableUnits(
   mobileUnits: ReadonlyMap<number, UnitState>,
@@ -81,11 +85,39 @@ out vec3 vNormal;
 out vec3 vMeta;
 
 float heightFor(uint b){bool land=(b&128u)!=0u;float m=float(b&31u);if(land&&m>30.5)return 57.0;if(land)return (0.15+pow(m/30.0,2.0)*31.0)*1.5;return -min(m,10.0)*0.02;}
+float sampledHeight(ivec2 p){
+  p=clamp(p,ivec2(0),ivec2(uMapSize)-1);
+  return heightFor(texelFetch(uTerrain,p,0).r);
+}
+float smoothHeight(vec2 world){
+  vec2 samplePos=world-vec2(0.5);
+  ivec2 p=ivec2(floor(samplePos));
+  vec2 f=smoothstep(vec2(0.0),vec2(1.0),fract(samplePos));
+  float center=mix(
+    mix(sampledHeight(p),sampledHeight(p+ivec2(1,0)),f.x),
+    mix(sampledHeight(p+ivec2(0,1)),sampledHeight(p+ivec2(1,1)),f.x),
+    f.y
+  );
+  float r=1.5;
+  float cardinals=
+    sampledHeight(ivec2(floor(samplePos+vec2(r,0.0))))+
+    sampledHeight(ivec2(floor(samplePos-vec2(r,0.0))))+
+    sampledHeight(ivec2(floor(samplePos+vec2(0.0,r))))+
+    sampledHeight(ivec2(floor(samplePos-vec2(0.0,r))));
+  float diagonals=
+    sampledHeight(ivec2(floor(samplePos+vec2(r,r))))+
+    sampledHeight(ivec2(floor(samplePos+vec2(r,-r))))+
+    sampledHeight(ivec2(floor(samplePos+vec2(-r,r))))+
+    sampledHeight(ivec2(floor(samplePos-vec2(r,r))));
+  return (center*8.0+cardinals*2.0+diagonals)/20.0;
+}
 mat3 rx(float a){float c=cos(a),s=sin(a);return mat3(1,0,0,0,c,s,0,-s,c);}
 mat3 ry(float a){float c=cos(a),s=sin(a);return mat3(c,0,-s,0,1,0,s,0,c);}
 mat3 rz(float a){float c=cos(a),s=sin(a);return mat3(c,s,0,-s,c,0,0,0,1);}
 void main(){
-  int animation=int(iMeta.w+0.5);
+  int packedAnimation=int(iMeta.w+0.5);
+  int surface=packedAnimation/10;
+  int animation=packedAnimation-surface*10;
   float phase=uTime+iWorld.x*.17+iWorld.z*.11;
   mat3 local=rz(iAngles.w)*ry(iAngles.z)*rx(iAngles.y);
   if(animation==1)local=ry(phase*.72)*local;
@@ -97,8 +129,7 @@ void main(){
   // Every primitive in a composite model samples the same unit-center ground
   // anchor. Sloped terrain can no longer lift chimneys, turrets, or wings away
   // from the body simply because their local centers land on adjacent tiles.
-  ivec2 tc=ivec2(clamp(floor(iAnchor),vec2(0.0),uMapSize-1.0));
-  float ground=heightFor(texelFetch(uTerrain,tc,0).r);
+  float ground=surface==1?-0.08:smoothHeight(iAnchor);
   float flightBob=step(1.5,iWorld.y)*sin(uTime*3.2+iWorld.x*.7+iWorld.z*.4)*.14;
   float hover=animation==5?sin(phase*2.1)*.11:0.0;
   vec3 world=vec3(iWorld.x,ground+iWorld.y+flightBob+hover,iWorld.z)+model;
@@ -257,6 +288,7 @@ export class ThreeDUnitPass {
       const isGhost = unit === ghostUnit;
       const ghostValid = ghost?.valid ?? false;
       const alpha = isGhost ? 0.72 : unit.underConstruction ? 0.72 : 1;
+      const surface = SURFACE[model.surface ?? "ground"];
       // A shared flattened cylinder anchors every model to the terrain and
       // makes altitude/motion immediately readable without custom shadow data
       // in each registry entry.
@@ -280,7 +312,7 @@ export class ThreeDUnitPass {
               : MATERIAL.ghostInvalid
             : MATERIAL.shadow,
           isGhost ? 0.22 : alpha,
-          ANIMATION.none,
+          ANIMATION.none + surface * 10,
           x,
           z,
         );
@@ -309,7 +341,8 @@ export class ThreeDUnitPass {
         alpha,
         ANIMATION[
           unit.underConstruction ? "pulse" : (model.animation ?? "none")
-        ],
+        ] +
+          surface * 10,
         x,
         z,
       );

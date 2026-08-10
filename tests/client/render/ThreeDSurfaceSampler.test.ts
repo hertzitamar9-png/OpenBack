@@ -8,16 +8,33 @@ import { threeDHeightForTerrainByte } from "../../../src/client/render/gl/three-
 
 describe("ThreeDSurfaceSampler", () => {
   it("uses the canonical terrain height at integer and interpolated positions", () => {
-    const terrain = (x: number, z: number) => 0x80 | (x + z === 2 ? 20 : 10);
-    const sampler = new ThreeDSurfaceSampler(4, 4, terrain);
+    const flat = new ThreeDSurfaceSampler(4, 4, () => 0x80 | 10);
 
-    expect(sampler.heightAt(0, 0)).toBeCloseTo(
+    expect(flat.heightAt(0, 0)).toBeCloseTo(
       threeDHeightForTerrainByte(0x80 | 10),
       5,
+    );
+    const sampler = new ThreeDSurfaceSampler(
+      4,
+      4,
+      (x, z) => 0x80 | (x + z === 2 ? 20 : 10),
     );
     expect(sampler.heightAt(1.5, 0.5)).toBeGreaterThan(
       threeDHeightForTerrainByte(0x80 | 10),
     );
+  });
+
+  it("uses the same fixed nine-tap surface at every terrain LOD", () => {
+    const low = 0x80 | 4;
+    const peak = 0x80 | 31;
+    const sampler = new ThreeDSurfaceSampler(9, 9, (x, z) =>
+      x === 4 && z === 4 ? peak : low,
+    );
+
+    const smoothedPeak = sampler.heightAt(4.5, 4.5);
+    expect(smoothedPeak).toBeGreaterThan(threeDHeightForTerrainByte(low));
+    expect(smoothedPeak).toBeLessThan(threeDHeightForTerrainByte(peak));
+    expect(sampler.heightAt(4.5, 4.5)).toBe(smoothedPeak);
   });
 
   it("returns stable footprint support and a finite normalized surface normal", () => {
