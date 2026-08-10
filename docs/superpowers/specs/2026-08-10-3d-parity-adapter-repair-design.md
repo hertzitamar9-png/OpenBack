@@ -97,11 +97,15 @@ Panning and zooming retain the existing map target and cannot move the complete 
 
 ## Terrain Relief and Materials
 
-Increase current land relief by a restrained 15 to 20 percent after fixing surface consistency. Preserve relative terrain ordering and smoothing so the result is more readable without returning to needle-like mountains.
+Increase every land-height value by 50 percent after fixing surface consistency. Preserve relative terrain ordering and smoothing so plains, hills, mountains, and snow remain visibly distinct without returning to needle-like mountains.
 
 Terrain height is deterministic in map space. Camera movement and LOD selection cannot change the sampled height of a fixed world coordinate.
 
 Ownership colors remain readable while rock, snow, highland, and slope materials remain visible. Land, water, outer walls, and underside are opaque in their opaque passes and use correct depth writes.
+
+Fallout tiles use a permanent dark-green ground material that remains visibly distinct from ordinary green ownership after the temporary explosion glow fades. Terrain lighting may shade it, but ownership tint cannot turn fallout back into ordinary land.
+
+Broad dark bands across otherwise continuous terrain are defects, not intended terrain shading. Terrain normals and lighting sample canonical world coordinates across chunk edges, and adjacent chunks must produce identical material values at shared coordinates.
 
 ## Ocean and Waves
 
@@ -132,6 +136,8 @@ Anchoring rules are data driven:
 - **Trains:** follow rail anchors and sample each carriage or bogie support point so long trains do not cut through slopes.
 
 Model definitions declare footprint, pivot, support points, waterline or flight behavior, maximum slope, and presentation offset. Per-unit magic offsets in rendering code are prohibited.
+
+Moving ships orient their bow toward the authoritative movement vector. Asset-forward-axis correction is declared once in model metadata, so transports, warships, and trade ships cannot travel sideways.
 
 ## Rendering Order and State
 

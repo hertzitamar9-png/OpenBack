@@ -15,6 +15,9 @@
 - All maps use the same generic 2D-to-3D conversion; no Earth- or Antarctica-specific coordinate workaround is allowed.
 - Runtime assets remain local and retain their existing verified license metadata.
 - Opaque land, water, side walls, and underside must write depth and never expose transparent or black gaps.
+- Every land height is raised by exactly 50 percent relative to the canonical terrain-byte curve.
+- Fallout ground remains permanently visible as dark green, distinct from normal owned land.
+- Ships travel bow-first and terrain lighting cannot create broad cross-map bands or chunk seams.
 - User-facing delivery is OpenBack v0.34.107 and credits **frootz jhklphy**.
 - Preserve AGPL, corresponding-source availability, copyright, asset-license notices, and contributor attribution.
 
@@ -103,7 +106,7 @@ export class ThreeDSurfaceSampler {
 }
 ```
 
-Use clamped bilinear samples for `heightAt`, centered finite differences for `normalAt`, and a sorted median for footprint support. Export `THREE_D_WATER_HEIGHT` and raise the current land curve by exactly `1.18` while preserving water depth ordering.
+Use clamped bilinear samples for `heightAt`, centered finite differences for `normalAt`, and a sorted median for footprint support. Export `THREE_D_WATER_HEIGHT` and raise the current land curve by exactly `1.5` while preserving water depth ordering.
 
 - [ ] **Step 4: Run focused tests and formatting**
 
@@ -237,7 +240,7 @@ expect(compositeSource.indexOf("drawWater")).toBeLessThan(
 );
 ```
 
-Also assert that the shader relief formula mirrors `threeDHeightForTerrainByte`'s `1.18` multiplier.
+Also assert that the shader relief formula mirrors `threeDHeightForTerrainByte`'s `1.5` multiplier, detects tile-state fallout bit 13, and applies a dark-green fallout material after ownership color.
 
 - [ ] **Step 2: Run focused tests and verify failure**
 
@@ -258,6 +261,8 @@ float worldWave(vec2 p, float time) {
 ```
 
 Mix deep cyan `vec3(0.025, 0.20, 0.34)` with highlight cyan `vec3(0.075, 0.48, 0.68)`. Keep vertex height fixed at `THREE_D_WATER_HEIGHT`; wave motion changes shading only. Add `waveDetail` to quality settings so mobile reduces the second band rather than removing water.
+
+Decode fallout with `(tileState & (1u << 13u)) != 0u` and override ordinary ownership material with a dark-green range centered near `vec3(0.055, 0.19, 0.075)`. Compute normals and lighting from canonical world-coordinate samples so adjacent chunks cannot create broad shading bands.
 
 Draw order inside `ThreeDCompositePass.draw` becomes surround, water, terrain chunks, then outer walls/underside with depth writes enabled.
 
@@ -395,6 +400,8 @@ expect(placeThreeDUnit(runwayState, runwayModel, sampler)).toEqual(
 
 Add cases for a building on a slope, tank moving across relief, ship over deep water, parked and airborne aircraft, train support points, and missile trajectory altitude.
 
+For all three ship types, assert that a positive-X movement vector produces a bow pointing positive X after the declared asset-forward correction; repeat for positive Z so sideways motion cannot regress.
+
 - [ ] **Step 2: Run focused tests and verify failure**
 
 Run: `npx vitest run tests/client/render/ThreeDModelRegistry.test.ts tests/client/render/ThreeDUnitParity.test.ts tests/client/render/ThreeDParityMatrix.test.ts`
@@ -531,6 +538,9 @@ Use a 1920x1080 viewport. Start 3D games on World, an irregular non-World map, a
 - exact normal leaderboard and alliance UI;
 - valid, invalid, snapped, stacking, range, upgrade, and targeting previews;
 - correctly anchored buildings, vehicles, ships, aircraft, trains, and projectiles;
+- ships moving bow-first in multiple directions;
+- dark-green fallout remaining distinguishable from ordinary green territory;
+- continuous terrain lighting without broad dark lines or chunk-edge bands;
 - local bomb, fallout, fog, disaster, selection, and trajectory visuals.
 
 Any failure becomes a focused failing automated test before its code fix.

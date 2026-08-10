@@ -1,3 +1,9 @@
+## OpenBack v0.34.107 - Complete 3D Battlefield Parity
+
+- Raised all 3D land relief by 50% through one canonical terrain-height contract shared by terrain interaction and the remaining 3D parity work.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.106 - Clean Profile Identity
 
 - Replaced raw profile flag text with the player's selected flag in the bottom-right corner of the profile banner.
