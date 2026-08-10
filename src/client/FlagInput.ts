@@ -66,15 +66,15 @@ export class FlagInput extends LitElement {
   render() {
     const isDefaultFlag = this.isDefaultFlagValue(this.flag);
     const showSelect = this.showSelectLabel && isDefaultFlag;
-    const buttonTitle = showSelect
+    const buttonLabel = showSelect
       ? translateText("flag_input.title")
       : translateText("flag_input.button_title");
 
     return html`
       <button
         id="flag-input"
-        class="flag-btn p-0 m-0 border-0 w-full h-full flex cursor-pointer justify-center items-center focus:outline-none focus:ring-0 transition-all duration-200 hover:-translate-y-0.5 hover:scale-110 hover:brightness-[1.12] active:translate-y-0 active:scale-100 hover:shadow-[var(--shadow-action-card-hover)] rounded-lg overflow-hidden"
-        title=${buttonTitle}
+        class="flag-btn p-0 m-0 border-0 w-full h-full flex cursor-pointer justify-center items-center focus:outline-none focus:ring-0 transition-all duration-200 hover:-translate-y-0.5 hover:scale-110 hover:brightness-[1.12] active:translate-y-0 active:scale-100 rounded-lg overflow-hidden"
+        aria-label=${buttonLabel}
         @click=${this.onInputClick}
       >
         <span

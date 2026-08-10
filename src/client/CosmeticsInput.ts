@@ -114,7 +114,7 @@ export class CosmeticsInput extends LitElement {
     }
 
     const showSelect = this.shouldShowSelectLabel();
-    const buttonTitle = translateText("cosmetics.button_title");
+    const buttonLabel = translateText("cosmetics.button_title");
 
     // Show loading state
     if (this.isLoading) {
@@ -150,8 +150,8 @@ export class CosmeticsInput extends LitElement {
     return html`
       <button
         id="cosmetics-input"
-        class="pattern-btn m-0 p-0 border-0 w-full h-full flex cursor-pointer justify-center items-center focus:outline-none focus:ring-0 transition-all duration-200 hover:-translate-y-0.5 hover:scale-110 bg-surface hover:brightness-[1.12] active:translate-y-0 active:scale-100 active:brightness-[0.95] hover:shadow-[var(--shadow-action-card-hover)] rounded-lg overflow-hidden"
-        title=${buttonTitle}
+        class="pattern-btn m-0 p-0 border-0 w-full h-full flex cursor-pointer justify-center items-center focus:outline-none focus:ring-0 transition-all duration-200 hover:-translate-y-0.5 hover:scale-110 bg-surface hover:brightness-[1.12] active:translate-y-0 active:scale-100 active:brightness-[0.95] rounded-lg overflow-hidden"
+        aria-label=${buttonLabel}
         @click=${this.onInputClick}
       >
         <span

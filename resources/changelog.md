@@ -1,3 +1,10 @@
+## OpenBack v0.34.106 - Clean Profile Identity
+
+- Replaced raw profile flag text with the player's selected flag in the bottom-right corner of the profile banner.
+- Removed the remaining blue selector outlines and browser hover tooltips while preserving the clean flag and cosmetic pop-out response.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.105 - Reliable Social Connection
 
 - Connected Friends, parties, invitations, presence, and chat through the local OpenBack gateway so those features no longer fail while the rest of the game remains connected.

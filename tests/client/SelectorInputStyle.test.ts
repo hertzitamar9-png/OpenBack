@@ -32,6 +32,19 @@ describe("home selector input styling", () => {
     for (const selector of [flag, cosmetic]) {
       expect(selector).not.toContain("focus-visible:ring");
       expect(selector).not.toContain("focus-visible:outline");
+      expect(selector).not.toContain(
+        "hover:shadow-[var(--shadow-action-card-hover)]",
+      );
+    }
+  });
+
+  it("uses accessible labels without native hover tooltips", () => {
+    const flag = source("FlagInput.ts");
+    const cosmetic = source("CosmeticsInput.ts");
+
+    for (const selector of [flag, cosmetic]) {
+      expect(selector).toContain("aria-label=${");
+      expect(selector).not.toContain("title=${buttonTitle}");
     }
   });
 });

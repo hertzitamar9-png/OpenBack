@@ -34,7 +34,11 @@ import "./components/FriendsList";
 import "./components/PlayerAvatar";
 import "./components/SubscriptionPanel";
 import { modalHeader } from "./components/ui/ModalHeader";
-import { fetchCosmetics, SUBSCRIPTIONS_ENABLED } from "./Cosmetics";
+import {
+  fetchCosmetics,
+  resolveFlagUrl,
+  SUBSCRIPTIONS_ENABLED,
+} from "./Cosmetics";
 import { crazyGamesSDK, type CrazyGamesUser } from "./CrazyGamesSDK";
 import { prepareProfileImage } from "./ProfileImage";
 import { socialAttention, type SocialAttentionStage } from "./SocialAttention";
@@ -54,6 +58,7 @@ export class AccountModal extends BaseModal {
   @state() private profileDisplayName = "";
   @state() private profileBio = "";
   @state() private profileBannerColor = "#1689d8";
+  @state() private profileFlagUrl: string | null = null;
   @state() private pendingProfilePicture: string | null = null;
   @state() private removeProfilePicture = false;
   @state() private profileSaving = false;
@@ -288,8 +293,8 @@ export class AccountModal extends BaseModal {
             class="min-h-36 bg-gradient-to-br from-black/10 to-black/55 p-6"
             style=${`background-color:${this.profileBannerColor}`}
           >
-            <div class="flex min-h-24 items-end justify-between gap-4">
-              <div class="flex min-w-0 items-center gap-4">
+            <div class="relative flex min-h-24 items-end gap-4">
+              <div class="flex min-w-0 items-center gap-4 pr-20">
                 <player-avatar
                   size="4.5rem"
                   .src=${this.profilePicturePreview()}
@@ -308,23 +313,14 @@ export class AccountModal extends BaseModal {
                   </p>
                 </div>
               </div>
-              <div class="shrink-0 text-right text-xs font-bold text-white/80">
-                ${this.userMeResponse?.user.selectedFlag
-                  ? translateText("account_modal.profile_flag_preview", {
-                      flag: this.userMeResponse.user.selectedFlag,
-                    })
-                  : ""}
-                ${this.userMeResponse?.user.selectedCosmetic
-                  ? html`<div>
-                      ${translateText(
-                        "account_modal.profile_cosmetic_preview",
-                        {
-                          cosmetic: this.userMeResponse.user.selectedCosmetic,
-                        },
-                      )}
-                    </div>`
-                  : ""}
-              </div>
+              ${this.profileFlagUrl
+                ? html`<img
+                    data-profile-flag
+                    src=${this.profileFlagUrl}
+                    alt=""
+                    class="absolute bottom-0 right-0 h-8 w-12 rounded-sm object-fill shadow-lg ring-1 ring-black/35"
+                  />`
+                : ""}
             </div>
           </div>
           <div class="space-y-4 p-6">
@@ -643,6 +639,13 @@ export class AccountModal extends BaseModal {
     this.profileBannerColor = userMe.user.bannerColor ?? "#1689d8";
     this.pendingProfilePicture = null;
     this.removeProfilePicture = false;
+    void this.syncProfileFlag(userMe.user.selectedFlag);
+  }
+
+  private async syncProfileFlag(flagRef: string | null | undefined) {
+    this.profileFlagUrl = flagRef
+      ? ((await resolveFlagUrl(flagRef)) ?? null)
+      : null;
   }
 
   private profilePicturePreview(): string | undefined {
