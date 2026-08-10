@@ -7,7 +7,14 @@
  */
 
 import type { GhostPreviewData } from "../../types";
-import { UT_MIRV, UT_PLANE, UT_TANK, UT_WARSHIP } from "../../types";
+import {
+  UT_ATOM_BOMB,
+  UT_HYDROGEN_BOMB,
+  UT_MIRV,
+  UT_PLANE,
+  UT_TANK,
+  UT_WARSHIP,
+} from "../../types";
 import { createProgram } from "../utils/GlUtils";
 
 import fragSrc from "../shaders/crosshair/crosshair.frag.glsl?raw";
@@ -26,12 +33,14 @@ export class CrosshairPass {
   private uHalfSize: WebGLUniformLocation;
   private uViewport: WebGLUniformLocation;
   private uColor: WebGLUniformLocation;
+  private uShape: WebGLUniformLocation;
 
   private active = false;
   private centerX = 0;
   private centerY = 0;
   private canBuild = false;
   private neutralVehicleCursor = false;
+  private nukeTargetCursor = false;
 
   constructor(gl: WebGL2RenderingContext) {
     this.gl = gl;
@@ -42,6 +51,7 @@ export class CrosshairPass {
     this.uHalfSize = gl.getUniformLocation(this.program, "uHalfSize")!;
     this.uViewport = gl.getUniformLocation(this.program, "uViewport")!;
     this.uColor = gl.getUniformLocation(this.program, "uColor")!;
+    this.uShape = gl.getUniformLocation(this.program, "uShape")!;
 
     // Unit quad [0,1]
     this.vao = gl.createVertexArray()!;
@@ -63,6 +73,8 @@ export class CrosshairPass {
       data &&
       (data.ghostType === UT_WARSHIP ||
         data.ghostType === UT_MIRV ||
+        data.ghostType === UT_ATOM_BOMB ||
+        data.ghostType === UT_HYDROGEN_BOMB ||
         data.ghostType === UT_PLANE ||
         data.ghostType === UT_TANK)
     ) {
@@ -72,6 +84,8 @@ export class CrosshairPass {
       this.canBuild = data.canBuild || data.canUpgrade;
       this.neutralVehicleCursor =
         data.ghostType === UT_PLANE || data.ghostType === UT_TANK;
+      this.nukeTargetCursor =
+        data.ghostType === UT_ATOM_BOMB || data.ghostType === UT_HYDROGEN_BOMB;
     } else {
       this.active = false;
     }
@@ -86,8 +100,13 @@ export class CrosshairPass {
     gl.uniform2f(this.uCenter, this.centerX, this.centerY);
     gl.uniform1f(this.uHalfSize, CROSSHAIR_PX);
     gl.uniform2f(this.uViewport, gl.drawingBufferWidth, gl.drawingBufferHeight);
+    gl.uniform1i(this.uShape, this.nukeTargetCursor ? 1 : 0);
 
-    if (this.neutralVehicleCursor && this.canBuild) {
+    if (this.nukeTargetCursor && this.canBuild) {
+      gl.uniform3f(this.uColor, 0.16, 1.0, 0.3);
+    } else if (this.nukeTargetCursor) {
+      gl.uniform3f(this.uColor, 0.52, 0.12, 0.12);
+    } else if (this.neutralVehicleCursor && this.canBuild) {
       gl.uniform3f(this.uColor, 1.0, 1.0, 1.0);
     } else if (this.neutralVehicleCursor) {
       gl.uniform3f(this.uColor, 0.62, 0.62, 0.62);

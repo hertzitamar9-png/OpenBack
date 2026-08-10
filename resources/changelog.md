@@ -1,3 +1,11 @@
+## OpenBack v0.34.115 - Clear 2D Bomb Targets
+
+- Replaced the enormous Atom Bomb and Hydrogen Bomb placement-radius overlay with a compact green landing reticle that stays readable at every 2D zoom level.
+- Kept the landing reticle visible while bombs are in flight without drawing their real damage radius across the map.
+- Preserved the established Atom Bomb and Hydrogen Bomb damage, simulation, interception, and multiplayer behavior; this release changes only their 2D targeting visuals.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.114 - Restored Bomb Destinations
 
 - Restored a compact, clearly visible final-destination reticle for every in-flight Atom Bomb, Hydrogen Bomb, and MIRV warhead.

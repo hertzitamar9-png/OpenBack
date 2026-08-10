@@ -16,6 +16,7 @@ uniform vec4 uTelegraphAlpha;   // (baseAlpha, pulseAmplitude, pulseSpeed, fillA
 uniform vec3 uColorSelf;
 uniform vec3 uColorAlly;
 uniform vec3 uColorEnemy;
+uniform float uWorldUnitsPerPixel;
 
 out vec4 fragColor;
 
@@ -67,23 +68,18 @@ void main() {
   float routeFill = step(0.5, vRouteKind);
   float isNuke = 1.0 - routeFill;
   float fillAlpha = routeFill * innerFill * max(0.0, baseAlpha - fillAlphaOff);
-  float strokeAlpha = innerStroke * baseAlpha;
-  float outerAlpha = outerRing * dashAlpha * baseAlpha;
+  float strokeAlpha = routeFill * innerStroke * baseAlpha;
+  float outerAlpha = routeFill * outerRing * dashAlpha * baseAlpha;
 
   // Removing the enormous bomb fill must not remove the destination itself.
   // Draw a compact center reticle whose size remains readable for Atom Bombs,
   // Hydrogen Bombs, and MIRV warheads without covering their blast area.
-  float targetReticleRadius = clamp(vInnerRadius * 0.1, 2.25, 4.0);
-  float targetReticleRing = smoothstep(
-    targetReticleRadius - strokeWidth - 0.35,
-    targetReticleRadius - strokeWidth,
-    dist
-  ) * (1.0 - smoothstep(
-    targetReticleRadius + strokeWidth,
-    targetReticleRadius + strokeWidth + 0.35,
-    dist
-  ));
-  float targetReticleDot = 1.0 - smoothstep(0.55, 1.15, dist);
+  float targetReticleDistPx = uWorldUnitsPerPixel > 0.0
+    ? dist / uWorldUnitsPerPixel
+    : dist * 4.0;
+  float targetReticleRing = smoothstep(11.0, 9.5, targetReticleDistPx)
+    * (1.0 - smoothstep(12.5, 14.0, targetReticleDistPx));
+  float targetReticleDot = 1.0 - smoothstep(1.6, 2.8, targetReticleDistPx);
   float targetReticleAlpha = isNuke
     * max(targetReticleRing, targetReticleDot)
     * min(1.0, baseAlpha + 0.12);
@@ -109,8 +105,10 @@ void main() {
              : vRelation < 0.5 ? uColorSelf
              : vRelation < 1.5 ? uColorAlly
              : uColorEnemy;
-  vec3 color = routeAlpha >= max(max(fillAlpha, strokeAlpha), outerAlpha)
-             ? routeColor
-             : circleColor;
+  vec3 targetReticleColor = vec3(0.16, 1.0, 0.3);
+  float circleAlpha = max(max(fillAlpha, strokeAlpha), outerAlpha);
+  vec3 color = targetReticleAlpha >= max(routeAlpha, circleAlpha)
+             ? targetReticleColor
+             : routeAlpha >= circleAlpha ? routeColor : circleColor;
   fragColor = vec4(color, alpha);
 }

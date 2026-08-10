@@ -92,22 +92,42 @@ describe("recoverable render frames", () => {
 });
 
 describe("nuke warning readability", () => {
-  it("keeps ordinary nukes outlined instead of filling their entire inner radius", () => {
+  it("does not render the real blast radius as a map-covering 2D warning", () => {
     const shader = readFileSync(
       "src/client/render/gl/shaders/nuke-telegraph/nuke-telegraph.frag.glsl",
       "utf8",
     );
     expect(shader).toContain("float routeFill = step(0.5, vRouteKind)");
     expect(shader).toContain("float fillAlpha = routeFill * innerFill");
+    expect(shader).toContain("float strokeAlpha = routeFill * innerStroke");
+    expect(shader).toContain("float outerAlpha = routeFill * outerRing");
   });
 
-  it("keeps a compact final-destination reticle visible for outlined nukes", () => {
+  it("keeps a fixed-screen-size final-destination reticle visible for nukes", () => {
     const shader = readFileSync(
       "src/client/render/gl/shaders/nuke-telegraph/nuke-telegraph.frag.glsl",
       "utf8",
     );
-    expect(shader).toContain("float isNuke = 1.0 - routeFill");
+    expect(shader).toContain("uniform float uWorldUnitsPerPixel");
+    expect(shader).toContain("float targetReticleDistPx");
     expect(shader).toContain("float targetReticleAlpha");
-    expect(shader).toContain("targetReticleAlpha");
+    expect(shader).toContain("vec3 targetReticleColor = vec3(0.16, 1.0, 0.3)");
+  });
+
+  it("uses the compact cursor for Atom and Hydrogen Bomb placement", () => {
+    const preview = readFileSync(
+      "src/client/controllers/BuildPreviewController.ts",
+      "utf8",
+    );
+    const crosshair = readFileSync(
+      "src/client/render/gl/passes/CrosshairPass.ts",
+      "utf8",
+    );
+    expect(preview).not.toContain(
+      "rangeRadius = this.game.config().nukeMagnitudes(u.type).outer",
+    );
+    expect(crosshair).toContain("UT_ATOM_BOMB");
+    expect(crosshair).toContain("UT_HYDROGEN_BOMB");
+    expect(crosshair).toContain("nukeTargetCursor");
   });
 });
