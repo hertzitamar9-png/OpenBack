@@ -29,7 +29,11 @@ import {
   invalidateUserMe,
   purchaseWithCurrency,
 } from "./Api";
-import { showInGameAlert, showInGameConfirm } from "./InGameModal";
+import {
+  showInGameAlert,
+  showInGameConfirm,
+  showOpenBackAlert,
+} from "./InGameModal";
 import { isPlayingVerified } from "./UsernameInput";
 import { translateText } from "./Utils";
 
@@ -168,7 +172,11 @@ export async function purchaseCosmetic(
     method === "hard" ? (priced.priceHard ?? 0) : (priced.priceSoft ?? 0);
   const userMe = await getUserMe();
   if (userMe === false) {
-    alert(translateText("store.login_required"));
+    await showOpenBackAlert({
+      kind: "warning",
+      title: translateText("store.title"),
+      message: translateText("store.login_required"),
+    });
     return;
   }
   const balance =
@@ -209,11 +217,19 @@ export async function purchaseCosmetic(
     colorPaletteName,
   );
   if (!success) {
-    alert(translateText("store.purchase_failed"));
+    await showOpenBackAlert({
+      kind: "error",
+      title: translateText("store.title"),
+      message: translateText("store.purchase_failed"),
+    });
     return;
   }
-  alert(translateText("store.purchase_success", { name: c.name }));
   invalidateUserMe();
+  await showOpenBackAlert({
+    kind: "success",
+    title: translateText("store.title"),
+    message: translateText("store.purchase_success", { name: c.name }),
+  });
   window.location.reload();
 }
 

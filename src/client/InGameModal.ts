@@ -31,6 +31,27 @@ function showDialog(props: Partial<ConfirmDialog>): Promise<boolean> {
   });
 }
 
+export type OpenBackDialogKind = "success" | "warning" | "error" | "info";
+
+export interface OpenBackAlertOptions {
+  kind: OpenBackDialogKind;
+  title: string;
+  message: string;
+}
+
+/** OpenBack-styled acknowledgement dialog for every non-confirmation result. */
+export async function showOpenBackAlert(
+  options: OpenBackAlertOptions,
+): Promise<void> {
+  await showDialog({
+    heading: options.title,
+    message: options.message,
+    variant: options.kind,
+    buttons: "confirmOnly",
+    confirmText: translateText("common.close"),
+  });
+}
+
 /**
  * In-game replacement for `confirm()`. Resolves true when confirmed.
  * `options` overrides the dialog's presentation (variant, texts, heading)

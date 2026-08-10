@@ -1,3 +1,10 @@
+## OpenBack v0.34.110 - Native OpenBack Dialogs
+
+- Replaced the remaining browser-generated store and reward popups with consistent OpenBack success, warning, and error dialogs.
+- Kept purchase, login-required, checkout, and reward feedback inside the game interface so browser or language settings cannot replace it with mismatched system UI.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.109 - Stable Nuclear Warnings
 
 - Kept the Hydrogen Bomb's established gameplay damage while changing its in-flight warning to readable outlines instead of a map-covering green surface.

@@ -30,7 +30,13 @@ import { translateText } from "../Utils";
 export class ConfirmDialog extends LitElement {
   @property() heading = "";
   @property() message = "";
-  @property() variant: "primary" | "danger" | "warning" = "primary";
+  @property() variant:
+    | "primary"
+    | "success"
+    | "danger"
+    | "error"
+    | "warning"
+    | "info" = "primary";
   @property() textareaPlaceholder = "";
   @property() confirmText = "";
   @property({ type: Boolean }) disabled = false;
@@ -70,24 +76,31 @@ export class ConfirmDialog extends LitElement {
   }
 
   private renderOverlay() {
-    const isDanger = this.variant === "danger";
+    const isDanger = this.variant === "danger" || this.variant === "error";
     const isWarning = this.variant === "warning";
+    const isSuccess = this.variant === "success";
     const borderColor = isDanger
       ? "border-red-500/40"
       : isWarning
         ? "border-amber-500/40"
-        : "border-malibu-blue/35";
+        : isSuccess
+          ? "border-emerald-400/40"
+          : "border-malibu-blue/35";
     const cardBg = "bg-surface";
     const textColor = isDanger
       ? "text-red-200"
       : isWarning
         ? "text-amber-200"
-        : "text-white/85";
+        : isSuccess
+          ? "text-emerald-100"
+          : "text-white/85";
     const btnClass = isDanger
       ? "bg-red-600 text-white hover:bg-red-500"
       : isWarning
         ? "bg-cyber-yellow text-gray-900 hover:brightness-110"
-        : "bg-malibu-blue text-white hover:bg-aquarius";
+        : isSuccess
+          ? "bg-emerald-600 text-white hover:bg-emerald-500"
+          : "bg-malibu-blue text-white hover:bg-aquarius";
 
     return html`
       <div
