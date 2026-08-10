@@ -1,3 +1,10 @@
+## OpenBack v0.34.108 - Complete Battle Artwork
+
+- Restored the full OpenBack battlefield artwork with its larger collection of aircraft, ships, tanks, missiles, structures, routes, and explosions while removing the tank that appeared in the water.
+- Made the defeat screen preserve the complete artwork instead of cropping its outer edges.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.107 - Complete 3D Battlefield Parity
 
 - Raised all 3D land relief by 50% through one canonical terrain-height contract shared by terrain interaction and the remaining 3D parity work.

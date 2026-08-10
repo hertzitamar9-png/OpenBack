@@ -114,4 +114,22 @@ describe("WinModal Requeue", () => {
       expect(hasRequeue).toBe(false);
     });
   });
+
+  it("shows the complete battle artwork without cropping it", async () => {
+    const { WinModal } =
+      await import("../../../../src/client/hud/layers/WinModal");
+    const modal = new WinModal();
+    Object.assign(modal, { deathMedia: "battle", isVisible: true });
+    document.body.append(modal);
+    await modal.updateComplete;
+
+    const artwork = modal.querySelector<HTMLImageElement>(
+      'img[alt="OpenBack battle"]',
+    );
+    expect(artwork).not.toBeNull();
+    expect(artwork?.classList.contains("object-contain")).toBe(true);
+    expect(artwork?.classList.contains("object-cover")).toBe(false);
+
+    modal.remove();
+  });
 });

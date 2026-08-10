@@ -111,7 +111,7 @@ export class WinModal extends LitElement implements Controller {
             `
           : html`
               <img
-                class="absolute inset-0 h-full w-full object-cover"
+                class="absolute inset-0 h-full w-full object-contain"
                 src=${assetUrl("images/OpenBackSocialPreview.png")}
                 alt="OpenBack battle"
               />
