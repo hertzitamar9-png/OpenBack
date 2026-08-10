@@ -70,6 +70,7 @@ import type { RenderSettings } from "./RenderSettings";
 import {
   ThreeDCameraState,
   threeDGroundHomography,
+  threeDScreenFacingScale,
 } from "./three-d/ThreeDCamera";
 import { ThreeDFogPass } from "./three-d/ThreeDFogPass";
 import { ThreeDQualityController } from "./three-d/ThreeDQuality";
@@ -1440,11 +1441,19 @@ export class GPURenderer {
       this.threeDFogPass?.setQuality(quality.particleScale);
       this.threeDWorldEventPass?.setQuality(quality.particleScale);
       toScreen(this.gl, cw, ch, () => {
-        const screenFacingScale: readonly [number, number] = [
-          (2 * zoom) / cw,
-          (-2 * zoom) / ch,
-        ];
-        const billboardCamera = this.makeThreeDGroundCamera(cw, ch, zoom, 0.15);
+        const threeDCamera = ThreeDCameraState.create({
+          viewportWidth: cw,
+          viewportHeight: ch,
+          mapWidth: this.mapW,
+          mapHeight: this.mapH,
+          centerX: this.camera.offsetX,
+          centerZ: this.camera.offsetY,
+          zoom,
+          yaw: this.threeDYaw,
+          pitch: this.threeDPitch,
+        });
+        const screenFacingScale = threeDScreenFacingScale(threeDCamera);
+        const billboardCamera = threeDGroundHomography(threeDCamera, 0.15);
         const labelCamera = billboardCamera;
         this.threeDPass!.draw(
           cw,
@@ -1556,33 +1565,6 @@ export class GPURenderer {
     }
 
     this.renderOverlays(cam, zoom);
-  }
-
-  /**
-   * Tangent-plane projection for screen-facing labels and status bars. The
-   * world itself uses full perspective; UI billboards deliberately keep a
-   * stable pixel size so distant player names remain readable.
-   */
-  private makeThreeDGroundCamera(
-    width: number,
-    height: number,
-    zoom: number,
-    worldHeight: number,
-  ): Float32Array {
-    return threeDGroundHomography(
-      ThreeDCameraState.create({
-        viewportWidth: width,
-        viewportHeight: height,
-        mapWidth: this.mapW,
-        mapHeight: this.mapH,
-        centerX: this.camera.offsetX,
-        centerZ: this.camera.offsetY,
-        zoom,
-        yaw: this.threeDYaw,
-        pitch: this.threeDPitch,
-      }),
-      worldHeight,
-    );
   }
 
   private isLightCompositingActive(): boolean {

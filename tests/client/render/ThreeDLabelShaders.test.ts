@@ -27,6 +27,13 @@ describe("3D label shaders", () => {
     expect(source).not.toContain("uScreenFacing == 1 ?");
   });
 
+  it("discards empty MSDF atlas padding in 3D instead of tinting glyph boxes", () => {
+    const vertex = shader("name.vert.glsl");
+    const fragment = shader("name.frag.glsl");
+    expect(vertex).toContain("vScreenFacing = float(uScreenFacing)");
+    expect(fragment).toContain("vScreenFacing > 0.5 && sd < 0.12");
+  });
+
   it("keeps world numbers screen-facing in 3D", () => {
     const source = readFileSync(
       resolve(

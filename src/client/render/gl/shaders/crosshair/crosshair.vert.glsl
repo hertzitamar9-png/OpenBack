@@ -18,6 +18,10 @@ void main() {
 
   // Offset in screen pixels → NDC
   vec2 pixelToNDC = 2.0 / uViewport;
-  vec2 projected = clip.xy / max(0.0001, clip.z);
+  if (clip.z <= 0.0001) {
+    gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+    return;
+  }
+  vec2 projected = clip.xy / clip.z;
   gl_Position = vec4(projected + vLocal * uHalfSize * pixelToNDC, 0.0, 1.0);
 }

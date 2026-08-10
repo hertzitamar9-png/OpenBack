@@ -16,6 +16,7 @@ in vec2 vUV;
 in vec4 vPlayerColor;   // player territory color (rgb) + alpha
 in float vNameShade;      // name fill grayscale shade (0.0 = black)
 flat in float vHighlight; // 1.0 when this player is hovered (white glow)
+flat in float vScreenFacing;
 out vec4 fragColor;
 
 float median(float r, float g, float b) {
@@ -38,6 +39,10 @@ void main() {
 
   vec3 msd = texture(uAtlas, vUV).rgb;
   float sd = median(msd.r, msd.g, msd.b);
+  // Perspective billboards can make the atlas' non-zero padding visible as a
+  // colored rectangle around each glyph. It is outside every valid outline,
+  // so discard it without changing the established 2D text rendering.
+  if (vScreenFacing > 0.5 && sd < 0.12) discard;
 
   vec2 unitRange = uDistRange / vec2(textureSize(uAtlas, 0));
   vec2 screenTexSize = 1.0 / fwidth(vUV);

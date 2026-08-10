@@ -4,6 +4,8 @@
 - Added a complete cyan ocean surface with animated world-space waves, removed broad terrain-lighting and chunk-LOD bands, and made radioactive ground remain clearly dark green after a blast.
 - Corrected transports, warships, and trade ships so their bows face their movement direction instead of travelling sideways, stay anchored to the water plane, and no longer inherit nearby land height.
 - Unified terrain and unit surface smoothing so buildings, previews, shadows, and moving units remain stable instead of jumping or floating across terrain-detail boundaries.
+- Locked 3D names, flags, troop counts, structure levels, and world text to the battlefield's real camera scale so zoom limits cannot enlarge UI into screen-covering blocks.
+- Removed colored glyph boxes from 3D player labels and culled unsafe behind-camera tactical geometry so blasts, fallout, ranges, paths, and selection effects cannot stretch across the whole screen.
 - Made 3D overview fitting account for the full map width, height, terrain relief, camera angle, and screen aspect ratio so partial edges such as Antarctica remain inside the battlefield.
 
 Created by **frootz jhklphy**.

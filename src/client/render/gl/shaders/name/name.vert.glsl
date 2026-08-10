@@ -38,8 +38,10 @@ out vec2 vUV;
 out vec4 vPlayerColor;  // player territory color (rgb) + alpha
 out float vNameShade;     // name fill grayscale shade (0.0 = black)
 flat out float vHighlight; // 1.0 when this player is hovered (white glow)
+flat out float vScreenFacing;
 
 void main() {
+  vScreenFacing = float(uScreenFacing);
   // 1. Decode instance ID → playerIdx, lineIdx, charPos
   int slotsPerPlayer = LINES * MAX_CHARS_PER_LINE;
   int playerIdx = gl_InstanceID / slotsPerPlayer;

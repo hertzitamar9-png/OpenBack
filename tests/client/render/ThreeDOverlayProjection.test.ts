@@ -23,9 +23,11 @@ describe("3D tactical overlay projection", () => {
     "sam-radius/sam-radius.vert.glsl",
     "selection-box/selection-box.vert.glsl",
   ])(
-    "perspective-divides %s instead of expanding across the screen",
+    "perspective-divides and culls unsafe %s anchors instead of expanding across the screen",
     (path) => {
-      expect(shader(path)).toContain("clip.xy / max(0.0001, clip.z)");
+      expect(shader(path)).toContain("clip.z <= 0.0001");
+      expect(shader(path)).toContain("clip.xy / clip.z");
+      expect(shader(path)).not.toContain("clip.xy / max(0.0001, clip.z)");
     },
   );
 });

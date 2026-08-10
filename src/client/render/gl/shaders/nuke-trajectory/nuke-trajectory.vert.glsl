@@ -44,5 +44,9 @@ void main() {
   vArcDist = aVertex.z;
 
   vec3 clip = uCamera * vec3(pos, 1.0);
-  gl_Position = vec4(clip.xy / max(0.0001, clip.z), 0.0, 1.0);
+  if (clip.z <= 0.0001) {
+    gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+    return;
+  }
+  gl_Position = vec4(clip.xy / clip.z, 0.0, 1.0);
 }

@@ -371,6 +371,17 @@ export function threeDGroundHomography(
   ]);
 }
 
+/** NDC units per world unit at the camera target. This is identical to the
+ * classic 2D scale until terrain-clearance limits the camera distance, then it
+ * stays locked to the actual board scale instead of letting labels grow while
+ * the terrain no longer zooms. */
+export function threeDScreenFacingScale(
+  camera: ThreeDCameraState,
+): readonly [number, number] {
+  const vertical = 1 / (camera.distance * camera.tanHalfFov);
+  return [vertical / camera.aspect, -vertical];
+}
+
 export function threeDFitZoom(input: ThreeDMapFitInput): number {
   const margin = Math.max(
     0,

@@ -3,6 +3,7 @@ import {
   ThreeDCameraState,
   threeDFitZoom,
   threeDGroundHomography,
+  threeDScreenFacingScale,
   type ThreeDCameraInput,
 } from "../../../src/client/render/gl/three-d/ThreeDCamera";
 import {
@@ -155,5 +156,24 @@ describe("ThreeDCameraState", () => {
       projected.y,
       4,
     );
+  });
+
+  it("keeps billboard scale synchronized with the terrain camera clamp", () => {
+    const medium = ThreeDCameraState.create(fixture({ zoom: 8, yaw: 0 }));
+    const extreme = ThreeDCameraState.create(fixture({ zoom: 48, yaw: 0 }));
+    const mediumScale = threeDScreenFacingScale(medium);
+    const extremeScale = threeDScreenFacingScale(extreme);
+
+    expect(mediumScale[0]).toBeGreaterThan(0);
+    expect(mediumScale[1]).toBeLessThan(0);
+    expect(extremeScale[0]).toBeLessThanOrEqual(mediumScale[0] * 6);
+    expect(extremeScale.every(Number.isFinite)).toBe(true);
+  });
+
+  it("matches the classic 2D pixel scale while the camera is unclamped", () => {
+    const camera = ThreeDCameraState.create(fixture({ zoom: 0.5, yaw: 0 }));
+    const scale = threeDScreenFacingScale(camera);
+    expect(scale[0]).toBeCloseTo((2 * 0.5) / camera.viewportWidth, 8);
+    expect(scale[1]).toBeCloseTo((-2 * 0.5) / camera.viewportHeight, 8);
   });
 });
