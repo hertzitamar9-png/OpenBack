@@ -474,6 +474,7 @@ export class GPURenderer {
       this.settings,
     );
     this.res.borderTex = this.borderPass.getBorderTex();
+    this.threeDPass?.setBorderTexture(this.res.borderTex);
 
     // --- Defense coverage (needs tileTex) — per-tile "defended by same-owner
     // post" flag, stamped one instanced circle per post. Replaces the old

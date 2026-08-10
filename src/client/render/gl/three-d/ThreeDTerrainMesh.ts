@@ -36,6 +36,43 @@ export function buildTerrainGrid(
   return { positions, indices };
 }
 
+export function buildWaterGrid(
+  width: number,
+  height: number,
+  segmentsX: number,
+  segmentsY: number,
+  waterHeight: number,
+): ThreeDTerrainMeshData {
+  const sx = Math.max(1, Math.floor(segmentsX));
+  const sy = Math.max(1, Math.floor(segmentsY));
+  const positions = new Float32Array((sx + 1) * (sy + 1) * 3);
+  let vertex = 0;
+  for (let y = 0; y <= sy; y++) {
+    for (let x = 0; x <= sx; x++) {
+      positions[vertex++] = (x / sx) * width;
+      positions[vertex++] = waterHeight;
+      positions[vertex++] = (y / sy) * height;
+    }
+  }
+  const indices = new Uint32Array(sx * sy * 6);
+  let index = 0;
+  for (let y = 0; y < sy; y++) {
+    for (let x = 0; x < sx; x++) {
+      const a = y * (sx + 1) + x;
+      const b = a + 1;
+      const c = a + sx + 1;
+      const d = c + 1;
+      indices[index++] = a;
+      indices[index++] = c;
+      indices[index++] = b;
+      indices[index++] = b;
+      indices[index++] = c;
+      indices[index++] = d;
+    }
+  }
+  return { positions, indices };
+}
+
 export function terrainEdgeCoordinates(
   originX: number,
   originY: number,
@@ -102,23 +139,7 @@ export function buildCompleteMapSurface(
   water: ThreeDTerrainMeshData;
   base: ThreeDTerrainMeshData;
 } {
-  const water = {
-    positions: new Float32Array([
-      0,
-      waterHeight,
-      0,
-      width,
-      waterHeight,
-      0,
-      width,
-      waterHeight,
-      height,
-      0,
-      waterHeight,
-      height,
-    ]),
-    indices: new Uint32Array([0, 2, 1, 0, 3, 2]),
-  };
+  const water = buildWaterGrid(width, height, 192, 96, waterHeight);
   return {
     water,
     base: buildSolidMapBase(width, height, waterHeight - 0.92, bottom),

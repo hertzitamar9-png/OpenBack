@@ -178,7 +178,7 @@ export class Leaderboard extends LitElement implements Controller {
   private handleRowClickPlayer(player: PlayerView) {
     this.contextMenu = null;
     if (this.eventBus === null) return;
-    this.eventBus.emit(new GoToPlayerEvent(player));
+    this.eventBus.emit(new GoToPlayerEvent(player, 6));
     this.eventBus.emit(new TerritoryFlashEvent(player.smallID(), 3000));
   }
 

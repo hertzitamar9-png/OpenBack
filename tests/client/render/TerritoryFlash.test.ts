@@ -10,8 +10,11 @@ describe("leaderboard territory focus", () => {
     expect(source("src/client/InputHandler.ts")).toContain(
       "export class TerritoryFlashEvent",
     );
-    expect(source("src/client/hud/layers/Leaderboard.ts")).toContain(
+    expect(source("src/client/hud/layers/PlayerStats.ts")).toContain(
       "new TerritoryFlashEvent(player.smallID(), 3000)",
+    );
+    expect(source("src/client/hud/layers/PlayerStats.ts")).toContain(
+      "new GoToPlayerEvent(player, 6)",
     );
   });
 
@@ -19,8 +22,9 @@ describe("leaderboard territory focus", () => {
     expect(
       source("src/client/render/gl/shaders/day-night/border-stamp.frag.glsl"),
     ).toContain("uFlashOwner");
-    expect(
-      source("src/client/render/gl/passes/ThreeDCompositePass.ts"),
-    ).toContain("uFlashOwner");
+    const threeD = source("src/client/render/gl/passes/ThreeDCompositePass.ts");
+    expect(threeD).toContain("uFlashOwner");
+    expect(threeD).toContain("uniform sampler2D uBorderTex");
+    expect(threeD).toContain("borderType>0.25");
   });
 });

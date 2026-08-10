@@ -1,3 +1,12 @@
+## OpenBack v0.34.116 - Living 3D Battlefield
+
+- Made leaderboard player focus move into a tactical view and pulse that player's complete territory with a bright cyan-white border for three seconds.
+- Rebuilt the ocean as a dense, animated 3D wave surface while keeping wave crests below coastlines, and replaced hollow-looking southern map edges with an opaque rock underside.
+- Replaced flat disaster particles with animated volumetric 3D geometry for natural disasters, Living World terrain events, disaster warnings, and strategic objectives whenever 3D mode is enabled.
+- Preserved the established deterministic modifier simulation, multiplayer results, classic 2D renderer, and gameplay rules.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.115 - Clear 2D Bomb Targets
 
 - Replaced the enormous Atom Bomb and Hydrogen Bomb placement-radius overlay with a compact green landing reticle that stays readable at every 2D zoom level.

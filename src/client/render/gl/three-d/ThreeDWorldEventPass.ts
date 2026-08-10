@@ -2,6 +2,7 @@ import type { WorldEventKind } from "../../../../core/game/GameUpdates";
 import type { WorldEventFx } from "../../types";
 import { createProgram } from "../utils/GlUtils";
 import { ThreeDCameraState } from "./ThreeDCamera";
+import { buildWorldEventParticleMesh } from "./ThreeDWorldEventGeometry";
 
 /**
  * Exhaustive data contract between deterministic simulation events and their
@@ -37,18 +38,20 @@ export const THREE_D_WORLD_EVENT_STYLE: Readonly<
 const vert = `#version 300 es
 precision highp float;
 precision highp usampler2D;
+layout(location=0) in vec3 aPosition;
 uniform usampler2D uTerrain;
 uniform vec2 uMapSize,uEventCenter;
 uniform mat4 uViewProjection;
-uniform float uDistance,uRadius,uProgress,uAngle;
+uniform float uRadius,uProgress,uAngle;
 uniform int uKind;
 out float vLife;
 out float vKind;
+out float vShade;
 
 float hash(float n){return fract(sin(n*91.3458)*47453.5453);}
 float heightFor(uint b){bool land=(b&128u)!=0u;float m=float(b&31u);if(land&&m>30.5)return 57.0;if(land)return (0.15+pow(m/30.0,2.0)*31.0)*1.5;return -min(m,10.0)*0.02;}
 void main(){
-  float id=float(gl_VertexID);
+  float id=float(gl_InstanceID);
   float h1=hash(id+uEventCenter.x*0.13),h2=hash(id+uEventCenter.y*0.17),h3=hash(id*3.71);
   float a=id*2.399963+uProgress*12.0;
   vec3 o=vec3((h1-0.5)*uRadius*1.6,h3*uRadius*0.65,(h2-0.5)*uRadius*1.6);
@@ -64,24 +67,43 @@ void main(){
     o=vec3(cos(spin)*rr,fract(h2+uProgress*.7)*uRadius*1.8,sin(spin)*rr);
   }
   else if(uKind==14||uKind==15){o.y=h3*uRadius*.8;}
+  vec3 shapeScale=vec3(max(0.35,uRadius*.034));
+  float shapeAngle=a;
+  if(uKind==0){shapeScale=vec3(uRadius*.075,uRadius*.020,uRadius*.075);}
+  else if(uKind==1||uKind==7){shapeScale=vec3(uRadius*.050,uRadius*.14,uRadius*.018);shapeAngle=uAngle;}
+  else if(uKind==2){float taper=max(.18,1.0-o.y/max(1.0,uRadius*1.15));shapeScale=vec3(uRadius*.026*taper,uRadius*.055,uRadius*.026*taper);}
+  else if(uKind==3){shapeScale=vec3(uRadius*.030,uRadius*.090,uRadius*.030);}
+  else if(uKind==4){shapeScale=vec3(uRadius*.075);}
+  else if(uKind==5||uKind==10){shapeScale=vec3(uRadius*.045,uRadius*.025,uRadius*.075);shapeAngle=uAngle;}
+  else if(uKind==6){shapeScale=vec3(uRadius*.026);}
+  else if(uKind==8){shapeScale=vec3(uRadius*.045,uRadius*.12,uRadius*.045);}
+  else if(uKind==9){shapeScale=vec3(uRadius*.018,uRadius*.16,uRadius*.018);}
+  else if(uKind==11){shapeScale=vec3(uRadius*.050,uRadius*.035,uRadius*.085);shapeAngle=uAngle;}
+  else if(uKind==12){shapeScale=vec3(uRadius*.080,uRadius*.018,uRadius*.080);}
+  else if(uKind==13||uKind==16){shapeScale=vec3(uRadius*.040,uRadius*.060,uRadius*.040);}
+  else if(uKind==14||uKind==15){shapeScale=vec3(uRadius*.038,uRadius*.018,uRadius*.038);}
+  else if(uKind==17){shapeScale=vec3(uRadius*.022,uRadius*.070,uRadius*.022);}
+  else if(uKind>=18&&uKind<=20){shapeScale=vec3(uRadius*.032,uRadius*.090,uRadius*.032);}
+  float cs=cos(shapeAngle),sn=sin(shapeAngle);
+  vec3 local=aPosition*shapeScale;
+  local.xz=mat2(cs,-sn,sn,cs)*local.xz;
   vec2 horizontal=uEventCenter+o.xz;
   ivec2 tc=ivec2(clamp(floor(horizontal),vec2(0.0),uMapSize-1.0));
   float ground=heightFor(texelFetch(uTerrain,tc,0).r);
-  vec3 world=vec3(horizontal.x,ground+o.y,horizontal.y);
+  vec3 world=vec3(horizontal.x,ground+o.y,horizontal.y)+local;
   gl_Position=uViewProjection*vec4(world,1.0);
   float viewZ=gl_Position.w;
-  if(viewZ<=0.0){gl_Position=vec4(2.0);gl_PointSize=0.0;vLife=0.0;vKind=float(uKind);return;}
-  gl_PointSize=clamp((3.0+uRadius*.12)*(uDistance/max(viewZ,.5)),2.0,18.0);
+  if(viewZ<=0.0){gl_Position=vec4(2.0);vLife=0.0;vKind=float(uKind);vShade=0.0;return;}
   vLife=1.0-h3*.35;vKind=float(uKind);
+  vShade=.58+.42*max(0.0,dot(normalize(aPosition),normalize(vec3(-.35,.8,.45))));
 }`;
 
 const frag = `#version 300 es
 precision highp float;
-in float vLife,vKind;
+in float vLife,vKind,vShade;
 out vec4 outColor;
 void main(){
-  vec2 p=gl_PointCoord*2.0-1.0;float d=dot(p,p);if(d>1.0)discard;
-  int k=int(vKind+.5);vec3 c=vec3(.72,.78,.82);float a=(1.0-d)*.72*vLife;
+  int k=int(vKind+.5);vec3 c=vec3(.72,.78,.82);float a=.78*vLife;
   if(k==1||k==7)c=vec3(.22,.72,1.0);
   else if(k==2)c=vec3(.74,.78,.77);
   else if(k==3)c=mix(vec3(.18,.17,.16),vec3(1.0,.20,.02),vLife);
@@ -96,7 +118,7 @@ void main(){
   else if(k==18)c=vec3(1.0,.78,.12);
   else if(k==19)c=vec3(.24,1.0,.50);
   else if(k==20)c=vec3(.30,.78,1.0);
-  outColor=vec4(c,a);
+  outColor=vec4(c*vShade,a);
 }`;
 
 interface Active extends WorldEventFx {
@@ -107,6 +129,9 @@ export class ThreeDWorldEventPass {
   private program: WebGLProgram;
   private events: Active[] = [];
   private vao: WebGLVertexArrayObject;
+  private vertexBuffer: WebGLBuffer;
+  private indexBuffer: WebGLBuffer;
+  private indexCount: number;
   private uniforms: Record<string, WebGLUniformLocation | null>;
   private particleScale = 1;
 
@@ -123,7 +148,6 @@ export class ThreeDWorldEventPass {
         "uTerrain",
         "uMapSize",
         "uViewProjection",
-        "uDistance",
         "uEventCenter",
         "uRadius",
         "uProgress",
@@ -131,7 +155,19 @@ export class ThreeDWorldEventPass {
         "uKind",
       ].map((name) => [name, gl.getUniformLocation(this.program, name)]),
     );
+    const mesh = buildWorldEventParticleMesh();
     this.vao = gl.createVertexArray()!;
+    gl.bindVertexArray(this.vao);
+    this.vertexBuffer = gl.createBuffer()!;
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, mesh.positions, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+    this.indexBuffer = gl.createBuffer()!;
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.indices, gl.STATIC_DRAW);
+    this.indexCount = mesh.indices.length;
+    gl.bindVertexArray(null);
     gl.useProgram(this.program);
     gl.uniform1i(this.uniforms.uTerrain, 0);
   }
@@ -175,7 +211,6 @@ export class ThreeDWorldEventPass {
       pitch,
     });
     gl.uniform2f(this.uniforms.uMapSize, this.mapWidth, this.mapHeight);
-    gl.uniform1f(this.uniforms.uDistance, camera.distance);
     gl.uniformMatrix4fv(
       this.uniforms.uViewProjection,
       false,
@@ -208,8 +243,10 @@ export class ThreeDWorldEventPass {
       const projectedRadius = e.radius * zoom;
       const particles =
         projectedRadius > 180 ? 128 : projectedRadius > 70 ? 96 : 64;
-      gl.drawArrays(
-        gl.POINTS,
+      gl.drawElementsInstanced(
+        gl.TRIANGLES,
+        this.indexCount,
+        gl.UNSIGNED_SHORT,
         0,
         Math.max(24, Math.round(particles * this.particleScale)),
       );
@@ -225,5 +262,7 @@ export class ThreeDWorldEventPass {
   dispose(): void {
     this.gl.deleteProgram(this.program);
     this.gl.deleteVertexArray(this.vao);
+    this.gl.deleteBuffer(this.vertexBuffer);
+    this.gl.deleteBuffer(this.indexBuffer);
   }
 }

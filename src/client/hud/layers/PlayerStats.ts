@@ -1,6 +1,7 @@
 import { customElement } from "lit/decorators.js";
 import type { EventBus } from "../../../core/EventBus";
 import { type StatsRow, StatsTable } from "../../components/StatsTable";
+import { TerritoryFlashEvent } from "../../InputHandler";
 import { GoToPlayerEvent } from "../../TransformHandler";
 import type { GameView } from "../../view";
 import { type ColumnDef, columnValues } from "./lib/StatsColumns";
@@ -31,7 +32,8 @@ export class PlayerStats extends StatsTable {
         pinned: player === myPlayer,
         onClick: () => {
           if (this.eventBus !== null) {
-            this.eventBus.emit(new GoToPlayerEvent(player));
+            this.eventBus.emit(new GoToPlayerEvent(player, 6));
+            this.eventBus.emit(new TerritoryFlashEvent(player.smallID(), 3000));
           }
         },
       }));

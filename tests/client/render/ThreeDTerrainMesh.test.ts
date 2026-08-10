@@ -3,6 +3,7 @@ import {
   buildCompleteMapSurface,
   buildSolidMapBase,
   buildTerrainGrid,
+  buildWaterGrid,
   terrainEdgeCoordinates,
 } from "../../../src/client/render/gl/three-d/ThreeDTerrainMesh";
 
@@ -40,17 +41,33 @@ describe("ThreeDTerrainMesh", () => {
     const surface = buildCompleteMapSurface(731, 413, -0.08, -40);
 
     const water = [...surface.water.positions];
-    expect(water.filter((_, index) => index % 3 === 0)).toEqual([
-      0, 731, 731, 0,
-    ]);
-    expect(water.filter((_, index) => index % 3 === 2)).toEqual([
-      0, 0, 413, 413,
-    ]);
+    expect(water[0]).toBe(0);
+    expect(water[1]).toBeCloseTo(-0.08, 5);
+    expect(water[2]).toBe(0);
+    expect(water[water.length - 3]).toBe(731);
+    expect(water[water.length - 2]).toBeCloseTo(-0.08, 5);
+    expect(water[water.length - 1]).toBe(413);
     for (const y of water.filter((_, index) => index % 3 === 1)) {
       expect(y).toBeCloseTo(-0.08, 5);
     }
-    expect(surface.water.indices.length).toBe(6);
+    expect(surface.water.indices.length).toBe(192 * 96 * 6);
     expect(surface.base.positions.length / 3).toBe(8);
     expect(Math.min(...surface.base.positions)).toBeLessThanOrEqual(-40);
+  });
+
+  it("subdivides the complete ocean so waves can displace real vertices", () => {
+    const water = buildWaterGrid(731, 413, 12, 7, -0.08);
+
+    expect(water.positions.length / 3).toBe(13 * 8);
+    expect(water.indices.length).toBe(12 * 7 * 6);
+    expect([...water.positions, ...water.indices].every(Number.isFinite)).toBe(
+      true,
+    );
+    expect(water.positions[0]).toBe(0);
+    expect(water.positions[1]).toBeCloseTo(-0.08, 5);
+    expect(water.positions[2]).toBe(0);
+    expect(water.positions[water.positions.length - 3]).toBe(731);
+    expect(water.positions[water.positions.length - 2]).toBeCloseTo(-0.08, 5);
+    expect(water.positions[water.positions.length - 1]).toBe(413);
   });
 });

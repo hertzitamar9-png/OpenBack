@@ -118,18 +118,39 @@ void main(){gl_Position=uViewProjection*vec4(aPos,1.0);}`;
 const baseFrag = `#version 300 es
 precision highp float;
 out vec4 outColor;
-void main(){outColor=vec4(0.018,0.028,0.042,1.0);}`;
+void main(){
+  // The closed board is exposed at shallow camera angles. Use an opaque rock
+  // material so partial southern edges read as solid terrain, never a void.
+  outColor=vec4(0.16,0.145,0.125,1.0);
+}`;
 
 const waterVert = `#version 300 es
 precision highp float;
 layout(location=0) in vec3 aPos;
 uniform mat4 uViewProjection;
+uniform float uTime;
 out vec2 vWorld;
-void main(){vWorld=aPos.xz;gl_Position=uViewProjection*vec4(aPos,1.0);}`;
+out float vWave;
+float waveAt(vec2 p,float time){
+  float broad=sin(dot(p,vec2(0.031,0.017))+time*0.55);
+  float cross=sin(dot(p,vec2(-0.021,0.039))-time*0.42);
+  float ripple=sin(dot(p,vec2(0.085,-0.061))+time*0.92);
+  return broad*0.48+cross*0.37+ripple*0.15;
+}
+void main(){
+  vWorld=aPos.xz;
+  vWave=waveAt(vWorld,uTime);
+  vec3 displaced=aPos;
+  // Keep every crest below the lowest land shelf while still moving real
+  // vertices. This prevents waves from drawing across low coastlines.
+  displaced.y+=vWave*0.16;
+  gl_Position=uViewProjection*vec4(displaced,1.0);
+}`;
 
 const waterFrag = `#version 300 es
 precision highp float;
 in vec2 vWorld;
+in float vWave;
 uniform float uTime;
 out vec4 outColor;
 float worldWave(vec2 p,float time){
@@ -142,7 +163,8 @@ void main(){
   float fine=sin((vWorld.x-vWorld.y)*0.11+uTime*0.75)*0.5+0.5;
   vec3 deep=vec3(0.025,0.20,0.34);
   vec3 highlight=vec3(0.075,0.48,0.68);
-  float shimmer=clamp(0.28+wave*0.10+fine*0.055,0.12,0.48);
+  float crest=smoothstep(0.42,0.9,vWave);
+  float shimmer=clamp(0.28+wave*0.10+fine*0.055+crest*0.24,0.12,0.68);
   outColor=vec4(mix(deep,highlight,shimmer),1.0);
 }`;
 
@@ -158,6 +180,7 @@ uniform usampler2D uTerrain;
 uniform usampler2D uTileState;
 uniform usampler2D uTrailState;
 uniform sampler2D uPalette;
+uniform sampler2D uBorderTex;
 uniform vec2 uMapSize;
 uniform float uTime;
 uniform float uDistance;
@@ -173,7 +196,6 @@ float heightFor(uint b){
 }
 void main(){
   bool inside=all(greaterThanEqual(vMapUV,vec2(0.0)))&&all(lessThanEqual(vMapUV,vec2(1.0)));
-  ivec2 size=textureSize(uTerrain,0);
   ivec2 p=ivec2(clamp(floor(vMapUV*uMapSize),vec2(0.0),uMapSize-1.0));
   uint centerByte=inside?texelFetch(uTerrain,p,0).r:10u;
   if((centerByte&128u)==0u)discard;
@@ -210,16 +232,20 @@ void main(){
   // mountain facets must never read as holes in the map.
   color=max(color,max(boardMaterial*0.68,vec3(0.12,0.15,0.09)));
   if((centerByte&128u)!=0u&&owner>0u){
-    ivec2 ownerLeft=ivec2(max(0,p.x-1),p.y),ownerRight=ivec2(min(size.x-1,p.x+1),p.y);
-    ivec2 ownerUp=ivec2(p.x,max(0,p.y-1)),ownerDown=ivec2(p.x,min(size.y-1,p.y+1));
-    vec2 f=fract(vMapUV*uMapSize);
-    bool edge=(f.x<0.10&&(texelFetch(uTileState,ownerLeft,0).r&4095u)!=owner)||
-              (f.x>0.90&&(texelFetch(uTileState,ownerRight,0).r&4095u)!=owner)||
-              (f.y<0.10&&(texelFetch(uTileState,ownerUp,0).r&4095u)!=owner)||
-              (f.y>0.90&&(texelFetch(uTileState,ownerDown,0).r&4095u)!=owner);
-    if(edge){
+    // Use the exact GPU border field shared with the classic renderer. This
+    // keeps 3D focus, defense borders, and the authoritative 2D outline on the
+    // same pixels instead of approximating the edge a second time.
+    float borderType=texelFetch(uBorderTex,p,0).r;
+    if(borderType>0.25){
       color*=0.36;
-      if(int(owner)==uFlashOwner) color=mix(color,vec3(0.30,0.84,1.0),uFlashAmount);
+    }
+    if(int(owner)==uFlashOwner&&uFlashAmount>0.0){
+      vec3 glow=vec3(0.42,0.92,1.0);
+      color+=glow*(0.035+uFlashAmount*0.055);
+      if(borderType>0.25){
+        color=mix(color,glow,0.72+uFlashAmount*0.22);
+        color+=glow*(0.16+uFlashAmount*0.24);
+      }
     }
   }
   uint trailRaw=inside?texelFetch(uTrailState,p,0).r:0u;
@@ -263,6 +289,7 @@ export class ThreeDCompositePass {
   private skyTime: WebGLUniformLocation | null;
   private skyTilt: WebGLUniformLocation | null;
   private uniforms: Record<string, WebGLUniformLocation | null>;
+  private borderState: WebGLTexture | null = null;
 
   constructor(
     private gl: WebGL2RenderingContext,
@@ -285,6 +312,7 @@ export class ThreeDCompositePass {
         "uTileState",
         "uTrailState",
         "uPalette",
+        "uBorderTex",
         "uMapSize",
         "uViewProjection",
         "uTime",
@@ -344,6 +372,11 @@ export class ThreeDCompositePass {
     gl.uniform1i(this.uniforms.uTileState, 1);
     gl.uniform1i(this.uniforms.uTrailState, 2);
     gl.uniform1i(this.uniforms.uPalette, 3);
+    gl.uniform1i(this.uniforms.uBorderTex, 4);
+  }
+
+  setBorderTexture(borderState: WebGLTexture): void {
+    this.borderState = borderState;
   }
 
   private createMesh(maxSegments: number): TerrainMesh {
@@ -434,6 +467,8 @@ export class ThreeDCompositePass {
     gl.bindTexture(gl.TEXTURE_2D, this.trailState);
     gl.activeTexture(gl.TEXTURE3);
     gl.bindTexture(gl.TEXTURE_2D, this.palette);
+    gl.activeTexture(gl.TEXTURE4);
+    gl.bindTexture(gl.TEXTURE_2D, this.borderState);
     for (const chunk of this.chunks.visible(camera)) {
       const mesh = this.meshes[Math.min(3, chunk.lod + this.lodBias)];
       gl.uniform2f(this.uniforms.uGroundOrigin, chunk.x, chunk.y);
