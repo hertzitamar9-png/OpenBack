@@ -267,9 +267,9 @@ export class ServerEnv {
     if (v) return v.replace(/\/+$/, "");
     return "";
   }
-  // Purchased bot tribe names require an explicit OpenBack-compatible
-  // service. Leave this empty to use the built-in organic tribe names without
-  // making a doomed request before every public match.
+  // Purchased bot tribe names are served by the master process itself. Master
+  // supplies its loopback URL; an explicit empty value still disables them in
+  // isolated workers and tests.
   static customTribesUrl(): string {
     return (process.env.CUSTOM_TRIBES_URL ?? "").replace(/\/+$/, "");
   }

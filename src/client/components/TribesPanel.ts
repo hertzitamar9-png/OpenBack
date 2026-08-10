@@ -22,7 +22,7 @@ import "./InsufficientCurrencyDialog";
 import "./PlutoniumIcon";
 import "./TribeStatsView";
 
-const MAX_TRIBE_NAME_LENGTH = 100;
+const MAX_TRIBE_NAME_LENGTH = 64;
 
 // A name goes live in games as soon as it's bought; review happens afterwards
 // and can only take a bad name down. So players only care about two states:
@@ -197,7 +197,7 @@ export class TribesPanel extends LitElement {
       currency: translateText("cosmetics.hard"),
       shortfall: Math.max(1, price - this.hardBalance),
       item: tribe.displayName,
-      canTopUp: true,
+      canTopUp: false,
     };
   }
 

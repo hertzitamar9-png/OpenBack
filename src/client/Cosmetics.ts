@@ -199,8 +199,10 @@ export async function purchaseCosmetic(
       currency: currencyName,
       shortfall: price - balance,
       item: itemName,
-      // Only plutonium can be topped up; caps are dismiss-only.
-      canTopUp: method === "hard",
+      // OpenBack has no visible payment or currency-pack surface. Players earn
+      // both balances through play, so an insufficient-balance dialog is
+      // dismiss-only instead of linking to an empty Packs tab.
+      canTopUp: false,
     };
   }
 

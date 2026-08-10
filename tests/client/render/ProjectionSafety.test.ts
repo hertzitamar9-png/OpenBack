@@ -58,6 +58,26 @@ describe("recoverable render frames", () => {
       /handleContextLost[\\s\\S]*?this\.renderer\.dispose\(\)/,
     );
   });
+
+  it("survives a long synthetic match with repeated effect failures", () => {
+    let scheduled = 0;
+    let reported = 0;
+    for (let frame = 0; frame < 50_000; frame++) {
+      const radius = frame % 19 === 0 ? Number.POSITIVE_INFINITY : frame % 250;
+      expect(clampWorldRadius(radius, 2048, 1024)).toBeLessThanOrEqual(
+        Math.hypot(2048, 1024),
+      );
+      executeRecoverableFrame(
+        () => {
+          if (frame % 997 === 0) throw new Error("effect pass failed");
+        },
+        () => reported++,
+        () => scheduled++,
+      );
+    }
+    expect(scheduled).toBe(50_000);
+    expect(reported).toBe(51);
+  });
 });
 
 describe("nuke warning readability", () => {

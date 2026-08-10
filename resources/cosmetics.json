@@ -2609,6 +2609,11 @@
       }
     }
   },
+  "tribeNames": {
+    "priceHard": 200,
+    "boostPriceHard": 100,
+    "boostDurationDays": 30
+  },
   "colorPalettes": {},
   "currencyPacks": {},
   "subscriptions": {}

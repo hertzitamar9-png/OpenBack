@@ -6,7 +6,8 @@ import "./ConfirmDialog";
 
 /**
  * Shown when the player can't afford a cosmetic. Set `.info` to display it and
- * clear it on `@close`. Plutonium gets a top-up button; caps are dismiss-only.
+ * clear it on `@close`. A top-up action is rendered only when the active
+ * catalog actually exposes a supported currency source.
  */
 @customElement("insufficient-currency-dialog")
 export class InsufficientCurrencyDialog extends LitElement {

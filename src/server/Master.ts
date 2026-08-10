@@ -22,6 +22,10 @@ import { SocialService } from "./SocialService";
 import { applyStaticAssetCacheControl } from "./StaticAssetCache";
 import { authRouter, closeAuthPersistence } from "./auth/AuthServer";
 
+// Game workers fetch purchased Tribe names from the authoritative registry in
+// this master process. Keep isolated worker tests fail-open unless they opt in.
+process.env.CUSTOM_TRIBES_URL ??= "http://127.0.0.1:3000";
+
 const playlist = new MapPlaylist();
 let lobbyService: MasterLobbyService;
 let masterStopping = false;

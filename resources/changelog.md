@@ -1,3 +1,21 @@
+## OpenBack v0.34.112 - Complete Visible Features
+
+- Audited the visible account, profile, friends, chat, clan, Store, Tribe, ranked, game-history, News, Tutorial, Blog, legal, and support surfaces against their local OpenBack implementations.
+- Removed dead currency top-up actions that led players to an empty Packs page; insufficient balances now give a clear in-game message and can be earned through play.
+- Added an automated release contract that prevents browser-native popups, unfinished payment panels, and missing local routes from returning unnoticed.
+
+Created by **frootz jhklphy**.
+
+## OpenBack v0.34.111 - Complete Tribe Service
+
+- Made purchased Tribe names persist with their owner, moderation status, boosts, and appearance history across server restarts.
+- Added unique-name validation and inappropriate-name filtering before Store currency is spent.
+- Added working Tribe purchases, 30-day boosts, owned-name management, public statistics pages, and the global Tribe leaderboard.
+- Connected purchased names to real multiplayer bot tribes, prioritizing names owned by players in the lobby and applying active boost weighting.
+- Made completed matches update Tribe game and player-reach statistics exactly once, with instant Store balance and owned-name refreshes.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.110 - Native OpenBack Dialogs
 
 - Replaced the remaining browser-generated store and reward popups with consistent OpenBack success, warning, and error dialogs.

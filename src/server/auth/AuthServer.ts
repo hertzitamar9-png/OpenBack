@@ -11,7 +11,10 @@ import {
   PlayerGameTypeFilter,
   PlayerProfileSchema,
   PublicPlayerGame,
+  PutUsernameResponseSchema,
   RankedLeaderboardResponseSchema,
+  TribeLeaderboardResponseSchema,
+  TribeStatsResponseSchema,
   UserMeResponse,
   UserMeResponseSchema,
 } from "../../core/ApiSchemas";
@@ -26,6 +29,7 @@ import {
 } from "../../core/game/Game";
 import { GameRecord, GameRecordSchema } from "../../core/Schemas";
 import { generateID, replacer } from "../../core/Util";
+import { profanityMatcher } from "../Censor";
 import { getMapNationCount } from "../MapLandTiles";
 import { ServerEnv } from "../ServerEnv";
 import { publishSocialEvent } from "../SocialEvents";
@@ -43,6 +47,7 @@ import {
   ProfileImageError,
   validateProfileImageDataUrl,
 } from "./ProfileImageStore";
+import { StoredTribeName, TribeRegistry } from "./TribeRegistry";
 
 // ---------------------------------------------------------------------------
 // Self-contained auth for OpenBack. OpenFront's auth lives in a closed-source
@@ -88,6 +93,8 @@ interface StoredUser {
   lifetimePurchasedAt?: string;
   lastSeenAt?: string;
   blockedPublicIds?: string[];
+  lastTribePurchaseAt?: number;
+  nextUsernameChangeAt?: string;
 }
 interface Session {
   persistentId: string;
@@ -164,6 +171,7 @@ interface PersistShape {
   conversations?: StoredConversation[];
   playerGames?: StoredPlayerGame[];
   purchases?: StoredPurchase[];
+  tribeNames?: StoredTribeName[];
 }
 interface StoredPurchase {
   captureId: string;
@@ -199,6 +207,7 @@ let friendRequests: StoredFriendRequest[] = [];
 let conversations: StoredConversation[] = [];
 let playerGames: StoredPlayerGame[] = [];
 let purchases: StoredPurchase[] = [];
+let tribeRegistry = new TribeRegistry();
 const complimentaryLifetimeEmails = new Set(
   (process.env.OPENBACK_COMPLIMENTARY_EMAILS ?? "hertzitamar9@gmail.com")
     .split(",")
@@ -209,6 +218,8 @@ const OWNER_STORE_CURRENCY_EMAIL = "hertzitamar9@gmail.com";
 const OWNER_STORE_CURRENCY_BALANCE = Number.MAX_SAFE_INTEGER;
 // Parsed once at startup. Purchases validate item names/prices against this.
 const cosmetics = CosmeticsSchema.parse(cosmeticsJson);
+const tribeNameConfig = cosmetics.tribeNames;
+const TRIBE_PURCHASE_RATE_LIMIT_MS = 5_000;
 const databaseUrl = process.env.DATABASE_URL;
 const ephemeralHostedRuntime =
   process.env.RENDER === "true" || Boolean(process.env.RENDER_SERVICE_ID);
@@ -237,6 +248,7 @@ function hydrate(raw: PersistShape) {
   conversations = raw.conversations ?? [];
   playerGames = raw.playerGames ?? [];
   purchases = raw.purchases ?? [];
+  tribeRegistry = new TribeRegistry(raw.tribeNames ?? []);
   for (const u of raw.users ?? []) {
     usersByEmail.set(u.email?.toLowerCase() ?? u.persistentId, u);
     usersByPid.set(u.persistentId, u);
@@ -324,6 +336,7 @@ function persistenceSnapshot(): PersistShape {
     conversations,
     playerGames,
     purchases,
+    tribeNames: tribeRegistry.serialize(),
   };
 }
 
@@ -445,6 +458,7 @@ function userMeFor(user: StoredUser): UserMeResponse {
       usernameBase: usernameFor(user),
       usernameDiscriminator: null,
       usernameStatus: user.email ? "indefinite" : "unclaimed",
+      nextUsernameChangeAt: user.nextUsernameChangeAt ?? null,
       infiniteGold: false,
       flares: user.flares ?? [],
       achievements: { singleplayerMap: [] },
@@ -590,6 +604,7 @@ function deleteUser(user: StoredUser): void {
         : conversation.members.length > 0,
     );
   playerGames = playerGames.filter((game) => game.publicId !== user.publicId);
+  tribeRegistry.removeOwner(user.publicId);
 }
 
 async function signToken(user: StoredUser): Promise<{
@@ -1422,7 +1437,15 @@ export function authRouter(): express.Router {
         (game) => game.gameId !== parsed.data.info.gameID,
       );
       playerGames.push(...summaries);
-      if (!alreadyArchived) await awardMatchCurrency(parsed.data, summaries);
+      if (!alreadyArchived) {
+        await awardMatchCurrency(parsed.data, summaries);
+        tribeRegistry.recordGame(
+          parsed.data.info.gameID,
+          parsed.data.info.tribes?.map((tribe) => tribe.name) ?? [],
+          parsed.data.info.players.length,
+          parsed.data.info.visibleAt ?? parsed.data.info.lobbyCreatedAt,
+        );
+      }
       await persistImmediately();
       res.json({ ok: true });
     } catch (error) {
@@ -2336,6 +2359,283 @@ export function authRouter(): express.Router {
     res.json(
       RankedLeaderboardResponseSchema.parse({ [RankedType.OneVOne]: entries }),
     );
+  });
+
+  // Complete local Tribe service. It shares the same durable state document as
+  // accounts, profiles, friends, clans, purchases, and match history.
+  router.get("/users/@me/tribe_names", async (req, res) => {
+    const user = await userFromBearer(req);
+    if (!user) {
+      res.status(401).json({ error: "unauthorized" });
+      return;
+    }
+    res.json({ names: tribeRegistry.listOwned(user.publicId) });
+  });
+
+  router.put("/users/@me/username", async (req, res) => {
+    const user = await userFromBearer(req);
+    if (!user?.email) {
+      res.status(401).json({ error: "email_account_required" });
+      return;
+    }
+    const parsed = z
+      .object({
+        username: z
+          .string()
+          .trim()
+          .min(3)
+          .max(20)
+          .regex(/^[a-zA-Z0-9_-]+( [a-zA-Z0-9_-]+)*$/),
+      })
+      .safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({
+        reason: "Use 3-20 letters, numbers, spaces, underscores, or hyphens.",
+      });
+      return;
+    }
+    if (profanityMatcher.hasMatch(parsed.data.username)) {
+      res.status(400).json({ code: "USERNAME_PROFANE" });
+      return;
+    }
+    const now = Date.now();
+    const nextChange = user.nextUsernameChangeAt
+      ? new Date(user.nextUsernameChangeAt).getTime()
+      : 0;
+    if (nextChange > now) {
+      res.setHeader(
+        "Retry-After",
+        String(Math.ceil((nextChange - now) / 1000)),
+      );
+      res.status(429).json({ error: "cooldown" });
+      return;
+    }
+    const normalized = parsed.data.username.toLocaleLowerCase("en-US");
+    const taken = [...usersByPid.values()].some(
+      (candidate) =>
+        candidate.persistentId !== user.persistentId &&
+        candidate.displayName?.toLocaleLowerCase("en-US") === normalized,
+    );
+    if (taken) {
+      res.status(409).json({ error: "taken" });
+      return;
+    }
+    user.displayName = parsed.data.username;
+    user.nextUsernameChangeAt = new Date(now + 30 * 86_400_000).toISOString();
+    await persistImmediately();
+    res.json(
+      PutUsernameResponseSchema.parse({
+        username: user.displayName,
+        base: user.displayName,
+        discriminator: "",
+        usernameStatus: "indefinite",
+        nextUsernameChangeAt: user.nextUsernameChangeAt,
+      }),
+    );
+  });
+
+  router.post("/users/@me/tribe_names", async (req, res) => {
+    const user = await userFromBearer(req);
+    if (!user || !user.email) {
+      res.status(401).json({ error: "unauthorized" });
+      return;
+    }
+    if (!tribeNameConfig) {
+      res.status(503).json({ error: "tribes_unavailable" });
+      return;
+    }
+    const parsed = z.object({ name: z.string() }).safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ reason: "Enter a valid Tribe name." });
+      return;
+    }
+    const now = Date.now();
+    const retryAfter = Math.ceil(
+      ((user.lastTribePurchaseAt ?? 0) + TRIBE_PURCHASE_RATE_LIMIT_MS - now) /
+        1000,
+    );
+    if (retryAfter > 0) {
+      res.setHeader("Retry-After", String(retryAfter));
+      res.status(429).json({ error: "rate_limited" });
+      return;
+    }
+    const ownerStoreAccess =
+      user.email.toLowerCase() === OWNER_STORE_CURRENCY_EMAIL;
+    const price = tribeNameConfig.priceHard;
+    const balance = ownerStoreAccess
+      ? OWNER_STORE_CURRENCY_BALANCE
+      : (user.currencyHard ?? 0);
+    if (balance < price) {
+      res.status(400).json({ reason: "Insufficient Plutonium balance." });
+      return;
+    }
+    const rollback = structuredClone(persistenceSnapshot());
+    try {
+      const tribe = tribeRegistry.purchase(
+        user.publicId,
+        parsed.data.name,
+        String(price),
+        now,
+      );
+      if (!ownerStoreAccess) user.currencyHard = balance - price;
+      user.lastTribePurchaseAt = now;
+      await persistImmediately();
+      res.status(201).json({
+        id: tribe.id,
+        displayName: tribe.displayName,
+        status: tribe.status,
+        pricePaid: tribe.pricePaid,
+      });
+    } catch (error) {
+      const code = error instanceof Error ? error.message : "invalid";
+      if (code === "duplicate") {
+        res.status(409).json({ error: "duplicate" });
+        return;
+      }
+      if (
+        code !== "inappropriate" &&
+        code !== "invalid_length" &&
+        code !== "invalid_characters"
+      ) {
+        hydrate(rollback);
+        console.error("[tribes] purchase could not be persisted", error);
+        res.status(503).json({ error: "persistent_storage_unavailable" });
+        return;
+      }
+      const reason =
+        code === "inappropriate"
+          ? "Choose a name without inappropriate language."
+          : code === "invalid_length"
+            ? "Tribe names must contain between 2 and 64 characters."
+            : "Use letters, numbers, spaces, apostrophes, periods, or hyphens.";
+      res.status(400).json({ reason });
+    }
+  });
+
+  router.post("/users/@me/tribe_names/:id/boosts", async (req, res) => {
+    const user = await userFromBearer(req);
+    if (!user || !user.email) {
+      res.status(401).json({ error: "unauthorized" });
+      return;
+    }
+    if (!tribeNameConfig) {
+      res.status(503).json({ error: "tribes_unavailable" });
+      return;
+    }
+    const tribeId = req.params.id;
+    const idempotencyKey = req.header("Idempotency-Key")?.trim();
+    if (!idempotencyKey || idempotencyKey.length > 128) {
+      res.status(400).json({ resource: "idempotency_key" });
+      return;
+    }
+    if (!tribeRegistry.isOwnedActive(tribeId, user.publicId)) {
+      res.status(404).json({ error: "not_found" });
+      return;
+    }
+    const existing = tribeRegistry.boostByIdempotencyKey(
+      tribeId,
+      idempotencyKey,
+    );
+    if (existing) {
+      res.status(201).json({
+        id: existing.id,
+        customTribeNameId: tribeId,
+        expiresAt: existing.expiresAt,
+        pricePaid: existing.pricePaid,
+      });
+      return;
+    }
+    const ownerStoreAccess =
+      user.email.toLowerCase() === OWNER_STORE_CURRENCY_EMAIL;
+    const price = tribeNameConfig.boostPriceHard;
+    const balance = ownerStoreAccess
+      ? OWNER_STORE_CURRENCY_BALANCE
+      : (user.currencyHard ?? 0);
+    if (balance < price) {
+      res.status(400).json({ reason: "Insufficient Plutonium balance." });
+      return;
+    }
+    const rollback = structuredClone(persistenceSnapshot());
+    try {
+      const boost = tribeRegistry.boost(
+        tribeId,
+        idempotencyKey,
+        String(price),
+        tribeNameConfig.boostDurationDays,
+      );
+      if (!ownerStoreAccess) user.currencyHard = balance - price;
+      await persistImmediately();
+      res.status(201).json({
+        id: boost.id,
+        customTribeNameId: tribeId,
+        expiresAt: boost.expiresAt,
+        pricePaid: boost.pricePaid,
+      });
+    } catch (error) {
+      hydrate(rollback);
+      console.error("[tribes] boost could not be persisted", error);
+      res.status(503).json({ error: "persistent_storage_unavailable" });
+    }
+  });
+
+  router.get("/public/tribe/:name", (req, res) => {
+    const name = Array.isArray(req.params.name)
+      ? req.params.name[0]
+      : req.params.name;
+    const stats = tribeRegistry.stats(
+      name,
+      (() => {
+        const ownerPublicId = tribeRegistry.ownerPublicIdFor(name);
+        if (!ownerPublicId) return null;
+        const owner = userByPublicId(ownerPublicId);
+        return owner
+          ? { publicId: owner.publicId, username: usernameFor(owner) }
+          : null;
+      })(),
+    );
+    if (!stats) {
+      res.status(404).json({ error: "not_found" });
+      return;
+    }
+    res.json(TribeStatsResponseSchema.parse(stats));
+  });
+
+  router.get("/leaderboard/tribes", (req, res) => {
+    const page = Number(req.query.page ?? 1);
+    if (!Number.isInteger(page) || page < 1 || page > 2) {
+      res.status(400).json({ error: "invalid_page" });
+      return;
+    }
+    const board = tribeRegistry.leaderboard((publicId) => {
+      const owner = userByPublicId(publicId);
+      return owner
+        ? { publicId: owner.publicId, username: usernameFor(owner) }
+        : null;
+    }, page);
+    res.json(TribeLeaderboardResponseSchema.parse(board));
+  });
+
+  router.post("/custom_tribes", (req, res) => {
+    if (req.header("x-api-key") !== ServerEnv.apiKey()) {
+      res.status(401).json({ error: "unauthorized" });
+      return;
+    }
+    const parsed = z
+      .object({
+        players: z
+          .array(z.object({ clientId: z.string(), publicId: z.string() }))
+          .max(500),
+      })
+      .safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "invalid_request" });
+      return;
+    }
+    res.json({
+      tribes: tribeRegistry.pool(
+        parsed.data.players.map((player) => player.publicId),
+      ),
+    });
   });
 
   // Currency purchase of a cosmetic. Grants the matching ownership flare.
