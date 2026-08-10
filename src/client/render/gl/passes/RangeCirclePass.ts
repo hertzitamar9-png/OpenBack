@@ -9,6 +9,10 @@
 
 import type { GhostPreviewData } from "../../types";
 import { createProgram } from "../utils/GlUtils";
+import {
+  clampWorldRadius,
+  isFiniteClipGeometry,
+} from "../utils/ProjectionSafety";
 
 import fragSrc from "../shaders/range-circle/range-circle.frag.glsl?raw";
 import vertSrc from "../shaders/range-circle/range-circle.vert.glsl?raw";
@@ -30,7 +34,11 @@ export class RangeCirclePass {
   private hoverRange: { x: number; y: number; radius: number } | null = null;
   private ghostVisible = false;
 
-  constructor(gl: WebGL2RenderingContext) {
+  constructor(
+    gl: WebGL2RenderingContext,
+    private mapW: number,
+    private mapH: number,
+  ) {
     this.gl = gl;
     this.program = createProgram(gl, vertSrc, fragSrc);
 
@@ -55,11 +63,19 @@ export class RangeCirclePass {
   }
 
   updateGhostPreview(data: GhostPreviewData | null): void {
-    if (data && data.rangeRadius > 0) {
+    if (
+      data &&
+      isFiniteClipGeometry([
+        data.radiusTileX,
+        data.radiusTileY,
+        data.rangeRadius,
+      ]) &&
+      data.rangeRadius > 0
+    ) {
       this.ghostVisible = true;
       this.centerX = data.radiusTileX;
       this.centerY = data.radiusTileY;
-      this.radius = data.rangeRadius;
+      this.radius = clampWorldRadius(data.rangeRadius, this.mapW, this.mapH);
       this.warning = data.rangeWarning;
     } else {
       this.ghostVisible = false;
@@ -71,7 +87,18 @@ export class RangeCirclePass {
   updateHoverRange(
     data: { x: number; y: number; radius: number } | null,
   ): void {
-    this.hoverRange = data;
+    if (
+      data === null ||
+      !isFiniteClipGeometry([data.x, data.y, data.radius]) ||
+      data.radius <= 0
+    ) {
+      this.hoverRange = null;
+      return;
+    }
+    this.hoverRange = {
+      ...data,
+      radius: clampWorldRadius(data.radius, this.mapW, this.mapH),
+    };
   }
 
   draw(cameraMatrix: Float32Array): void {

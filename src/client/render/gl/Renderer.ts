@@ -85,6 +85,7 @@ import {
   MAX_TRAIL_COLORS,
 } from "./utils/ColorUtils";
 import { renderDpr } from "./utils/Dpr";
+import { executeRecoverableFrame } from "./utils/FrameRecovery";
 import {
   createTexture2D,
   toScreen,
@@ -218,6 +219,7 @@ export class GPURenderer {
     else this.startLoop();
   };
   private frameTick = 0;
+  private lastRenderErrorAt = 0;
   private mapW = 0;
   private mapH = 0;
 
@@ -625,7 +627,7 @@ export class GPURenderer {
     );
 
     // --- Range circle (ghost preview radius) ---
-    this.rangeCirclePass = new RangeCirclePass(gl);
+    this.rangeCirclePass = new RangeCirclePass(gl, mapW, mapH);
 
     // --- SAM radius overlay (dashed green circles during build mode) ---
     this.samRadiusPass = new SAMRadiusPass(gl, mapW, this.settings);
@@ -736,9 +738,29 @@ export class GPURenderer {
       this.animId = null;
       return;
     }
-    this.draw();
-    this.animId = this.raf(this.renderLoop);
+    executeRecoverableFrame(
+      () => this.draw(),
+      (error) => this.recoverFailedFrame(error),
+      () => {
+        this.animId = this.renderSuspended ? null : this.raf(this.renderLoop);
+      },
+    );
   };
+
+  private recoverFailedFrame(error: unknown): void {
+    const now = performance.now();
+    if (now - this.lastRenderErrorAt > 1_000) {
+      console.error("[renderer] recovered from failed frame", error);
+      this.lastRenderErrorAt = now;
+    }
+    const gl = this.gl;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+    gl.disable(gl.SCISSOR_TEST);
+    gl.disable(gl.DEPTH_TEST);
+    gl.disable(gl.CULL_FACE);
+    gl.disable(gl.BLEND);
+  }
 
   private startLoop(): void {
     this.animId ??= this.raf(this.renderLoop);
@@ -1755,6 +1777,19 @@ export class GPURenderer {
   // ---------------------------------------------------------------------------
   // Lifecycle
   // ---------------------------------------------------------------------------
+
+  /**
+   * A lost WebGL context has already invalidated every GPU object. Do not run
+   * normal disposal (which deliberately calls WEBGL_lose_context again), as
+   * doing so can prevent the browser's restoration event from completing.
+   */
+  abandonLostContext(): void {
+    this.stopLoop();
+    this.renderSuspended = true;
+    document.removeEventListener("visibilitychange", this.onVisibilityChange);
+    this.lastUnits = new Map();
+    this.lastStructures = new Map();
+  }
 
   dispose(): void {
     this.stopLoop();

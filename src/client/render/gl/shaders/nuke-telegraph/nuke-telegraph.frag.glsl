@@ -61,7 +61,11 @@ void main() {
   // Combine
   // Tanks now use the same clean concentric-circle treatment, but their
   // world-space angle keeps it symmetric and green rather than aircraft red.
-  float fillAlpha = innerFill * max(0.0, baseAlpha - fillAlphaOff);
+  // Bombs have very large real damage radii (Hydrogen reaches 100 tiles).
+  // Keep those warnings outlined so they never become a giant opaque surface.
+  // Aircraft and tank destination reticles retain their subtle fill.
+  float routeFill = step(0.5, vRouteKind);
+  float fillAlpha = routeFill * innerFill * max(0.0, baseAlpha - fillAlphaOff);
   float strokeAlpha = innerStroke * baseAlpha;
   float outerAlpha = outerRing * dashAlpha * baseAlpha;
 

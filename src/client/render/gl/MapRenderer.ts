@@ -2,7 +2,8 @@
  * MapRenderer — public facade for the WebGL map renderer.
  *
  * Wraps GPURenderer as a private implementation detail and survives WebGL
- * context loss: when the context is lost the renderer is disposed, and on
+ * context loss: when the context is lost the invalid renderer is abandoned,
+ * and on
  * restore a fresh GPURenderer is created and `onContextRestored` fires so
  * the owner can re-upload all simulation state.
  *
@@ -106,7 +107,7 @@ export class MapRenderer {
   private handleContextLost = (e: Event) => {
     e.preventDefault();
     if (this.renderer) {
-      this.renderer.dispose();
+      this.renderer.abandonLostContext();
       this.renderer = null;
     }
   };

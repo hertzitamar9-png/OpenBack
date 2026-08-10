@@ -11,6 +11,10 @@ import { DynamicInstanceBuffer } from "../DynamicBuffer";
 import type { RenderSettings } from "../RenderSettings";
 import { ThreeDCameraState } from "../three-d/ThreeDCamera";
 import { createProgram } from "../utils/GlUtils";
+import {
+  clampWorldRadius,
+  isFiniteClipGeometry,
+} from "../utils/ProjectionSafety";
 
 import fragSrc from "../shaders/nuke-telegraph/nuke-telegraph.frag.glsl?raw";
 import vertSrc from "../shaders/nuke-telegraph/nuke-telegraph.vert.glsl?raw";
@@ -119,17 +123,28 @@ export class NukeTelegraphPass {
   }
 
   update(data: NukeTelegraphData[]): void {
-    const count = data.length;
+    const safeData = data.filter((d) =>
+      isFiniteClipGeometry([
+        d.x,
+        d.y,
+        d.innerRadius,
+        d.outerRadius,
+        d.sourceX,
+        d.sourceY,
+        d.routeKind,
+      ]),
+    );
+    const count = safeData.length;
     this.instanceBuf.ensureCapacity(count);
 
     const buf = this.instanceBuf.float32;
     for (let i = 0; i < count; i++) {
-      const d = data[i];
+      const d = safeData[i];
       const off = i * FLOATS_PER_INSTANCE;
       buf[off + 0] = d.x;
       buf[off + 1] = d.y;
-      buf[off + 2] = d.innerRadius;
-      buf[off + 3] = d.outerRadius;
+      buf[off + 2] = clampWorldRadius(d.innerRadius, this.mapW, this.mapH);
+      buf[off + 3] = clampWorldRadius(d.outerRadius, this.mapW, this.mapH);
       buf[off + 4] = d.relation;
       buf[off + 5] = d.sourceX;
       buf[off + 6] = d.sourceY;

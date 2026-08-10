@@ -1,3 +1,12 @@
+## OpenBack v0.34.109 - Stable Nuclear Warnings
+
+- Kept the Hydrogen Bomb's established gameplay damage while changing its in-flight warning to readable outlines instead of a map-covering green surface.
+- Prevented invalid effect radii and projection values from creating screen-sized geometry.
+- Made failed WebGL frames recover on the next animation frame instead of permanently freezing borders, names, effects, and the battlefield while the match continues.
+- Corrected WebGL context-loss recovery so restored games rebuild their live terrain and tactical state rather than losing the renderer a second time.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.108 - Complete Battle Artwork
 
 - Restored the full OpenBack battlefield artwork with its larger collection of aircraft, ships, tanks, missiles, structures, routes, and explosions while removing the tank that appeared in the water.
