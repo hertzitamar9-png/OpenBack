@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   ThreeDCameraState,
+  threeDFitZoom,
   threeDGroundHomography,
   type ThreeDCameraInput,
 } from "../../../src/client/render/gl/three-d/ThreeDCamera";
@@ -25,6 +26,43 @@ function fixture(override: Partial<ThreeDCameraInput> = {}): ThreeDCameraInput {
 }
 
 describe("ThreeDCameraState", () => {
+  it.each([
+    {
+      mapWidth: 4096,
+      mapHeight: 2049,
+      viewportWidth: 1920,
+      viewportHeight: 1080,
+    },
+    { mapWidth: 731, mapHeight: 413, viewportWidth: 390, viewportHeight: 844 },
+  ])("fits every complete map corner inside the battlefield", (shape) => {
+    const zoom = threeDFitZoom({
+      ...shape,
+      yaw: 0.45,
+      pitch: THREE_D_MIN_TILT,
+      margin: 12,
+    });
+    const camera = ThreeDCameraState.create({
+      ...shape,
+      centerX: shape.mapWidth / 2,
+      centerZ: shape.mapHeight / 2,
+      yaw: 0.45,
+      pitch: THREE_D_MIN_TILT,
+      zoom,
+    });
+
+    for (const x of [0, shape.mapWidth]) {
+      for (const z of [0, shape.mapHeight]) {
+        for (const y of [-0.08, THREE_D_MAX_TERRAIN_HEIGHT]) {
+          const screen = camera.project({ x, y, z });
+          expect(screen).not.toBeNull();
+          expect(screen!.x).toBeGreaterThanOrEqual(11.5);
+          expect(screen!.x).toBeLessThanOrEqual(shape.viewportWidth - 11.5);
+          expect(screen!.y).toBeGreaterThanOrEqual(11.5);
+          expect(screen!.y).toBeLessThanOrEqual(shape.viewportHeight - 11.5);
+        }
+      }
+    }
+  });
   it("keeps shallow forward and backward views above the focused surface", () => {
     for (const yaw of [0, Math.PI]) {
       const camera = ThreeDCameraState.create(

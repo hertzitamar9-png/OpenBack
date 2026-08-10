@@ -46,6 +46,16 @@ export interface ThreeDFrustum {
   }>;
 }
 
+export interface ThreeDMapFitInput {
+  viewportWidth: number;
+  viewportHeight: number;
+  mapWidth: number;
+  mapHeight: number;
+  yaw: number;
+  pitch: number;
+  margin?: number;
+}
+
 const WORLD_UP: Vec3 = { x: 0, y: 1, z: 0 };
 
 function finite(value: number, fallback: number): number {
@@ -359,4 +369,49 @@ export function threeDGroundHomography(
     m[13] + m[5] * height,
     m[15] + m[7] * height,
   ]);
+}
+
+export function threeDFitZoom(input: ThreeDMapFitInput): number {
+  const margin = Math.max(
+    0,
+    Math.min(
+      input.margin ?? 0,
+      Math.min(input.viewportWidth, input.viewportHeight) / 3,
+    ),
+  );
+  const fits = (zoom: number): boolean => {
+    const camera = ThreeDCameraState.create({
+      ...input,
+      centerX: input.mapWidth / 2,
+      centerZ: input.mapHeight / 2,
+      zoom,
+    });
+    for (const x of [0, input.mapWidth]) {
+      for (const z of [0, input.mapHeight]) {
+        for (const y of [-0.08, THREE_D_MAX_TERRAIN_HEIGHT]) {
+          const screen = camera.project({ x, y, z });
+          if (
+            screen === null ||
+            screen.x < margin ||
+            screen.y < margin ||
+            screen.x > input.viewportWidth - margin ||
+            screen.y > input.viewportHeight - margin
+          ) {
+            return false;
+          }
+        }
+      }
+    }
+    return true;
+  };
+
+  let low = 0.001;
+  let high = 48;
+  if (!fits(low)) return low;
+  for (let iteration = 0; iteration < 48; iteration++) {
+    const middle = (low + high) / 2;
+    if (fits(middle)) low = middle;
+    else high = middle;
+  }
+  return low;
 }

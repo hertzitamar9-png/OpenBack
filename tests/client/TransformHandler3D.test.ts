@@ -94,12 +94,12 @@ describe("TransformHandler 3D camera", () => {
 
     expect(mountain).toBeGreaterThan(lowland + 10);
     expect(peak).toBeGreaterThan(mountain + 10);
-    expect(peak).toBe(38);
+    expect(peak).toBe(57);
   });
 
   it("allows a close tactical camera while retaining surface clearance", () => {
     const distance = threeDCameraDistance(400, 48, THREE_D_MIN_TILT);
-    expect(distance * Math.sin(THREE_D_MIN_TILT)).toBeCloseTo(58, 6);
+    expect(distance * Math.sin(THREE_D_MIN_TILT)).toBeCloseTo(77, 6);
   });
 
   it("uses the actual 3D camera target as the focus center", () => {

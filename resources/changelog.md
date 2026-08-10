@@ -3,6 +3,7 @@
 - Raised all 3D land relief by 50% through one canonical terrain-height contract shared by terrain interaction and the remaining 3D parity work.
 - Added a complete cyan ocean surface with animated world-space waves, removed broad terrain-lighting bands, and made radioactive ground remain clearly dark green after a blast.
 - Corrected transports, warships, and trade ships so their bows face their movement direction instead of travelling sideways.
+- Made 3D overview fitting account for the full map width, height, terrain relief, camera angle, and screen aspect ratio so partial edges such as Antarctica remain inside the battlefield.
 
 Created by **frootz jhklphy**.
 

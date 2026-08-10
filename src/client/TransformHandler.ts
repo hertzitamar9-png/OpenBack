@@ -7,7 +7,10 @@ import {
   ZOOM_DELTA_DIVISOR,
   ZoomEvent,
 } from "./InputHandler";
-import { ThreeDCameraState } from "./render/gl/three-d/ThreeDCamera";
+import {
+  ThreeDCameraState,
+  threeDFitZoom,
+} from "./render/gl/three-d/ThreeDCamera";
 import {
   THREE_D_MAX_TILT,
   THREE_D_MIN_TILT,
@@ -534,9 +537,17 @@ export class TransformHandler {
     const mapWidth = this.game.width();
     const mapHeight = this.game.height();
 
-    const scHor = (vpWidth / mapWidth) * fit;
-    const scVer = (vpHeight / mapHeight) * fit;
-    const tScale = Math.min(scHor, scVer);
+    const tScale = this.isThreeD()
+      ? threeDFitZoom({
+          viewportWidth: vpWidth,
+          viewportHeight: vpHeight,
+          mapWidth,
+          mapHeight,
+          yaw: this.threeDYaw,
+          pitch: this.threeDPitch,
+          margin: Math.max(8, Math.min(vpWidth, vpHeight) * 0.025),
+        }) * fit
+      : Math.min((vpWidth / mapWidth) * fit, (vpHeight / mapHeight) * fit);
 
     const oHor = (mapWidth - vpWidth) / 2 / tScale;
     const oVer = (mapHeight - vpHeight) / 2 / tScale;
