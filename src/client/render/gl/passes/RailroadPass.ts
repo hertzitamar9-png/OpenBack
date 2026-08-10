@@ -208,37 +208,6 @@ export class RailroadPass {
     this.vao = createMapQuad(gl, mapW, mapH);
   }
 
-  applyTerrainDelta(refs: readonly number[], bytes: Uint8Array): void {
-    if (refs.length === 0) return;
-    const gl = this.gl;
-    gl.bindTexture(gl.TEXTURE_2D, this.terrainTex);
-    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-    for (let i = 0; i < refs.length; ) {
-      const ref = refs[i];
-      const y = Math.floor(ref / this.mapW);
-      let end = i + 1;
-      while (
-        end < refs.length &&
-        refs[end] === refs[end - 1] + 1 &&
-        Math.floor(refs[end] / this.mapW) === y
-      ) {
-        end++;
-      }
-      gl.texSubImage2D(
-        gl.TEXTURE_2D,
-        0,
-        ref % this.mapW,
-        Math.floor(ref / this.mapW),
-        end - i,
-        1,
-        gl.RED_INTEGER,
-        gl.UNSIGNED_BYTE,
-        bytes.subarray(i, end),
-      );
-      i = end;
-    }
-  }
-
   uploadRailroadState(railroadState: Uint8Array): void {
     this.cpuRailroadState = railroadState;
     this.hasRailroads = false;
@@ -453,6 +422,6 @@ export class RailroadPass {
     gl.deleteProgram(this.program);
     gl.deleteTexture(this.railroadTex);
     gl.deleteTexture(this.ghostRailTex);
-    // Don't delete tileTex or paletteTex — shared with other passes
+    // Don't delete tileTex, paletteTex, or terrainTex — they are shared.
   }
 }

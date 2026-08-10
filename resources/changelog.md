@@ -1,3 +1,11 @@
+## OpenBack v0.34.113 - Stable Railroad Rendering
+
+- Fixed an invalid railroad terrain-texture connection that could fail every WebGL frame after railroads appeared, causing severe slowdown and eventually leaving the battlefield frozen while match time continued.
+- Shared one live terrain texture across railroads and map effects so terrain changes remain synchronized without duplicate GPU uploads.
+- Verified sustained live matches keep the battlefield, borders, destination warnings, and HUD rendering after the previous freeze window.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.112 - Complete Visible Features
 
 - Audited the visible account, profile, friends, chat, clan, Store, Tribe, ranked, game-history, News, Tutorial, Blog, legal, and support surfaces against their local OpenBack implementations.

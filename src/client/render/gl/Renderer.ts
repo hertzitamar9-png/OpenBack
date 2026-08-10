@@ -622,7 +622,7 @@ export class GPURenderer {
       mapH,
       this.res.tileTex,
       this.paletteTex,
-      terrainBytes,
+      this.terrainBytesTex!,
       this.settings,
     );
 
@@ -1064,13 +1064,12 @@ export class GPURenderer {
   /**
    * Update terrain texels for tiles whose terrain byte changed (e.g. water
    * nukes converting land → water). `terrainBytes[i]` is the new byte for
-   * `refs[i]`. Forwards to both TerrainPass (RGBA color) and RailroadPass
-   * (R8UI water-detection for bridges).
+   * `refs[i]`. TerrainPass owns the RGBA surface while the shared R8UI texture
+   * supplies water detection to railroads and the other map-layer passes.
    */
   applyTerrainDelta(refs: readonly number[], terrainBytes: Uint8Array): void {
     if (refs.length === 0) return;
     this.terrainPass.applyTerrainDelta(refs, terrainBytes);
-    this.railroadPass.applyTerrainDelta(refs, terrainBytes);
     // Update the shared R8UI terrain-bytes texture used by map-layer passes.
     if (!this.terrainBytesTex) return;
     const gl = this.gl;

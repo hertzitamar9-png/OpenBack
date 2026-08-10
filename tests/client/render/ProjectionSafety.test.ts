@@ -37,6 +37,17 @@ describe("projection safety", () => {
 });
 
 describe("recoverable render frames", () => {
+  it("wires railroads to the shared terrain texture instead of CPU bytes", () => {
+    const renderer = readFileSync("src/client/render/gl/Renderer.ts", "utf8");
+    const railroadConstruction = renderer.match(
+      /this\.railroadPass = new RailroadPass\([\s\S]*?this\.settings,\s*\);/,
+    )?.[0];
+
+    expect(railroadConstruction).toContain("this.terrainBytesTex!");
+    expect(railroadConstruction).not.toContain("terrainBytes,");
+    expect(renderer).not.toContain("this.railroadPass.applyTerrainDelta");
+  });
+
   it("schedules the next frame even when drawing throws", () => {
     const report = vi.fn();
     const schedule = vi.fn();
