@@ -1,3 +1,13 @@
+## OpenBack v0.34.117 - Classic Units in 3D
+
+- Replaced the mismatched 3D unit and structure meshes with OpenBack's established 2D artwork while keeping the battlefield terrain in 3D.
+- Restored the classic placement previews, stacking feedback, construction bars, unit counts, missiles, paths, ranges, and combat effects in 3D mode.
+- Made ships turn along every segment of a curved route so their bow always faces their current movement direction instead of staring at the final destination.
+- Kept ship trails attached to the 3D water and colored with the sending player's color, matching the established 2D presentation.
+- Preserved the deterministic simulation, multiplayer results, and classic 2D renderer.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.116 - Living 3D Battlefield
 
 - Made leaderboard player focus move into a tactical view and pulse that player's complete territory with a bright cyan-white border for three seconds.

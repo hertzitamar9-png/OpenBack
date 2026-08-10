@@ -119,6 +119,27 @@ const FLAG_LAUNCH_FIRE = 7;
 const FLAG_FUEL_TRAIN = 8;
 const FLAG_TANK_FIREBALL = 9;
 
+/**
+ * Return the heading used by the classic 2D sprite renderer. Ships and other
+ * moving units follow their most recent path segment, so a curved route turns
+ * the artwork a segment at a time instead of making it stare at the final
+ * destination. Aircraft and tanks keep their authoritative trajectory angle.
+ */
+export function unitSpriteHeading(unit: UnitState, mapWidth: number): number {
+  if (
+    (unit.unitType === UT_PLANE || unit.unitType === UT_TANK) &&
+    unit.trajectoryAngle !== undefined
+  ) {
+    return unit.trajectoryAngle;
+  }
+  if (unit.lastPos === unit.pos) return 0;
+  const x = unit.pos % mapWidth;
+  const y = (unit.pos - x) / mapWidth;
+  const lastX = unit.lastPos % mapWidth;
+  const lastY = (unit.lastPos - lastX) / mapWidth;
+  return Math.atan2(x - lastX, -(y - lastY));
+}
+
 /** Atlas column indices for train sub-types (resolved from trainType + loaded) */
 const TRAIN_ENGINE_COL = UNIT_ORDER.indexOf("TrainEngine");
 const TRAIN_CARRIAGE_COL = UNIT_ORDER.indexOf("TrainCarriage");
@@ -439,14 +460,6 @@ export class UnitPass {
     this.missileCount++;
   }
 
-  /** Sprite heading from a screen-space direction (dx, dy): the rotation that
-   *  maps the sprite's default "up" facing (0,-1) onto the travel direction.
-   *  Convention matches y-down screen space. */
-  private headingFromDir(dx: number, dy: number): number {
-    if (dx === 0 && dy === 0) return 0;
-    return Math.atan2(dx, -dy);
-  }
-
   updateUnits(units: Map<number, UnitState>, tick: number): void {
     this.frameTick = tick;
     this.groundCount = 0;
@@ -537,17 +550,7 @@ export class UnitPass {
       // Sprite heading (screen space, 0 = up/north). For planes we use the
       // server-provided travel angle so the nose tracks the flight path; other
       // units derive it from their lastPos→pos trail (no-op for static ones).
-      let angle = 0;
-      if (
-        (unit.unitType === UT_PLANE || unit.unitType === UT_TANK) &&
-        unit.trajectoryAngle !== undefined
-      ) {
-        angle = unit.trajectoryAngle;
-      } else if (unit.lastPos !== unit.pos) {
-        const lx = unit.lastPos % this.mapW;
-        const ly = (unit.lastPos - lx) / this.mapW;
-        angle = this.headingFromDir(x - lx, y - ly);
-      }
+      const angle = unitSpriteHeading(unit, this.mapW);
 
       if (isMissile) {
         if (

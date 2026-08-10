@@ -70,11 +70,9 @@ import type { RenderSettings } from "./RenderSettings";
 import {
   ThreeDCameraState,
   threeDGroundHomography,
-  threeDScreenFacingScale,
 } from "./three-d/ThreeDCamera";
 import { ThreeDFogPass } from "./three-d/ThreeDFogPass";
 import { ThreeDQualityController } from "./three-d/ThreeDQuality";
-import { ThreeDUnitPass } from "./three-d/ThreeDUnitPass";
 import { ThreeDWorldEventPass } from "./three-d/ThreeDWorldEventPass";
 import { THREE_D_TILT } from "./three-d/ThreeDWorldMath";
 import { AffiliationPalette } from "./utils/Affiliation";
@@ -158,7 +156,6 @@ export class GPURenderer {
   private worldTextPass: WorldTextPass;
   private worldEventPass: WorldEventPass | null = null;
   private threeDPass: ThreeDCompositePass | null = null;
-  private threeDUnitPass: ThreeDUnitPass | null = null;
   private threeDWorldEventPass: ThreeDWorldEventPass | null = null;
   private threeDFogPass: ThreeDFogPass | null = null;
   private selectionBoxPass: SelectionBoxPass;
@@ -437,13 +434,6 @@ export class GPURenderer {
         this.terrainBytesTex!,
         this.res.tileTex,
         this.res.trailTex,
-        this.paletteTex,
-        mapW,
-        mapH,
-      );
-      this.threeDUnitPass = new ThreeDUnitPass(
-        gl,
-        this.terrainBytesTex!,
         this.paletteTex,
         mapW,
         mapH,
@@ -994,7 +984,6 @@ export class GPURenderer {
     this.lastUnits = units;
     this.frameTick++;
     this.unitPass.updateUnits(units, this.frameTick);
-    this.refreshThreeDUnits();
     this.barPass.updateBars(units, this.lastStructures, gameTick);
     this.pointLightPass.updateLights(units);
     this.heatManager.decayHeat();
@@ -1039,7 +1028,6 @@ export class GPURenderer {
     this.structureLevelPass.updateStructures(units);
     this.samRadiusPass.updateStructures(units);
     this.unitPass.setStructures(units);
-    this.refreshThreeDUnits();
     const posts: { x: number; y: number; ownerID: number }[] = [];
     const w = this.mapW;
     for (const u of units.values()) {
@@ -1173,8 +1161,6 @@ export class GPURenderer {
   }
 
   updateGhostPreview(data: GhostPreviewData | null): void {
-    this.threeDUnitPass?.updateGhostPreview(data);
-    this.refreshThreeDUnits();
     this.structurePass.updateGhostPreview(data);
     this.railroadPass.updateGhostPreview(data);
     this.rangeCirclePass.updateGhostPreview(data);
@@ -1194,20 +1180,6 @@ export class GPURenderer {
       data !== null && SAM_RADIUS_GHOST_TYPES.has(data.ghostType);
     this.samRadiusPass.setVisible(
       this.samGhostVisible || this.samHighlightVisible,
-    );
-  }
-
-  private refreshThreeDUnits(): void {
-    this.threeDUnitPass?.update(
-      this.lastUnits,
-      {
-        centerX: this.camera.offsetX,
-        centerY: this.camera.offsetY,
-        zoom: this.camera.zoom,
-        width: this.canvas.width,
-        height: this.canvas.height,
-      },
-      this.lastStructures,
     );
   }
 
@@ -1459,7 +1431,6 @@ export class GPURenderer {
       const territoryFlash = this.territoryFlash();
       const centerHeight = 0;
       this.threeDPass.setQuality(quality.terrainLodBias);
-      this.threeDUnitPass?.setQuality(quality.distantModelDetail);
       this.threeDFogPass?.setQuality(quality.particleScale);
       this.threeDWorldEventPass?.setQuality(quality.particleScale);
       toScreen(this.gl, cw, ch, () => {
@@ -1474,9 +1445,7 @@ export class GPURenderer {
           yaw: this.threeDYaw,
           pitch: this.threeDPitch,
         });
-        const screenFacingScale = threeDScreenFacingScale(threeDCamera);
         const billboardCamera = threeDGroundHomography(threeDCamera, 0.15);
-        const labelCamera = billboardCamera;
         this.threeDPass!.draw(
           cw,
           ch,
@@ -1489,21 +1458,12 @@ export class GPURenderer {
           territoryFlash.owner,
           territoryFlash.amount,
         );
-        this.threeDUnitPass?.draw(
-          this.camera.offsetX,
-          this.camera.offsetY,
-          centerHeight,
-          zoom,
-          cw,
-          ch,
-          this.threeDYaw,
-          this.threeDPitch,
-        );
-        // Preserve the classic renderer's tactical information in 3D. These
-        // passes include ship routes, railways, targeting paths, ranges,
-        // selection feedback, build previews, and combat effects; world
-        // objects and environment masks already have dedicated 3D passes.
-        this.renderOverlays(billboardCamera, zoom, true, true, true, true);
+        // 3D changes only the battlefield surface. Units, structures, ships,
+        // construction previews, stacking feedback, counts, bars, paths and
+        // combat effects stay on the exact classic sprite pipeline. This keeps
+        // the established artwork and gameplay feedback identical to 2D while
+        // the homography places it over the perspective terrain.
+        this.renderOverlays(billboardCamera, zoom, false, true, true, true);
         this.nukeTelegraphPass.drawThreeD(
           this.camera.offsetX,
           this.camera.offsetY,
@@ -1527,28 +1487,6 @@ export class GPURenderer {
           this.threeDYaw,
           this.threeDPitch,
         );
-        // Screen-facing information remains crisp instead of being baked into
-        // and distorted by the terrain material. It is still positioned in
-        // world space and therefore follows the perspective battlefield.
-        if (this.settings.passEnabled.structure) {
-          this.structureLevelPass.draw(
-            billboardCamera,
-            zoom,
-            true,
-            screenFacingScale,
-          );
-        }
-        if (this.settings.passEnabled.bar) this.barPass.draw(billboardCamera);
-        if (this.settings.passEnabled.name && !this.altView) {
-          this.namePass.draw(
-            labelCamera,
-            this.nightCompositePass.getAmbient(),
-            true,
-            screenFacingScale,
-          );
-        }
-        this.worldTextPass.tick(zoom);
-        this.worldTextPass.draw(billboardCamera, zoom, true, screenFacingScale);
         this.threeDFogPass?.draw(
           this.camera.offsetX,
           this.camera.offsetY,
@@ -1833,7 +1771,6 @@ export class GPURenderer {
     this.worldTextPass.dispose();
     this.worldEventPass?.dispose();
     this.threeDPass?.dispose();
-    this.threeDUnitPass?.dispose();
     this.threeDWorldEventPass?.dispose();
     this.threeDFogPass?.dispose();
     this.selectionBoxPass.dispose();
