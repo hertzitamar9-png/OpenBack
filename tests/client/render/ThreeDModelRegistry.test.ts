@@ -44,6 +44,15 @@ describe("3D model registry", () => {
     expect(threeDModel(UnitType.Plane).primitives[0].kind).toBe("hull");
     expect(threeDModel(UnitType.Warship).primitives[0].kind).toBe("hull");
   });
+
+  it.each([UnitType.TransportShip, UnitType.Warship, UnitType.TradeShip])(
+    "declares a bow-forward correction for %s",
+    (type) => {
+      expect(Math.abs(threeDModel(type).forwardYaw ?? 0)).toBeCloseTo(
+        Math.PI / 2,
+      );
+    },
+  );
 });
 
 describe("3D assembled model transforms", () => {

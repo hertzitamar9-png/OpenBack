@@ -32,6 +32,8 @@ export interface ThreeDPrimitive {
 export interface ThreeDModelDefinition {
   footprint: number;
   altitude?: number;
+  /** Corrects the source asset's forward axis before gameplay heading. */
+  forwardYaw?: number;
   animation?: ThreeDAnimation;
   primitives: readonly ThreeDPrimitive[];
   lods: readonly {
@@ -246,6 +248,7 @@ const RAW_MODELS: Readonly<
   },
   [UnitType.TransportShip]: {
     footprint: 2.7,
+    forwardYaw: Math.PI / 2,
     animation: "hover",
     primitives: [
       p("hull", [0, 0.25, 0], [2.7, 0.45, 0.9], "owner"),
@@ -259,6 +262,7 @@ const RAW_MODELS: Readonly<
   },
   [UnitType.Warship]: {
     footprint: 3.2,
+    forwardYaw: Math.PI / 2,
     animation: "hover",
     primitives: [
       p("hull", [0, 0.3, 0], [3.1, 0.5, 1.05], "owner"),
@@ -273,6 +277,7 @@ const RAW_MODELS: Readonly<
   },
   [UnitType.TradeShip]: {
     footprint: 2.7,
+    forwardYaw: Math.PI / 2,
     animation: "hover",
     primitives: [
       p("hull", [0, 0.25, 0], [2.65, 0.45, 0.92], "owner"),

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildCompleteMapSurface,
   buildSolidMapBase,
   buildTerrainGrid,
   terrainEdgeCoordinates,
@@ -33,5 +34,23 @@ describe("ThreeDTerrainMesh", () => {
     const heights = base.positions.filter((_, index) => index % 3 === 1);
     expect(Math.max(...heights)).toBeGreaterThanOrEqual(-2);
     expect(Math.max(...heights)).toBeLessThanOrEqual(-1);
+  });
+
+  it("covers every irregular map coordinate with water and a closed base", () => {
+    const surface = buildCompleteMapSurface(731, 413, -0.08, -40);
+
+    const water = [...surface.water.positions];
+    expect(water.filter((_, index) => index % 3 === 0)).toEqual([
+      0, 731, 731, 0,
+    ]);
+    expect(water.filter((_, index) => index % 3 === 2)).toEqual([
+      0, 0, 413, 413,
+    ]);
+    for (const y of water.filter((_, index) => index % 3 === 1)) {
+      expect(y).toBeCloseTo(-0.08, 5);
+    }
+    expect(surface.water.indices.length).toBe(6);
+    expect(surface.base.positions.length / 3).toBe(8);
+    expect(Math.min(...surface.base.positions)).toBeLessThanOrEqual(-40);
   });
 });

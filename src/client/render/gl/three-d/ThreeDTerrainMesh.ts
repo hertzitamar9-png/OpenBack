@@ -92,3 +92,35 @@ export function buildSolidMapBase(
   ]);
   return { positions, indices };
 }
+
+export function buildCompleteMapSurface(
+  width: number,
+  height: number,
+  waterHeight = -0.08,
+  bottom = -40,
+): {
+  water: ThreeDTerrainMeshData;
+  base: ThreeDTerrainMeshData;
+} {
+  const water = {
+    positions: new Float32Array([
+      0,
+      waterHeight,
+      0,
+      width,
+      waterHeight,
+      0,
+      width,
+      waterHeight,
+      height,
+      0,
+      waterHeight,
+      height,
+    ]),
+    indices: new Uint32Array([0, 2, 1, 0, 3, 2]),
+  };
+  return {
+    water,
+    base: buildSolidMapBase(width, height, waterHeight - 0.92, bottom),
+  };
+}

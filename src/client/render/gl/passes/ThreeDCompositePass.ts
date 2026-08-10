@@ -6,9 +6,10 @@
  * colors. No flat screenshot is bent over the mesh.
  */
 import { ThreeDCameraState } from "../three-d/ThreeDCamera";
+import { THREE_D_WATER_HEIGHT } from "../three-d/ThreeDSurfaceSampler";
 import { ThreeDTerrainChunks } from "../three-d/ThreeDTerrainChunks";
 import {
-  buildSolidMapBase,
+  buildCompleteMapSurface,
   buildTerrainGrid,
 } from "../three-d/ThreeDTerrainMesh";
 import { createFullscreenQuad, createProgram } from "../utils/GlUtils";
@@ -50,12 +51,14 @@ uniform float uFlashAmount;
 out vec2 vMapUV;
 out float vHeight;
 out float vViewDepth;
+out vec2 vWorld;
+out vec3 vTerrainNormal;
 
 float heightFor(uint b){
   bool land=(b&128u)!=0u;
   float m=float(b&31u);
-  if(land&&m>30.5)return 38.0;
-  if(land)return 0.15+pow(m/30.0,2.0)*31.0;
+  if(land&&m>30.5)return 57.0;
+  if(land)return (0.15+pow(m/30.0,2.0)*31.0)*1.5;
   return -min(m,10.0)*0.02;
 }
 float sampledHeight(ivec2 p){
@@ -95,10 +98,16 @@ void main(){
   ivec2 tc=ivec2(clamp(floor(world),vec2(0.0),uMapSize-1.0));
   uint terrainByte=inside?texelFetch(uTerrain,tc,0).r:10u;
   float h=inside?smoothHeight(world):heightFor(terrainByte);
+  float hx0=smoothHeight(world-vec2(1.0,0.0));
+  float hx1=smoothHeight(world+vec2(1.0,0.0));
+  float hz0=smoothHeight(world-vec2(0.0,1.0));
+  float hz1=smoothHeight(world+vec2(0.0,1.0));
   gl_Position=uViewProjection*vec4(world.x,h,world.y,1.0);
   vMapUV=mapUV;
   vHeight=h;
   vViewDepth=gl_Position.w;
+  vWorld=world;
+  vTerrainNormal=normalize(vec3(hx0-hx1,2.0,hz0-hz1));
 }`;
 
 const baseVert = `#version 300 es
@@ -112,12 +121,40 @@ precision highp float;
 out vec4 outColor;
 void main(){outColor=vec4(0.018,0.028,0.042,1.0);}`;
 
+const waterVert = `#version 300 es
+precision highp float;
+layout(location=0) in vec3 aPos;
+uniform mat4 uViewProjection;
+out vec2 vWorld;
+void main(){vWorld=aPos.xz;gl_Position=uViewProjection*vec4(aPos,1.0);}`;
+
+const waterFrag = `#version 300 es
+precision highp float;
+in vec2 vWorld;
+uniform float uTime;
+out vec4 outColor;
+float worldWave(vec2 p,float time){
+  float broad=sin(dot(p,vec2(0.031,0.017))+time*0.55);
+  float cross=sin(dot(p,vec2(-0.021,0.039))-time*0.42);
+  return broad*0.55+cross*0.45;
+}
+void main(){
+  float wave=worldWave(vWorld,uTime);
+  float fine=sin((vWorld.x-vWorld.y)*0.11+uTime*0.75)*0.5+0.5;
+  vec3 deep=vec3(0.025,0.20,0.34);
+  vec3 highlight=vec3(0.075,0.48,0.68);
+  float shimmer=clamp(0.28+wave*0.10+fine*0.055,0.12,0.48);
+  outColor=vec4(mix(deep,highlight,shimmer),1.0);
+}`;
+
 const terrainFrag = `#version 300 es
 precision highp float;
 precision highp usampler2D;
 in vec2 vMapUV;
 in float vHeight;
 in float vViewDepth;
+in vec2 vWorld;
+in vec3 vTerrainNormal;
 uniform usampler2D uTerrain;
 uniform usampler2D uTileState;
 uniform usampler2D uTrailState;
@@ -132,8 +169,8 @@ out vec4 outColor;
 
 float heightFor(uint b){
   bool land=(b&128u)!=0u; float m=float(b&31u);
-  if(land&&m>30.5)return 38.0;
-  if(land)return 0.15+pow(m/30.0,2.0)*31.0;
+  if(land&&m>30.5)return 57.0;
+  if(land)return (0.15+pow(m/30.0,2.0)*31.0)*1.5;
   return -min(m,10.0)*0.02;
 }
 void main(){
@@ -141,20 +178,13 @@ void main(){
   ivec2 size=textureSize(uTerrain,0);
   ivec2 p=ivec2(clamp(floor(vMapUV*uMapSize),vec2(0.0),uMapSize-1.0));
   uint centerByte=inside?texelFetch(uTerrain,p,0).r:10u;
-  int radius=max(1,int(round(uSampleRadius)));
-  ivec2 left=ivec2(max(0,p.x-radius),p.y);
-  ivec2 right=ivec2(min(size.x-1,p.x+radius),p.y);
-  ivec2 up=ivec2(p.x,max(0,p.y-radius));
-  ivec2 down=ivec2(p.x,min(size.y-1,p.y+radius));
-  float hl=heightFor(texelFetch(uTerrain,left,0).r);
-  float hr=heightFor(texelFetch(uTerrain,right,0).r);
-  float hu=heightFor(texelFetch(uTerrain,up,0).r);
-  float hd=heightFor(texelFetch(uTerrain,down,0).r);
-  vec2 stableSlope=vec2(hl-hr,hu-hd)/max(1.0,float(radius)*2.0);
+  if((centerByte&128u)==0u)discard;
+  vec3 continuousNormal=normalize(vTerrainNormal);
+  vec2 stableSlope=vec2(-continuousNormal.x,-continuousNormal.z)/max(0.18,continuousNormal.y);
   float relief=clamp(length(stableSlope)*0.28,0.0,1.0);
   float directional=clamp(0.5+dot(stableSlope,vec2(-0.68,-0.42))*0.16,0.0,1.0);
   float lightLevel=clamp(0.70+directional*0.38-relief*0.08,0.62,1.14);
-  float altitude=clamp(vHeight/31.0,0.0,1.0);
+  float altitude=clamp(vHeight/57.0,0.0,1.0);
   vec3 lowGround=vec3(0.25,0.44,0.18);
   vec3 exposedRock=vec3(0.42,0.39,0.34);
   vec3 snow=vec3(0.91,0.94,0.96);
@@ -164,6 +194,7 @@ void main(){
   terrainMaterial=mix(terrainMaterial,snow,snowMask);
   uint tileState=inside?texelFetch(uTileState,p,0).r:0u;
   uint owner=tileState&4095u;
+  bool fallout=(tileState&(1u<<13u))!=0u;
   vec3 ownerColor=texture(uPalette,vec2((float(owner)+0.5)/4096.0,0.25)).rgb;
   // Ownership stays unmistakable, while the underlying rock and snow remain
   // visible instead of every claimed mountain becoming one flat green slab.
@@ -172,16 +203,14 @@ void main(){
     boardMaterial=mix(boardMaterial,exposedRock,mix(0.0,0.34,rockMask));
     boardMaterial=mix(boardMaterial,snow,mix(0.0,0.72,snowMask));
   }
-  vec3 color=boardMaterial*lightLevel;
-  if((centerByte&128u)==0u){
-    float depth=clamp(float(centerByte&31u)/10.0,0.0,1.0);
-    vec3 water=mix(vec3(0.055,0.29,0.44),vec3(0.012,0.10,0.22),depth);
-    color=water;
-  }else{
-    // Even the unlit side of a ridge remains a solid board material; dark
-    // mountain facets must never read as holes in the map.
-    color=max(color,max(boardMaterial*0.68,vec3(0.12,0.15,0.09)));
+  if(fallout){
+    vec3 falloutGround=vec3(0.055,0.19,0.075);
+    boardMaterial=mix(falloutGround,exposedRock,rockMask*0.18);
   }
+  vec3 color=boardMaterial*lightLevel;
+  // Even the unlit side of a ridge remains a solid board material; dark
+  // mountain facets must never read as holes in the map.
+  color=max(color,max(boardMaterial*0.68,vec3(0.12,0.15,0.09)));
   if((centerByte&128u)!=0u&&owner>0u){
     ivec2 ownerLeft=ivec2(max(0,p.x-1),p.y),ownerRight=ivec2(min(size.x-1,p.x+1),p.y);
     ivec2 ownerUp=ivec2(p.x,max(0,p.y-1)),ownerDown=ivec2(p.x,min(size.y-1,p.y+1));
@@ -217,12 +246,19 @@ export class ThreeDCompositePass {
   private skyProgram: WebGLProgram;
   private terrainProgram: WebGLProgram;
   private baseProgram: WebGLProgram;
+  private waterProgram: WebGLProgram;
   private skyVao: WebGLVertexArrayObject;
   private baseVao: WebGLVertexArrayObject;
   private baseVertexBuffer: WebGLBuffer;
   private baseIndexBuffer: WebGLBuffer;
   private baseIndexCount: number;
   private baseViewProjection: WebGLUniformLocation | null;
+  private waterVao: WebGLVertexArrayObject;
+  private waterVertexBuffer: WebGLBuffer;
+  private waterIndexBuffer: WebGLBuffer;
+  private waterIndexCount: number;
+  private waterViewProjection: WebGLUniformLocation | null;
+  private waterTime: WebGLUniformLocation | null;
   private meshes: TerrainMesh[];
   private chunks: ThreeDTerrainChunks;
   private lodBias = 0;
@@ -242,6 +278,7 @@ export class ThreeDCompositePass {
     this.skyProgram = createProgram(gl, skyVert, skyFrag);
     this.terrainProgram = createProgram(gl, terrainVert, terrainFrag);
     this.baseProgram = createProgram(gl, baseVert, baseFrag);
+    this.waterProgram = createProgram(gl, waterVert, waterFrag);
     this.skyTime = gl.getUniformLocation(this.skyProgram, "uTime");
     this.skyTilt = gl.getUniformLocation(this.skyProgram, "uTilt");
     this.uniforms = Object.fromEntries(
@@ -263,7 +300,12 @@ export class ThreeDCompositePass {
     this.skyVao = createFullscreenQuad(gl);
     this.meshes = [128, 64, 32, 16].map((detail) => this.createMesh(detail));
     this.chunks = new ThreeDTerrainChunks(mapWidth, mapHeight);
-    const base = buildSolidMapBase(mapWidth, mapHeight);
+    const surface = buildCompleteMapSurface(
+      mapWidth,
+      mapHeight,
+      THREE_D_WATER_HEIGHT,
+    );
+    const base = surface.base;
     this.baseVao = gl.createVertexArray()!;
     gl.bindVertexArray(this.baseVao);
     this.baseVertexBuffer = gl.createBuffer()!;
@@ -279,6 +321,26 @@ export class ThreeDCompositePass {
       this.baseProgram,
       "uViewProjection",
     );
+    this.waterVao = gl.createVertexArray()!;
+    gl.bindVertexArray(this.waterVao);
+    this.waterVertexBuffer = gl.createBuffer()!;
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.waterVertexBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, surface.water.positions, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+    this.waterIndexBuffer = gl.createBuffer()!;
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.waterIndexBuffer);
+    gl.bufferData(
+      gl.ELEMENT_ARRAY_BUFFER,
+      surface.water.indices,
+      gl.STATIC_DRAW,
+    );
+    this.waterIndexCount = surface.water.indices.length;
+    this.waterViewProjection = gl.getUniformLocation(
+      this.waterProgram,
+      "uViewProjection",
+    );
+    this.waterTime = gl.getUniformLocation(this.waterProgram, "uTime");
     gl.bindVertexArray(null);
     gl.useProgram(this.terrainProgram);
     gl.uniform1i(this.uniforms.uTerrain, 0);
@@ -355,6 +417,12 @@ export class ThreeDCompositePass {
     gl.bindVertexArray(this.baseVao);
     gl.drawElements(gl.TRIANGLES, this.baseIndexCount, gl.UNSIGNED_INT, 0);
 
+    gl.useProgram(this.waterProgram);
+    gl.uniformMatrix4fv(this.waterViewProjection, false, viewProjection);
+    gl.uniform1f(this.waterTime, performance.now() / 1000);
+    gl.bindVertexArray(this.waterVao);
+    gl.drawElements(gl.TRIANGLES, this.waterIndexCount, gl.UNSIGNED_INT, 0);
+
     gl.useProgram(this.terrainProgram);
     gl.uniform2f(this.uniforms.uMapSize, this.mapWidth, this.mapHeight);
     gl.uniformMatrix4fv(this.uniforms.uViewProjection, false, viewProjection);
@@ -389,10 +457,14 @@ export class ThreeDCompositePass {
     this.gl.deleteProgram(this.skyProgram);
     this.gl.deleteProgram(this.terrainProgram);
     this.gl.deleteProgram(this.baseProgram);
+    this.gl.deleteProgram(this.waterProgram);
     this.gl.deleteVertexArray(this.skyVao);
     this.gl.deleteVertexArray(this.baseVao);
     this.gl.deleteBuffer(this.baseVertexBuffer);
     this.gl.deleteBuffer(this.baseIndexBuffer);
+    this.gl.deleteVertexArray(this.waterVao);
+    this.gl.deleteBuffer(this.waterVertexBuffer);
+    this.gl.deleteBuffer(this.waterIndexBuffer);
     for (const mesh of this.meshes) {
       this.gl.deleteVertexArray(mesh.vao);
       this.gl.deleteBuffer(mesh.vertexBuffer);
