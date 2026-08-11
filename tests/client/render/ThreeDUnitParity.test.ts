@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import {
   collectThreeDRenderableUnits,
   threeDGhostPresentation,
@@ -25,6 +27,18 @@ function unit(id: number, unitType: UnitType): UnitState {
 }
 
 describe("3D unit parity", () => {
+  it("keeps names, levels, and world text screen-facing in the 3D overlay pass", () => {
+    const renderer = readFileSync(
+      resolve(process.cwd(), "src/client/render/gl/Renderer.ts"),
+      "utf8",
+    );
+
+    expect(renderer).toContain("threeDScreenFacingScale(threeDCamera)");
+    expect(renderer).toMatch(
+      /this\.renderOverlays\([\s\S]*?billboardCamera,[\s\S]*?screenFacingScale,[\s\S]*?\);/,
+    );
+  });
+
   it("routes every unit through the real asset batch", () => {
     for (const type of Object.values(UnitType)) {
       expect(threeDModelBatchKey(type)).toBe(`asset:${type}`);

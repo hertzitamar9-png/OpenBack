@@ -35,6 +35,7 @@ import {
 } from "../Transport";
 import { UIState } from "../UIState";
 import { GameView } from "../view";
+import { isPointerOverVehicleSource } from "./VehicleSourceHover";
 
 /** True for nuke types (AtomBomb, HydrogenBomb): ghost is preserved after placement so user can place multiple or keep selection (Enter/key confirm). */
 export function shouldPreserveGhostAfterBuild(unitType: UnitType): boolean {
@@ -729,7 +730,7 @@ export class BuildPreviewController implements Controller {
     }
     const player = this.game.myPlayer();
     if (!player) return;
-    const hover = this.transformHandler.screenToWorldCoordinates(
+    const hover = this.transformHandler.screenToWorldCoordinatesFloat(
       this.mousePos.x,
       this.mousePos.y,
     );
@@ -737,21 +738,34 @@ export class BuildPreviewController implements Controller {
       this.view.updateHoverRange(null);
       return;
     }
-    const hoverTile = this.game.ref(hover.x, hover.y);
-    const maxDistance = this.game.config().openBackVehicleSnapRadius() ** 2;
-    let best: { tile: TileRef; radius: number; distance: number } | undefined;
+    let best:
+      | { tile: TileRef; radius: number; pointerDistance: number }
+      | undefined;
     for (const type of [UnitType.Runway, UnitType.MilitaryBase] as const) {
       for (const unit of player.units(type)) {
         if (!unit.isActive() || unit.isUnderConstruction()) continue;
-        const distance = this.game.euclideanDistSquared(unit.tile(), hoverTile);
-        if (distance > maxDistance || (best && distance >= best.distance)) {
+        const source = {
+          x: this.game.x(unit.tile()),
+          y: this.game.y(unit.tile()),
+        };
+        if (
+          !isPointerOverVehicleSource(
+            hover,
+            source,
+            this.transformHandler.scale,
+            type,
+          )
+        ) {
           continue;
         }
+        const pointerDistance =
+          (hover.x - (source.x + 0.5)) ** 2 + (hover.y - (source.y + 0.5)) ** 2;
+        if (best && pointerDistance >= best.pointerDistance) continue;
         const radius =
           type === UnitType.Runway
             ? this.game.config().planeMaxFlightRadius(unit.level())
             : this.game.config().tankMaxDriveRadius(unit.level());
-        best = { tile: unit.tile(), radius, distance };
+        best = { tile: unit.tile(), radius, pointerDistance };
       }
     }
     this.view.updateHoverRange(

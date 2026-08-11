@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildCompleteMapSurface,
+  buildMapEdgeSkirt,
   buildSolidMapBase,
   buildTerrainGrid,
   buildWaterGrid,
@@ -69,5 +70,14 @@ describe("ThreeDTerrainMesh", () => {
     expect(water.positions[water.positions.length - 3]).toBe(731);
     expect(water.positions[water.positions.length - 2]).toBeCloseTo(-0.08, 5);
     expect(water.positions[water.positions.length - 1]).toBe(413);
+  });
+
+  it("builds a continuous terrain skirt around every map edge", () => {
+    const skirt = buildMapEdgeSkirt(731, 413, 12, 7);
+    expect(skirt.positions.length / 3).toBe((12 + 1) * 4 + (7 + 1) * 4);
+    expect(skirt.indices.length).toBe((12 * 2 + 7 * 2) * 6);
+    expect([...skirt.positions, ...skirt.indices].every(Number.isFinite)).toBe(
+      true,
+    );
   });
 });

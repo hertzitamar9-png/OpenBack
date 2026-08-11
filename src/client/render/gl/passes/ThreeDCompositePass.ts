@@ -10,6 +10,7 @@ import { THREE_D_WATER_HEIGHT } from "../three-d/ThreeDSurfaceSampler";
 import { ThreeDTerrainChunks } from "../three-d/ThreeDTerrainChunks";
 import {
   buildCompleteMapSurface,
+  buildMapEdgeSkirt,
   buildTerrainGrid,
 } from "../three-d/ThreeDTerrainMesh";
 import { createFullscreenQuad, createProgram } from "../utils/GlUtils";
@@ -122,6 +123,39 @@ void main(){
   // The closed board is exposed at shallow camera angles. Use an opaque rock
   // material so partial southern edges read as solid terrain, never a void.
   outColor=vec4(0.16,0.145,0.125,1.0);
+}`;
+
+const skirtVert = `#version 300 es
+precision highp float;
+precision highp usampler2D;
+layout(location=0) in vec3 aPos;
+uniform usampler2D uTerrain;
+uniform vec2 uMapSize;
+uniform mat4 uViewProjection;
+uniform float uSkirtBottom;
+out float vHeight;
+float heightFor(uint b){
+  bool land=(b&128u)!=0u; float m=float(b&31u);
+  if(land&&m>30.5)return 57.0;
+  if(land)return (0.15+pow(m/30.0,2.0)*31.0)*1.5;
+  return -min(m,10.0)*0.02;
+}
+void main(){
+  ivec2 p=ivec2(clamp(floor(aPos.xz),vec2(0.0),uMapSize-1.0));
+  float terrainHeight=heightFor(texelFetch(uTerrain,p,0).r);
+  float height=mix(uSkirtBottom,terrainHeight,aPos.y);
+  vHeight=height;
+  gl_Position=uViewProjection*vec4(aPos.x,height,aPos.z,1.0);
+}`;
+
+const skirtFrag = `#version 300 es
+precision highp float;
+in float vHeight;
+out vec4 outColor;
+void main(){
+  float snow=smoothstep(28.0,48.0,vHeight);
+  vec3 rock=vec3(0.25,0.23,0.20);
+  outColor=vec4(mix(rock,vec3(0.78,0.81,0.82),snow),1.0);
 }`;
 
 const waterVert = `#version 300 es
@@ -270,6 +304,7 @@ export class ThreeDCompositePass {
   private skyProgram: WebGLProgram;
   private terrainProgram: WebGLProgram;
   private baseProgram: WebGLProgram;
+  private skirtProgram: WebGLProgram;
   private waterProgram: WebGLProgram;
   private skyVao: WebGLVertexArrayObject;
   private baseVao: WebGLVertexArrayObject;
@@ -277,6 +312,13 @@ export class ThreeDCompositePass {
   private baseIndexBuffer: WebGLBuffer;
   private baseIndexCount: number;
   private baseViewProjection: WebGLUniformLocation | null;
+  private skirtVao: WebGLVertexArrayObject;
+  private skirtVertexBuffer: WebGLBuffer;
+  private skirtIndexBuffer: WebGLBuffer;
+  private skirtIndexCount: number;
+  private skirtViewProjection: WebGLUniformLocation | null;
+  private skirtMapSize: WebGLUniformLocation | null;
+  private skirtBottom: WebGLUniformLocation | null;
   private waterVao: WebGLVertexArrayObject;
   private waterVertexBuffer: WebGLBuffer;
   private waterIndexBuffer: WebGLBuffer;
@@ -303,6 +345,7 @@ export class ThreeDCompositePass {
     this.skyProgram = createProgram(gl, skyVert, skyFrag);
     this.terrainProgram = createProgram(gl, terrainVert, terrainFrag);
     this.baseProgram = createProgram(gl, baseVert, baseFrag);
+    this.skirtProgram = createProgram(gl, skirtVert, skirtFrag);
     this.waterProgram = createProgram(gl, waterVert, waterFrag);
     this.skyTime = gl.getUniformLocation(this.skyProgram, "uTime");
     this.skyTilt = gl.getUniformLocation(this.skyProgram, "uTilt");
@@ -346,6 +389,26 @@ export class ThreeDCompositePass {
       this.baseProgram,
       "uViewProjection",
     );
+    const skirt = buildMapEdgeSkirt(mapWidth, mapHeight);
+    this.skirtVao = gl.createVertexArray()!;
+    gl.bindVertexArray(this.skirtVao);
+    this.skirtVertexBuffer = gl.createBuffer()!;
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.skirtVertexBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, skirt.positions, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+    this.skirtIndexBuffer = gl.createBuffer()!;
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.skirtIndexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, skirt.indices, gl.STATIC_DRAW);
+    this.skirtIndexCount = skirt.indices.length;
+    this.skirtViewProjection = gl.getUniformLocation(
+      this.skirtProgram,
+      "uViewProjection",
+    );
+    this.skirtMapSize = gl.getUniformLocation(this.skirtProgram, "uMapSize");
+    this.skirtBottom = gl.getUniformLocation(this.skirtProgram, "uSkirtBottom");
+    gl.useProgram(this.skirtProgram);
+    gl.uniform1i(gl.getUniformLocation(this.skirtProgram, "uTerrain"), 0);
     this.waterVao = gl.createVertexArray()!;
     gl.bindVertexArray(this.waterVao);
     this.waterVertexBuffer = gl.createBuffer()!;
@@ -447,6 +510,15 @@ export class ThreeDCompositePass {
     gl.bindVertexArray(this.baseVao);
     gl.drawElements(gl.TRIANGLES, this.baseIndexCount, gl.UNSIGNED_INT, 0);
 
+    gl.useProgram(this.skirtProgram);
+    gl.uniformMatrix4fv(this.skirtViewProjection, false, viewProjection);
+    gl.uniform2f(this.skirtMapSize, this.mapWidth, this.mapHeight);
+    gl.uniform1f(this.skirtBottom, THREE_D_WATER_HEIGHT - 0.92);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.terrain);
+    gl.bindVertexArray(this.skirtVao);
+    gl.drawElements(gl.TRIANGLES, this.skirtIndexCount, gl.UNSIGNED_INT, 0);
+
     gl.useProgram(this.waterProgram);
     gl.uniformMatrix4fv(this.waterViewProjection, false, viewProjection);
     gl.uniform1f(this.waterTime, performance.now() / 1000);
@@ -488,11 +560,15 @@ export class ThreeDCompositePass {
     this.gl.deleteProgram(this.skyProgram);
     this.gl.deleteProgram(this.terrainProgram);
     this.gl.deleteProgram(this.baseProgram);
+    this.gl.deleteProgram(this.skirtProgram);
     this.gl.deleteProgram(this.waterProgram);
     this.gl.deleteVertexArray(this.skyVao);
     this.gl.deleteVertexArray(this.baseVao);
     this.gl.deleteBuffer(this.baseVertexBuffer);
     this.gl.deleteBuffer(this.baseIndexBuffer);
+    this.gl.deleteVertexArray(this.skirtVao);
+    this.gl.deleteBuffer(this.skirtVertexBuffer);
+    this.gl.deleteBuffer(this.skirtIndexBuffer);
     this.gl.deleteVertexArray(this.waterVao);
     this.gl.deleteBuffer(this.waterVertexBuffer);
     this.gl.deleteBuffer(this.waterIndexBuffer);

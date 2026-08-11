@@ -81,7 +81,11 @@ void main() {
   vec2 worldPos = center + rotated;
 
   vec3 clip = uCamera * vec3(worldPos, 1.0);
-  gl_Position = vec4(clip.xy, 0.0, 1.0);
+  if (clip.z <= 0.0001) {
+    gl_Position = vec4(2.0, 2.0, 0.0, 1.0);
+    return;
+  }
+  gl_Position = vec4(clip.xy / clip.z, 0.0, 1.0);
 
   vQuadPos = aPos;
   vAngle = aAngle;

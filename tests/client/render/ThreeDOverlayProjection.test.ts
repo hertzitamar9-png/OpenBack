@@ -22,6 +22,9 @@ describe("3D tactical overlay projection", () => {
     "range-circle/range-circle.vert.glsl",
     "sam-radius/sam-radius.vert.glsl",
     "selection-box/selection-box.vert.glsl",
+    "bar/bar.vert.glsl",
+    "structure/structure.vert.glsl",
+    "unit/unit.vert.glsl",
   ])(
     "perspective-divides and culls unsafe %s anchors instead of expanding across the screen",
     (path) => {

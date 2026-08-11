@@ -71,6 +71,7 @@ import type { RenderSettings } from "./RenderSettings";
 import {
   ThreeDCameraState,
   threeDGroundHomography,
+  threeDScreenFacingScale,
 } from "./three-d/ThreeDCamera";
 import { ThreeDFogPass } from "./three-d/ThreeDFogPass";
 import { ThreeDQualityController } from "./three-d/ThreeDQuality";
@@ -1454,6 +1455,7 @@ export class GPURenderer {
           pitch: this.threeDPitch,
         });
         const billboardCamera = threeDGroundHomography(threeDCamera, 0.15);
+        const screenFacingScale = threeDScreenFacingScale(threeDCamera);
         this.threeDPass!.draw(
           cw,
           ch,
@@ -1471,7 +1473,15 @@ export class GPURenderer {
         // combat effects stay on the exact classic sprite pipeline. This keeps
         // the established artwork and gameplay feedback identical to 2D while
         // the homography places it over the perspective terrain.
-        this.renderOverlays(billboardCamera, zoom, false, true, true, true);
+        this.renderOverlays(
+          billboardCamera,
+          zoom,
+          false,
+          true,
+          true,
+          true,
+          screenFacingScale,
+        );
         this.nukeTelegraphPass.drawThreeD(
           this.camera.offsetX,
           this.camera.offsetY,
@@ -1589,6 +1599,7 @@ export class GPURenderer {
     omitSpawnOverlay = false,
     omitEnvironment = false,
     threeDCompatibleOnly = false,
+    screenFacingScale?: readonly [number, number],
   ): void {
     const gl = this.gl;
     const pe = this.settings.passEnabled;
@@ -1618,7 +1629,12 @@ export class GPURenderer {
     this.parkedVehicleGlowPass.draw(cam, this.frameTick);
     if (pe.structure && !omitWorldObjects) this.structurePass.draw(cam, zoom);
     if (pe.structure && !omitWorldObjects)
-      this.structureLevelPass.draw(cam, zoom);
+      this.structureLevelPass.draw(
+        cam,
+        zoom,
+        screenFacingScale !== undefined,
+        screenFacingScale,
+      );
     // Small-player glow draws after structures so buildings can't hide it.
     if (!threeDCompatibleOnly) this.smallPlayerGlowPass.draw(cam);
     if (pe.bar && !omitWorldObjects) this.barPass.draw(cam);
@@ -1645,13 +1661,23 @@ export class GPURenderer {
       this.coordinateGridPass.draw(cam, zoom);
     }
     if (pe.name && !this.altView && !omitWorldObjects)
-      this.namePass.draw(cam, this.nightCompositePass.getAmbient());
+      this.namePass.draw(
+        cam,
+        this.nightCompositePass.getAmbient(),
+        screenFacingScale !== undefined,
+        screenFacingScale,
+      );
 
     // World text (attack-troop labels, popups, ghost cost) draws on top of
     // player names so attack callouts aren't hidden behind a centered name.
     if (!omitWorldObjects) {
       this.worldTextPass.tick(zoom);
-      this.worldTextPass.draw(cam, zoom);
+      this.worldTextPass.draw(
+        cam,
+        zoom,
+        screenFacingScale !== undefined,
+        screenFacingScale,
+      );
     }
     if (!omitEnvironment) {
       this.fogPass?.draw(cam);

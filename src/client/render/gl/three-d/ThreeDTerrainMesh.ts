@@ -145,3 +145,42 @@ export function buildCompleteMapSurface(
     base: buildSolidMapBase(width, height, waterHeight - 0.92, bottom),
   };
 }
+
+/**
+ * Four vertical strips joining the sampled terrain boundary to the board base.
+ * The Y component is a top/bottom selector; the GPU resolves top vertices from
+ * the live terrain texture so irregular edges such as Antarctica stay closed.
+ */
+export function buildMapEdgeSkirt(
+  width: number,
+  height: number,
+  segmentsX = 192,
+  segmentsY = 96,
+): ThreeDTerrainMeshData {
+  const positions: number[] = [];
+  const indices: number[] = [];
+  const addEdge = (
+    segments: number,
+    point: (t: number) => readonly [number, number],
+  ) => {
+    const start = positions.length / 3;
+    for (let index = 0; index <= segments; index++) {
+      const [x, z] = point(index / segments);
+      positions.push(x, 1, z, x, 0, z);
+    }
+    for (let index = 0; index < segments; index++) {
+      const current = start + index * 2;
+      const next = current + 2;
+      indices.push(current, current + 1, next + 1, current, next + 1, next);
+    }
+  };
+
+  addEdge(segmentsX, (t) => [t * width, 0]);
+  addEdge(segmentsX, (t) => [(1 - t) * width, height]);
+  addEdge(segmentsY, (t) => [0, (1 - t) * height]);
+  addEdge(segmentsY, (t) => [width, t * height]);
+  return {
+    positions: new Float32Array(positions),
+    indices: new Uint32Array(indices),
+  };
+}

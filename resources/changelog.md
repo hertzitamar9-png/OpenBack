@@ -1,3 +1,12 @@
+## OpenBack v0.34.123 - Complete 3D Battlefield Visibility
+
+- Restored country names, flags, troop counts, structures, mobile units, construction bars, and tactical text throughout 3D matches by repairing the classic overlay projection and keeping labels screen-facing.
+- Closed raised terrain along every map boundary with an opaque terrain-matched skirt, so Antarctica and other irregular southern edges no longer expose a hollow or transparent gap above the board.
+- Limited Runway and Military Base deployment-radius previews to direct pointer contact with their visible structure artwork instead of activating anywhere inside the wider stacking distance.
+- Added perspective safety checks for unit, structure, and bar geometry so rapid 3D camera movement cannot expand invalid overlay vertices across or hide the battlefield.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.122 - Parked Vehicle Readiness and Tank Defenses
 
 - Added a pulsing owner-colored ground glow beneath Tanks waiting at Military Bases and Aircraft loading or waiting at Runways; the glow clears immediately when the vehicle launches or is destroyed in both 2D and 3D mode.

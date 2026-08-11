@@ -24,6 +24,12 @@ describe("3D terrain material parity", () => {
     expect(source).toContain("vec3(0.075,0.48,0.68)");
   });
 
+  it("closes raised southern terrain against the solid board", () => {
+    expect(source).toContain("skirtProgram");
+    expect(source).toContain("uTerrain");
+    expect(source).toContain("uSkirtBottom");
+  });
+
   it("computes continuous world-coordinate terrain normals", () => {
     expect(source).toContain("vWorld");
     expect(source).toContain("smoothHeight(world+vec2(1.0,0.0))");
