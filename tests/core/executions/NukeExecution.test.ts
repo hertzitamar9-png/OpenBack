@@ -7,6 +7,7 @@ import {
   PlayerType,
   UnitType,
 } from "../../../src/core/game/Game";
+import type { NukeType } from "../../../src/core/StatsSchemas";
 import { setup } from "../../util/Setup";
 import { TestConfig } from "../../util/TestConfig";
 import { executeTicks } from "../../util/utils";
@@ -71,26 +72,35 @@ describe("NukeExecution", () => {
     expect(defensePost.touch).not.toHaveBeenCalled();
   });
 
-  test("bomb blasts destroy planes but not tanks", () => {
-    const blastTile = game.ref(20, 20);
-    const launchTile = game.ref(80, 80);
-    player.conquer(blastTile);
-    otherPlayer.conquer(launchTile);
-    otherPlayer.buildUnit(UnitType.MissileSilo, launchTile, {});
-    const plane = player.buildUnit(UnitType.Plane, blastTile, {
-      troops: 1_000,
-      trajectory: [],
-    });
-    const tank = player.buildUnit(UnitType.Tank, blastTile, { trajectory: [] });
+  test.each([
+    UnitType.AtomBomb,
+    UnitType.HydrogenBomb,
+    UnitType.MIRVWarhead,
+  ] satisfies NukeType[])(
+    "%s blasts destroy planes but not tanks",
+    (bombType) => {
+      const blastTile = game.ref(20, 20);
+      const launchTile = game.ref(80, 80);
+      player.conquer(blastTile);
+      otherPlayer.conquer(launchTile);
+      otherPlayer.buildUnit(UnitType.MissileSilo, launchTile, {});
+      const plane = player.buildUnit(UnitType.Plane, blastTile, {
+        troops: 1_000,
+        trajectory: [],
+      });
+      const tank = player.buildUnit(UnitType.Tank, blastTile, {
+        trajectory: [],
+      });
 
-    game.addExecution(
-      new NukeExecution(UnitType.AtomBomb, otherPlayer, blastTile, launchTile),
-    );
-    executeTicks(game, 200);
+      game.addExecution(
+        new NukeExecution(bombType, otherPlayer, blastTile, launchTile),
+      );
+      executeTicks(game, 400);
 
-    expect(plane.isActive()).toBe(false);
-    expect(tank.isActive()).toBe(true);
-  });
+      expect(plane.isActive()).toBe(false);
+      expect(tank.isActive()).toBe(true);
+    },
+  );
 
   test("nuke should only be targetable near src and dst", async () => {
     player.buildUnit(UnitType.MissileSilo, game.ref(1, 1), {});
