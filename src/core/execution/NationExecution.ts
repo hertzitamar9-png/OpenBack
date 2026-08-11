@@ -12,6 +12,7 @@ import {
   UnitType,
 } from "../game/Game";
 import { TileRef } from "../game/GameMap";
+import { reachableLandTiles } from "../pathfinding/PathFinder.Land";
 import { PseudoRandom } from "../PseudoRandom";
 import { GameID } from "../Schemas";
 import { assertNever, simpleHash } from "../Util";
@@ -251,10 +252,23 @@ export class NationExecution implements Execution {
           other.borderTiles().size > 0,
       );
     if (targets.length === 0) return;
+    const baseLevel = player
+      .units(UnitType.MilitaryBase)
+      .filter(
+        (base) =>
+          base.isActive() &&
+          !base.isUnderConstruction() &&
+          base.tile() === tank.tile(),
+      )
+      .reduce((sum, base) => sum + base.level(), 0);
+    if (baseLevel === 0) return;
+    const reachable = reachableLandTiles(
+      this.mg,
+      tank.tile(),
+      this.mg.config().tankMaxDriveRadius(baseLevel),
+    );
     const reachableTiles = targets.flatMap((target) =>
-      Array.from(target.borderTiles()).filter(
-        (tile) => player.canBuild(UnitType.Tank, tile) !== false,
-      ),
+      Array.from(target.borderTiles()).filter((tile) => reachable.has(tile)),
     );
     if (reachableTiles.length === 0) return;
     const tile = this.random.randElement(reachableTiles);

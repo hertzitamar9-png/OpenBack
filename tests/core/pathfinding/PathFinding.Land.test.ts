@@ -1,6 +1,9 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { Game } from "../../../src/core/game/Game";
-import { findLandPath } from "../../../src/core/pathfinding/PathFinder.Land";
+import {
+  findLandPath,
+  reachableLandTiles,
+} from "../../../src/core/pathfinding/PathFinder.Land";
 import { setup } from "../../util/Setup";
 
 describe("PathFinding.Land", () => {
@@ -27,7 +30,25 @@ describe("PathFinding.Land", () => {
     expect(hasDiagonal).toBe(true);
   });
 
+  it("keeps the deterministic route without sorting the entire frontier", () => {
+    const sort = vi.spyOn(Array.prototype, "sort");
+    const path = findLandPath(game, game.ref(0, 0), game.ref(7, 15));
+
+    expect(path).toEqual([
+      0, 16, 32, 48, 64, 80, 96, 113, 130, 146, 162, 179, 196, 213, 230, 247,
+    ]);
+    expect(sort).not.toHaveBeenCalled();
+    sort.mockRestore();
+  });
+
   it("rejects destinations across a water barrier", () => {
     expect(findLandPath(game, game.ref(0, 0), game.ref(8, 0))).toBeNull();
+  });
+
+  it("collects every connected land destination within a vehicle radius", () => {
+    const reachable = reachableLandTiles(game, game.ref(0, 0), 20);
+
+    expect(reachable.has(game.ref(7, 15))).toBe(true);
+    expect(reachable.has(game.ref(8, 0))).toBe(false);
   });
 });

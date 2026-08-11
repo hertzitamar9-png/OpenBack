@@ -1,3 +1,11 @@
+## OpenBack v0.34.121 - Stable World Matches and Restored Build Shortcuts
+
+- Fixed the complete simulation freeze that could stop large World matches after several minutes when nation AI evaluated tank routes across extensive borders.
+- Replaced repeated full-map tank route searches with one deterministic connectivity pass and a priority-queue pathfinder, preserving the same destinations and multiplayer simulation while making the reproduced 400-bot match complete normally.
+- Restored Shift+1 through Shift+6 build shortcuts for Aircraft, MANPAD, Runway, Military Base, Tank, and Tank Mine after the input-handler update dropped the added OpenBack units.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.120 - Reliable In-Flight Bomb Targets
 
 - Restored the large green OpenFront landing telegraph after an Atom Bomb or Hydrogen Bomb has already been launched.

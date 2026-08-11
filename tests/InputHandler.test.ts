@@ -799,6 +799,29 @@ describe("InputHandler AutoUpgrade", () => {
       } as UIState;
     });
 
+    test.each([
+      ["Digit1", UnitType.Plane],
+      ["Digit2", UnitType.MANPAD],
+      ["Digit3", UnitType.Runway],
+      ["Digit4", UnitType.MilitaryBase],
+      ["Digit5", UnitType.Tank],
+      ["Digit6", UnitType.TankMine],
+    ])("Shift+%s selects the added OpenBack unit", (code, expectedType) => {
+      inputHandler = new InputHandler(
+        mockGameView,
+        uiState,
+        mockCanvas,
+        eventBus,
+      );
+      inputHandler.initialize();
+
+      window.dispatchEvent(
+        new KeyboardEvent("keyup", { code, shiftKey: true }),
+      );
+
+      expect(uiState.ghostStructure).toBe(expectedType);
+    });
+
     test("Shift+Digit1 sets City when buildCity is bound to Shift+Digit1", () => {
       testSettings.setKeybinds({ buildCity: "Shift+Digit1" });
       inputHandler = new InputHandler(
