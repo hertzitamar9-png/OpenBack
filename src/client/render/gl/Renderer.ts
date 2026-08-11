@@ -47,6 +47,7 @@ import { NamePass } from "./passes/name-pass";
 import { NightCompositePass } from "./passes/NightCompositePass";
 import { NukeTelegraphPass } from "./passes/NukeTelegraphPass";
 import { NukeTrajectoryPass } from "./passes/NukeTrajectoryPass";
+import { ParkedVehicleGlowPass } from "./passes/ParkedVehicleGlowPass";
 import { PointLightPass } from "./passes/PointLightPass";
 import { RailroadPass } from "./passes/RailroadPass";
 import { RangeCirclePass } from "./passes/RangeCirclePass";
@@ -167,6 +168,7 @@ export class GPURenderer {
   private coordinateGridPass: CoordinateGridPass;
   private spawnOverlayPass: SpawnOverlayPass;
   private smallPlayerGlowPass: SmallPlayerGlowPass;
+  private parkedVehicleGlowPass: ParkedVehicleGlowPass;
   private inSpawnPhase = false;
   private threeDModeActive = false;
   private threeDQuality = new ThreeDQualityController("high");
@@ -533,6 +535,11 @@ export class GPURenderer {
       mapH,
       this.res.tileTex,
       this.settings.smallPlayerGlow,
+    );
+    this.parkedVehicleGlowPass = new ParkedVehicleGlowPass(
+      gl,
+      mapW,
+      paletteData,
     );
 
     // --- Trail (needs trailTex, paletteTex, effectTex) ---
@@ -986,6 +993,7 @@ export class GPURenderer {
     this.unitPass.updateUnits(units, this.frameTick);
     this.barPass.updateBars(units, this.lastStructures, gameTick);
     this.pointLightPass.updateLights(units);
+    this.parkedVehicleGlowPass.update(units);
     this.heatManager.decayHeat();
   }
 
@@ -1607,6 +1615,7 @@ export class GPURenderer {
     this.rangeCirclePass.draw(cam);
     this.nukeTrajectoryPass.draw(cam);
     this.crosshairPass.draw(cam);
+    this.parkedVehicleGlowPass.draw(cam, this.frameTick);
     if (pe.structure && !omitWorldObjects) this.structurePass.draw(cam, zoom);
     if (pe.structure && !omitWorldObjects)
       this.structureLevelPass.draw(cam, zoom);
@@ -1759,6 +1768,7 @@ export class GPURenderer {
     this.coordinateGridPass.dispose();
     this.spawnOverlayPass.dispose();
     this.smallPlayerGlowPass.dispose();
+    this.parkedVehicleGlowPass.dispose();
     this.railroadPass.dispose();
     this.rangeCirclePass.dispose();
     this.samRadiusPass.dispose();
