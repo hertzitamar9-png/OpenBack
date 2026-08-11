@@ -99,7 +99,12 @@ export class TankExecution implements Execution {
     }
     // Transport ships advance one tile per tick. Three half-tile credits per
     // tick makes tanks average exactly 1.5 tiles/tick using integer arithmetic.
-    this.movementCredit += 3;
+    // Hostile completed Defense Posts reduce that income to two credits: one
+    // tile per tick. A boolean coverage check means overlapping posts never
+    // stack, and speed returns immediately when coverage ends.
+    this.movementCredit += this.isInsideHostileDefenseCoverage(this.tank.tile())
+      ? 2
+      : 3;
     // Reuse one mine snapshot for every movement step in this tick. A tank
     // stops immediately after triggering a mine, so this preserves behavior.
     const mines = this.game.units(UnitType.TankMine);
@@ -138,6 +143,16 @@ export class TankExecution implements Execution {
         return;
       }
     }
+  }
+
+  private isInsideHostileDefenseCoverage(tile: TileRef): boolean {
+    return this.game
+      .nearbyUnits(
+        tile,
+        this.game.config().defensePostRange(),
+        UnitType.DefensePost,
+      )
+      .some(({ unit }) => !this.player.isFriendly(unit.owner()));
   }
 
   /** Two side brushes sweep fallout beyond the tank's own footprint. */

@@ -73,6 +73,84 @@ describe("TankExecution", () => {
     expect(Number.isFinite(tank.trajectoryAngle())).toBe(true);
   });
 
+  test("hostile defense coverage slows a tank by one third without stacking", () => {
+    game.addExecution(new TankExecution(attacker, game.ref(5, 5)));
+    game.executeNextTick();
+    const tank = attacker.units(UnitType.Tank)[0];
+    defender.buildUnit(UnitType.DefensePost, game.ref(5, 25), {});
+    defender.buildUnit(UnitType.DefensePost, game.ref(15, 25), {});
+
+    game.addExecution(new TankExecution(attacker, game.ref(18, 5)));
+    game.executeNextTick();
+    const start = tank.tile();
+    game.executeNextTick();
+    game.executeNextTick();
+
+    expect(game.manhattanDist(start, tank.tile())).toBe(2);
+  });
+
+  test("friendly, unfinished, and out-of-range defense posts do not slow a tank", () => {
+    game.addExecution(new TankExecution(attacker, game.ref(5, 5)));
+    game.executeNextTick();
+    const tank = attacker.units(UnitType.Tank)[0];
+    attacker.buildUnit(UnitType.DefensePost, game.ref(5, 25), {});
+    const unfinishedEnemyPost = defender.buildUnit(
+      UnitType.DefensePost,
+      game.ref(15, 25),
+      {},
+    );
+    unfinishedEnemyPost.setUnderConstruction(true);
+    defender.buildUnit(UnitType.DefensePost, game.ref(80, 80), {});
+
+    game.addExecution(new TankExecution(attacker, game.ref(18, 5)));
+    game.executeNextTick();
+    const start = tank.tile();
+    game.executeNextTick();
+    game.executeNextTick();
+
+    expect(game.manhattanDist(start, tank.tile())).toBe(3);
+  });
+
+  test("allied defense posts do not slow a tank", () => {
+    game.addExecution(new TankExecution(attacker, game.ref(5, 5)));
+    game.executeNextTick();
+    const tank = attacker.units(UnitType.Tank)[0];
+    defender.buildUnit(UnitType.DefensePost, game.ref(5, 25), {});
+
+    game.addExecution(new TankExecution(attacker, game.ref(18, 5)));
+    game.executeNextTick();
+    attacker.createAllianceRequest(defender)!.accept();
+    const start = tank.tile();
+    game.executeNextTick();
+    game.executeNextTick();
+
+    expect(game.manhattanDist(start, tank.tile())).toBe(3);
+  });
+
+  test("tank immediately regains full speed when defense coverage ends", () => {
+    game.addExecution(new TankExecution(attacker, game.ref(5, 5)));
+    game.executeNextTick();
+    const tank = attacker.units(UnitType.Tank)[0];
+    const defensePost = defender.buildUnit(
+      UnitType.DefensePost,
+      game.ref(5, 25),
+      {},
+    );
+
+    game.addExecution(new TankExecution(attacker, game.ref(18, 5)));
+    game.executeNextTick();
+    const start = tank.tile();
+    game.executeNextTick();
+    game.executeNextTick();
+    expect(game.manhattanDist(start, tank.tile())).toBe(2);
+
+    defensePost.delete(false);
+    const resumedAt = tank.tile();
+    game.executeNextTick();
+    game.executeNextTick();
+    expect(game.manhattanDist(resumedAt, tank.tile())).toBe(3);
+  });
+
   test("snaps tank placement to a nearby military base (regular game snap)", () => {
     const nearby = game.ref(8, 5);
     attacker.conquer(nearby);
