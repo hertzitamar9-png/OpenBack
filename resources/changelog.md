@@ -1,3 +1,12 @@
+## OpenBack v0.34.118 - Restored OpenFront Bomb Targets
+
+- Restored OpenFront's original in-flight bomb target visualization: the translucent inner blast area, solid inner boundary, and animated dashed outer radius.
+- Own bomb targets are green, allied targets are yellow, and enemy targets are red exactly as in the established OpenFront renderer.
+- Applied the same target shader and real gameplay radii to both 2D and 3D mode without changing bomb damage, interception, or multiplayer simulation.
+- Preserved the separate aircraft and tank route visuals added by OpenBack.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.117 - Classic Units in 3D
 
 - Replaced the mismatched 3D unit and structure meshes with OpenBack's established 2D artwork while keeping the battlefield terrain in 3D.

@@ -16,7 +16,6 @@ uniform vec4 uTelegraphAlpha;   // (baseAlpha, pulseAmplitude, pulseSpeed, fillA
 uniform vec3 uColorSelf;
 uniform vec3 uColorAlly;
 uniform vec3 uColorEnemy;
-uniform float uWorldUnitsPerPixel;
 
 out vec4 fragColor;
 
@@ -59,30 +58,12 @@ void main() {
   float dashPhase = mod(arcPos + uTime * rotationSpeed, period);
   float dashAlpha = 1.0 - smoothstep(dashLen - 0.5, dashLen + 0.5, dashPhase);
 
-  // Combine
-  // Tanks now use the same clean concentric-circle treatment, but their
-  // world-space angle keeps it symmetric and green rather than aircraft red.
-  // Bombs have very large real damage radii (Hydrogen reaches 100 tiles).
-  // Keep those warnings outlined so they never become a giant opaque surface.
-  // Aircraft and tank destination reticles retain their subtle fill.
-  float routeFill = step(0.5, vRouteKind);
-  float isNuke = 1.0 - routeFill;
-  float fillAlpha = routeFill * innerFill * max(0.0, baseAlpha - fillAlphaOff);
-  float strokeAlpha = routeFill * innerStroke * baseAlpha;
-  float outerAlpha = routeFill * outerRing * dashAlpha * baseAlpha;
-
-  // Removing the enormous bomb fill must not remove the destination itself.
-  // Draw a compact center reticle whose size remains readable for Atom Bombs,
-  // Hydrogen Bombs, and MIRV warheads without covering their blast area.
-  float targetReticleDistPx = uWorldUnitsPerPixel > 0.0
-    ? dist / uWorldUnitsPerPixel
-    : dist * 4.0;
-  float targetReticleRing = smoothstep(11.0, 9.5, targetReticleDistPx)
-    * (1.0 - smoothstep(12.5, 14.0, targetReticleDistPx));
-  float targetReticleDot = 1.0 - smoothstep(1.6, 2.8, targetReticleDistPx);
-  float targetReticleAlpha = isNuke
-    * max(targetReticleRing, targetReticleDot)
-    * min(1.0, baseAlpha + 0.12);
+  // OpenFront's original target visualization: a translucent filled inner
+  // blast area, solid inner boundary, and animated dashed outer radius. The
+  // same shader is shared by the 2D and 3D projection paths.
+  float fillAlpha = innerFill * max(0.0, baseAlpha - fillAlphaOff);
+  float strokeAlpha = innerStroke * baseAlpha;
+  float outerAlpha = outerRing * dashAlpha * baseAlpha;
 
   // Every client sees the aircraft's strategic route as a red dashed line.
   vec2 ab = vTarget - vSource;
@@ -93,10 +74,8 @@ void main() {
   float hasRoute = step(0.5, vRouteKind);
   float routeAlpha = hasRoute * (1.0 - smoothstep(0.25, 0.65, lineDist)) * lineDash * 0.9;
 
-  float alpha = max(
-    max(max(max(fillAlpha, strokeAlpha), outerAlpha), targetReticleAlpha),
-    routeAlpha
-  );
+  float circleAlpha = max(max(fillAlpha, strokeAlpha), outerAlpha);
+  float alpha = max(circleAlpha, routeAlpha);
   if (alpha < 0.01) discard;
 
   vec3 routeColor = vRouteKind > 1.5 ? vec3(0.2, 1.0, 0.32) : vec3(1.0, 0.08, 0.04);
@@ -105,10 +84,6 @@ void main() {
              : vRelation < 0.5 ? uColorSelf
              : vRelation < 1.5 ? uColorAlly
              : uColorEnemy;
-  vec3 targetReticleColor = vec3(0.16, 1.0, 0.3);
-  float circleAlpha = max(max(fillAlpha, strokeAlpha), outerAlpha);
-  vec3 color = targetReticleAlpha >= max(routeAlpha, circleAlpha)
-             ? targetReticleColor
-             : routeAlpha >= circleAlpha ? routeColor : circleColor;
+  vec3 color = routeAlpha >= circleAlpha ? routeColor : circleColor;
   fragColor = vec4(color, alpha);
 }

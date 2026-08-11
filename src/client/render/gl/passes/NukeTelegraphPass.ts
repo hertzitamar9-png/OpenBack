@@ -36,7 +36,6 @@ export class NukeTelegraphPass {
   private uColorSelf: WebGLUniformLocation;
   private uColorAlly: WebGLUniformLocation;
   private uColorEnemy: WebGLUniformLocation;
-  private uWorldUnitsPerPixel: WebGLUniformLocation;
   private uThreeD: WebGLUniformLocation;
   private uThreeDCenter: WebGLUniformLocation;
   private uDistance: WebGLUniformLocation;
@@ -73,10 +72,6 @@ export class NukeTelegraphPass {
     this.uColorSelf = gl.getUniformLocation(this.program, "uColorSelf")!;
     this.uColorAlly = gl.getUniformLocation(this.program, "uColorAlly")!;
     this.uColorEnemy = gl.getUniformLocation(this.program, "uColorEnemy")!;
-    this.uWorldUnitsPerPixel = gl.getUniformLocation(
-      this.program,
-      "uWorldUnitsPerPixel",
-    )!;
     this.uThreeD = gl.getUniformLocation(this.program, "uThreeD")!;
     this.uThreeDCenter = gl.getUniformLocation(this.program, "uThreeDCenter")!;
     this.uDistance = gl.getUniformLocation(this.program, "uDistance")!;
@@ -181,10 +176,6 @@ export class NukeTelegraphPass {
     gl.useProgram(this.program);
     gl.uniform1i(this.uThreeD, 0);
     gl.uniformMatrix3fv(this.uCamera, false, cameraMatrix);
-    gl.uniform1f(
-      this.uWorldUnitsPerPixel,
-      2 / Math.max(0.000001, Math.abs(cameraMatrix[0]) * gl.drawingBufferWidth),
-    );
     gl.uniform1f(this.uTime, time);
     gl.uniform4f(
       this.uTelegraphStyle,
@@ -234,7 +225,6 @@ export class NukeTelegraphPass {
     });
     gl.useProgram(this.program);
     gl.uniform1i(this.uThreeD, 1);
-    gl.uniform1f(this.uWorldUnitsPerPixel, 0);
     gl.uniform2f(this.uThreeDCenter, centerX, centerY);
     gl.uniform2f(
       gl.getUniformLocation(this.program, "uMapSize"),

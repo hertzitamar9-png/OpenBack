@@ -91,27 +91,28 @@ describe("recoverable render frames", () => {
   });
 });
 
-describe("nuke warning readability", () => {
-  it("does not render the real blast radius as a map-covering 2D warning", () => {
+describe("OpenFront nuke warning parity", () => {
+  it("renders the upstream filled inner blast area and dashed outer radius", () => {
     const shader = readFileSync(
       "src/client/render/gl/shaders/nuke-telegraph/nuke-telegraph.frag.glsl",
       "utf8",
     );
-    expect(shader).toContain("float routeFill = step(0.5, vRouteKind)");
-    expect(shader).toContain("float fillAlpha = routeFill * innerFill");
-    expect(shader).toContain("float strokeAlpha = routeFill * innerStroke");
-    expect(shader).toContain("float outerAlpha = routeFill * outerRing");
+    expect(shader).toContain(
+      "float fillAlpha = innerFill * max(0.0, baseAlpha - fillAlphaOff)",
+    );
+    expect(shader).toContain("float strokeAlpha = innerStroke * baseAlpha");
+    expect(shader).toContain(
+      "float outerAlpha = outerRing * dashAlpha * baseAlpha",
+    );
   });
 
-  it("keeps a fixed-screen-size final-destination reticle visible for nukes", () => {
+  it("does not replace the upstream target area with a compact reticle", () => {
     const shader = readFileSync(
       "src/client/render/gl/shaders/nuke-telegraph/nuke-telegraph.frag.glsl",
       "utf8",
     );
-    expect(shader).toContain("uniform float uWorldUnitsPerPixel");
-    expect(shader).toContain("float targetReticleDistPx");
-    expect(shader).toContain("float targetReticleAlpha");
-    expect(shader).toContain("vec3 targetReticleColor = vec3(0.16, 1.0, 0.3)");
+    expect(shader).not.toContain("targetReticleDistPx");
+    expect(shader).not.toContain("targetReticleAlpha");
   });
 
   it("uses the compact cursor for Atom and Hydrogen Bomb placement", () => {
