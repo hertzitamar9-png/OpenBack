@@ -477,9 +477,9 @@ export class BuildPreviewController implements Controller {
     }
     const canUpgrade = u.canUpgrade !== false || stackTargetTile !== null;
 
-    // Range circle: structures and vehicles show their useful range. Nukes
-    // deliberately use the fixed-size target cursor instead: their real blast
-    // radii are simulation data and become map-covering placement overlays.
+    // Range circle: structures and vehicles show their useful range. Atom and
+    // Hydrogen Bombs keep OpenFront's real outer blast-radius preview while
+    // NukeTrajectoryPass draws the white dashed silo-to-target arc.
     let rangeRadius = 0;
     let vehicleRangeSourceTile: TileRef | null = null;
     switch (u.type) {
@@ -488,6 +488,10 @@ export class BuildPreviewController implements Controller {
         rangeRadius = this.game.config().samRange(level);
         break;
       }
+      case UnitType.AtomBomb:
+      case UnitType.HydrogenBomb:
+        rangeRadius = this.game.config().nukeMagnitudes(u.type).outer;
+        break;
       case UnitType.Factory:
         rangeRadius = this.game.config().trainStationMaxRange();
         break;

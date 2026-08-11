@@ -1,3 +1,12 @@
+## OpenBack v0.34.119 - Restored OpenFront Bomb Flight Preview
+
+- Restored OpenFront's original Atom Bomb and Hydrogen Bomb placement presentation: the curved white dashed path from the active missile silo to the selected target.
+- Removed OpenBack's replacement compact target crosshair and restored the real outer blast-radius placement preview.
+- Preserved OpenFront's colored moving bomb marker at the head of the flight trail and its original in-flight target circles.
+- Kept the same trajectory, projectile, target, and radius behavior in both 2D and 3D mode without changing bomb gameplay or damage.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.118 - Restored OpenFront Bomb Targets
 
 - Restored OpenFront's original in-flight bomb target visualization: the translucent inner blast area, solid inner boundary, and animated dashed outer radius.

@@ -115,7 +115,7 @@ describe("OpenFront nuke warning parity", () => {
     expect(shader).not.toContain("targetReticleAlpha");
   });
 
-  it("uses the compact cursor for Atom and Hydrogen Bomb placement", () => {
+  it("uses OpenFront's trajectory and blast-radius preview for bomb placement", () => {
     const preview = readFileSync(
       "src/client/controllers/BuildPreviewController.ts",
       "utf8",
@@ -124,11 +124,18 @@ describe("OpenFront nuke warning parity", () => {
       "src/client/render/gl/passes/CrosshairPass.ts",
       "utf8",
     );
-    expect(preview).not.toContain(
+    const trajectoryShader = readFileSync(
+      "src/client/render/gl/shaders/nuke-trajectory/nuke-trajectory.frag.glsl",
+      "utf8",
+    );
+    expect(preview).toContain(
       "rangeRadius = this.game.config().nukeMagnitudes(u.type).outer",
     );
-    expect(crosshair).toContain("UT_ATOM_BOMB");
-    expect(crosshair).toContain("UT_HYDROGEN_BOMB");
-    expect(crosshair).toContain("nukeTargetCursor");
+    expect(crosshair).not.toContain("UT_ATOM_BOMB");
+    expect(crosshair).not.toContain("UT_HYDROGEN_BOMB");
+    expect(crosshair).not.toContain("nukeTargetCursor");
+    expect(trajectoryShader).toContain(
+      "fragColor = vec4(color, outlineAlpha * dashAlpha)",
+    );
   });
 });
