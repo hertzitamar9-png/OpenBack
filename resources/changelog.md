@@ -1,3 +1,11 @@
+## OpenBack v0.34.122 - Parked Vehicle Readiness and Tank Defenses
+
+- Added a pulsing owner-colored ground glow beneath Tanks waiting at Military Bases and Aircraft loading or waiting at Runways; the glow clears immediately when the vehicle launches or is destroyed in both 2D and 3D mode.
+- Made completed hostile Defense Posts slow Tanks inside their coverage by one-third without stacking, giving defenders time to react while Tanks remain able to advance through and destroy the post.
+- Preserved Tank Mines as the dedicated instant Tank counter and locked Tank immunity to Atom Bomb, Hydrogen Bomb, and MIRV blast deletion across the deterministic simulation.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.121 - Stable World Matches and Restored Build Shortcuts
 
 - Fixed the complete simulation freeze that could stop large World matches after several minutes when nation AI evaluated tank routes across extensive borders.
