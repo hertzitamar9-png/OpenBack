@@ -92,9 +92,19 @@ describe("recoverable render frames", () => {
 });
 
 describe("OpenFront nuke warning parity", () => {
+  it("isolates the exact OpenFront 2D warning from custom 3D route shaders", () => {
+    const pass = readFileSync(
+      "src/client/render/gl/passes/NukeTelegraphPass.ts",
+      "utf8",
+    );
+    expect(pass).toContain("nuke-telegraph-classic.vert.glsl?raw");
+    expect(pass).toContain("nuke-telegraph-classic.frag.glsl?raw");
+    expect(pass).toContain("gl.useProgram(this.classicProgram)");
+  });
+
   it("renders the upstream filled inner blast area and dashed outer radius", () => {
     const shader = readFileSync(
-      "src/client/render/gl/shaders/nuke-telegraph/nuke-telegraph.frag.glsl",
+      "src/client/render/gl/shaders/nuke-telegraph/nuke-telegraph-classic.frag.glsl",
       "utf8",
     );
     expect(shader).toContain(
@@ -108,7 +118,7 @@ describe("OpenFront nuke warning parity", () => {
 
   it("does not replace the upstream target area with a compact reticle", () => {
     const shader = readFileSync(
-      "src/client/render/gl/shaders/nuke-telegraph/nuke-telegraph.frag.glsl",
+      "src/client/render/gl/shaders/nuke-telegraph/nuke-telegraph-classic.frag.glsl",
       "utf8",
     );
     expect(shader).not.toContain("targetReticleDistPx");

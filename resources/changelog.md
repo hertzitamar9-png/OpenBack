@@ -1,3 +1,11 @@
+## OpenBack v0.34.120 - Reliable In-Flight Bomb Targets
+
+- Restored the large green OpenFront landing telegraph after an Atom Bomb or Hydrogen Bomb has already been launched.
+- Kept the translucent inner blast area, solid inner circle, and animated dashed outer circle visible for the complete flight by isolating OpenFront's original 2D warning renderer from OpenBack's 3D projection path.
+- Made each frame preserve a stable active-unit snapshot for bomb destinations in both 2D and 3D while preserving bomb damage, timing, interception, and multiplayer simulation.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.119 - Restored OpenFront Bomb Flight Preview
 
 - Restored OpenFront's original Atom Bomb and Hydrogen Bomb placement presentation: the curved white dashed path from the active missile silo to the selected target.

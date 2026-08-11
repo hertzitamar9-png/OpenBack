@@ -16,6 +16,8 @@ import {
   isFiniteClipGeometry,
 } from "../utils/ProjectionSafety";
 
+import classicFragSrc from "../shaders/nuke-telegraph/nuke-telegraph-classic.frag.glsl?raw";
+import classicVertSrc from "../shaders/nuke-telegraph/nuke-telegraph-classic.vert.glsl?raw";
 import fragSrc from "../shaders/nuke-telegraph/nuke-telegraph.frag.glsl?raw";
 import vertSrc from "../shaders/nuke-telegraph/nuke-telegraph.vert.glsl?raw";
 
@@ -26,6 +28,7 @@ export class NukeTelegraphPass {
   private gl: WebGL2RenderingContext;
   private settings: RenderSettings;
   private program: WebGLProgram;
+  private classicProgram: WebGLProgram;
   private vao: WebGLVertexArrayObject;
   private instanceBuf: DynamicInstanceBuffer;
 
@@ -44,6 +47,13 @@ export class NukeTelegraphPass {
   private uTilt: WebGLUniformLocation;
   private uYaw: WebGLUniformLocation;
   private uViewProjection: WebGLUniformLocation;
+  private classicCamera: WebGLUniformLocation;
+  private classicTime: WebGLUniformLocation;
+  private classicTelegraphStyle: WebGLUniformLocation;
+  private classicTelegraphAlpha: WebGLUniformLocation;
+  private classicColorSelf: WebGLUniformLocation;
+  private classicColorAlly: WebGLUniformLocation;
+  private classicColorEnemy: WebGLUniformLocation;
 
   private instanceCount = 0;
   private startTime = performance.now();
@@ -58,6 +68,10 @@ export class NukeTelegraphPass {
     this.gl = gl;
     this.settings = settings;
     this.program = createProgram(gl, vertSrc, fragSrc);
+    // Keep OpenFront's proven 2D warning program independent from the custom
+    // 3D terrain-projection program. Sharing the latter made valid in-flight
+    // destinations disappear in the classic renderer on real GPUs.
+    this.classicProgram = createProgram(gl, classicVertSrc, classicFragSrc);
 
     this.uCamera = gl.getUniformLocation(this.program, "uCamera")!;
     this.uTime = gl.getUniformLocation(this.program, "uTime")!;
@@ -82,6 +96,28 @@ export class NukeTelegraphPass {
     this.uViewProjection = gl.getUniformLocation(
       this.program,
       "uViewProjection",
+    )!;
+    this.classicCamera = gl.getUniformLocation(this.classicProgram, "uCamera")!;
+    this.classicTime = gl.getUniformLocation(this.classicProgram, "uTime")!;
+    this.classicTelegraphStyle = gl.getUniformLocation(
+      this.classicProgram,
+      "uTelegraphStyle",
+    )!;
+    this.classicTelegraphAlpha = gl.getUniformLocation(
+      this.classicProgram,
+      "uTelegraphAlpha",
+    )!;
+    this.classicColorSelf = gl.getUniformLocation(
+      this.classicProgram,
+      "uColorSelf",
+    )!;
+    this.classicColorAlly = gl.getUniformLocation(
+      this.classicProgram,
+      "uColorAlly",
+    )!;
+    this.classicColorEnemy = gl.getUniformLocation(
+      this.classicProgram,
+      "uColorEnemy",
     )!;
     gl.useProgram(this.program);
     gl.uniform1i(gl.getUniformLocation(this.program, "uTerrain"), 0);
@@ -173,27 +209,36 @@ export class NukeTelegraphPass {
     const s = this.settings.nukeTelegraph;
     const time = (performance.now() - this.startTime) / 1000;
 
-    gl.useProgram(this.program);
-    gl.uniform1i(this.uThreeD, 0);
-    gl.uniformMatrix3fv(this.uCamera, false, cameraMatrix);
-    gl.uniform1f(this.uTime, time);
+    gl.useProgram(this.classicProgram);
+    gl.uniformMatrix3fv(this.classicCamera, false, cameraMatrix);
+    gl.uniform1f(this.classicTime, time);
     gl.uniform4f(
-      this.uTelegraphStyle,
+      this.classicTelegraphStyle,
       s.strokeWidth,
       s.dashLen,
       s.gapLen,
       s.rotationSpeed,
     );
     gl.uniform4f(
-      this.uTelegraphAlpha,
+      this.classicTelegraphAlpha,
       s.baseAlpha,
       s.pulseAmplitude,
       s.pulseSpeed,
       s.fillAlphaOffset,
     );
-    gl.uniform3f(this.uColorSelf, s.selfColorR, s.selfColorG, s.selfColorB);
-    gl.uniform3f(this.uColorAlly, s.allyColorR, s.allyColorG, s.allyColorB);
-    gl.uniform3f(this.uColorEnemy, s.colorR, s.colorG, s.colorB);
+    gl.uniform3f(
+      this.classicColorSelf,
+      s.selfColorR,
+      s.selfColorG,
+      s.selfColorB,
+    );
+    gl.uniform3f(
+      this.classicColorAlly,
+      s.allyColorR,
+      s.allyColorG,
+      s.allyColorB,
+    );
+    gl.uniform3f(this.classicColorEnemy, s.colorR, s.colorG, s.colorB);
 
     gl.bindVertexArray(this.vao);
     gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, this.instanceCount);
@@ -274,6 +319,7 @@ export class NukeTelegraphPass {
   dispose(): void {
     const gl = this.gl;
     gl.deleteProgram(this.program);
+    gl.deleteProgram(this.classicProgram);
     this.instanceBuf.dispose();
     gl.deleteVertexArray(this.vao);
   }

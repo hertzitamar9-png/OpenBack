@@ -32,7 +32,7 @@ import { formatPlayerDisplayName } from "../../core/Util";
 import { WorkerClient } from "../../core/worker/WorkerClient";
 import { computeAllianceClusters } from "../render/frame/derive/AllianceClusters";
 import { extractAttackRingsFromIds } from "../render/frame/derive/AttackRings";
-import { extractNukeTelegraphsFromIds } from "../render/frame/derive/NukeTelegraphs";
+import { extractNukeTelegraphs } from "../render/frame/derive/NukeTelegraphs";
 import { computePlayerStatus } from "../render/frame/derive/PlayerStatus";
 import { buildRelationMatrix } from "../render/frame/derive/RelationMatrix";
 import { RailroadCache } from "../render/frame/RailroadCache";
@@ -762,8 +762,11 @@ export class GameView implements GameMap {
       this._clustersDirty = false;
       f.allianceClusters = computeAllianceClusters(this._playerStates);
     }
-    f.nukeTelegraphs = extractNukeTelegraphsFromIds(
-      this._telegraphUnitIds,
+    // Match OpenFront's authoritative snapshot path. This must be a fresh
+    // array: render upload may happen after the next simulation update, and
+    // reusing/clearing the same array can erase a short in-flight telegraph
+    // before the GPU ever sees it.
+    f.nukeTelegraphs = extractNukeTelegraphs(
       this._unitStates,
       this._map.width(),
       this._myPlayer?.smallID() ?? 0,
@@ -771,7 +774,6 @@ export class GameView implements GameMap {
       // carried over on the frame from the last rebuild.
       f.relationMatrix,
       f.relationSize,
-      f.nukeTelegraphs,
     );
     f.attackRings = this._myPlayer
       ? extractAttackRingsFromIds(
