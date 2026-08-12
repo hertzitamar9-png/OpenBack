@@ -220,6 +220,7 @@ export class GPURenderer {
     else this.startLoop();
   };
   private frameTick = 0;
+  private gameTick = 0;
   private lastRenderErrorAt = 0;
   private mapW = 0;
   private mapH = 0;
@@ -643,6 +644,7 @@ export class GPURenderer {
       this.paletteTex,
       this.effectTex,
       this.settings,
+      config,
     );
     this.structureLevelPass = new StructureLevelPass(gl, header, this.settings);
     this.unitPass = new UnitPass(
@@ -992,6 +994,7 @@ export class GPURenderer {
 
   updateUnits(units: Map<number, UnitState>, gameTick: number): void {
     this.lastUnits = units;
+    this.gameTick = gameTick;
     this.frameTick++;
     this.unitPass.updateUnits(units, this.frameTick);
     this.barPass.updateBars(units, this.lastStructures, gameTick);
@@ -1035,7 +1038,7 @@ export class GPURenderer {
 
   updateStructures(units: Map<number, UnitState>): void {
     this.lastStructures = units;
-    this.structurePass.updateStructures(units);
+    this.structurePass.updateStructures(units, this.gameTick);
     this.structureLevelPass.updateStructures(units);
     this.samRadiusPass.updateStructures(units);
     this.unitPass.setStructures(units);

@@ -1,6 +1,7 @@
 ## OpenBack v0.34.126 - Living War Table
 
 - Began OpenBack's new 2D Living War Table presentation with stable terrain relief, material detail, coastline depth, and animated world-space water that remains fixed to the map while panning.
+- Replaced circular structure markers with distinct grounded top-down miniatures, deterministic construction assembly, owner-color panels, and matching placement previews while preserving counts, levels, readiness, and progress bars.
 - Preserved territory readability, map interaction, simulation, balance, multiplayer synchronization, and the existing 3D presentation.
 
 Created by **frootz jhklphy**.
