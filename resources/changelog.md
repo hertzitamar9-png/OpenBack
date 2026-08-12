@@ -7,6 +7,7 @@
 - Unified 2D routes, trails, ranges, labels, progress indicators, and nuclear warnings around restrained tactical overlay limits while preserving the established Atom and Hydrogen Bomb radii and all targeting behavior.
 - Added a responsive opaque command-console HUD system with compact spacing, tabular resources, semantic ally/enemy/local states, clearer build affordability, keyboard focus, and mobile wrapping without changing any controls.
 - Added hysteresis-based adaptive 2D quality tiers that respond only to sustained rendering load, recover slowly, and reduce decorative detail rather than borders, names, targets, units, or gameplay information.
+- Closed Antarctica's irregular southern 3D land boundary with terrain-following opaque geometry, removing the hollow black gap without changing 3D cameras, relief, units, input, or overlays.
 - Preserved territory readability, map interaction, simulation, balance, multiplayer synchronization, and the existing 3D presentation.
 
 Created by **frootz jhklphy**.

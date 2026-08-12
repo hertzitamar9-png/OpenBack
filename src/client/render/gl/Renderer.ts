@@ -446,6 +446,7 @@ export class GPURenderer {
         this.res.tileTex,
         this.res.trailTex,
         this.paletteTex,
+        terrainSource(),
         mapW,
         mapH,
       );

@@ -184,3 +184,45 @@ export function buildMapEdgeSkirt(
     indices: new Uint32Array(indices),
   };
 }
+
+/** Terrain-following wall beneath contiguous land touching the southern side. */
+export function buildSouthernLandClosure(
+  terrain: Uint8Array,
+  width: number,
+  height: number,
+): ThreeDTerrainMeshData {
+  const positions: number[] = [];
+  const indices: number[] = [];
+  let previous: { x: number; y: number; top: number; bottom: number } | null =
+    null;
+
+  for (let x = 0; x < width; x++) {
+    let southernY = -1;
+    for (let y = height - 1; y >= 0; y--) {
+      if ((terrain[y * width + x] & 128) !== 0) {
+        southernY = y + 1;
+        break;
+      }
+    }
+    if (southernY < 0) {
+      previous = null;
+      continue;
+    }
+    const top = positions.length / 3;
+    const bottom = top + 1;
+    positions.push(x, 1, southernY, x, 0, southernY);
+    if (previous !== null && previous.x === x - 1) {
+      const rightTop = top + 2;
+      const rightBottom = bottom + 2;
+      positions.push(x + 1, 1, southernY, x + 1, 0, southernY);
+      indices.push(top, bottom, rightBottom, top, rightBottom, rightTop);
+      previous = { x, y: southernY, top: rightTop, bottom: rightBottom };
+    } else {
+      previous = { x, y: southernY, top, bottom };
+    }
+  }
+  return {
+    positions: new Float32Array(positions),
+    indices: new Uint32Array(indices),
+  };
+}

@@ -11,6 +11,7 @@ import { ThreeDTerrainChunks } from "../three-d/ThreeDTerrainChunks";
 import {
   buildCompleteMapSurface,
   buildMapEdgeSkirt,
+  buildSouthernLandClosure,
   buildTerrainGrid,
 } from "../three-d/ThreeDTerrainMesh";
 import { createFullscreenQuad, createProgram } from "../utils/GlUtils";
@@ -319,6 +320,10 @@ export class ThreeDCompositePass {
   private skirtViewProjection: WebGLUniformLocation | null;
   private skirtMapSize: WebGLUniformLocation | null;
   private skirtBottom: WebGLUniformLocation | null;
+  private southernVao: WebGLVertexArrayObject;
+  private southernVertexBuffer: WebGLBuffer;
+  private southernIndexBuffer: WebGLBuffer;
+  private southernIndexCount: number;
   private waterVao: WebGLVertexArrayObject;
   private waterVertexBuffer: WebGLBuffer;
   private waterIndexBuffer: WebGLBuffer;
@@ -339,6 +344,7 @@ export class ThreeDCompositePass {
     private tileState: WebGLTexture,
     private trailState: WebGLTexture,
     private palette: WebGLTexture,
+    terrainBytes: Uint8Array,
     private mapWidth: number,
     private mapHeight: number,
   ) {
@@ -409,6 +415,22 @@ export class ThreeDCompositePass {
     this.skirtBottom = gl.getUniformLocation(this.skirtProgram, "uSkirtBottom");
     gl.useProgram(this.skirtProgram);
     gl.uniform1i(gl.getUniformLocation(this.skirtProgram, "uTerrain"), 0);
+    const southern = buildSouthernLandClosure(
+      terrainBytes,
+      mapWidth,
+      mapHeight,
+    );
+    this.southernVao = gl.createVertexArray()!;
+    gl.bindVertexArray(this.southernVao);
+    this.southernVertexBuffer = gl.createBuffer()!;
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.southernVertexBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, southern.positions, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+    this.southernIndexBuffer = gl.createBuffer()!;
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.southernIndexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, southern.indices, gl.STATIC_DRAW);
+    this.southernIndexCount = southern.indices.length;
     this.waterVao = gl.createVertexArray()!;
     gl.bindVertexArray(this.waterVao);
     this.waterVertexBuffer = gl.createBuffer()!;
@@ -518,6 +540,15 @@ export class ThreeDCompositePass {
     gl.bindTexture(gl.TEXTURE_2D, this.terrain);
     gl.bindVertexArray(this.skirtVao);
     gl.drawElements(gl.TRIANGLES, this.skirtIndexCount, gl.UNSIGNED_INT, 0);
+    if (this.southernIndexCount > 0) {
+      gl.bindVertexArray(this.southernVao);
+      gl.drawElements(
+        gl.TRIANGLES,
+        this.southernIndexCount,
+        gl.UNSIGNED_INT,
+        0,
+      );
+    }
 
     gl.useProgram(this.waterProgram);
     gl.uniformMatrix4fv(this.waterViewProjection, false, viewProjection);
@@ -569,6 +600,9 @@ export class ThreeDCompositePass {
     this.gl.deleteVertexArray(this.skirtVao);
     this.gl.deleteBuffer(this.skirtVertexBuffer);
     this.gl.deleteBuffer(this.skirtIndexBuffer);
+    this.gl.deleteVertexArray(this.southernVao);
+    this.gl.deleteBuffer(this.southernVertexBuffer);
+    this.gl.deleteBuffer(this.southernIndexBuffer);
     this.gl.deleteVertexArray(this.waterVao);
     this.gl.deleteBuffer(this.waterVertexBuffer);
     this.gl.deleteBuffer(this.waterIndexBuffer);
