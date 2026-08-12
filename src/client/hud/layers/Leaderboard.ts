@@ -278,7 +278,7 @@ export class Leaderboard extends LitElement implements Controller {
         @contextmenu=${(e: Event) => e.preventDefault()}
       >
         <div
-          class="grid bg-gray-800/85 w-full text-xs md:text-xs lg:text-sm rounded-lg overflow-hidden"
+          class="ob-command ob-command--leaderboard grid w-full text-xs md:text-xs lg:text-sm rounded-md overflow-hidden"
           style="grid-template-columns: minmax(24px, 30px) minmax(60px, 100px) minmax(45px, 70px) minmax(40px, 55px) minmax(55px, 105px);"
         >
           <div class="contents font-bold bg-gray-700/60">
@@ -330,7 +330,9 @@ export class Leaderboard extends LitElement implements Controller {
             (p) => p.player.id(),
             (player, index) => html`
               <div
-                class="contents hover:bg-slate-600/60 ${player.isOnSameTeam
+                class="contents hover:bg-slate-700 ${player.isMyPlayer
+                  ? "ob-command--local"
+                  : ""} ${player.isOnSameTeam
                   ? "font-bold"
                   : ""} cursor-pointer"
                 @click=${() => this.handleRowClickPlayer(player.player)}

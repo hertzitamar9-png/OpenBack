@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./hud/war-table/war-table-hud.css";
 
 /* Login/profile is an optional focused flow: obscure the main menu while it
    is open, but keep the account page and its working Back arrow available. */

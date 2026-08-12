@@ -5,6 +5,7 @@
 - Rebuilt ships, trains, aircraft, tanks, shells, and missiles as heading-aware top-down war-table miniatures while retaining curved routes, player visibility, missile smoothing, launch smoke, tank self-destruction, fuel trains, SAM behavior, and established layer order.
 - Bounded decorative battlefield effects in a fixed-capacity lifecycle pool so repeated impacts, crashes, sinking ships, dust, smoke, and destruction cannot grow without limit during long matches; reduced-motion players skip optional debris.
 - Unified 2D routes, trails, ranges, labels, progress indicators, and nuclear warnings around restrained tactical overlay limits while preserving the established Atom and Hydrogen Bomb radii and all targeting behavior.
+- Added a responsive opaque command-console HUD system with compact spacing, tabular resources, semantic ally/enemy/local states, clearer build affordability, keyboard focus, and mobile wrapping without changing any controls.
 - Preserved territory readability, map interaction, simulation, balance, multiplayer synchronization, and the existing 3D presentation.
 
 Created by **frootz jhklphy**.

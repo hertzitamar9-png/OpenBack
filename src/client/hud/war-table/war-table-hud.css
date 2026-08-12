@@ -1,0 +1,42 @@
+:root {
+  --ob-command-bg: #081526;
+  --ob-command-border: #29435d;
+  --ob-command-text: #f4f8fc;
+  --ob-command-muted: #9fb1c5;
+  --ob-command-cyan: #19b9f3;
+  --ob-command-green: #29cf7b;
+  --ob-command-amber: #f0b84b;
+  --ob-command-red: #ef5967;
+}
+
+.ob-command {
+  color: var(--ob-command-text);
+  background: var(--ob-command-bg);
+  border: 1px solid var(--ob-command-border);
+  font-variant-numeric: tabular-nums;
+}
+.ob-command--selected {
+  border-color: var(--ob-command-cyan);
+}
+.ob-command--unavailable {
+  color: var(--ob-command-muted);
+  opacity: 0.62;
+}
+.ob-command--building,
+.ob-command--warning {
+  border-color: var(--ob-command-amber);
+}
+.ob-command--affordable,
+.ob-command--ally {
+  border-color: var(--ob-command-green);
+}
+.ob-command--enemy {
+  border-color: var(--ob-command-red);
+}
+.ob-command--local {
+  box-shadow: inset 3px 0 var(--ob-command-cyan);
+}
+.ob-command:focus-visible {
+  outline: 2px solid var(--ob-command-cyan);
+  outline-offset: 2px;
+}

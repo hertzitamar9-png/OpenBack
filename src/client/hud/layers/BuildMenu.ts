@@ -229,10 +229,11 @@ export class BuildMenu extends LitElement implements Controller {
       left: 50%;
       transform: translate(-50%, -50%);
       z-index: 9999;
-      background-color: #1e1e1e;
-      padding: 15px;
+      background-color: var(--ob-command-bg, #081526);
+      border: 1px solid var(--ob-command-border, #29435d);
+      padding: 12px;
       box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-      border-radius: 10px;
+      border-radius: 8px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -251,26 +252,28 @@ export class BuildMenu extends LitElement implements Controller {
     }
     .build-button {
       position: relative;
-      width: 120px;
-      height: 140px;
-      border: 2px solid #444;
-      background-color: #2c2c2c;
+      width: 104px;
+      min-height: 112px;
+      border: 1px solid var(--ob-command-border, #29435d);
+      background-color: #0b1b2e;
       color: white;
-      border-radius: 12px;
+      border-radius: 6px;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition:
+        transform 120ms ease,
+        border-color 120ms ease;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      margin: 8px;
-      padding: 10px;
-      gap: 5px;
+      margin: 4px;
+      padding: 7px;
+      gap: 4px;
     }
     .build-button:not(:disabled):hover {
-      background-color: #3a3a3a;
-      transform: scale(1.05);
-      border-color: #666;
+      background-color: #10253d;
+      transform: translateY(-2px);
+      border-color: var(--ob-command-cyan, #19b9f3);
     }
     .build-button:not(:disabled):active {
       background-color: #4a4a4a;
