@@ -1099,7 +1099,7 @@ export class GPURenderer {
       );
       return;
     }
-    for (let i = 0; i < refs.length;) {
+    for (let i = 0; i < refs.length; ) {
       const ref = refs[i];
       const x = ref % this.mapW;
       const y = Math.floor(ref / this.mapW);

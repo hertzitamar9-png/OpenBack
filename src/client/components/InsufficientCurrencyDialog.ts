@@ -38,7 +38,9 @@ export class InsufficientCurrencyDialog extends LitElement {
       .showClose=${true}
       .buttons=${info.canTopUp ? "confirmOnly" : "none"}
       .confirmText=${info.canTopUp
-        ? translateText("store.purchase_currency", { currency: info.currency })
+        ? translateText("store.purchase_currency", {
+            currency: info.currency,
+          })
         : ""}
       @cancel=${() => this.close()}
       @confirm=${() => {
