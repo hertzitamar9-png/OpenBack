@@ -71,7 +71,21 @@ export async function gotoHome(page) {
 // The single-player button is labeled "SOLO!". There are multiple SOLO
 // buttons in the DOM (responsive layouts) — only one is visible.
 export async function openSoloModal(page) {
-  await page.locator("button:visible", { hasText: /solo/i }).first().click();
+  const soloButton = page
+    .locator("button:visible")
+    .filter({ hasText: /^\s*solo!?\s*$/i })
+    .first();
+  if ((await soloButton.count()) > 0) {
+    await soloButton.click();
+  } else {
+    // The rotating home-card action can already have opened the Solo modal
+    // before the driver reaches it. Its title is visible but there is no Solo
+    // button, so continuing is the correct idempotent behavior.
+    await page
+      .getByText(/^\s*solo!?\s*$/i)
+      .first()
+      .waitFor({ state: "visible" });
+  }
   await page.waitForTimeout(1500);
 }
 

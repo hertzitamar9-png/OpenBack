@@ -135,9 +135,16 @@ function parseArgs(): Options {
 async function startViteServer(port: number): Promise<ChildProcess> {
   // --strictPort makes vite exit instead of silently picking another port —
   // that also guards against measuring a different checkout's server.
+  const viteBin = path.join(
+    process.cwd(),
+    "node_modules",
+    "vite",
+    "bin",
+    "vite.js",
+  );
   const child = spawnProcess(
-    "npx",
-    ["vite", "--port", String(port), "--strictPort"],
+    process.execPath,
+    [viteBin, "--port", String(port), "--strictPort"],
     {
       env: { ...process.env, SKIP_BROWSER_OPEN: "true" },
       stdio: ["ignore", "pipe", "pipe"],
@@ -169,7 +176,8 @@ async function startViteServer(port: number): Promise<ChildProcess> {
 function stopViteServer(child: ChildProcess): void {
   if (child.pid !== undefined && child.exitCode === null) {
     try {
-      process.kill(-child.pid, "SIGTERM"); // whole process group
+      if (process.platform === "win32") child.kill("SIGTERM");
+      else process.kill(-child.pid, "SIGTERM"); // whole process group
     } catch {
       // already gone
     }

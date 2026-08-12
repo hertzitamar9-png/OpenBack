@@ -21,6 +21,13 @@ describe("3D southern land closure", () => {
     const columns = new Set<number>();
     for (let i = 0; i < mesh.positions.length; i += 3)
       columns.add(mesh.positions[i]);
-    expect([...columns]).toEqual([2, 3, 4, 5, 6]);
+    expect([...columns]).toEqual([2, 3, 4, 5]);
+    // Adjacent columns use their own southern edge, producing a continuous
+    // sloped wall rather than horizontal strips with cracks at height changes.
+    const vertices = Array.from({ length: mesh.positions.length / 3 }, (_, i) =>
+      Array.from(mesh.positions.slice(i * 3, i * 3 + 3)),
+    );
+    expect(vertices).toContainEqual([3, 1, 7]);
+    expect(vertices).toContainEqual([4, 1, 6]);
   });
 });

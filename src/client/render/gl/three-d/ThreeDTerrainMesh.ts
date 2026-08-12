@@ -193,8 +193,7 @@ export function buildSouthernLandClosure(
 ): ThreeDTerrainMeshData {
   const positions: number[] = [];
   const indices: number[] = [];
-  let previous: { x: number; y: number; top: number; bottom: number } | null =
-    null;
+  let previous: { x: number; y: number } | null = null;
 
   for (let x = 0; x < width; x++) {
     let southernY = -1;
@@ -208,18 +207,25 @@ export function buildSouthernLandClosure(
       previous = null;
       continue;
     }
-    const top = positions.length / 3;
-    const bottom = top + 1;
-    positions.push(x, 1, southernY, x, 0, southernY);
     if (previous !== null && previous.x === x - 1) {
-      const rightTop = top + 2;
-      const rightBottom = bottom + 2;
-      positions.push(x + 1, 1, southernY, x + 1, 0, southernY);
-      indices.push(top, bottom, rightBottom, top, rightBottom, rightTop);
-      previous = { x, y: southernY, top: rightTop, bottom: rightBottom };
-    } else {
-      previous = { x, y: southernY, top, bottom };
+      const start = positions.length / 3;
+      positions.push(
+        previous.x,
+        1,
+        previous.y,
+        previous.x,
+        0,
+        previous.y,
+        x,
+        1,
+        southernY,
+        x,
+        0,
+        southernY,
+      );
+      indices.push(start, start + 1, start + 3, start, start + 3, start + 2);
     }
+    previous = { x, y: southernY };
   }
   return {
     positions: new Float32Array(positions),

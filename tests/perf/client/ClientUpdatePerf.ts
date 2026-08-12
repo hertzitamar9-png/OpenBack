@@ -179,6 +179,7 @@ function createGlStub() {
       changedTilesSeen += changed.length;
     },
     uploadLiveTrailDelta: noop("uploadLiveTrailDelta"),
+    updateSpiralRibbons: noop("updateSpiralRibbons"),
     applyFullTiles: noop("applyFullTiles"),
     applyDelta: noop("applyDelta"),
     uploadRailroadState: noop("uploadRailroadState"),
