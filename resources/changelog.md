@@ -1,3 +1,10 @@
+## OpenBack v0.34.126 - Living War Table
+
+- Began OpenBack's new 2D Living War Table presentation with stable terrain relief, material detail, coastline depth, and animated world-space water that remains fixed to the map while panning.
+- Preserved territory readability, map interaction, simulation, balance, multiplayer synchronization, and the existing 3D presentation.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.125 - Accurate Nuclear Targeting
 
 - Matched Atom Bomb targeting and explosion presentation to its real 12-tile solid impact area and 30-tile dashed outer radius.

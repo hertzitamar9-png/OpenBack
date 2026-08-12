@@ -8,8 +8,8 @@
  * so each terrain cell stays pixel-crisp at every zoom level.
  */
 
-import terrainFragSrc from "../shaders/terrain/terrain.frag.glsl?raw";
 import terrainVertSrc from "../shaders/terrain/terrain.vert.glsl?raw";
+import terrainFragSrc from "../shaders/terrain/war-table-terrain.frag.glsl?raw";
 import {
   buildTerrainRGBA,
   encodeTerrainTile,
@@ -29,8 +29,11 @@ import {
 export class TerrainPass {
   private program: WebGLProgram;
   private tex: WebGLTexture;
+  private terrainByteTex: WebGLTexture;
   private vao: WebGLVertexArrayObject;
   private uCamera: WebGLUniformLocation;
+  private uZoom: WebGLUniformLocation;
+  private uTime: WebGLUniformLocation;
   private mapW: number;
   private mapH: number;
   // Base ocean (deep water) color; reused by applyTerrainDelta and rebuilds.
@@ -59,6 +62,12 @@ export class TerrainPass {
       terrainFragSrc,
     );
     this.uCamera = gl.getUniformLocation(this.program, "uCamera")!;
+    this.uZoom = gl.getUniformLocation(this.program, "uZoom")!;
+    this.uTime = gl.getUniformLocation(this.program, "uTime")!;
+    gl.useProgram(this.program);
+    gl.uniform1i(gl.getUniformLocation(this.program, "uTerrain"), 0);
+    gl.uniform1i(gl.getUniformLocation(this.program, "uTerrainBytes"), 1);
+    gl.uniform2f(gl.getUniformLocation(this.program, "uMapSize"), mapW, mapH);
 
     this.tex = createTexture2D(gl, {
       width: mapW,
@@ -68,6 +77,15 @@ export class TerrainPass {
       type: gl.UNSIGNED_BYTE,
       data: buildTerrainRGBA(terrainBytes, mapW, mapH, terrainColors),
       filter: gl.NEAREST, // pixel-crisp at all zoom levels
+    });
+    this.terrainByteTex = createTexture2D(gl, {
+      width: mapW,
+      height: mapH,
+      internalFormat: gl.R8UI,
+      format: gl.RED_INTEGER,
+      type: gl.UNSIGNED_BYTE,
+      data: terrainBytes,
+      filter: gl.NEAREST,
     });
 
     this.vao = createMapQuad(gl, mapW, mapH);
@@ -80,6 +98,7 @@ export class TerrainPass {
   setTerrainColors(terrainColors?: TerrainColorOverrides): void {
     this.terrainColors = terrainColors;
     const gl = this.gl;
+    gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.tex);
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
     gl.texSubImage2D(
@@ -111,10 +130,26 @@ export class TerrainPass {
     if (refs.length === 0) return;
     // Full-map fast path: rebuild the entire RGBA texture in one upload.
     if (refs.length === this.mapW * this.mapH) {
+      const gl = this.gl;
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, this.terrainByteTex);
+      gl.texSubImage2D(
+        gl.TEXTURE_2D,
+        0,
+        0,
+        0,
+        this.mapW,
+        this.mapH,
+        gl.RED_INTEGER,
+        gl.UNSIGNED_BYTE,
+        bytes,
+      );
+      gl.activeTexture(gl.TEXTURE0);
       this.setTerrainColors(this.terrainColors);
       return;
     }
     const gl = this.gl;
+    gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.tex);
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
     for (let i = 0; i < refs.length; ) {
@@ -130,6 +165,21 @@ export class TerrainPass {
         end++;
       }
       const runLength = end - i;
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, this.terrainByteTex);
+      gl.texSubImage2D(
+        gl.TEXTURE_2D,
+        0,
+        x,
+        y,
+        runLength,
+        1,
+        gl.RED_INTEGER,
+        gl.UNSIGNED_BYTE,
+        bytes.subarray(i, end),
+      );
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, this.tex);
       const required = runLength * 4;
       if (this.pixelScratch.length < required) {
         let capacity = this.pixelScratch.length;
@@ -160,13 +210,18 @@ export class TerrainPass {
   }
 
   /** Render the terrain. Call with depth test disabled, no blending. */
-  draw(cameraMatrix: Float32Array): void {
+  draw(cameraMatrix: Float32Array, zoom: number, timeSeconds: number): void {
     const gl = this.gl;
     gl.useProgram(this.program);
     gl.uniformMatrix3fv(this.uCamera, false, cameraMatrix);
+    gl.uniform1f(this.uZoom, zoom);
+    gl.uniform1f(this.uTime, timeSeconds);
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.tex);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, this.terrainByteTex);
+    gl.activeTexture(gl.TEXTURE0);
 
     gl.bindVertexArray(this.vao);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -176,6 +231,7 @@ export class TerrainPass {
     const gl = this.gl;
     gl.deleteProgram(this.program);
     gl.deleteTexture(this.tex);
+    gl.deleteTexture(this.terrainByteTex);
     // VAO + buffer leak is acceptable on dispose (context is being destroyed)
   }
 }

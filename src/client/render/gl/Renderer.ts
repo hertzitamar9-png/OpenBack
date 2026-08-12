@@ -1590,7 +1590,9 @@ export class GPURenderer {
     gl.clearColor(60 / 255, 60 / 255, 60 / 255, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.disable(gl.BLEND);
-    if (pe.terrain) this.terrainPass.draw(cam);
+    if (pe.terrain) {
+      this.terrainPass.draw(cam, this.camera.zoom, performance.now() / 1000);
+    }
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     // Map layers sit between terrain and territory.
