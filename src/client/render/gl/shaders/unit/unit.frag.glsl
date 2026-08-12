@@ -120,7 +120,9 @@ void main() {
           sin(dot(floor((p + 1.3) * 9.0), vec2(39.346, 11.135)))
           * 24634.6345));
       texel = vec4(vec3(0.72), step(0.01, max(outer, fuelTrainMask)));
-    } else if (abs(vAtlasCol - float(PLANE_COL)) < 0.5) {
+    } else if (abs(vAtlasCol - float(PLANE_COL)) < 0.5 &&
+               (abs(vFlags - FLAG_LAUNCH_SMOKE) < 0.1 ||
+                abs(vFlags - FLAG_LAUNCH_FIRE) < 0.1)) {
       // The vertex shader rotates the complete aircraft quad. Keeping the
       // model in local coordinates makes its nose visibly face the target.
       vec2 p = vCellUV - 0.5;
@@ -173,7 +175,7 @@ void main() {
       // spawn color; blackOutline supplies separation around every component.
       float planeAlpha = step(0.035, max(planeOuter, cockpitOuter));
       texel = vec4(vec3(0.72), planeAlpha);
-    } else if (abs(vAtlasCol - float(TANK_COL)) < 0.5) {
+    } else if (abs(vAtlasCol - float(TANK_COL)) < 0.5 && vFlags >= 19.5) {
       vec2 p = vCellUV - 0.5;
       float aa = 0.012;
       float selfDestruct = step(19.5, vFlags);
@@ -238,6 +240,9 @@ void main() {
     } else {
       vec2 atlasUV = vec2((vAtlasCol + vCellUV.x) / float(ATLAS_COLS), vCellUV.y);
       texel = texture(uAtlas, atlasUV);
+      if (abs(vFlags - 12.0) < 0.1 && abs(vAtlasCol - 9.0) < 0.5) {
+        texel.rgb = mix(texel.rgb, vec3(0.82, 0.66, 0.30), 0.26);
+      }
     }
   }
 

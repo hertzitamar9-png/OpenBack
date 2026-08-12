@@ -70,8 +70,15 @@ void main() {
   // Rotate the quad about its center by the sprite heading so the plane's
   // nose tracks its travel direction. Screen space is y-down, so a positive
   // angle rotates clockwise (which is the convention the angle is supplied in).
-  float c = cos(aAngle);
-  float s = sin(aAngle);
+  // Source miniatures share an authored top-down presentation angle. Rotate
+  // that authored nose/forward axis onto the canonical movement heading.
+  float authoredHeading = -1.57079633;
+  if (atlasCol >= 3.0 && atlasCol <= 8.0) authoredHeading = -0.78539816;
+  if (isPlane > 0.5) authoredHeading = -1.04719755;
+  if (isTank > 0.5) authoredHeading = -0.78539816;
+  float displayAngle = aAngle + authoredHeading;
+  float c = cos(displayAngle);
+  float s = sin(displayAngle);
   vec2 local = (aPos - 0.5) * halfSize * 2.0;
   vec2 rotated = vec2(
     local.x * c - local.y * s,
