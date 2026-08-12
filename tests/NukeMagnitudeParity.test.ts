@@ -26,9 +26,9 @@ describe("OpenFront nuke magnitude parity", () => {
     });
   });
 
-  it("keeps explosion artwork sizes independent from damage radii", () => {
-    expect(NUKE_EXPLOSION_RADII[UT_ATOM_BOMB]).toBe(70);
-    expect(NUKE_EXPLOSION_RADII[UT_HYDROGEN_BOMB]).toBe(160);
-    expect(NUKE_EXPLOSION_RADII[UT_MIRV_WARHEAD]).toBe(70);
+  it("caps explosion artwork at each weapon's dashed outer radius", () => {
+    expect(NUKE_EXPLOSION_RADII[UT_ATOM_BOMB]).toBe(30);
+    expect(NUKE_EXPLOSION_RADII[UT_HYDROGEN_BOMB]).toBe(100);
+    expect(NUKE_EXPLOSION_RADII[UT_MIRV_WARHEAD]).toBe(18);
   });
 });

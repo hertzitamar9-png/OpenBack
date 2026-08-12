@@ -1,5 +1,5 @@
-/**
- * FxSpritePass — instanced textured quads sampling an animated sprite atlas.
+﻿/**
+ * FxSpritePass â€” instanced textured quads sampling an animated sprite atlas.
  *
  * Manages: sprite FX state (explosions, dust, conquest, debris).
  * Atlas layout: 12 horizontal sprite strips stacked vertically.
@@ -136,14 +136,15 @@ const FX_CONFIG: FxTypeConfig[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// Nuke explosion radii — visual-only (FxLayer source, not Config). These are
-// the shockwave/debris scatter sizes, not the gameplay damage radii.
+// Nuke explosion radii â€” visual-only (FxLayer source, not Config). These are
+// Keep shockwave/debris artwork within each weapon's dashed outer target
+// radius so visuals never imply damage beyond the simulation.
 // ---------------------------------------------------------------------------
 
 export const NUKE_EXPLOSION_RADII: Readonly<Record<string, number>> = {
-  [UT_ATOM_BOMB]: 70,
-  [UT_HYDROGEN_BOMB]: 160,
-  [UT_MIRV_WARHEAD]: 70,
+  [UT_ATOM_BOMB]: 30,
+  [UT_HYDROGEN_BOMB]: 100,
+  [UT_MIRV_WARHEAD]: 18,
   [UT_PLANE]: 22,
 };
 
@@ -176,8 +177,8 @@ interface ActiveFx {
   fxType: number;
   startMs: number;
   lifetimeMs: number;
-  fadeIn: number; // fraction 0–1 (start of full alpha)
-  fadeOut: number; // fraction 0–1 (start of fade out)
+  fadeIn: number; // fraction 0â€“1 (start of full alpha)
+  fadeOut: number; // fraction 0â€“1 (start of fade out)
 }
 
 // ---------------------------------------------------------------------------

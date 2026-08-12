@@ -1,8 +1,16 @@
+## OpenBack v0.34.125 - Accurate Nuclear Targeting
+
+- Matched Atom Bomb targeting and explosion presentation to its real 12-tile solid impact area and 30-tile dashed outer radius.
+- Matched Hydrogen Bomb targeting and explosion presentation to its real 80-tile solid impact area and 100-tile dashed outer radius.
+- Kept MIRV warhead explosion artwork inside its real 18-tile dashed outer radius, preventing any nuclear effect from implying damage beyond the simulation.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.124 - OpenFront v0.33.4 and Tactical Clarity
 
 - Integrated the complete published OpenFront v0.33.4 release, including stacked structure and nuke actions, same-tick nuke launch protection, Solo match archives, replay privacy fixes, Doomsday territory rot, refreshed statistics, corrected Las Vegas terrain, and improved anonymous names.
 - Restored exact OpenFront 2D bomb targeting with the translucent inner blast area, solid inner boundary, and animated dashed outer radius for the entire flight.
-- Kept the Hydrogen Bomb's real 80/100-tile gameplay radii and 160-tile explosion artwork independent, preventing presentation changes from altering damage or multiplayer simulation.
+- Kept the Hydrogen Bomb's real 80/100-tile gameplay radii independent from renderer scale, preventing presentation changes from altering damage or multiplayer simulation.
 - Added safe 3D target projection that retains the same world-space bomb radii while rejecting invalid behind-camera geometry before it can cover or hide the battlefield.
 - Unified OpenBack menus, dialogs, actions, warnings, and focus states around a shared navy, cyan, green, amber, and red tactical presentation system with reduced-motion support.
 - Regenerated the corrected Las Vegas Strip preview with the release map pipeline so the published map card matches the shipped terrain on every platform.
