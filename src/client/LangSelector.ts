@@ -246,6 +246,7 @@ export class LangSelector extends LitElement {
       "tribes-panel",
       "steam-wishlist",
       "steam-wishlist-button",
+      "streaming-now",
     ];
 
     document.querySelectorAll("[data-i18n]").forEach((element) => {

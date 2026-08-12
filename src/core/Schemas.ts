@@ -16,6 +16,7 @@ import {
   GameMode,
   GameType,
   HumansVsNations,
+  MAX_UPGRADE_AMOUNT,
   Quads,
   RankedType,
   Trios,
@@ -543,12 +544,14 @@ export const BuildUnitIntentSchema = z.object({
   tile: z.number().int().nonnegative(),
   rocketDirectionUp: z.boolean().optional(),
   troops: z.number().nonnegative().optional(),
+  amount: z.number().int().min(1).max(MAX_UPGRADE_AMOUNT).optional(),
 });
 
 export const UpgradeStructureIntentSchema = z.object({
   type: z.literal("upgrade_structure"),
   unit: z.enum(UnitType),
   unitId: z.number().int().nonnegative(),
+  amount: z.number().int().min(1).max(MAX_UPGRADE_AMOUNT).optional(),
 });
 
 export const CancelAttackIntentSchema = z.object({

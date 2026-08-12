@@ -336,7 +336,14 @@ export class NationExecution implements Execution {
     if (reachableTiles.length === 0) return;
     const tile = this.random.randElement(reachableTiles);
     this.mg.addExecution(
-      new ConstructionExecution(player, UnitType.Plane, tile, undefined, 0),
+      new ConstructionExecution(
+        player,
+        UnitType.Plane,
+        tile,
+        undefined,
+        undefined,
+        0,
+      ),
     );
   }
 

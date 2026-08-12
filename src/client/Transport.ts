@@ -57,6 +57,7 @@ export class SendUpgradeStructureIntentEvent implements GameEvent {
   constructor(
     public readonly unitId: number,
     public readonly unitType: UnitType,
+    public readonly amount: number = 1,
   ) {}
 }
 
@@ -91,6 +92,7 @@ export class BuildUnitIntentEvent implements GameEvent {
     public readonly unit: UnitType,
     public readonly tile: TileRef,
     public readonly rocketDirectionUp?: boolean,
+    public readonly amount?: number,
     public readonly troops?: number,
   ) {}
 }
@@ -530,6 +532,7 @@ export class Transport {
       type: "upgrade_structure",
       unit: event.unitType,
       unitId: event.unitId,
+      amount: event.amount,
     });
   }
 
@@ -596,6 +599,7 @@ export class Transport {
       tile: event.tile,
       rocketDirectionUp: event.rocketDirectionUp,
       troops: event.troops,
+      amount: event.amount,
     });
   }
 

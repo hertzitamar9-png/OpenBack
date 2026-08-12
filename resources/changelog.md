@@ -1,3 +1,13 @@
+## OpenBack v0.34.124 - OpenFront v0.33.4 and Tactical Clarity
+
+- Integrated the complete published OpenFront v0.33.4 release, including stacked structure and nuke actions, same-tick nuke launch protection, Solo match archives, replay privacy fixes, Doomsday territory rot, refreshed statistics, corrected Las Vegas terrain, and improved anonymous names.
+- Restored exact OpenFront 2D bomb targeting with the translucent inner blast area, solid inner boundary, and animated dashed outer radius for the entire flight.
+- Kept the Hydrogen Bomb's real 80/100-tile gameplay radii and 160-tile explosion artwork independent, preventing presentation changes from altering damage or multiplayer simulation.
+- Added safe 3D target projection that retains the same world-space bomb radii while rejecting invalid behind-camera geometry before it can cover or hide the battlefield.
+- Unified OpenBack menus, dialogs, actions, warnings, and focus states around a shared navy, cyan, green, amber, and red tactical presentation system with reduced-motion support.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.123 - Complete 3D Battlefield Visibility
 
 - Restored country names, flags, troop counts, structures, mobile units, construction bars, and tactical text throughout 3D matches by repairing the classic overlay projection and keeping labels screen-facing.

@@ -21,6 +21,27 @@ body.account-flow-open main-layout main {
 @custom-variant dark (&:where(.dark, .dark *));
 @custom-variant hover (&:hover);
 
+:root {
+  color-scheme: dark;
+  --ob-surface-base: #070c14;
+  --ob-surface-raised: #0c1727;
+  --ob-surface-overlay: rgb(12 23 39 / 94%);
+  --ob-action: #09a9ec;
+  --ob-action-hover: #32c2ff;
+  --ob-success: #18c76f;
+  --ob-warning: #f1b84b;
+  --ob-danger: #ef4f5f;
+  --ob-border: rgb(135 184 224 / 24%);
+  --ob-border-strong: rgb(70 192 255 / 52%);
+  --ob-text: #f4f8fc;
+  --ob-text-muted: #9fb1c5;
+  --ob-radius-sm: 0.5rem;
+  --ob-radius-md: 0.875rem;
+  --ob-shadow-panel: 0 18px 48px rgb(0 0 0 / 46%);
+  --ob-motion-fast: 120ms;
+  --ob-motion-normal: 200ms;
+}
+
 @theme {
   --default-ring-width: 3px;
   --default-ring-color: var(--color-malibu-blue);
@@ -105,11 +126,49 @@ html {
 }
 
 body {
+  background: var(--ob-surface-base);
+  color: var(--ob-text);
   height: 100%;
   overflow: hidden !important;
   /* Safe area padding for notched devices */
   padding: env(safe-area-inset-top) env(safe-area-inset-right)
     env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+dialog,
+[role="dialog"] {
+  color: var(--ob-text);
+  background: var(--ob-surface-overlay);
+  border-color: var(--ob-border);
+  border-radius: var(--ob-radius-md);
+  box-shadow: var(--ob-shadow-panel);
+}
+
+button,
+[role="button"] {
+  transition-duration: var(--ob-motion-fast);
+  transition-property:
+    color, background-color, border-color, box-shadow, opacity, transform;
+}
+
+button:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--ob-action);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Phone and tablet ergonomics are centralized here so every current and future

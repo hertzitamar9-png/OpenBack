@@ -59,9 +59,18 @@ void main() {
   if (uThreeD == 1) {
     ivec2 cell = ivec2(clamp(floor(worldPos), vec2(0.0), uMapSize - 1.0));
     float h = heightFor(texelFetch(uTerrain, cell, 0).r) + 0.45;
-    gl_Position = uViewProjection * vec4(worldPos.x, h, worldPos.y, 1.0);
+    vec4 projected = uViewProjection * vec4(worldPos.x, h, worldPos.y, 1.0);
+    if (projected.w <= 0.0001 || any(isnan(projected)) || any(isinf(projected))) {
+      gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+      return;
+    }
+    gl_Position = projected;
   } else {
     vec3 clip = uCamera * vec3(worldPos, 1.0);
-    gl_Position = vec4(clip.xy, 0.0, 1.0);
+    if (clip.z <= 0.0001) {
+      gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+      return;
+    }
+    gl_Position = vec4(clip.xy / clip.z, 0.0, 1.0);
   }
 }

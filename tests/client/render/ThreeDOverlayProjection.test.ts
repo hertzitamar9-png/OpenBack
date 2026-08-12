@@ -17,6 +17,7 @@ describe("3D tactical overlay projection", () => {
     "fx/sprite.vert.glsl",
     "map-overlay/spiral-ribbon.vert.glsl",
     "move-indicator/move-indicator.vert.glsl",
+    "nuke-telegraph/nuke-telegraph.vert.glsl",
     "nuke-trajectory/nuke-trajectory.vert.glsl",
     "nuke-trajectory/nuke-trajectory-marker.vert.glsl",
     "range-circle/range-circle.vert.glsl",
@@ -33,4 +34,16 @@ describe("3D tactical overlay projection", () => {
       expect(shader(path)).not.toContain("clip.xy / max(0.0001, clip.z)");
     },
   );
+
+  it("keeps bomb target radii in map-world units across every camera zoom", () => {
+    const vertex = shader("nuke-telegraph/nuke-telegraph.vert.glsl");
+    const fragment = shader("nuke-telegraph/nuke-telegraph.frag.glsl");
+
+    expect(vertex).toContain("float r = aInstance.w + 2.0");
+    expect(vertex).toContain(
+      "uViewProjection * vec4(worldPos.x, h, worldPos.y, 1.0)",
+    );
+    expect(vertex).not.toMatch(/aInstance\.(z|w)\s*\*\s*u(Distance|Zoom)/);
+    expect(fragment).toContain("float dist = length(vWorld - vTarget)");
+  });
 });

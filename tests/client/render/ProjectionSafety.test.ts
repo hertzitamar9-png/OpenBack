@@ -116,6 +116,31 @@ describe("OpenFront nuke warning parity", () => {
     );
   });
 
+  it("uploads authoritative world radii without camera or zoom scaling", () => {
+    const pass = readFileSync(
+      "src/client/render/gl/passes/NukeTelegraphPass.ts",
+      "utf8",
+    );
+    expect(pass).toContain(
+      "buf[off + 2] = clampWorldRadius(d.innerRadius, this.mapW, this.mapH)",
+    );
+    expect(pass).toContain(
+      "buf[off + 3] = clampWorldRadius(d.outerRadius, this.mapW, this.mapH)",
+    );
+    expect(pass).not.toMatch(/innerRadius\s*\*\s*(zoom|camera)/);
+    expect(pass).not.toMatch(/outerRadius\s*\*\s*(zoom|camera)/);
+  });
+
+  it("keeps the 2D target quad in world space for the complete blast radius", () => {
+    const shader = readFileSync(
+      "src/client/render/gl/shaders/nuke-telegraph/nuke-telegraph-classic.vert.glsl",
+      "utf8",
+    );
+    expect(shader).toContain("float r = aInstance.w + 2.0");
+    expect(shader).toContain("vec2 worldPos = center + vLocal * r");
+    expect(shader).not.toContain("uViewport");
+  });
+
   it("does not replace the upstream target area with a compact reticle", () => {
     const shader = readFileSync(
       "src/client/render/gl/shaders/nuke-telegraph/nuke-telegraph-classic.frag.glsl",

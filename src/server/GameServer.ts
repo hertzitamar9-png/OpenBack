@@ -3,7 +3,7 @@ import ipAnonymize from "ip-anonymize";
 import { Logger } from "winston";
 import WebSocket from "ws";
 import { z } from "zod";
-import { anonAnimalName } from "../core/AnonAnimals";
+import { anonWordName } from "../core/AnonNames";
 import { isAdminRole } from "../core/ApiSchemas";
 import { GameEnv } from "../core/configuration/Config";
 import {
@@ -323,7 +323,7 @@ export class GameServer {
   // The target's slot is its join-order position in allClients (an
   // insertion-ordered Map): stable for the whole game, and late-joiners simply
   // append, so existing players' names never shift. Distinct targets have
-  // distinct slots, and anonAnimalName maps distinct slots (at a fixed offset) to
+  // distinct slots, and anonWordName maps distinct slots (at a fixed offset) to
   // distinct handles — so within any one viewer's view no two players ever share
   // a name. The per-viewer offset rotates the animal assignment, so different
   // viewers still see different names for the same player (the anti-team point).
@@ -335,7 +335,7 @@ export class GameServer {
       if (id === target) break;
       slot++;
     }
-    return anonAnimalName(slot, viewer ? simpleHash(viewer) : 0);
+    return anonWordName(slot, viewer ? simpleHash(viewer) : 0);
   }
 
   // Whether `viewer` should see `target`'s real identity: when names aren't
@@ -1894,6 +1894,7 @@ export class GameServer {
           this.winner?.winner,
           this.createdAt,
           this.visibleAt,
+          this.gameStartInfo.tribes,
         ),
       ),
     );

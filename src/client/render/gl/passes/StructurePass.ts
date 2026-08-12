@@ -31,7 +31,11 @@ import {
 } from "../../types";
 import { DynamicInstanceBuffer } from "../DynamicBuffer";
 import type { RenderSettings } from "../RenderSettings";
-import { getPaletteSize } from "../utils/ColorUtils";
+import {
+  getPaletteSize,
+  MAX_TRAIL_COLORS,
+  STRUCTURES_EFFECT_BLOCK,
+} from "../utils/ColorUtils";
 import { createProgram, shaderSrc } from "../utils/GlUtils";
 
 import { assetUrl } from "src/core/AssetUrls";
@@ -106,12 +110,16 @@ export class StructurePass {
   private uIconAlpha: WebGLUniformLocation;
   private uIconColor: WebGLUniformLocation;
   private uIconDarken: WebGLUniformLocation;
+  private uTime: WebGLUniformLocation;
+  private uHoverOwner: WebGLUniformLocation;
+  private readonly startTime = performance.now();
 
   private vao: WebGLVertexArrayObject;
   private instanceBuf: DynamicInstanceBuffer;
   private ghostInstanceBuf: WebGLBuffer;
 
   private paletteTex: WebGLTexture;
+  private effectTex: WebGLTexture;
   private atlasTex: WebGLTexture;
   private affiliationTex: WebGLTexture | null = null;
   private altView = false;
@@ -140,12 +148,14 @@ export class StructurePass {
     gl: WebGL2RenderingContext,
     header: RendererConfig,
     paletteTex: WebGLTexture,
+    effectTex: WebGLTexture,
     settings: RenderSettings,
   ) {
     this.gl = gl;
     this.settings = settings;
     this.mapW = header.mapWidth;
     this.paletteTex = paletteTex;
+    this.effectTex = effectTex;
 
     // Build unitType string → atlas column mapping
     for (let i = 0; i < header.unitTypes.length; i++) {
@@ -165,6 +175,7 @@ export class StructurePass {
         PALETTE_SIZE: getPaletteSize(),
         ATLAS_COLS,
         STRUCTURE_TYPES_COUNT,
+        STRUCT_EFFECT_ROW_BASE: STRUCTURES_EFFECT_BLOCK * MAX_TRAIL_COLORS,
       }),
     );
     this.uLocalPlayerID = gl.getUniformLocation(
@@ -203,12 +214,15 @@ export class StructurePass {
     this.uIconAlpha = gl.getUniformLocation(this.program, "uIconAlpha")!;
     this.uIconColor = gl.getUniformLocation(this.program, "uIconColor")!;
     this.uIconDarken = gl.getUniformLocation(this.program, "uIconDarken")!;
+    this.uTime = gl.getUniformLocation(this.program, "uTime")!;
+    this.uHoverOwner = gl.getUniformLocation(this.program, "uHoverOwner")!;
 
     // Texture unit bindings + ghost defaults
     gl.useProgram(this.program);
     gl.uniform1i(gl.getUniformLocation(this.program, "uPalette"), 0);
     gl.uniform1i(gl.getUniformLocation(this.program, "uAtlas"), 1);
     gl.uniform1i(gl.getUniformLocation(this.program, "uAffiliation"), 2);
+    gl.uniform1i(gl.getUniformLocation(this.program, "uEffect"), 3);
     gl.uniform1f(this.uGhostAlpha, 1.0);
     gl.uniform3f(this.uOutlineColor, 0, 0, 0);
     gl.uniform1i(this.uHighlightMask, 0);
@@ -414,6 +428,8 @@ export class StructurePass {
     gl.uniform1f(this.uIconAlpha, ss.iconAlpha);
     gl.uniform3f(this.uIconColor, ss.iconR, ss.iconG, ss.iconB);
     gl.uniform1f(this.uIconDarken, ss.iconDarken);
+    gl.uniform1f(this.uTime, (performance.now() - this.startTime) / 1000);
+    gl.uniform1f(this.uHoverOwner, this.highlightOwner);
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.paletteTex);
@@ -425,6 +441,9 @@ export class StructurePass {
       gl.activeTexture(gl.TEXTURE2);
       gl.bindTexture(gl.TEXTURE_2D, this.affiliationTex);
     }
+
+    gl.activeTexture(gl.TEXTURE3);
+    gl.bindTexture(gl.TEXTURE_2D, this.effectTex);
 
     gl.bindVertexArray(this.vao);
 
