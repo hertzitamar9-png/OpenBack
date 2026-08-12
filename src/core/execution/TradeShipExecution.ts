@@ -11,6 +11,7 @@ import { TileRef } from "../game/GameMap";
 import { WaterPathFinder } from "../pathfinding/PathFinder";
 import { PathStatus } from "../pathfinding/types";
 import { findClosestBy } from "../Util";
+import { shipStepsForRoute } from "../world/ThreeDWorldCycle";
 
 export class TradeShipExecution implements Execution {
   private active = true;
@@ -131,7 +132,18 @@ export class TradeShipExecution implements Execution {
     }
 
     const dst = this._dstPort.tile();
-    const result = this.pathFinder.next(curTile, dst);
+    const movementSteps = shipStepsForRoute(
+      this.mg,
+      ticks,
+      this.tradeShip.id(),
+      curTile,
+      dst,
+    );
+    if (movementSteps === 0) return;
+    let result = this.pathFinder.next(curTile, dst);
+    if (movementSteps === 2 && result.status === PathStatus.NEXT) {
+      result = this.pathFinder.next(result.node, dst);
+    }
 
     switch (result.status) {
       case PathStatus.NEXT:
@@ -155,7 +167,7 @@ export class TradeShipExecution implements Execution {
           this.tradeShip.setSafeFromPirates();
         }
         this.tradeShip.move(result.node);
-        this.tilesTraveled++;
+        this.tilesTraveled += movementSteps;
         break;
       case PathStatus.COMPLETE:
         this.complete();

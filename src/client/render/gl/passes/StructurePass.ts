@@ -14,8 +14,6 @@
  *   FrameSnapshot.units → filter structures → instance VBO → GPU
  */
 
-import type { Config } from "../../../../core/configuration/Config";
-import { UnitType } from "../../../../core/game/Game";
 import type { GhostPreviewData, RendererConfig, UnitState } from "../../types";
 import {
   UT_CITY,
@@ -39,13 +37,12 @@ import {
   STRUCTURES_EFFECT_BLOCK,
 } from "../utils/ColorUtils";
 import { createProgram, shaderSrc } from "../utils/GlUtils";
-import { structureInstanceFor } from "../war-table/WarTableAnimationState";
 
 import { assetUrl } from "src/core/AssetUrls";
-import structureFragSrc from "../shaders/structure/war-table-structure.frag.glsl?raw";
-import structureVertSrc from "../shaders/structure/war-table-structure.vert.glsl?raw";
+import structureFragSrc from "../shaders/structure/structure.frag.glsl?raw";
+import structureVertSrc from "../shaders/structure/structure.vert.glsl?raw";
 
-const iconAtlasUrl = assetUrl("atlases/war-table-structures.png");
+const iconAtlasUrl = assetUrl("atlases/icon-atlas.png");
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -153,7 +150,6 @@ export class StructurePass {
     paletteTex: WebGLTexture,
     effectTex: WebGLTexture,
     settings: RenderSettings,
-    private config: Config,
   ) {
     this.gl = gl;
     this.settings = settings;
@@ -323,7 +319,7 @@ export class StructurePass {
     this.highlightOwner = ownerID;
   }
 
-  updateStructures(units: Map<number, UnitState>, gameTick = 0): void {
+  updateStructures(units: Map<number, UnitState>): void {
     let count = 0;
 
     for (const unit of units.values()) {
@@ -338,26 +334,13 @@ export class StructurePass {
       const x = unit.pos % this.mapW;
       const y = (unit.pos - x) / this.mapW;
 
-      const visual = structureInstanceFor({
-        unitType: unit.unitType,
-        x,
-        y,
-        ownerID: unit.ownerID,
-        constructionStartTick: unit.underConstruction
-          ? unit.constructionStartTick
-          : null,
-        constructionDuration:
-          this.config.unitInfo(unit.unitType as UnitType)
-            .constructionDuration ?? 50,
-        markedForDeletion: unit.markedForDeletion !== false,
-        tick: gameTick,
-      });
-      this.instanceBuf.float32[off + 0] = visual.x;
-      this.instanceBuf.float32[off + 1] = visual.y;
-      this.instanceBuf.float32[off + 2] = visual.ownerID;
-      this.instanceBuf.float32[off + 3] = visual.assembly;
-      this.instanceBuf.float32[off + 4] = visual.atlasColumn;
-      this.instanceBuf.float32[off + 5] = visual.deletion;
+      this.instanceBuf.float32[off + 0] = x;
+      this.instanceBuf.float32[off + 1] = y;
+      this.instanceBuf.float32[off + 2] = unit.ownerID;
+      this.instanceBuf.float32[off + 3] = unit.underConstruction ? 1 : 0;
+      this.instanceBuf.float32[off + 4] = atlasIdx;
+      this.instanceBuf.float32[off + 5] =
+        unit.markedForDeletion !== false ? 1 : 0;
 
       count++;
     }
@@ -494,7 +477,7 @@ export class StructurePass {
         this.ghostBuf[0] = tx;
         this.ghostBuf[1] = ty;
         this.ghostBuf[2] = g.ownerID;
-        this.ghostBuf[3] = 1;
+        this.ghostBuf[3] = 0;
         this.ghostBuf[4] = atlasIdx;
         this.ghostBuf[5] = 0;
         gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.ghostBuf);
@@ -508,7 +491,7 @@ export class StructurePass {
       this.ghostBuf[0] = g.tileX;
       this.ghostBuf[1] = g.tileY;
       this.ghostBuf[2] = g.ownerID;
-      this.ghostBuf[3] = 1;
+      this.ghostBuf[3] = 0;
       this.ghostBuf[4] = atlasIdx;
       this.ghostBuf[5] = 0;
       gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.ghostBuf);

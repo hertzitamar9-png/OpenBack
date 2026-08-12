@@ -59,7 +59,7 @@ void main() {
   float fuelCamoBlack = 0.0;
   float fuelChimney = 0.0;
   bool inSprite = vCellUV.x >= 0.0 && vCellUV.x <= 1.0 &&
-                  vCellUV.y >= 0.0 && vCellUV.y <= 1.0;
+                   vCellUV.y >= 0.0 && vCellUV.y <= 1.0;
   if (inSprite) {
     if (abs(vFlags - 9.0) < 0.1) {
       vec2 p = vCellUV - 0.5;
@@ -83,6 +83,30 @@ void main() {
       color = mix(color, vec3(1.0, 0.98, 0.72), hotCore);
       color = mix(color, vec3(1.0, 0.30, 0.01), detail);
       fragColor = vec4(color, alpha);
+      return;
+    } else if ((vAtlasCol >= 2.5 && vAtlasCol <= 5.5) ||
+               abs(vAtlasCol - 8.0) < 0.5) {
+      // Nuclear projectiles keep a unique OpenBack identity: a compact sun-like
+      // sphere with a white-hot center and deterministic licking corona. The
+      // alpha remains bounded to this sprite cell and cannot cover the map.
+      vec2 nuclearP = vCellUV - 0.5;
+      float nuclearRadius = length(nuclearP);
+      float nuclearAngle = atan(nuclearP.y, nuclearP.x);
+      float nuclearFlames = 0.025 * sin(nuclearAngle * 11.0 + uTick * 0.19)
+                          + 0.018 * sin(nuclearAngle * 19.0 - uTick * 0.31);
+      float nuclearFireball = 1.0 - smoothstep(0.27, 0.34, nuclearRadius);
+      float nuclearCorona = 1.0 - smoothstep(
+          0.34 + nuclearFlames, 0.43 + nuclearFlames, nuclearRadius);
+      float nuclearCore = 1.0 - smoothstep(0.055, 0.18, nuclearRadius);
+      float nuclearAlpha = max(nuclearFireball, nuclearCorona * 0.88);
+      if (nuclearAlpha < 0.01) discard;
+      vec3 nuclearColor = mix(
+          vec3(0.82, 0.025, 0.002),
+          vec3(1.0, 0.48, 0.01),
+          nuclearFireball
+      );
+      nuclearColor = mix(nuclearColor, vec3(1.0, 0.96, 0.66), nuclearCore);
+      fragColor = vec4(nuclearColor, nuclearAlpha * alphaMul);
       return;
     } else if (abs(vFlags - 8.0) < 0.1 && vAtlasCol > 8.5 && vAtlasCol < 11.5) {
       vec2 p = vCellUV - 0.5;
@@ -120,9 +144,7 @@ void main() {
           sin(dot(floor((p + 1.3) * 9.0), vec2(39.346, 11.135)))
           * 24634.6345));
       texel = vec4(vec3(0.72), step(0.01, max(outer, fuelTrainMask)));
-    } else if (abs(vAtlasCol - float(PLANE_COL)) < 0.5 &&
-               (abs(vFlags - FLAG_LAUNCH_SMOKE) < 0.1 ||
-                abs(vFlags - FLAG_LAUNCH_FIRE) < 0.1)) {
+    } else if (abs(vAtlasCol - float(PLANE_COL)) < 0.5) {
       // The vertex shader rotates the complete aircraft quad. Keeping the
       // model in local coordinates makes its nose visibly face the target.
       vec2 p = vCellUV - 0.5;
@@ -175,7 +197,7 @@ void main() {
       // spawn color; blackOutline supplies separation around every component.
       float planeAlpha = step(0.035, max(planeOuter, cockpitOuter));
       texel = vec4(vec3(0.72), planeAlpha);
-    } else if (abs(vAtlasCol - float(TANK_COL)) < 0.5 && vFlags >= 19.5) {
+    } else if (abs(vAtlasCol - float(TANK_COL)) < 0.5) {
       vec2 p = vCellUV - 0.5;
       float aa = 0.012;
       float selfDestruct = step(19.5, vFlags);
@@ -240,9 +262,6 @@ void main() {
     } else {
       vec2 atlasUV = vec2((vAtlasCol + vCellUV.x) / float(ATLAS_COLS), vCellUV.y);
       texel = texture(uAtlas, atlasUV);
-      if (abs(vFlags - 12.0) < 0.1 && abs(vAtlasCol - 9.0) < 0.5) {
-        texel.rgb = mix(texel.rgb, vec3(0.82, 0.66, 0.30), 0.26);
-      }
     }
   }
 

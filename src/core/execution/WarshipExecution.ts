@@ -9,9 +9,10 @@ import {
 } from "../game/Game";
 import { TileRef } from "../game/GameMap";
 import { WaterPathFinder } from "../pathfinding/PathFinder";
-import { PathStatus } from "../pathfinding/types";
+import { PathResult, PathStatus } from "../pathfinding/types";
 import { PseudoRandom } from "../PseudoRandom";
 import { findMinimumBy } from "../Util";
+import { shipStepsForRoute } from "../world/ThreeDWorldCycle";
 import { ShellExecution } from "./ShellExecution";
 
 export class WarshipExecution implements Execution {
@@ -432,7 +433,7 @@ export class WarshipExecution implements Execution {
     }
 
     this.warship.setTargetTile(retreatPortTile);
-    const result = this.pathfinder.next(this.warship.tile(), retreatPortTile);
+    const result = this.nextWithCurrent(retreatPortTile);
     switch (result.status) {
       case PathStatus.COMPLETE:
         this.warship.move(result.node);
@@ -681,7 +682,7 @@ export class WarshipExecution implements Execution {
         }
       }
 
-      const result = this.pathfinder.next(this.warship.tile(), targetTile, 5);
+      const result = this.nextWithCurrent(targetTile, 5);
       switch (result.status) {
         case PathStatus.COMPLETE:
           this.warship.owner().captureUnit(target);
@@ -722,10 +723,7 @@ export class WarshipExecution implements Execution {
       }
     }
 
-    const result = this.pathfinder.next(
-      this.warship.tile(),
-      this.warship.targetTile()!,
-    );
+    const result = this.nextWithCurrent(this.warship.targetTile()!);
     switch (result.status) {
       case PathStatus.COMPLETE:
         this.warship.setTargetTile(undefined);
@@ -740,6 +738,23 @@ export class WarshipExecution implements Execution {
         break;
       }
     }
+  }
+
+  private nextWithCurrent(target: TileRef, dist?: number): PathResult<TileRef> {
+    const from = this.warship.tile();
+    const steps = shipStepsForRoute(
+      this.mg,
+      this.mg.ticks(),
+      this.warship.id(),
+      from,
+      target,
+    );
+    if (steps === 0) return { status: PathStatus.NEXT, node: from };
+    let result = this.pathfinder.next(from, target, dist);
+    if (steps === 2 && result.status === PathStatus.NEXT) {
+      result = this.pathfinder.next(result.node, target, dist);
+    }
+    return result;
   }
 
   isActive(): boolean {

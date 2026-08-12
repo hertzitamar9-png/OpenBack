@@ -48,6 +48,7 @@ import {
   UT_TANK,
   UT_TRADE_SHIP,
   UT_TRAIN,
+  UT_TRANSPORT,
   UT_WARSHIP,
 } from "../../types";
 import { DynamicInstanceBuffer } from "../DynamicBuffer";
@@ -56,10 +57,8 @@ import unitFragSrc from "../shaders/unit/unit.frag.glsl?raw";
 import unitVertSrc from "../shaders/unit/unit.vert.glsl?raw";
 import { getPaletteSize } from "../utils/ColorUtils";
 import { createProgram, shaderSrc } from "../utils/GlUtils";
-import { mobileInstanceFor } from "../war-table/WarTableAnimationState";
-import { WAR_TABLE_MOBILE_ORDER } from "../war-table/WarTableMiniatureRegistry";
 
-const unitAtlasUrl = assetUrl("atlases/war-table-units.png");
+const unitAtlasUrl = assetUrl("atlases/unit-atlas.png");
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -70,11 +69,24 @@ const unitAtlasUrl = assetUrl("atlases/war-table-units.png");
  *  they don't match header.unitTypes directly. Train resolution is
  *  handled specially in updateUnits() via trainType + loaded fields.
  */
-const UNIT_ORDER = WAR_TABLE_MOBILE_ORDER;
+const UNIT_ORDER = [
+  UT_TRANSPORT,
+  UT_TRADE_SHIP,
+  UT_WARSHIP,
+  UT_ATOM_BOMB,
+  UT_HYDROGEN_BOMB,
+  UT_MIRV,
+  UT_SAM_MISSILE,
+  UT_SHELL,
+  UT_MIRV_WARHEAD,
+  "TrainEngine",
+  "TrainCarriage",
+  "TrainCarriageLoaded",
+] as const;
 
 const ATLAS_COLS = UNIT_ORDER.length;
-const PLANE_COL = UNIT_ORDER.indexOf(UT_PLANE);
-const TANK_COL = UNIT_ORDER.indexOf(UT_TANK);
+const PLANE_COL = ATLAS_COLS;
+const TANK_COL = ATLAS_COLS + 1;
 
 /** Atlas column of the hydrogen bomb — drives the GPU glow halo. */
 const HYDROGEN_BOMB_COL = UNIT_ORDER.indexOf(UT_HYDROGEN_BOMB);
@@ -106,9 +118,6 @@ const FLAG_LAUNCH_SMOKE = 6;
 const FLAG_LAUNCH_FIRE = 7;
 const FLAG_FUEL_TRAIN = 8;
 const FLAG_TANK_FIREBALL = 9;
-const FLAG_TRAIN_ENGINE = 10;
-const FLAG_TRAIN_CARRIAGE = 11;
-const FLAG_TRAIN_LOADED = 12;
 
 /**
  * Return the heading used by the classic 2D sprite renderer. Ships and other
@@ -131,7 +140,9 @@ export function unitSpriteHeading(unit: UnitState, mapWidth: number): number {
   return Math.atan2(x - lastX, -(y - lastY));
 }
 
-const TRAIN_COL = UNIT_ORDER.indexOf(UT_TRAIN);
+const TRAIN_ENGINE_COL = UNIT_ORDER.indexOf("TrainEngine");
+const TRAIN_CARRIAGE_COL = UNIT_ORDER.indexOf("TrainCarriage");
+const TRAIN_CARRIAGE_LOADED_COL = UNIT_ORDER.indexOf("TrainCarriageLoaded");
 const MIRV_WARHEAD_COL = UNIT_ORDER.indexOf(UT_MIRV_WARHEAD);
 
 /** Nuke + warhead types — rendered with flickering hot colors */
@@ -290,7 +301,6 @@ export class UnitPass {
     }
     this.typeToAtlasCol.set(UT_PLANE, PLANE_COL);
     this.typeToAtlasCol.set(UT_TANK, TANK_COL);
-    this.typeToAtlasCol.set(UT_TRAIN, TRAIN_COL);
 
     // Compile shaders
     this.program = createProgram(
@@ -462,7 +472,18 @@ export class UnitPass {
         continue;
       }
 
-      const atlasIdx = this.typeToAtlasCol.get(unit.unitType);
+      let atlasIdx = this.typeToAtlasCol.get(unit.unitType);
+
+      if (atlasIdx === undefined && unit.unitType === UT_TRAIN) {
+        const tt = unit.trainType;
+        if (tt === TrainType.Engine || tt === TrainType.TailEngine) {
+          atlasIdx = TRAIN_ENGINE_COL;
+        } else {
+          atlasIdx = unit.loaded
+            ? TRAIN_CARRIAGE_LOADED_COL
+            : TRAIN_CARRIAGE_COL;
+        }
+      }
 
       if (atlasIdx === undefined) continue;
 
@@ -517,14 +538,6 @@ export class UnitPass {
       } else if (isFlicker) {
         // Untargetable nukes render dimmed so players can tell SAMs can't hit them
         flags = unit.targetable ? FLAG_FLICKER : FLAG_FLICKER_UNTARGETABLE;
-      } else if (unit.unitType === UT_TRAIN) {
-        flags =
-          unit.trainType === TrainType.Engine ||
-          unit.trainType === TrainType.TailEngine
-            ? FLAG_TRAIN_ENGINE
-            : unit.loaded
-              ? FLAG_TRAIN_LOADED
-              : FLAG_TRAIN_CARRIAGE;
       }
       const isMissile = MISSILE_TYPES.has(unit.unitType);
 
@@ -535,18 +548,6 @@ export class UnitPass {
       // server-provided travel angle so the nose tracks the flight path; other
       // units derive it from their lastPos→pos trail (no-op for static ones).
       const angle = unitSpriteHeading(unit, this.mapW);
-      const visual = mobileInstanceFor({
-        unitType: unit.unitType,
-        x,
-        y,
-        ownerID: unit.ownerID,
-        angle,
-        tick,
-        moving: unit.lastPos !== unit.pos,
-        trainType: unit.trainType,
-        loaded: unit.loaded,
-      });
-
       if (isMissile) {
         if (
           SMOOTHED_NUKE_TYPES.has(unit.unitType) &&
@@ -556,14 +557,7 @@ export class UnitPass {
           const ly = (unit.lastPos - lx) / this.mapW;
           this.smoothSegs.push(this.missileCount, lx, ly, x, y);
         }
-        this.emitMissile(
-          visual.x,
-          visual.y,
-          visual.ownerID,
-          visual.atlasColumn,
-          flags,
-          visual.heading,
-        );
+        this.emitMissile(x, y, unit.ownerID, atlasIdx, flags, angle);
 
         // Tank self-destruction launches a separate MIRV-style projectile in
         // world space. It is no longer part of the rotating tank quad, so it
@@ -601,14 +595,7 @@ export class UnitPass {
           this.emitMissile(lx, ly, unit.ownerID, atlasIdx, flags, angle);
         }
       } else {
-        this.emitGround(
-          visual.x,
-          visual.y,
-          visual.ownerID,
-          visual.atlasColumn,
-          flags,
-          visual.heading,
-        );
+        this.emitGround(x, y, unit.ownerID, atlasIdx, flags, angle);
       }
     }
 

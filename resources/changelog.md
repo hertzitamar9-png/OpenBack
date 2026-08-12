@@ -1,3 +1,15 @@
+## OpenBack v0.34.127 - Classic Models and Living 3D Seas
+
+- Restored the established OpenBack and OpenFront 2D unit and structure artwork across both 2D and 3D matches, including Cities, Ports, Factories, defenses, ships, custom Aircraft, Tanks, Runways, Military Bases, MANPADs, Tank Mines, railways, regular trains, and camouflaged fuel trains.
+- Kept nuclear projectiles visually unique as compact sun-like fireballs with animated flame coronas while preventing their sprite geometry from covering the battlefield.
+- Rebuilt 3D water with raised moving swells, cyan depth, animated white breaking foam, shoreline masking, and smooth motion that never draws water through inland terrain.
+- Added an authoritative day-and-night cycle to 3D matches, with darker night lighting and deterministic high tides that temporarily cover only low ocean-facing coastline before restoring its previous terrain and owner during daylight.
+- Added deterministic sea currents to 3D Transport Ships, Trade Ships, and Warships so favorable headings provide a modest speed increase and opposing headings provide a modest slowdown without changing any 2D match movement.
+- Made low-flying Aircraft in 3D matches deterministically route around terrain above their flight clearance while preserving the established direct Aircraft path in 2D.
+- Batched coastline discovery and tide transitions so large maps do not perform a single blocking full-map rewrite.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.126 - Living War Table
 
 - Began OpenBack's new 2D Living War Table presentation with stable terrain relief, material detail, coastline depth, and animated world-space water that remains fixed to the map while panning.

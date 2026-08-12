@@ -14,6 +14,7 @@ import { MotionPlanRecord } from "../game/MotionPlans";
 import { targetTransportTile } from "../game/TransportShipUtils";
 import { WaterPathFinder } from "../pathfinding/PathFinder";
 import { PathStatus } from "../pathfinding/types";
+import { shipStepsForRoute } from "../world/ThreeDWorldCycle";
 import { AttackExecution } from "./AttackExecution";
 
 const malusForRetreat = 25;
@@ -233,7 +234,18 @@ export class TransportShipExecution implements Execution {
       }
     }
 
-    const result = this.pathFinder.next(this.boat.tile(), this.dst);
+    const movementSteps = shipStepsForRoute(
+      this.mg,
+      ticks,
+      this.boat.id(),
+      this.boat.tile(),
+      this.dst,
+    );
+    if (movementSteps === 0) return;
+    let result = this.pathFinder.next(this.boat.tile(), this.dst);
+    if (movementSteps === 2 && result.status === PathStatus.NEXT) {
+      result = this.pathFinder.next(result.node, this.dst);
+    }
     switch (result.status) {
       case PathStatus.COMPLETE:
         if (this.mg.owner(this.dst) === this.attacker) {

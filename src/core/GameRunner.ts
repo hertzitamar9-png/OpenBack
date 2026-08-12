@@ -127,7 +127,12 @@ export class GameRunner {
     }
     this.game.addExecution(new WinCheckExecution());
     const wm = this.game.config().worldMechanics();
-    if (wm.strategicObjectives || wm.naturalDisasters || wm.livingWorld) {
+    if (
+      wm.strategicObjectives ||
+      wm.naturalDisasters ||
+      wm.livingWorld ||
+      wm.threeDMode
+    ) {
       this.game.addExecution(
         new WorldMechanicsExecution(
           this.worldSeed || simpleHash(this.game.config().gameConfig().gameMap),

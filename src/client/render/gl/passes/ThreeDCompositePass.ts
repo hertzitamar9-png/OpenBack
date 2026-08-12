@@ -5,6 +5,7 @@
  * supplies territory ownership, and the player palette supplies board-piece
  * colors. No flat screenshot is bent over the mesh.
  */
+import { threeDWorldCycle } from "../../../../core/world/ThreeDWorldCycle";
 import { ThreeDCameraState } from "../three-d/ThreeDCamera";
 import { THREE_D_WATER_HEIGHT } from "../three-d/ThreeDSurfaceSampler";
 import { ThreeDTerrainChunks } from "../three-d/ThreeDTerrainChunks";
@@ -27,12 +28,15 @@ precision highp float;
 in vec2 vUV;
 uniform float uTime;
 uniform float uTilt;
+uniform float uDaylight;
 out vec4 outColor;
 void main(){
   // Match the classic battlefield's unobtrusive dark surround. The terrain is
   // the board; a painted horizon must never look like a second detached map.
   float vignette=1.0-0.16*smoothstep(0.28,0.82,length(vUV-vec2(0.5)));
-  vec3 sky=vec3(0.012,0.017,0.026);
+  vec3 nightSky=vec3(0.006,0.012,0.035);
+  vec3 daySky=vec3(0.055,0.22,0.42);
+  vec3 sky=mix(nightSky,daySky,uDaylight);
   vec3 oceanFloor=vec3(0.018,0.085,0.15);
   float belowHorizon=1.0-smoothstep(0.22,0.62,vUV.y);
   outColor=vec4(mix(sky,oceanFloor,belowHorizon)*vignette,1.0);
@@ -164,29 +168,39 @@ precision highp float;
 layout(location=0) in vec3 aPos;
 uniform mat4 uViewProjection;
 uniform float uTime;
+uniform float uGameTick;
+uniform float uTideHeight;
+uniform float uWaveStrength;
 out vec2 vWorld;
 out float vWave;
-float waveAt(vec2 p,float time){
-  float broad=sin(dot(p,vec2(0.031,0.017))+time*0.55);
-  float cross=sin(dot(p,vec2(-0.021,0.039))-time*0.42);
-  float ripple=sin(dot(p,vec2(0.085,-0.061))+time*0.92);
-  return broad*0.48+cross*0.37+ripple*0.15;
+float gerstnerWave(vec2 p,float phase){
+  float broad=sin(dot(p,vec2(0.090,0.034))+phase*0.075);
+  float cross=sin(dot(p,vec2(-0.052,0.112))-phase*0.052);
+  float swell=sin(dot(p,vec2(0.020,-0.036))+phase*0.031);
+  return (broad*0.46+cross*0.29+swell*0.25)*uWaveStrength;
 }
 void main(){
   vWorld=aPos.xz;
-  vWave=waveAt(vWorld,uTime);
+  // Interpolate the authoritative tick for smooth geometry without changing
+  // any simulation state.
+  vWave=gerstnerWave(vWorld,uGameTick+fract(uTime*10.0));
   vec3 displaced=aPos;
-  // Keep every crest below the lowest land shelf while still moving real
-  // vertices. This prevents waves from drawing across low coastlines.
-  displaced.y+=vWave*0.16;
+  // Real vertical water: high crests rise, collapse at shore, and retreat with
+  // the authoritative tide. Land remains a separate solid surface.
+  displaced.y+=uTideHeight+vWave*0.62;
   gl_Position=uViewProjection*vec4(displaced,1.0);
 }`;
 
 const waterFrag = `#version 300 es
 precision highp float;
+precision highp usampler2D;
 in vec2 vWorld;
 in float vWave;
+uniform usampler2D uTerrain;
+uniform vec2 uMapSize;
 uniform float uTime;
+uniform float uDaylight;
+uniform float uTideHeight;
 out vec4 outColor;
 float worldWave(vec2 p,float time){
   float broad=sin(dot(p,vec2(0.031,0.017))+time*0.55);
@@ -194,13 +208,28 @@ float worldWave(vec2 p,float time){
   return broad*0.55+cross*0.45;
 }
 void main(){
+  ivec2 p=ivec2(clamp(floor(vWorld),vec2(0.0),uMapSize-1.0));
+  uint terrainByte=texelFetch(uTerrain,p,0).r;
+  bool land=(terrainByte&128u)!=0u;
+  if(land)discard;
+  bool shoreline=(terrainByte&64u)!=0u;
   float wave=worldWave(vWorld,uTime);
   float fine=sin((vWorld.x-vWorld.y)*0.11+uTime*0.75)*0.5+0.5;
   vec3 deep=vec3(0.025,0.20,0.34);
   vec3 highlight=vec3(0.075,0.48,0.68);
-  float crest=smoothstep(0.42,0.9,vWave);
+  float shoreBreak=sin(vWorld.x*0.18+vWorld.y*0.13-uTime*1.8)*0.5+0.5;
+  // Open ocean gets only sparse, thin crest caps. The stronger white break is
+  // reserved for shoreline water so the board never becomes a tiled field of
+  // oversized white patches when viewed from above.
+  float openCrest=smoothstep(0.82,0.96,vWave)*0.16;
+  float coastalBreak=shoreline?smoothstep(0.58,0.90,shoreBreak)*0.72:0.0;
+  float foamCrest=max(openCrest,coastalBreak);
+  float crest=foamCrest;
   float shimmer=clamp(0.28+wave*0.10+fine*0.055+crest*0.24,0.12,0.68);
-  outColor=vec4(mix(deep,highlight,shimmer),1.0);
+  vec3 water=mix(deep,highlight,shimmer);
+  water=mix(water,vec3(0.92,0.98,1.0),foamCrest*0.78);
+  water*=mix(0.42,1.0,uDaylight);
+  outColor=vec4(water,1.0);
 }`;
 
 const terrainFrag = `#version 300 es
@@ -330,11 +359,17 @@ export class ThreeDCompositePass {
   private waterIndexCount: number;
   private waterViewProjection: WebGLUniformLocation | null;
   private waterTime: WebGLUniformLocation | null;
+  private waterGameTick: WebGLUniformLocation | null;
+  private waterTideHeight: WebGLUniformLocation | null;
+  private waterWaveStrength: WebGLUniformLocation | null;
+  private waterDaylight: WebGLUniformLocation | null;
+  private waterMapSize: WebGLUniformLocation | null;
   private meshes: TerrainMesh[];
   private chunks: ThreeDTerrainChunks;
   private lodBias = 0;
   private skyTime: WebGLUniformLocation | null;
   private skyTilt: WebGLUniformLocation | null;
+  private skyDaylight: WebGLUniformLocation | null;
   private uniforms: Record<string, WebGLUniformLocation | null>;
   private borderState: WebGLTexture | null = null;
 
@@ -355,6 +390,7 @@ export class ThreeDCompositePass {
     this.waterProgram = createProgram(gl, waterVert, waterFrag);
     this.skyTime = gl.getUniformLocation(this.skyProgram, "uTime");
     this.skyTilt = gl.getUniformLocation(this.skyProgram, "uTilt");
+    this.skyDaylight = gl.getUniformLocation(this.skyProgram, "uDaylight");
     this.uniforms = Object.fromEntries(
       [
         "uTerrain",
@@ -451,6 +487,19 @@ export class ThreeDCompositePass {
       "uViewProjection",
     );
     this.waterTime = gl.getUniformLocation(this.waterProgram, "uTime");
+    this.waterGameTick = gl.getUniformLocation(this.waterProgram, "uGameTick");
+    this.waterTideHeight = gl.getUniformLocation(
+      this.waterProgram,
+      "uTideHeight",
+    );
+    this.waterWaveStrength = gl.getUniformLocation(
+      this.waterProgram,
+      "uWaveStrength",
+    );
+    this.waterDaylight = gl.getUniformLocation(this.waterProgram, "uDaylight");
+    this.waterMapSize = gl.getUniformLocation(this.waterProgram, "uMapSize");
+    gl.useProgram(this.waterProgram);
+    gl.uniform1i(gl.getUniformLocation(this.waterProgram, "uTerrain"), 0);
     gl.bindVertexArray(null);
     gl.useProgram(this.terrainProgram);
     gl.uniform1i(this.uniforms.uTerrain, 0);
@@ -501,6 +550,7 @@ export class ThreeDCompositePass {
     pitch: number,
     flashOwner = 0,
     flashAmount = 0,
+    gameTick = 0,
   ): void {
     const gl = this.gl;
     gl.disable(gl.BLEND);
@@ -509,6 +559,8 @@ export class ThreeDCompositePass {
     gl.useProgram(this.skyProgram);
     gl.uniform1f(this.skyTime, performance.now() / 1000);
     gl.uniform1f(this.skyTilt, pitch);
+    const worldCycle = threeDWorldCycle(gameTick);
+    gl.uniform1f(this.skyDaylight, worldCycle.daylight);
     gl.bindVertexArray(this.skyVao);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 
@@ -553,6 +605,13 @@ export class ThreeDCompositePass {
     gl.useProgram(this.waterProgram);
     gl.uniformMatrix4fv(this.waterViewProjection, false, viewProjection);
     gl.uniform1f(this.waterTime, performance.now() / 1000);
+    gl.uniform1f(this.waterGameTick, gameTick);
+    gl.uniform1f(this.waterTideHeight, worldCycle.tideHeight);
+    gl.uniform1f(this.waterWaveStrength, worldCycle.waveStrength);
+    gl.uniform1f(this.waterDaylight, worldCycle.daylight);
+    gl.uniform2f(this.waterMapSize, this.mapWidth, this.mapHeight);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.terrain);
     gl.bindVertexArray(this.waterVao);
     gl.drawElements(gl.TRIANGLES, this.waterIndexCount, gl.UNSIGNED_INT, 0);
 

@@ -2,6 +2,7 @@ import { Execution, Game, MessageType, Player, Structures } from "../game/Game";
 import { TileRef } from "../game/GameMap";
 import { GameUpdateType, WorldEventKind } from "../game/GameUpdates";
 import { PseudoRandom } from "../PseudoRandom";
+import { isTidalCoast, threeDWorldCycle } from "../world/ThreeDWorldCycle";
 
 type ObjectiveReward = "gold" | "troops" | "radar" | "victory";
 const DISASTER_MESSAGES = {
@@ -80,6 +81,12 @@ interface DisasterDamageScan {
   ends: Int32Array;
 }
 
+interface TidalTerrainChange {
+  originalByte: number;
+  originalOwnerID: number;
+  appliedByte: number;
+}
+
 /** Deterministic optional world systems shared by clients, bots, and replays. */
 export class WorldMechanicsExecution implements Execution {
   private game!: Game;
@@ -97,6 +104,10 @@ export class WorldMechanicsExecution implements Execution {
     null;
   private lastSaturationCount = 0;
   private pendingDamageScans: DisasterDamageScan[] = [];
+  private tidalCoast: TileRef[] = [];
+  private tideScanCursor = 0;
+  private tideApplyCursor = 0;
+  private tidalTerrain = new Map<TileRef, TidalTerrainChange>();
 
   constructor(seed: number) {
     this.random = new PseudoRandom(seed ^ 0x4f50454e);
@@ -111,6 +122,11 @@ export class WorldMechanicsExecution implements Execution {
     this.processDisasterDamageScans();
     const mechanics = this.game.config().worldMechanics();
     this.restoreTerrain(ticks);
+    if (mechanics.threeDMode) {
+      this.processThreeDTide(ticks);
+    } else if (this.tidalTerrain.size > 0) {
+      this.restoreThreeDTide();
+    }
     if (mechanics.strategicObjectives) {
       if (this.objectives.length === 0) this.createObjectives();
       if (ticks % 100 === 0) this.updateObjectives();
@@ -153,6 +169,71 @@ export class WorldMechanicsExecution implements Execution {
       this.nextSeasonTick = null;
       this.pendingSeasonal = null;
       this.pendingSaturation = null;
+    }
+  }
+
+  private processThreeDTide(ticks: number): void {
+    const totalTiles = this.game.width() * this.game.height();
+    if (this.tideScanCursor < totalTiles) {
+      // Finish before the first night without a single large map-loading scan.
+      const scanBudget = Math.max(4096, Math.ceil(totalTiles / 240));
+      const end = Math.min(totalTiles, this.tideScanCursor + scanBudget);
+      for (let tile = this.tideScanCursor; tile < end; tile++) {
+        const ref = tile as TileRef;
+        if (
+          isTidalCoast(this.game.terrainByte(ref), this.game.isOceanShore(ref))
+        ) {
+          this.tidalCoast.push(ref);
+        }
+      }
+      this.tideScanCursor = end;
+    }
+
+    if (threeDWorldCycle(ticks).isNight) {
+      const end = Math.min(this.tidalCoast.length, this.tideApplyCursor + 1800);
+      for (; this.tideApplyCursor < end; this.tideApplyCursor++) {
+        const tile = this.tidalCoast[this.tideApplyCursor];
+        if (
+          !isTidalCoast(
+            this.game.terrainByte(tile),
+            this.game.isOceanShore(tile),
+          )
+        ) {
+          continue;
+        }
+        const originalByte = this.game.terrainByte(tile);
+        const appliedByte = 0x60; // ocean shoreline, magnitude zero
+        this.tidalTerrain.set(tile, {
+          originalByte,
+          originalOwnerID: this.game.ownerID(tile),
+          appliedByte,
+        });
+        this.game.setTerrainByte(tile, appliedByte);
+      }
+      return;
+    }
+
+    if (this.tidalTerrain.size > 0) this.restoreThreeDTide();
+    this.tideApplyCursor = 0;
+  }
+
+  private restoreThreeDTide(): void {
+    let restored = 0;
+    for (const [tile, change] of this.tidalTerrain) {
+      if (restored >= 1800) break;
+      if (this.game.terrainByte(tile) === change.appliedByte) {
+        this.game.setTerrainByte(tile, change.originalByte);
+        if (
+          change.originalOwnerID !== 0 &&
+          this.game.isLand(tile) &&
+          !this.game.hasOwner(tile)
+        ) {
+          const owner = this.game.playerBySmallID(change.originalOwnerID);
+          if (owner.isPlayer() && owner.isAlive()) owner.conquer(tile);
+        }
+      }
+      this.tidalTerrain.delete(tile);
+      restored++;
     }
   }
 

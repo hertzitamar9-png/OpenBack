@@ -131,4 +131,16 @@ describe("WorldMechanicsExecution", () => {
     expect(thawed).toBe(true);
     expect(Array.from(game.terrainBuffer())).toEqual(Array.from(original));
   });
+
+  test("temporarily covers low coastline at 3D night and restores it by day", async () => {
+    const game = await setup("ocean_and_land", {
+      worldMechanics: { threeDMode: true },
+    });
+    game.addExecution(new WorldMechanicsExecution(112233));
+    const original = Uint8Array.from(game.terrainBuffer());
+    for (let tick = 0; tick < 520; tick++) game.executeNextTick();
+    expect(game.terrainBuffer()).not.toEqual(original);
+    for (let tick = 520; tick < 980; tick++) game.executeNextTick();
+    expect(Array.from(game.terrainBuffer())).toEqual(Array.from(original));
+  });
 });
