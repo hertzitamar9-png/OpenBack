@@ -21,7 +21,7 @@ void main() {
   float stroke = smoothstep(strokeInner - 0.5, strokeInner + 0.5, dist)
                * (1.0 - smoothstep(strokeOuter - 0.5, strokeOuter + 0.5, dist));
 
-  float alpha = fill * 0.2 + stroke * 0.5;
+  float alpha = fill * 0.14 + stroke * 0.62;
   if (alpha < 0.001) discard;
 
   fragColor = vec4(uColor, alpha);

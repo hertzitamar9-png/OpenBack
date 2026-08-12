@@ -15,6 +15,7 @@ import {
   clampWorldRadius,
   isFiniteClipGeometry,
 } from "../utils/ProjectionSafety";
+import { WAR_TABLE_OVERLAY } from "../war-table/WarTableStyle";
 
 import classicFragSrc from "../shaders/nuke-telegraph/nuke-telegraph-classic.frag.glsl?raw";
 import classicVertSrc from "../shaders/nuke-telegraph/nuke-telegraph-classic.vert.glsl?raw";
@@ -214,15 +215,15 @@ export class NukeTelegraphPass {
     gl.uniform1f(this.classicTime, time);
     gl.uniform4f(
       this.classicTelegraphStyle,
-      s.strokeWidth,
-      s.dashLen,
+      Math.min(s.strokeWidth, WAR_TABLE_OVERLAY.pathWidth),
+      Math.min(s.dashLen, WAR_TABLE_OVERLAY.dashInterval),
       s.gapLen,
       s.rotationSpeed,
     );
     gl.uniform4f(
       this.classicTelegraphAlpha,
-      s.baseAlpha,
-      s.pulseAmplitude,
+      Math.min(s.baseAlpha, 0.85),
+      Math.min(s.pulseAmplitude, WAR_TABLE_OVERLAY.selectionPulse),
       s.pulseSpeed,
       s.fillAlphaOffset,
     );
