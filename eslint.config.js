@@ -33,6 +33,7 @@ export default [
             "__mocks__/fileMock.js",
             "eslint.config.js",
             "scripts/generate-icon-atlas.mjs",
+            "scripts/generate-war-table-atlases.mjs",
             "scripts/import-fictional-shop-cosmetics.mjs",
             "scripts/refresh-shop-catalog.mjs",
             "scripts/sync-assets.mjs",
