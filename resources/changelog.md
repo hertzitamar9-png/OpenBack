@@ -5,6 +5,7 @@
 - Kept the Hydrogen Bomb's real 80/100-tile gameplay radii and 160-tile explosion artwork independent, preventing presentation changes from altering damage or multiplayer simulation.
 - Added safe 3D target projection that retains the same world-space bomb radii while rejecting invalid behind-camera geometry before it can cover or hide the battlefield.
 - Unified OpenBack menus, dialogs, actions, warnings, and focus states around a shared navy, cyan, green, amber, and red tactical presentation system with reduced-motion support.
+- Regenerated the corrected Las Vegas Strip preview with the release map pipeline so the published map card matches the shipped terrain on every platform.
 
 Created by **frootz jhklphy**.
 
