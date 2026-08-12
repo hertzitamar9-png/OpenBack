@@ -99,6 +99,7 @@ import {
   type GPUResources,
 } from "./utils/GpuResources";
 import { HeatManager } from "./utils/HeatManager";
+import { WarTableQualityController } from "./war-table/WarTableQuality";
 
 /** Ghost types that trigger SAM radius overlay (matches upstream SAMRadiusLayer). */
 const SAM_RADIUS_GHOST_TYPES = new Set([
@@ -175,6 +176,11 @@ export class GPURenderer {
   private threeDModeActive = false;
   private threeDQuality = new ThreeDQualityController("high");
   private lastThreeDFrameAt = 0;
+  private warTableQuality = new WarTableQualityController(
+    typeof navigator !== "undefined" &&
+      /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent),
+  );
+  private lastWarTableFrameAt = 0;
   private territoryFlashOwner = 0;
   private territoryFlashStartedAt = 0;
   private territoryFlashEndsAt = 0;
@@ -1440,6 +1446,14 @@ export class GPURenderer {
     const cw = this.canvas.width;
     const ch = this.canvas.height;
     const compositingActive = this.isLightCompositingActive();
+    const frameNow = performance.now();
+    if (!this.threeDPass && this.lastWarTableFrameAt > 0) {
+      this.warTableQuality.sample(
+        frameNow - this.lastWarTableFrameAt,
+        frameNow,
+      );
+    }
+    this.lastWarTableFrameAt = frameNow;
 
     if (this.threeDPass) {
       const now = performance.now();
@@ -1594,7 +1608,12 @@ export class GPURenderer {
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.disable(gl.BLEND);
     if (pe.terrain) {
-      this.terrainPass.draw(cam, this.camera.zoom, performance.now() / 1000);
+      this.terrainPass.draw(
+        cam,
+        this.camera.zoom,
+        performance.now() / 1000,
+        this.warTableQuality.current().terrainDetail,
+      );
     }
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);

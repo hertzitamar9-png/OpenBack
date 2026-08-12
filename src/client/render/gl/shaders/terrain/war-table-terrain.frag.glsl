@@ -7,6 +7,7 @@ uniform usampler2D uTerrainBytes;
 uniform vec2 uMapSize;
 uniform float uZoom;
 uniform float uTime;
+uniform float uQuality;
 
 in vec2 vUV;
 out vec4 fragColor;
@@ -35,7 +36,7 @@ void main() {
   bool land = (terrain & 128u) != 0u;
   bool shore = (terrain & 64u) != 0u;
   vec3 color = texture(uTerrain, vUV).rgb;
-  float detail = smoothstep(0.35, 1.15, uZoom);
+  float detail = smoothstep(0.35, 1.15, uZoom) * clamp(uQuality, 0.45, 1.0);
 
   if (land) {
     float west = heightAt(tile + ivec2(-1, 0));

@@ -34,6 +34,7 @@ export class TerrainPass {
   private uCamera: WebGLUniformLocation;
   private uZoom: WebGLUniformLocation;
   private uTime: WebGLUniformLocation;
+  private uQuality: WebGLUniformLocation;
   private mapW: number;
   private mapH: number;
   // Base ocean (deep water) color; reused by applyTerrainDelta and rebuilds.
@@ -64,6 +65,7 @@ export class TerrainPass {
     this.uCamera = gl.getUniformLocation(this.program, "uCamera")!;
     this.uZoom = gl.getUniformLocation(this.program, "uZoom")!;
     this.uTime = gl.getUniformLocation(this.program, "uTime")!;
+    this.uQuality = gl.getUniformLocation(this.program, "uQuality")!;
     gl.useProgram(this.program);
     gl.uniform1i(gl.getUniformLocation(this.program, "uTerrain"), 0);
     gl.uniform1i(gl.getUniformLocation(this.program, "uTerrainBytes"), 1);
@@ -210,12 +212,18 @@ export class TerrainPass {
   }
 
   /** Render the terrain. Call with depth test disabled, no blending. */
-  draw(cameraMatrix: Float32Array, zoom: number, timeSeconds: number): void {
+  draw(
+    cameraMatrix: Float32Array,
+    zoom: number,
+    timeSeconds: number,
+    quality = 1,
+  ): void {
     const gl = this.gl;
     gl.useProgram(this.program);
     gl.uniformMatrix3fv(this.uCamera, false, cameraMatrix);
     gl.uniform1f(this.uZoom, zoom);
     gl.uniform1f(this.uTime, timeSeconds);
+    gl.uniform1f(this.uQuality, Math.max(0.45, Math.min(1, quality)));
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.tex);
