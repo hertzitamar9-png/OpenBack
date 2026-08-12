@@ -42,4 +42,16 @@ describe("Render production persistence", () => {
     });
     expect(service?.healthCheckPath).toBe("/auth/health");
   });
+
+  test("supervisor can stop every managed process during a Render restart", () => {
+    const supervisor = fs.readFileSync(
+      path.resolve("supervisord.conf"),
+      "utf8",
+    );
+    const managedUsers = [...supervisor.matchAll(/^user=(.+)$/gm)].map(
+      (match) => match[1].trim(),
+    );
+
+    expect(new Set(managedUsers)).toEqual(new Set(["root"]));
+  });
 });

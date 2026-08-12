@@ -9,6 +9,7 @@
 - Added hysteresis-based adaptive 2D quality tiers that respond only to sustained rendering load, recover slowly, and reduce decorative detail rather than borders, names, targets, units, or gameplay information.
 - Closed Antarctica's irregular southern 3D land boundary with terrain-following opaque geometry, removing the hollow black gap without changing 3D cameras, relief, units, input, or overlays.
 - Added exhaustive miniature coverage and projection-safety regression gates so every canonical visible unit has a valid rendering path and invalid visual geometry is rejected before reaching the GPU.
+- Made hosted restarts and rolling deployments shut down OpenBack cleanly, preventing the game server from being stranded when Render replaces an instance.
 - Preserved territory readability, map interaction, simulation, balance, multiplayer synchronization, and the existing 3D presentation.
 
 Created by **frootz jhklphy**.
