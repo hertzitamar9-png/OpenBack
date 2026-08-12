@@ -3,6 +3,7 @@
 - Began OpenBack's new 2D Living War Table presentation with stable terrain relief, material detail, coastline depth, and animated world-space water that remains fixed to the map while panning.
 - Replaced circular structure markers with distinct grounded top-down miniatures, deterministic construction assembly, owner-color panels, and matching placement previews while preserving counts, levels, readiness, and progress bars.
 - Rebuilt ships, trains, aircraft, tanks, shells, and missiles as heading-aware top-down war-table miniatures while retaining curved routes, player visibility, missile smoothing, launch smoke, tank self-destruction, fuel trains, SAM behavior, and established layer order.
+- Bounded decorative battlefield effects in a fixed-capacity lifecycle pool so repeated impacts, crashes, sinking ships, dust, smoke, and destruction cannot grow without limit during long matches; reduced-motion players skip optional debris.
 - Preserved territory readability, map interaction, simulation, balance, multiplayer synchronization, and the existing 3D presentation.
 
 Created by **frootz jhklphy**.

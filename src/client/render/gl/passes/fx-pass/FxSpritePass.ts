@@ -22,6 +22,11 @@ import {
 import { DynamicInstanceBuffer } from "../../DynamicBuffer";
 import type { RenderSettings } from "../../RenderSettings";
 import { createProgram, shaderSrc } from "../../utils/GlUtils";
+import {
+  WarTableEffectPool,
+  type WarTableEffectFamily,
+  type WarTableEffectInstance,
+} from "../../war-table/WarTableEffectPool";
 
 import fxAtlasMeta from "resources/atlases/fx-atlas-meta.json" with { type: "json" };
 import { assetUrl } from "src/core/AssetUrls";
@@ -171,15 +176,11 @@ function seededRandom(seed: number): number {
 // Active FX state
 // ---------------------------------------------------------------------------
 
-interface ActiveFx {
-  x: number;
-  y: number;
+type ActiveFx = WarTableEffectInstance & {
   fxType: number;
-  startMs: number;
-  lifetimeMs: number;
-  fadeIn: number; // fraction 0â€“1 (start of full alpha)
-  fadeOut: number; // fraction 0â€“1 (start of fade out)
-}
+  fadeIn: number;
+  fadeOut: number;
+};
 
 // ---------------------------------------------------------------------------
 // Instance data layout
@@ -207,7 +208,7 @@ export class FxSpritePass {
   private atlasTex: WebGLTexture;
   private atlasReady = false;
 
-  private activeFx: ActiveFx[] = [];
+  private effectPool: WarTableEffectPool;
   private timeFn: () => number = () => performance.now();
 
   constructor(
@@ -219,6 +220,11 @@ export class FxSpritePass {
     this.gl = gl;
     this.mapW = header.mapWidth;
     this.settings = settings;
+    this.effectPool = new WarTableEffectPool(
+      2048,
+      globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches ??
+        false,
+    );
 
     this.program = createProgram(
       gl,
@@ -340,7 +346,8 @@ export class FxSpritePass {
     for (const evt of events) {
       const startMs = now - (evt.tickAge ?? 0) * this.config.msPerTick();
       if (now - startMs >= fx.conquestLifetimeMs) continue;
-      this.activeFx.push({
+      this.spawnActive({
+        family: "impact",
         x: evt.x,
         y: evt.y,
         fxType: FX_CONQUEST,
@@ -423,7 +430,8 @@ export class FxSpritePass {
       const fireY = y + Math.sin(angle) * distance;
       this.pushFx(fireX, fireY, FX_MINI_EXPLOSION, now);
       for (const fxType of [FX_MINI_FIRE]) {
-        this.activeFx.push({
+        this.spawnActive({
+          family: "aircraft-crash",
           x: fireX,
           y: fireY,
           fxType,
@@ -462,7 +470,8 @@ export class FxSpritePass {
 
   pushFx(x: number, y: number, fxType: number, now: number): void {
     const cfg = FX_CONFIG[fxType];
-    this.activeFx.push({
+    this.spawnActive({
+      family: this.familyForFx(fxType),
       x,
       y,
       fxType,
@@ -475,7 +484,8 @@ export class FxSpritePass {
 
   private pushDebris(x: number, y: number, fxType: number, now: number): void {
     const fx = this.settings.fx;
-    this.activeFx.push({
+    this.spawnActive({
+      family: "debris",
       x,
       y,
       fxType,
@@ -483,7 +493,31 @@ export class FxSpritePass {
       lifetimeMs: fx.debrisLifetimeMs,
       fadeIn: fx.debrisFadeIn,
       fadeOut: fx.debrisFadeOut,
+      decorative: true,
     });
+  }
+
+  private familyForFx(fxType: number): WarTableEffectFamily {
+    if (fxType === FX_BUILDING_EXPLOSION) return "building-collapse";
+    if (fxType === FX_SINKING_SHIP) return "ship-sinking";
+    if (fxType === FX_DUST) return "assembly";
+    if (fxType === FX_MINI_SMOKE) return "train-smoke";
+    if (fxType === FX_MINI_SMOKE_FIRE) return "tank-destruction";
+    return "impact";
+  }
+
+  private spawnActive(effect: {
+    family: WarTableEffectFamily;
+    x: number;
+    y: number;
+    fxType: number;
+    startMs: number;
+    lifetimeMs: number;
+    fadeIn: number;
+    fadeOut: number;
+    decorative?: boolean;
+  }): void {
+    this.effectPool.spawn(effect);
   }
 
   // -------------------------------------------------------------------------
@@ -491,25 +525,21 @@ export class FxSpritePass {
   // -------------------------------------------------------------------------
 
   tick(): void {
-    if (this.activeFx.length === 0) return;
     const now = this.timeFn();
-
-    for (let i = this.activeFx.length - 1; i >= 0; i--) {
-      if (now - this.activeFx[i].startMs >= this.activeFx[i].lifetimeMs) {
-        this.activeFx[i] = this.activeFx[this.activeFx.length - 1];
-        this.activeFx.pop();
-      }
+    this.effectPool.update(now);
+    if (this.effectPool.activeCount === 0) {
+      this.spriteCount = 0;
+      return;
     }
-
-    this.rebuildInstances(now);
+    this.rebuildInstances(now, this.effectPool.snapshot() as ActiveFx[]);
   }
 
-  private rebuildInstances(now: number): void {
-    const count = this.activeFx.length;
+  private rebuildInstances(now: number, activeFx: ActiveFx[]): void {
+    const count = activeFx.length;
     this.instanceBuf.ensureCapacity(count);
 
     for (let i = 0; i < count; i++) {
-      const fx = this.activeFx[i];
+      const fx = activeFx[i];
       const cfg = FX_CONFIG[fx.fxType];
       const elapsed = now - fx.startMs;
 
@@ -578,7 +608,7 @@ export class FxSpritePass {
   }
 
   clear(): void {
-    this.activeFx.length = 0;
+    this.effectPool.clear();
     this.spriteCount = 0;
   }
 
