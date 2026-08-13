@@ -233,7 +233,14 @@ export class ServerEnv {
     return process.env.OTEL_AUTH_HEADER ?? "";
   }
   static gitCommit(): string {
-    const v = process.env.GIT_COMMIT;
+    // Render supplies the exact source revision for every deploy. Prefer it
+    // over the legacy manual value so the client cannot advertise an old
+    // revision after a newer container is running.
+    const renderCommit = process.env.RENDER_GIT_COMMIT;
+    const v =
+      renderCommit !== undefined && renderCommit.length > 0
+        ? renderCommit
+        : process.env.GIT_COMMIT;
     if (!v) {
       throw new Error("GIT_COMMIT not set");
     }

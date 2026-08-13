@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  THREE_D_WAVE_HEIGHT_SCALE,
   isTidalCoast,
   shipCurrentMultiplier,
   shipMovementSteps,
@@ -38,6 +39,17 @@ describe("deterministic 3D world cycle", () => {
     );
     expect(aligned).toBeGreaterThan(1);
     expect(opposed).toBeLessThan(1);
+  });
+
+  it("keeps 3D wave crests visibly raised above the ocean plane", () => {
+    const day = threeDWorldCycle(0);
+    const night = threeDWorldCycle(450);
+    expect(day.waveStrength * THREE_D_WAVE_HEIGHT_SCALE).toBeGreaterThanOrEqual(
+      2.4,
+    );
+    expect(
+      night.waveStrength * THREE_D_WAVE_HEIGHT_SCALE,
+    ).toBeGreaterThanOrEqual(3.5);
   });
 
   it("turns current alignment into deterministic zero, one, or two ship steps", () => {

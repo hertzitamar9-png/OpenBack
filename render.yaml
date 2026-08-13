@@ -19,8 +19,6 @@ services:
     # Render assigns $PORT at runtime; the Dockerfile's start.sh rewrites
     # nginx to listen on it.
     envVars:
-      - key: GIT_COMMIT
-        sync: false
       - key: DOMAIN
         value: openback.servegame.com
       - key: PUBLIC_ORIGIN

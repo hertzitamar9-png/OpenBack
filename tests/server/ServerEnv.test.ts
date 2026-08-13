@@ -2,6 +2,24 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 import { GameEnv } from "../../src/core/configuration/Config";
 import { resolveServerGameEnv, ServerEnv } from "../../src/server/ServerEnv";
 
+describe("ServerEnv.gitCommit", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  test("uses Render's deployed commit instead of a stale manual value", () => {
+    vi.stubEnv("GIT_COMMIT", "old-manual-commit");
+    vi.stubEnv("RENDER_GIT_COMMIT", "current-render-commit");
+    expect(ServerEnv.gitCommit()).toBe("current-render-commit");
+  });
+
+  test("keeps the explicit commit outside Render", () => {
+    vi.stubEnv("GIT_COMMIT", "local-commit");
+    vi.stubEnv("RENDER_GIT_COMMIT", "");
+    expect(ServerEnv.gitCommit()).toBe("local-commit");
+  });
+});
+
 describe("ServerEnv.numWorkers", () => {
   afterEach(() => {
     vi.unstubAllEnvs();

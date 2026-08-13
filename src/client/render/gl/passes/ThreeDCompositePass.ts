@@ -5,7 +5,10 @@
  * supplies territory ownership, and the player palette supplies board-piece
  * colors. No flat screenshot is bent over the mesh.
  */
-import { threeDWorldCycle } from "../../../../core/world/ThreeDWorldCycle";
+import {
+  THREE_D_WAVE_HEIGHT_SCALE,
+  threeDWorldCycle,
+} from "../../../../core/world/ThreeDWorldCycle";
 import { ThreeDCameraState } from "../three-d/ThreeDCamera";
 import { THREE_D_WATER_HEIGHT } from "../three-d/ThreeDSurfaceSampler";
 import { ThreeDTerrainChunks } from "../three-d/ThreeDTerrainChunks";
@@ -187,7 +190,7 @@ void main(){
   vec3 displaced=aPos;
   // Real vertical water: high crests rise, collapse at shore, and retreat with
   // the authoritative tide. Land remains a separate solid surface.
-  displaced.y+=uTideHeight+vWave*0.62;
+  displaced.y+=uTideHeight+vWave*${THREE_D_WAVE_HEIGHT_SCALE.toFixed(1)};
   gl_Position=uViewProjection*vec4(displaced,1.0);
 }`;
 

@@ -19,8 +19,8 @@ COPY resources ./resources
 COPY src ./src
 
 ARG GIT_COMMIT=unknown
-ENV GIT_COMMIT="$GIT_COMMIT"
-RUN npm run build-prod
+ARG RENDER_GIT_COMMIT=
+RUN GIT_COMMIT="${RENDER_GIT_COMMIT:-$GIT_COMMIT}" npm run build-prod
 
 # Production dependencies stage - separate from build
 FROM base AS prod-deps
@@ -73,7 +73,8 @@ COPY src ./src
 
 
 ARG GIT_COMMIT=unknown
-RUN echo "$GIT_COMMIT" > static/commit.txt
+ARG RENDER_GIT_COMMIT=
+RUN echo "${RENDER_GIT_COMMIT:-$GIT_COMMIT}" > static/commit.txt
 
 ENV GIT_COMMIT="$GIT_COMMIT"
 

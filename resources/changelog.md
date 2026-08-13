@@ -1,3 +1,11 @@
+## OpenBack v0.34.131 - Visible Models and Raised Seas
+
+- Restored the current OpenBack renderer to the public game so established 2D units and structures no longer disappear behind an outdated deployment.
+- Increased real 3D ocean displacement to produce clearly raised moving crests instead of surface-only shading.
+- Made deployed builds report Render's exact source revision automatically, preventing a stale manual commit value from hiding failed or outdated deployments.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.130 - Stable 3D Operations
 
 - Rebuilt 3D pointer targeting around the rendered terrain surface so attacks, MIRVs, Aircraft, Tanks, structures, and placement previews remain aligned with the cursor at every camera angle; clicks that miss the board no longer fall back onto an unrelated country.
