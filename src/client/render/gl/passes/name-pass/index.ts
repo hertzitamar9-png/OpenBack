@@ -46,6 +46,7 @@ import {
 import { DebugProgram } from "./DebugProgram";
 import { FlagAtlasArray } from "./FlagAtlasArray";
 import { IconProgram } from "./IconProgram";
+import { fitNameScaleToTerritory } from "./NameScale";
 import { StatusIconProgram } from "./StatusIconProgram";
 import { layoutString } from "./TextLayout";
 import { TextProgram } from "./TextProgram";
@@ -450,6 +451,18 @@ export class NamePass {
         dirty = true;
       }
 
+      const fittedSize = fitNameScaleToTerritory({
+        requestedSize: entry.size,
+        availableWidth: entry.availableWidth ?? Number.POSITIVE_INFINITY,
+        nameHalfWidth: slot.nameHalfWidth,
+        hasFlag: slot.static.flag !== undefined,
+        verified: slot.static.verified === true,
+        fontSize: this.fontSize,
+        fontBase: this.fontBase,
+        nameScaleFactor: this.settings.name.nameScaleFactor,
+        nameScaleCap: this.settings.name.nameScaleCap,
+      });
+
       // Write troop count string (refreshed per slot every 500ms, staggered by
       // slot index so updates spread across the window instead of bursting).
       const troopBucket = Math.floor((now + (slot.index % 5) * 0.1) / 0.5);
@@ -469,7 +482,7 @@ export class NamePass {
       if (
         entry.x !== slot.tgtX ||
         entry.y !== slot.tgtY ||
-        entry.size !== slot.tgtScale
+        fittedSize !== slot.tgtScale
       ) {
         if (!snap) {
           const elapsed = now - slot.startTime;
@@ -483,11 +496,11 @@ export class NamePass {
         } else {
           slot.srcX = entry.x;
           slot.srcY = entry.y;
-          slot.srcScale = entry.size;
+          slot.srcScale = fittedSize;
         }
         slot.tgtX = entry.x;
         slot.tgtY = entry.y;
-        slot.tgtScale = entry.size;
+        slot.tgtScale = fittedSize;
         slot.startTime = now;
         dirty = true;
       }

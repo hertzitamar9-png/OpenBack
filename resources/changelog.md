@@ -1,3 +1,10 @@
+## OpenBack v0.34.129 - Clear Country Labels
+
+- Prevented large country names, flags, and verified badges from covering neighboring countries' labels by fitting each complete name row inside its own usable territory area.
+- Preserved large readable labels for countries with enough room instead of globally shrinking every name.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.128 - Organized 3D Rail and Air Operations
 
 - Restored visible rail lines beneath regular and camouflaged fuel trains in 3D matches by shading the authoritative track layout directly onto raised terrain.

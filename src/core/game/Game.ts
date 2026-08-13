@@ -1089,4 +1089,6 @@ export interface NameViewData {
   x: number;
   y: number;
   size: number;
+  /** Width of the owned rectangle selected for this name label. */
+  availableWidth?: number;
 }

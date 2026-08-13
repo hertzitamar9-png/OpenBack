@@ -701,6 +701,7 @@ export class GameView implements GameMap {
           x: p.nameData?.x ?? 0,
           y: p.nameData?.y ?? 0,
           size: p.nameData?.size ?? 0,
+          availableWidth: p.nameData?.availableWidth,
         });
       }
     }

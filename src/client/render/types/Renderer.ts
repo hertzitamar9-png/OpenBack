@@ -192,6 +192,7 @@ export interface NameEntry {
   x: number;
   y: number;
   size: number;
+  availableWidth?: number;
 }
 
 /** Per-player status data for the GPU name/status-icon passes. */

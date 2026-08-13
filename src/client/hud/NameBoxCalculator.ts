@@ -90,6 +90,7 @@ export function placeName(game: Game, player: Player): NameViewData {
     x: Math.ceil(center.x),
     y: Math.ceil(center.y),
     size: fontSize,
+    availableWidth: largestRectangle.width,
   };
 }
 
