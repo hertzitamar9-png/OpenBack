@@ -1193,8 +1193,9 @@ export class GPURenderer {
             cost: data.cost,
             canAfford: data.canAfford,
             canPlace: data.canBuild || data.canUpgrade,
-            topText:
-              data.multiplier && data.multiplier > 1
+            topText: data.invalidReason
+              ? translateText(data.invalidReason)
+              : data.multiplier && data.multiplier > 1
                 ? translateText("build_menu.upgrade_amount", {
                     amount: data.multiplier.toString(),
                   })
@@ -1467,6 +1468,8 @@ export class GPURenderer {
       this.threeDPass.setQuality(quality.terrainLodBias);
       this.threeDFogPass?.setQuality(quality.particleScale);
       this.threeDWorldEventPass?.setQuality(quality.particleScale);
+      this.railroadPass.prepareTextures();
+      this.threeDPass.setRailroadTexture(this.railroadPass.railroadTexture());
       toScreen(this.gl, cw, ch, () => {
         const threeDCamera = ThreeDCameraState.create({
           viewportWidth: cw,

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { Game } from "../../../src/core/game/Game";
-import { AirPathFinder } from "../../../src/core/pathfinding/PathFinder.Air";
+import {
+  AirPathFinder,
+  isAircraftLandingTooHigh,
+} from "../../../src/core/pathfinding/PathFinder.Air";
 
 function gridGame(threeDMode: boolean): Game {
   const width = 9;
@@ -38,5 +41,24 @@ describe("terrain-aware aircraft routing", () => {
       game.ref(7, 3),
     )!;
     expect(path.some((tile) => game.magnitude(tile) >= 18)).toBe(true);
+  });
+
+  it("rejects a mountain landing in 3D mode", () => {
+    const game = gridGame(true);
+    const destination = game.ref(4, 3);
+    expect(game.magnitude(destination)).toBeGreaterThanOrEqual(18);
+    expect(isAircraftLandingTooHigh(game, destination)).toBe(true);
+    expect(
+      new AirPathFinder(game).findPath(game.ref(1, 3), destination),
+    ).toBeNull();
+  });
+
+  it("keeps mountain landing unrestricted in 2D mode", () => {
+    const game = gridGame(false);
+    const destination = game.ref(4, 3);
+    expect(isAircraftLandingTooHigh(game, destination)).toBe(false);
+    expect(
+      new AirPathFinder(game).findPath(game.ref(1, 3), destination),
+    ).not.toBeNull();
   });
 });

@@ -245,6 +245,7 @@ uniform usampler2D uTileState;
 uniform usampler2D uTrailState;
 uniform sampler2D uPalette;
 uniform sampler2D uBorderTex;
+uniform usampler2D uRailroadState;
 uniform vec2 uMapSize;
 uniform float uTime;
 uniform float uDistance;
@@ -257,6 +258,30 @@ float heightFor(uint b){
   if(land&&m>30.5)return 57.0;
   if(land)return (0.15+pow(m/30.0,2.0)*31.0)*1.5;
   return -min(m,10.0)*0.02;
+}
+float railSegmentDistance(vec2 p,vec2 a,vec2 b){
+  vec2 ab=b-a;
+  float t=clamp(dot(p-a,ab)/max(dot(ab,ab),0.0001),0.0,1.0);
+  return length(p-a-ab*t);
+}
+float railSurfaceCoverage(uint railType,vec2 p){
+  if(railType==0u||railType>6u)return 0.0;
+  vec2 c=vec2(0.5);
+  float d;
+  if(railType==1u){
+    d=railSegmentDistance(p,vec2(0.5,0.0),vec2(0.5,1.0));
+  }else if(railType==2u){
+    d=railSegmentDistance(p,vec2(0.0,0.5),vec2(1.0,0.5));
+  }else{
+    vec2 vertical=vec2(0.5,(railType==3u||railType==4u)?0.0:1.0);
+    vec2 horizontal=vec2((railType==3u||railType==5u)?0.0:1.0,0.5);
+    d=min(railSegmentDistance(p,c,vertical),railSegmentDistance(p,c,horizontal));
+  }
+  float rail=1.0-smoothstep(0.095,0.145,d);
+  float along=(railType==1u)?p.y:(railType==2u)?p.x:length(p-c);
+  float ties=(1.0-smoothstep(0.035,0.075,abs(fract(along*4.0)-0.5)))
+    *(1.0-smoothstep(0.13,0.20,d));
+  return max(rail,ties*0.72);
 }
 void main(){
   bool inside=all(greaterThanEqual(vMapUV,vec2(0.0)))&&all(lessThanEqual(vMapUV,vec2(1.0)));
@@ -318,6 +343,16 @@ void main(){
     vec3 trailColor=texture(uPalette,vec2((float(trailOwner)+0.5)/4096.0,0.25)).rgb;
     color=mix(color,trailColor,0.88);
   }
+  // Exact rail orientation data, shaded directly into the raised surface.
+  // This conforms to relief without reviving the old floating polygon webs.
+  uint railType=inside?texelFetch(uRailroadState,p,0).r:0u;
+  float railCoverage=railSurfaceCoverage(railType,fract(vWorld));
+  if(railCoverage>0.0){
+    vec3 railColor=owner>0u
+      ?texture(uPalette,vec2((float(owner)+0.5)/4096.0,0.75)).rgb
+      :vec3(0.16,0.17,0.18);
+    color=mix(color,railColor,railCoverage*0.96);
+  }
   outColor=vec4(color,1.0);
 }`;
 
@@ -372,6 +407,7 @@ export class ThreeDCompositePass {
   private skyDaylight: WebGLUniformLocation | null;
   private uniforms: Record<string, WebGLUniformLocation | null>;
   private borderState: WebGLTexture | null = null;
+  private railroadState: WebGLTexture | null = null;
 
   constructor(
     private gl: WebGL2RenderingContext,
@@ -398,6 +434,7 @@ export class ThreeDCompositePass {
         "uTrailState",
         "uPalette",
         "uBorderTex",
+        "uRailroadState",
         "uMapSize",
         "uViewProjection",
         "uTime",
@@ -507,10 +544,15 @@ export class ThreeDCompositePass {
     gl.uniform1i(this.uniforms.uTrailState, 2);
     gl.uniform1i(this.uniforms.uPalette, 3);
     gl.uniform1i(this.uniforms.uBorderTex, 4);
+    gl.uniform1i(this.uniforms.uRailroadState, 5);
   }
 
   setBorderTexture(borderState: WebGLTexture): void {
     this.borderState = borderState;
+  }
+
+  setRailroadTexture(railroadState: WebGLTexture): void {
+    this.railroadState = railroadState;
   }
 
   private createMesh(maxSegments: number): TerrainMesh {
@@ -631,6 +673,8 @@ export class ThreeDCompositePass {
     gl.bindTexture(gl.TEXTURE_2D, this.palette);
     gl.activeTexture(gl.TEXTURE4);
     gl.bindTexture(gl.TEXTURE_2D, this.borderState);
+    gl.activeTexture(gl.TEXTURE5);
+    gl.bindTexture(gl.TEXTURE_2D, this.railroadState);
     for (const chunk of this.chunks.visible(camera)) {
       const mesh = this.meshes[Math.min(3, chunk.lod + this.lodBias)];
       gl.uniform2f(this.uniforms.uGroundOrigin, chunk.x, chunk.y);

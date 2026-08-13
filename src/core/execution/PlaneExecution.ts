@@ -10,6 +10,7 @@ import {
 } from "../game/Game";
 import { TileRef } from "../game/GameMap";
 import { UniversalPathFinding } from "../pathfinding/PathFinder";
+import { isAircraftLandingTooHigh } from "../pathfinding/PathFinder.Air";
 import type { SteppingPathFinder } from "../pathfinding/types";
 import { PathStatus } from "../pathfinding/types";
 import {
@@ -104,13 +105,26 @@ export class PlaneExecution implements Execution {
     this.src = this.plane.tile();
     this.target = owner;
     this.carriedTroops = this.plane.troops();
+    if (isAircraftLandingTooHigh(game, this.dst)) {
+      game.displayMessage(
+        "events_display.aircraft_land_too_high",
+        MessageType.ATTACK_FAILED,
+        this.player.id(),
+      );
+      this.active = false;
+      return;
+    }
+    this.pathFinder = UniversalPathFinding.Air(game);
+    this.flightPath = this.pathFinder.findPath(this.src, this.dst) ?? [];
+    if (this.flightPath.length === 0) {
+      this.active = false;
+      return;
+    }
     this.mode = "launching";
     this.warningTicks = DEPLOYMENT_WARNING_TICKS;
     this.plane.setLoaded(false);
     this.plane.setTargetTile(this.dst);
     this.plane.setLaunchPhase(1);
-    this.pathFinder = UniversalPathFinding.Air(game);
-    this.flightPath = this.pathFinder.findPath(this.src, this.dst) ?? [];
     // Point the nose at the target from the get-go.
     this.plane.setTrajectoryAngle(this.angleTo(this.src, this.dst));
     this.plane.setTrajectory(this.trajectory());

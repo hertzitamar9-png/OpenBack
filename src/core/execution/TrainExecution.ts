@@ -44,6 +44,7 @@ export class TrainExecution implements Execution {
 
   init(mg: Game, ticks: number): void {
     this.mg = mg;
+    this.spacing = trainVisualSpacing(mg.config().worldMechanics().threeDMode);
     const stations = this.railNetwork.findStationsPath(
       this.source,
       this.destination,
@@ -295,4 +296,9 @@ export class TrainExecution implements Execution {
   activeDuringSpawnPhase(): boolean {
     return false;
   }
+}
+
+/** Preserve classic spacing in 2D while keeping each car readable in 3D. */
+export function trainVisualSpacing(threeDMode: boolean): number {
+  return threeDMode ? 3 : 2;
 }

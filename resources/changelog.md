@@ -1,3 +1,12 @@
+## OpenBack v0.34.128 - Organized 3D Rail and Air Operations
+
+- Restored visible rail lines beneath regular and camouflaged fuel trains in 3D matches by shading the authoritative track layout directly onto raised terrain.
+- Increased only the 3D train-car spacing so engines and carriages remain organized and readable in perspective while preserving the established 2D train layout.
+- Restored floating train and military-fuel gold rewards in 3D at every playable camera distance.
+- Prevented low-flying Aircraft from attempting to land on terrain above their flight clearance in 3D, with a clear rejection message while keeping all 2D Aircraft landing rules unchanged.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.127 - Classic Models and Living 3D Seas
 
 - Restored the established OpenBack and OpenFront 2D unit and structure artwork across both 2D and 3D matches, including Cities, Ports, Factories, defenses, ships, custom Aircraft, Tanks, Runways, Military Bases, MANPADs, Tank Mines, railways, regular trains, and camouflaged fuel trains.

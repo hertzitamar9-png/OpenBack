@@ -238,6 +238,8 @@ export interface GhostPreviewData {
   rangeRadius: number;
   /** True if placing here would carry a penalty (e.g. nuking an ally → traitor). */
   rangeWarning: boolean;
+  /** Optional player-facing reason the current placement is invalid. */
+  invalidReason?: string;
 }
 
 /** Nuke trajectory preview data — Bezier control points + color thresholds. */

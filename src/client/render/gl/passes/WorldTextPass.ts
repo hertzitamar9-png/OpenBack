@@ -18,6 +18,14 @@ import { buildGlyphMetricsTex } from "./name-pass/DataTextures";
 import { layoutString } from "./name-pass/TextLayout";
 import { CHAR_RANGE, MAX_CHARS } from "./name-pass/Types";
 
+export function shouldCullWorldText(
+  zoom: number,
+  cullZoom: number,
+  screenFacing: boolean,
+): boolean {
+  return !screenFacing && zoom < cullZoom;
+}
+
 import { assetUrl } from "src/core/AssetUrls";
 import { renderNumber } from "../../../Utils";
 import fragSrc from "../shaders/world-text/world-text.frag.glsl?raw";
@@ -582,7 +590,10 @@ export class WorldTextPass {
     screenFacingScale: readonly [number, number] = [0, 0],
   ): void {
     if (!this.atlasReady || this.instanceCount === 0) return;
-    if (zoom < this.settings.bonusPopup.cullZoom) return;
+    if (
+      shouldCullWorldText(zoom, this.settings.bonusPopup.cullZoom, screenFacing)
+    )
+      return;
 
     const gl = this.gl;
     gl.useProgram(this.program);

@@ -4,6 +4,18 @@ import { PseudoRandom } from "../PseudoRandom";
 import { MinHeap } from "./algorithms/PriorityQueue";
 import { PathFinder } from "./types";
 
+export function isAircraftLandingTooHigh(
+  game: {
+    config(): { worldMechanics(): { threeDMode: boolean } };
+    magnitude(tile: TileRef): number;
+  },
+  tile: TileRef,
+): boolean {
+  return (
+    game.config().worldMechanics().threeDMode && game.magnitude(tile) >= 18
+  );
+}
+
 export class AirPathFinder implements PathFinder<TileRef> {
   private seed: number;
 
@@ -14,6 +26,12 @@ export class AirPathFinder implements PathFinder<TileRef> {
   findPath(from: TileRef | TileRef[], to: TileRef): TileRef[] | null {
     if (Array.isArray(from)) {
       throw new Error("AirPathFinder does not support multiple start points");
+    }
+
+    // Low-flying aircraft can route around mountains, but cannot land on a
+    // tile above their fixed clearance. Classic 2D flight stays unrestricted.
+    if (isAircraftLandingTooHigh(this.game, to)) {
+      return null;
     }
 
     const random = new PseudoRandom(this.seed);
@@ -75,9 +93,8 @@ export class AirPathFinder implements PathFinder<TileRef> {
         if (nx < 0 || ny < 0 || nx >= width || ny >= this.game.height())
           continue;
         const next = this.game.ref(nx, ny);
-        // Magnitude 18+ represents terrain above the aircraft's fixed low
-        // clearance. A mountainous destination itself remains reachable.
-        if (next !== to && this.game.magnitude(next) >= 18) continue;
+        // Magnitude 18+ represents terrain above the aircraft's clearance.
+        if (this.game.magnitude(next) >= 18) continue;
         const altitudeCost = 1 + Math.pow(this.game.magnitude(next) / 18, 2);
         const nextCost = best[current] + altitudeCost;
         if (nextCost >= best[next]) continue;

@@ -220,6 +220,30 @@ export class RailroadPass {
     this.railroadDirty = true;
   }
 
+  /** Upload rail state even when 3D skips the flat railroad draw pass. */
+  prepareTextures(): void {
+    if (!this.railroadDirty || this.cpuRailroadState === null) return;
+    const gl = this.gl;
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.railroadTex);
+    gl.texSubImage2D(
+      gl.TEXTURE_2D,
+      0,
+      0,
+      0,
+      this.mapW,
+      this.mapH,
+      gl.RED_INTEGER,
+      gl.UNSIGNED_BYTE,
+      this.cpuRailroadState,
+    );
+    this.railroadDirty = false;
+  }
+
+  railroadTexture(): WebGLTexture {
+    return this.railroadTex;
+  }
+
   setLocalPlayer(smallID: number): void {
     this.localPlayerID = smallID;
   }
@@ -302,22 +326,7 @@ export class RailroadPass {
     if (fade <= 0) return;
 
     // Flush CPU railroad state → GPU
-    if (this.railroadDirty && this.cpuRailroadState !== null) {
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, this.railroadTex);
-      gl.texSubImage2D(
-        gl.TEXTURE_2D,
-        0,
-        0,
-        0,
-        this.mapW,
-        this.mapH,
-        gl.RED_INTEGER,
-        gl.UNSIGNED_BYTE,
-        this.cpuRailroadState,
-      );
-      this.railroadDirty = false;
-    }
+    this.prepareTextures();
 
     // Flush ghost railroad state → GPU
     if (this.ghostRailDirty) {
