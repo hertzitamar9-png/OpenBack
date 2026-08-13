@@ -1597,6 +1597,12 @@ export class GPURenderer {
       toScreen(this.gl, cw, ch, () => this.drawBaseLayer(cam));
     }
 
+    // A renderer can survive a 3D match and then be reused for a classic 2D
+    // match. Clear the perspective state before the shared sprite passes;
+    // otherwise their shaders keep projecting structures and mobile units
+    // through the previous 3D camera, leaving only HUD counts visible.
+    this.unitPass.setThreeDProjection(null, null);
+    this.structurePass.setThreeDProjection(null, null);
     this.renderOverlays(cam, zoom);
   }
 

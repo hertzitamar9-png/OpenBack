@@ -1,6 +1,7 @@
 ## OpenBack v0.34.132 - Visible Battlefield Models
 
 - Corrected the 2D battlefield layer order so small-territory glow remains behind Cities, defenses, ships, trains, Aircraft, Tanks, and every other visible model instead of painting over them.
+- Cleared leftover 3D projection state whenever the classic renderer starts a 2D frame, restoring structures and mobile units after changing modes or starting another match.
 - Preserved structure counts, build previews, bars, routes, effects, and established model artwork while restoring their actual on-map visibility.
 
 Created by **frootz jhklphy**.

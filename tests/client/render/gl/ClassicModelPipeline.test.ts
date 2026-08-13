@@ -46,4 +46,19 @@ describe("classic model pipeline", () => {
       overlays.indexOf("structurePass.draw(cam, zoom)"),
     );
   });
+
+  it("clears perspective projection before drawing a classic 2D frame", () => {
+    const renderer = source("src/client/render/gl/Renderer.ts");
+    const twoDFrame = renderer.slice(
+      renderer.indexOf("if (compositingActive)"),
+      renderer.indexOf("private isLightCompositingActive"),
+    );
+    expect(twoDFrame).toContain("unitPass.setThreeDProjection(null, null)");
+    expect(twoDFrame).toContain(
+      "structurePass.setThreeDProjection(null, null)",
+    );
+    expect(
+      twoDFrame.indexOf("unitPass.setThreeDProjection(null, null)"),
+    ).toBeLessThan(twoDFrame.indexOf("this.renderOverlays(cam, zoom)"));
+  });
 });
