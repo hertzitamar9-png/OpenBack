@@ -1,6 +1,13 @@
-## OpenBack v0.34.131 - Visible Models and Raised Seas
+## OpenBack v0.34.132 - Visible Battlefield Models
 
-- Restored the current OpenBack renderer to the public game so established 2D units and structures no longer disappear behind an outdated deployment.
+- Corrected the 2D battlefield layer order so small-territory glow remains behind Cities, defenses, ships, trains, Aircraft, Tanks, and every other visible model instead of painting over them.
+- Preserved structure counts, build previews, bars, routes, effects, and established model artwork while restoring their actual on-map visibility.
+
+Created by **frootz jhklphy**.
+
+## OpenBack v0.34.131 - Raised Seas and Reliable Deployments
+
+- Restored the current OpenBack renderer to the public game instead of serving an outdated deployment.
 - Increased real 3D ocean displacement to produce clearly raised moving crests instead of surface-only shading.
 - Made deployed builds report Render's exact source revision automatically, preventing a stale manual commit value from hiding failed or outdated deployments.
 

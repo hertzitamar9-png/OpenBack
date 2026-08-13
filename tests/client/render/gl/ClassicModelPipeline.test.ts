@@ -35,4 +35,15 @@ describe("classic model pipeline", () => {
     expect(fragment).toContain("nuclearCorona");
     expect(fragment).toContain("nuclearFlames");
   });
+
+  it("draws small-territory glow behind units and structures", () => {
+    const renderer = source("src/client/render/gl/Renderer.ts");
+    const overlays = renderer.slice(renderer.indexOf("private renderOverlays"));
+    expect(overlays.indexOf("smallPlayerGlowPass.draw(cam)")).toBeLessThan(
+      overlays.indexOf("unitPass.drawGround(cam)"),
+    );
+    expect(overlays.indexOf("smallPlayerGlowPass.draw(cam)")).toBeLessThan(
+      overlays.indexOf("structurePass.draw(cam, zoom)"),
+    );
+  });
 });

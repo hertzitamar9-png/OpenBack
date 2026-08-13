@@ -1682,6 +1682,10 @@ export class GPURenderer {
       );
     }
     if (pe.railroad && !threeDCompatibleOnly) this.railroadPass.draw(cam, zoom);
+    // The glow belongs beneath battlefield objects. Drawing it after sprites
+    // lets its full-territory blend overwrite small Cities, ships, and other
+    // models even though their authoritative counts remain visible in the HUD.
+    if (!threeDCompatibleOnly) this.smallPlayerGlowPass.draw(cam);
     if (pe.unit && !omitWorldObjects) this.unitPass.drawGround(cam);
     if (pe.falloutBloom) this.bloomPass.draw(cam, this.frameTick);
     this.samRadiusPass.draw(cam);
@@ -1697,8 +1701,6 @@ export class GPURenderer {
         screenFacingScale !== undefined,
         screenFacingScale,
       );
-    // Small-player glow draws after structures so buildings can't hide it.
-    if (!threeDCompatibleOnly) this.smallPlayerGlowPass.draw(cam);
     if (pe.bar && !omitWorldObjects) this.barPass.draw(cam);
     this.updateSelectionBox();
     this.selectionBoxPass.draw(cam, this.frameTick);
