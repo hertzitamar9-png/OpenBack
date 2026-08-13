@@ -39,6 +39,22 @@ export function* collectThreeDRenderableUnits(
   yield* structures.values();
 }
 
+export function isThreeDSpecialModel(unit: UnitState): boolean {
+  const type = unit.unitType as UnitType;
+  if (
+    type === UnitType.TransportShip ||
+    type === UnitType.TradeShip ||
+    type === UnitType.Warship ||
+    type === UnitType.AtomBomb ||
+    type === UnitType.HydrogenBomb ||
+    type === UnitType.MIRV ||
+    type === UnitType.MIRVWarhead
+  ) {
+    return true;
+  }
+  return type === UnitType.Tank && (unit.launchPhase ?? 0) >= 20;
+}
+
 export function threeDGhostPresentation(data: GhostPreviewData): {
   unitType: UnitType;
   x: number;
@@ -197,8 +213,10 @@ export class ThreeDUnitPass {
       ),
     );
     // The only generated geometry retained is the soft terrain shadow. Unit
-    // bodies are loaded from the verified local GLB catalog below.
+    // bodies are loaded from the verified local GLB catalog below. The sphere
+    // and cylinder are reserved for the tank's terminal turret/projectile FX.
     this.meshes.set("cylinder", this.createMesh(this.radialGeometry(false)));
+    this.meshes.set("sphere", this.createMesh(this.sphereGeometry()));
     for (const kind of this.meshes.keys()) this.batches.set(kind, []);
     gl.useProgram(this.program);
     gl.uniform1i(this.uniforms.uTerrain, 0);
@@ -257,7 +275,9 @@ export class ThreeDUnitPass {
           underConstruction: false,
         } as UnitState)
       : null;
-    const renderables = collectThreeDRenderableUnits(units, structures);
+    const renderables = [
+      ...collectThreeDRenderableUnits(units, structures),
+    ].filter(isThreeDSpecialModel);
     const allUnits = ghostUnit
       ? (function* (): Generator<UnitState> {
           yield* renderables;
@@ -289,6 +309,62 @@ export class ThreeDUnitPass {
       const ghostValid = ghost?.valid ?? false;
       const alpha = isGhost ? 0.72 : unit.underConstruction ? 0.72 : 1;
       const surface = SURFACE[model.surface ?? "ground"];
+      if (unit.unitType === UnitType.Tank && (unit.launchPhase ?? 0) >= 20) {
+        const sequence = Math.max(
+          0,
+          Math.min(1, ((unit.launchPhase ?? 20) - 20) / 30),
+        );
+        const raised =
+          Math.min(1, sequence / 0.12) *
+          (1 - Math.max(0, (sequence - 0.12) / 0.88));
+        this.batches
+          .get("cylinder")!
+          .push(
+            x,
+            0.24 + raised * 0.58,
+            z,
+            0.22,
+            0.72,
+            0.22,
+            heading,
+            0,
+            0,
+            0,
+            unit.ownerID,
+            MATERIAL.owner,
+            alpha,
+            ANIMATION.none + surface * 10,
+            x,
+            z,
+          );
+        if (sequence >= 0.1 && sequence < 0.995) {
+          const flight = Math.max(0, Math.min(1, (sequence - 0.1) / 0.88));
+          const distance = flight * 1.75;
+          const projectileX = x + Math.cos(heading) * distance;
+          const projectileZ = z + Math.sin(heading) * distance;
+          this.batches
+            .get("sphere")!
+            .push(
+              projectileX,
+              1.15 + Math.sin(flight * Math.PI) * 40,
+              projectileZ,
+              0.38,
+              0.38,
+              0.38,
+              heading,
+              0,
+              0,
+              0,
+              unit.ownerID,
+              MATERIAL.emissive,
+              alpha,
+              ANIMATION.pulse + surface * 10,
+              x,
+              z,
+            );
+        }
+        continue;
+      }
       // A shared flattened cylinder anchors every model to the terrain and
       // makes altitude/motion immediately readable without custom shadow data
       // in each registry entry.
@@ -533,6 +609,33 @@ export class ThreeDUnitPass {
           topCenter + 1 + i,
           topCenter + 1 + ((i + 1) % n),
         );
+      }
+    }
+    return { vertices, indices };
+  }
+
+  private sphereGeometry() {
+    const vertices: number[] = [];
+    const indices: number[] = [];
+    const latitudes = 12;
+    const longitudes = 18;
+    for (let latitude = 0; latitude <= latitudes; latitude++) {
+      const v = latitude / latitudes;
+      const phi = v * Math.PI;
+      for (let longitude = 0; longitude <= longitudes; longitude++) {
+        const u = longitude / longitudes;
+        const theta = u * Math.PI * 2;
+        const x = Math.sin(phi) * Math.cos(theta);
+        const y = Math.cos(phi);
+        const z = Math.sin(phi) * Math.sin(theta);
+        vertices.push(x * 0.5, y * 0.5, z * 0.5, x, y, z);
+      }
+    }
+    for (let latitude = 0; latitude < latitudes; latitude++) {
+      for (let longitude = 0; longitude < longitudes; longitude++) {
+        const a = latitude * (longitudes + 1) + longitude;
+        const b = a + longitudes + 1;
+        indices.push(a, b, a + 1, b, b + 1, a + 1);
       }
     }
     return { vertices, indices };

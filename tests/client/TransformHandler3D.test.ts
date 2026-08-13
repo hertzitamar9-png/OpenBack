@@ -6,7 +6,6 @@ import {
   RotateCameraEvent,
   ZoomEvent,
 } from "../../src/client/InputHandler";
-import { TransformHandler } from "../../src/client/TransformHandler";
 import {
   THREE_D_MAX_TILT,
   THREE_D_MIN_TILT,
@@ -14,15 +13,26 @@ import {
   threeDGroundHalfExtents,
   threeDHeightForTerrainByte,
 } from "../../src/client/render/gl/three-d/ThreeDWorldMath";
+import { TransformHandler } from "../../src/client/TransformHandler";
 import type { GameView } from "../../src/client/view";
 import { EventBus } from "../../src/core/EventBus";
+import { Cell } from "../../src/core/game/Game";
 
 function createHandler(): TransformHandler {
+  const width = 2048;
+  const height = 1024;
   const game = {
     config: () => ({ worldMechanics: () => ({ threeDMode: true }) }),
-    width: () => 2048,
-    height: () => 1024,
-    isValidCoord: () => false,
+    width: () => width,
+    height: () => height,
+    isValidCoord: (x: number, y: number) =>
+      x >= 0 && y >= 0 && x < width && y < height,
+    ref: (x: number, y: number) => y * width + x,
+    terrainByte: (ref: number) => {
+      const x = ref % width;
+      const y = Math.floor(ref / width);
+      return x > 900 && x < 1150 && y > 390 && y < 640 ? 0x9a : 0x86;
+    },
   } as unknown as GameView;
   const canvas = document.createElement("div");
   Object.defineProperty(canvas, "getBoundingClientRect", {
@@ -115,6 +125,28 @@ describe("TransformHandler 3D camera", () => {
 
     expect(center.screenX).toBeCloseTo(expectedX, 6);
     expect(center.screenY).toBeCloseTo(expectedY, 6);
+  });
+
+  it("round-trips clicks against the same smoothed raised terrain as rendering", () => {
+    const handler = createHandler();
+    handler.offsetX = 0;
+    handler.offsetY = 0;
+    handler.scale = 2.4;
+    const world = new Cell(1024, 512);
+
+    const canvas = handler.worldToCanvasCoordinates(world);
+    const roundTrip = handler.screenToWorldCoordinatesFloat(canvas.x, canvas.y);
+
+    expect(roundTrip.x).toBeCloseTo(world.x, 1);
+    expect(roundTrip.y).toBeCloseTo(world.y, 1);
+  });
+
+  it("does not redirect a missed 3D ray to the camera center", () => {
+    const handler = createHandler();
+    const missed = handler.screenToWorldCoordinatesFloat(640, -100_000);
+
+    expect(Number.isNaN(missed.x)).toBe(true);
+    expect(Number.isNaN(missed.y)).toBe(true);
   });
 
   it("keeps the 3D ground target fixed through the complete zoom range", () => {

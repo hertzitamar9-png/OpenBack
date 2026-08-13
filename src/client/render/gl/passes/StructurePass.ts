@@ -32,6 +32,10 @@ import {
 import { DynamicInstanceBuffer } from "../DynamicBuffer";
 import type { RenderSettings } from "../RenderSettings";
 import {
+  ThreeDCameraState,
+  threeDScreenFacingScale,
+} from "../three-d/ThreeDCamera";
+import {
   getPaletteSize,
   MAX_TRAIL_COLORS,
   STRUCTURES_EFFECT_BLOCK,
@@ -112,6 +116,12 @@ export class StructurePass {
   private uIconDarken: WebGLUniformLocation;
   private uTime: WebGLUniformLocation;
   private uHoverOwner: WebGLUniformLocation;
+  private uThreeD: WebGLUniformLocation;
+  private uThreeDViewProjection: WebGLUniformLocation;
+  private uThreeDMapSize: WebGLUniformLocation;
+  private uThreeDScreenScale: WebGLUniformLocation;
+  private threeDTerrain: WebGLTexture | null = null;
+  private threeDCamera: ThreeDCameraState | null = null;
   private readonly startTime = performance.now();
 
   private vao: WebGLVertexArrayObject;
@@ -216,6 +226,19 @@ export class StructurePass {
     this.uIconDarken = gl.getUniformLocation(this.program, "uIconDarken")!;
     this.uTime = gl.getUniformLocation(this.program, "uTime")!;
     this.uHoverOwner = gl.getUniformLocation(this.program, "uHoverOwner")!;
+    this.uThreeD = gl.getUniformLocation(this.program, "uThreeD")!;
+    this.uThreeDViewProjection = gl.getUniformLocation(
+      this.program,
+      "uThreeDViewProjection",
+    )!;
+    this.uThreeDMapSize = gl.getUniformLocation(
+      this.program,
+      "uThreeDMapSize",
+    )!;
+    this.uThreeDScreenScale = gl.getUniformLocation(
+      this.program,
+      "uThreeDScreenScale",
+    )!;
 
     // Texture unit bindings + ghost defaults
     gl.useProgram(this.program);
@@ -223,6 +246,7 @@ export class StructurePass {
     gl.uniform1i(gl.getUniformLocation(this.program, "uAtlas"), 1);
     gl.uniform1i(gl.getUniformLocation(this.program, "uAffiliation"), 2);
     gl.uniform1i(gl.getUniformLocation(this.program, "uEffect"), 3);
+    gl.uniform1i(gl.getUniformLocation(this.program, "uThreeDTerrain"), 4);
     gl.uniform1f(this.uGhostAlpha, 1.0);
     gl.uniform3f(this.uOutlineColor, 0, 0, 0);
     gl.uniform1i(this.uHighlightMask, 0);
@@ -383,6 +407,14 @@ export class StructurePass {
     this.affiliationTex = tex;
   }
 
+  setThreeDProjection(
+    camera: ThreeDCameraState | null,
+    terrain: WebGLTexture | null,
+  ): void {
+    this.threeDCamera = camera;
+    this.threeDTerrain = terrain;
+  }
+
   draw(cameraMatrix: Float32Array, zoom: number): void {
     const hasGhost =
       this.ghost !== null &&
@@ -430,6 +462,21 @@ export class StructurePass {
     gl.uniform1f(this.uIconDarken, ss.iconDarken);
     gl.uniform1f(this.uTime, (performance.now() - this.startTime) / 1000);
     gl.uniform1f(this.uHoverOwner, this.highlightOwner);
+    const threeD = this.threeDCamera !== null && this.threeDTerrain !== null;
+    gl.uniform1i(this.uThreeD, threeD ? 1 : 0);
+    if (threeD) {
+      const camera = this.threeDCamera!;
+      const scale = threeDScreenFacingScale(camera);
+      gl.uniformMatrix4fv(
+        this.uThreeDViewProjection,
+        false,
+        new Float32Array(camera.viewProjection),
+      );
+      gl.uniform2f(this.uThreeDMapSize, camera.mapWidth, camera.mapHeight);
+      gl.uniform2f(this.uThreeDScreenScale, scale[0], scale[1]);
+      gl.activeTexture(gl.TEXTURE4);
+      gl.bindTexture(gl.TEXTURE_2D, this.threeDTerrain);
+    }
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.paletteTex);

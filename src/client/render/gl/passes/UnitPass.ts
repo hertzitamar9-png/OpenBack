@@ -55,6 +55,10 @@ import { DynamicInstanceBuffer } from "../DynamicBuffer";
 import type { RenderSettings } from "../RenderSettings";
 import unitFragSrc from "../shaders/unit/unit.frag.glsl?raw";
 import unitVertSrc from "../shaders/unit/unit.vert.glsl?raw";
+import {
+  ThreeDCameraState,
+  threeDScreenFacingScale,
+} from "../three-d/ThreeDCamera";
 import { getPaletteSize } from "../utils/ColorUtils";
 import { createProgram, shaderSrc } from "../utils/GlUtils";
 
@@ -239,6 +243,12 @@ export class UnitPass {
   private uHBombGlowStrength: WebGLUniformLocation;
   private uHBombGlowInner: WebGLUniformLocation;
   private uUntargetableAlpha: WebGLUniformLocation;
+  private uThreeD: WebGLUniformLocation;
+  private uThreeDViewProjection: WebGLUniformLocation;
+  private uThreeDMapSize: WebGLUniformLocation;
+  private uThreeDScreenScale: WebGLUniformLocation;
+  private threeDTerrain: WebGLTexture | null = null;
+  private threeDCamera: ThreeDCameraState | null = null;
 
   private affiliationTex: WebGLTexture | null = null;
   private altView = false;
@@ -345,6 +355,20 @@ export class UnitPass {
       this.program,
       "uUntargetableAlpha",
     )!;
+    this.uThreeD = gl.getUniformLocation(this.program, "uThreeD")!;
+    this.uThreeDViewProjection = gl.getUniformLocation(
+      this.program,
+      "uThreeDViewProjection",
+    )!;
+    this.uThreeDMapSize = gl.getUniformLocation(
+      this.program,
+      "uThreeDMapSize",
+    )!;
+    this.uThreeDScreenScale = gl.getUniformLocation(
+      this.program,
+      "uThreeDScreenScale",
+    )!;
+    gl.uniform1i(gl.getUniformLocation(this.program, "uThreeDTerrain"), 3);
 
     // Texture unit bindings
     gl.useProgram(this.program);
@@ -638,6 +662,14 @@ export class UnitPass {
     this.structures = structs;
   }
 
+  setThreeDProjection(
+    camera: ThreeDCameraState | null,
+    terrain: WebGLTexture | null,
+  ): void {
+    this.threeDCamera = camera;
+    this.threeDTerrain = terrain;
+  }
+
   /** Bind shared program state + uniforms (call before drawGround/drawMissiles). */
   private bindProgram(cameraMatrix: Float32Array): void {
     const gl = this.gl;
@@ -664,6 +696,21 @@ export class UnitPass {
     gl.uniform1f(this.uHBombGlowStrength, us.hBombGlowStrength);
     gl.uniform1f(this.uHBombGlowInner, us.hBombGlowInner);
     gl.uniform1f(this.uUntargetableAlpha, us.untargetableAlpha);
+    const threeD = this.threeDCamera !== null && this.threeDTerrain !== null;
+    gl.uniform1i(this.uThreeD, threeD ? 1 : 0);
+    if (threeD) {
+      const camera = this.threeDCamera!;
+      const scale = threeDScreenFacingScale(camera);
+      gl.uniformMatrix4fv(
+        this.uThreeDViewProjection,
+        false,
+        new Float32Array(camera.viewProjection),
+      );
+      gl.uniform2f(this.uThreeDMapSize, camera.mapWidth, camera.mapHeight);
+      gl.uniform2f(this.uThreeDScreenScale, scale[0], scale[1]);
+      gl.activeTexture(gl.TEXTURE3);
+      gl.bindTexture(gl.TEXTURE_2D, this.threeDTerrain);
+    }
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.paletteTex);

@@ -234,17 +234,22 @@ export class TransportShipExecution implements Execution {
       }
     }
 
-    const movementSteps = shipStepsForRoute(
-      this.mg,
-      ticks,
-      this.boat.id(),
-      this.boat.tile(),
-      this.dst,
-    );
-    if (movementSteps === 0) return;
     let result = this.pathFinder.next(this.boat.tile(), this.dst);
-    if (movementSteps === 2 && result.status === PathStatus.NEXT) {
-      result = this.pathFinder.next(result.node, this.dst);
+    // Arrival is authoritative and must not be delayed by a temporary
+    // opposing-current zero-step tick. Current throttling only applies while
+    // the vessel still has water tiles left to travel.
+    if (result.status === PathStatus.NEXT) {
+      const movementSteps = shipStepsForRoute(
+        this.mg,
+        ticks,
+        this.boat.id(),
+        this.boat.tile(),
+        this.dst,
+      );
+      if (movementSteps === 0) return;
+      if (movementSteps === 2) {
+        result = this.pathFinder.next(result.node, this.dst);
+      }
     }
     switch (result.status) {
       case PathStatus.COMPLETE:

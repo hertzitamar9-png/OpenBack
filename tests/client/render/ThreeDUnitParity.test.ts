@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import {
   collectThreeDRenderableUnits,
+  isThreeDSpecialModel,
   threeDGhostPresentation,
   threeDModelBatchKey,
 } from "../../../src/client/render/gl/three-d/ThreeDUnitPass";
@@ -53,6 +54,48 @@ describe("3D unit parity", () => {
       mobile.get(1),
       structures.get(2),
     ]);
+  });
+
+  it("uses true 3D only for ships, bombs, and the tank terminal shot", () => {
+    expect(isThreeDSpecialModel(unit(1, UnitType.Warship))).toBe(true);
+    expect(isThreeDSpecialModel(unit(2, UnitType.AtomBomb))).toBe(true);
+    expect(isThreeDSpecialModel(unit(3, UnitType.City))).toBe(false);
+    expect(isThreeDSpecialModel(unit(4, UnitType.Plane))).toBe(false);
+    expect(isThreeDSpecialModel(unit(5, UnitType.Tank))).toBe(false);
+    expect(
+      isThreeDSpecialModel({
+        ...unit(6, UnitType.Tank),
+        launchPhase: 20,
+      }),
+    ).toBe(true);
+  });
+
+  it("anchors classic 3D-mode sprites to the same smoothed terrain as the board", () => {
+    for (const shader of [
+      "src/client/render/gl/shaders/unit/unit.vert.glsl",
+      "src/client/render/gl/shaders/structure/structure.vert.glsl",
+    ]) {
+      const source = readFileSync(resolve(process.cwd(), shader), "utf8");
+      expect(source).toContain("smoothTerrainHeight(center)");
+      expect(source).toContain("cardinals * 2.0");
+    }
+  });
+
+  it("keeps the tank body classic while reserving 3D for its terminal turret and projectile", () => {
+    const unitVertex = readFileSync(
+      resolve(
+        process.cwd(),
+        "src/client/render/gl/shaders/unit/unit.vert.glsl",
+      ),
+      "utf8",
+    );
+    const specialPass = readFileSync(
+      resolve(process.cwd(), "src/client/render/gl/three-d/ThreeDUnitPass.ts"),
+      "utf8",
+    );
+    expect(unitVertex).not.toMatch(/dedicatedThreeD[^;]*tankSelfDestruct/s);
+    expect(specialPass).toMatch(/this\.batches\s*\.get\("sphere"\)!/);
+    expect(specialPass).toContain("Math.sin(flight * Math.PI) * 40");
   });
 
   it("uses a white valid ghost and gray invalid ghost at the authoritative preview tile", () => {

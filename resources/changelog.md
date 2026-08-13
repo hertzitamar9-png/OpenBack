@@ -1,3 +1,13 @@
+## OpenBack v0.34.130 - Stable 3D Operations
+
+- Rebuilt 3D pointer targeting around the rendered terrain surface so attacks, MIRVs, Aircraft, Tanks, structures, and placement previews remain aligned with the cursor at every camera angle; clicks that miss the board no longer fall back onto an unrelated country.
+- Anchored classic unit and structure artwork to the same smoothed raised terrain used by the 3D board, preventing models from floating, sinking, or appearing to slide while the camera moves.
+- Kept established 2D-style artwork for normal Tanks and added true 3D only to the raised terminal turret and its round self-destruction projectile.
+- Restored immediate Transport Ship deployment on the exact arrival tick instead of leaving ships visibly paused at their destination.
+- Preserved raised animated seas, foam, day/night lighting, deterministic tides and currents, terrain-following rails, military-fuel rewards, dark fallout, 3D ship/bomb presentation, and mountain-aware Aircraft routing across every compatible map.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.129 - Clear Country Labels
 
 - Prevented large country names, flags, and verified badges from covering neighboring countries' labels by fitting each complete name row inside its own usable territory area.

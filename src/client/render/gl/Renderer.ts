@@ -76,6 +76,7 @@ import {
 } from "./three-d/ThreeDCamera";
 import { ThreeDFogPass } from "./three-d/ThreeDFogPass";
 import { ThreeDQualityController } from "./three-d/ThreeDQuality";
+import { ThreeDUnitPass } from "./three-d/ThreeDUnitPass";
 import { ThreeDWorldEventPass } from "./three-d/ThreeDWorldEventPass";
 import { THREE_D_TILT } from "./three-d/ThreeDWorldMath";
 import { AffiliationPalette } from "./utils/Affiliation";
@@ -162,6 +163,7 @@ export class GPURenderer {
   private threeDPass: ThreeDCompositePass | null = null;
   private threeDWorldEventPass: ThreeDWorldEventPass | null = null;
   private threeDFogPass: ThreeDFogPass | null = null;
+  private threeDUnitPass: ThreeDUnitPass | null = null;
   private selectionBoxPass: SelectionBoxPass;
   private moveIndicatorPass: MoveIndicatorPass;
   private nukeTrajectoryPass: NukeTrajectoryPass;
@@ -456,6 +458,13 @@ export class GPURenderer {
         mapW,
         mapH,
         config.msPerTick(),
+      );
+      this.threeDUnitPass = new ThreeDUnitPass(
+        gl,
+        this.terrainBytesTex!,
+        this.paletteTex,
+        mapW,
+        mapH,
       );
       if (mechanics.fogOfWar) {
         this.threeDFogPass = new ThreeDFogPass(
@@ -1003,6 +1012,7 @@ export class GPURenderer {
     this.simulationTick = gameTick;
     this.frameTick++;
     this.unitPass.updateUnits(units, this.frameTick);
+    this.threeDUnitPass?.update(units, undefined, this.lastStructures);
     this.barPass.updateBars(units, this.lastStructures, gameTick);
     this.pointLightPass.updateLights(units);
     this.parkedVehicleGlowPass.update(units);
@@ -1048,6 +1058,7 @@ export class GPURenderer {
     this.structureLevelPass.updateStructures(units);
     this.samRadiusPass.updateStructures(units);
     this.unitPass.setStructures(units);
+    this.threeDUnitPass?.update(this.lastUnits, undefined, units);
     const posts: { x: number; y: number; ownerID: number }[] = [];
     const w = this.mapW;
     for (const u of units.values()) {
@@ -1484,6 +1495,11 @@ export class GPURenderer {
         });
         const billboardCamera = threeDGroundHomography(threeDCamera, 0.15);
         const screenFacingScale = threeDScreenFacingScale(threeDCamera);
+        this.unitPass.setThreeDProjection(threeDCamera, this.terrainBytesTex);
+        this.structurePass.setThreeDProjection(
+          threeDCamera,
+          this.terrainBytesTex,
+        );
         this.threeDPass!.draw(
           cw,
           ch,
@@ -1510,6 +1526,16 @@ export class GPURenderer {
           true,
           true,
           screenFacingScale,
+        );
+        this.threeDUnitPass?.draw(
+          this.camera.offsetX,
+          this.camera.offsetY,
+          centerHeight,
+          zoom,
+          cw,
+          ch,
+          this.threeDYaw,
+          this.threeDPitch,
         );
         this.nukeTelegraphPass.drawThreeD(
           this.camera.offsetX,
@@ -1845,6 +1871,7 @@ export class GPURenderer {
     this.threeDPass?.dispose();
     this.threeDWorldEventPass?.dispose();
     this.threeDFogPass?.dispose();
+    this.threeDUnitPass?.dispose();
     this.selectionBoxPass.dispose();
     this.moveIndicatorPass.dispose();
     this.nukeTrajectoryPass.dispose();

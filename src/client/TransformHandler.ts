@@ -11,11 +11,11 @@ import {
   ThreeDCameraState,
   threeDFitZoom,
 } from "./render/gl/three-d/ThreeDCamera";
+import { ThreeDWorldFrame } from "./render/gl/three-d/ThreeDWorldFrame";
 import {
   THREE_D_MAX_TILT,
   THREE_D_MIN_TILT,
   THREE_D_TILT,
-  threeDHeightForTerrainByte,
 } from "./render/gl/three-d/ThreeDWorldMath";
 import { GameView, PlayerView, UnitView } from "./view";
 
@@ -188,7 +188,13 @@ export class TransformHandler {
         this.threeDCanvasToWorld(canvasWidth, 0),
         this.threeDCanvasToWorld(0, canvasHeight),
         this.threeDCanvasToWorld(canvasWidth, canvasHeight),
-      ];
+      ].filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y));
+      if (corners.length === 0) {
+        return [
+          new Cell(0, 0),
+          new Cell(this.game.width() - 1, this.game.height() - 1),
+        ];
+      }
       return [
         new Cell(
           Math.floor(Math.min(...corners.map((c) => c.x))),
@@ -249,34 +255,40 @@ export class TransformHandler {
   }
 
   private threeDCanvasToWorld(canvasX: number, canvasY: number) {
-    const c = this.threeDCamera();
-    const point = c.intersectHeightField(canvasX, canvasY, (x, z) =>
-      this.threeDHeightAt(Math.floor(x), Math.floor(z)),
-    );
-    return point
-      ? { x: point.x, y: point.z }
-      : { x: c.center.x, y: c.center.z };
+    const point = this.threeDWorldFrame().intersectTerrain(canvasX, canvasY);
+    if (!point) {
+      return { x: Number.NaN, y: Number.NaN };
+    }
+    return { x: point.x, y: point.z };
   }
 
   private worldToThreeDCanvas(worldX: number, worldY: number) {
-    const c = this.threeDCamera();
-    const terrainHeight = this.threeDHeightAt(
-      Math.floor(worldX),
-      Math.floor(worldY),
-    );
     return (
-      c.project({ x: worldX, y: terrainHeight, z: worldY }) ?? {
+      this.threeDWorldFrame().projectWorld(worldX, worldY) ?? {
         x: Number.NEGATIVE_INFINITY,
         y: Number.NEGATIVE_INFINITY,
       }
     );
   }
 
-  private threeDHeightAt(x: number, y: number): number {
-    if (!this.game.isValidCoord(x, y)) return 0;
-    return threeDHeightForTerrainByte(
-      this.game.terrainByte(this.game.ref(x, y)),
-    );
+  private threeDWorldFrame(): ThreeDWorldFrame {
+    const camera = this.threeDCamera();
+    return ThreeDWorldFrame.create({
+      viewportWidth: camera.viewportWidth,
+      viewportHeight: camera.viewportHeight,
+      mapWidth: camera.mapWidth,
+      mapHeight: camera.mapHeight,
+      centerX: camera.center.x,
+      centerZ: camera.center.z,
+      centerHeight: camera.center.y,
+      zoom: this.scale,
+      pitch: this.threeDPitch,
+      yaw: this.threeDYaw,
+      terrainByteAt: (x, y) =>
+        this.game.isValidCoord(x, y)
+          ? this.game.terrainByte(this.game.ref(x, y))
+          : 10,
+    });
   }
 
   isOnScreen(cell: Cell): boolean {
