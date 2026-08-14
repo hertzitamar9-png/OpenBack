@@ -382,6 +382,7 @@
 
     <!-- Bottom HUD: <sm=column, sm..lg=2col (HUD left | events right), lg+=3col grid centered -->
     <div
+      id="game-bottom-hud"
       class="fixed bottom-0 left-0 w-full z-[200] flex flex-col pointer-events-none sm:flex-row sm:items-end lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(580px,1000px)_minmax(0,1fr)] lg:items-end min-[1200px]:px-4"
       style="
         padding-bottom: env(safe-area-inset-bottom);
@@ -391,13 +392,13 @@
     >
       <!-- HUD: <sm contents (children join outer flex), sm+ flex-col 460px, lg+ col-2 -->
       <div
-        class="contents sm:flex sm:flex-col sm:pointer-events-none w-full sm:w-full lg:w-full lg:col-start-2 sm:z-10"
+        class="game-hud-primary contents sm:flex sm:flex-col sm:pointer-events-none w-full sm:w-full lg:w-full lg:col-start-2 sm:z-10"
       >
         <attacks-display
           class="w-full pointer-events-auto order-1 sm:order-none"
         ></attacks-display>
         <div
-          class="pointer-events-auto bg-gray-800 sm:rounded-tr-lg lg:rounded-t-lg min-[1200px]:rounded-lg shadow-lg order-3 sm:order-none"
+          class="game-hud-controls pointer-events-auto bg-gray-800 sm:rounded-tr-lg lg:rounded-t-lg min-[1200px]:rounded-lg shadow-lg order-3 sm:order-none"
         >
           <control-panel class="w-full"></control-panel>
           <unit-display class="block w-full"></unit-display>
@@ -406,7 +407,7 @@
 
       <!-- events+chat: <sm between attacks and control (order-2), sm+ right side, lg+ col-3 -->
       <div
-        class="flex flex-col pointer-events-none items-end order-2 sm:order-none sm:flex-1 lg:col-start-3 lg:self-end lg:justify-end"
+        class="game-hud-events flex flex-col pointer-events-none items-end order-2 sm:order-none sm:flex-1 lg:col-start-3 lg:self-end lg:justify-end"
       >
         <chat-display
           class="w-full sm:w-auto pointer-events-auto"

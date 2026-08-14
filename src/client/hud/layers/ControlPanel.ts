@@ -628,7 +628,7 @@ export class ControlPanel extends LitElement implements Controller {
         }
       </style>
       <div
-        class="relative pointer-events-auto ${this._isVisible
+        class="game-control-panel relative pointer-events-auto ${this._isVisible
           ? "relative w-full text-sm px-2 py-1"
           : "hidden"}"
         @contextmenu=${(e: MouseEvent) => e.preventDefault()}

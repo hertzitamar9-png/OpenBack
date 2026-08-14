@@ -1,3 +1,11 @@
+## OpenBack v0.34.134 - Mobile Battlefield HUD
+
+- Made the upper player-information bar fill the complete phone width, including safe-area handling, instead of leaving an empty strip on the right.
+- Added a compact landscape battlefield layout that keeps all 16 build controls immediately available while preserving the map, attack controls, notifications, and every gameplay action.
+- Improved mobile HUD sizing, overflow containment, touch behavior, player-name fitting, and short-screen spacing without reducing game or rendering quality.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.133 - Clean Mobile Building
 
 - Matched Select Cosmetic to the compact, borderless Select Flag control on phones, including the same text size, spacing, and hover treatment.

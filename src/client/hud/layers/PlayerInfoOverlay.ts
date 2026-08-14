@@ -224,7 +224,7 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
   private displayUnitCount(player: PlayerView, type: UnitType, icon: string) {
     return !this.game.config().isUnitDisabled(type)
       ? html`<div
-          class="flex items-center justify-center gap-0.5 lg:gap-1 p-0.5 lg:p-1 border rounded-md border-gray-500 text-[10px] lg:text-xs w-9 lg:w-12 h-6 lg:h-7"
+          class="player-info-unit-count flex items-center justify-center gap-0.5 lg:gap-1 p-0.5 lg:p-1 border rounded-md border-gray-500 text-[10px] lg:text-xs w-9 lg:w-12 h-6 lg:h-7"
           translate="no"
         >
           <img
@@ -331,9 +331,13 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
     const playerTeam = getTranslatedPlayerTeamLabel(player.team());
 
     return html`
-      <div class="flex items-start gap-1 lg:gap-2 p-1 lg:p-1.5">
+      <div
+        class="player-info-content flex items-start gap-1 lg:gap-2 p-1 lg:p-1.5"
+      >
         <!-- Left: Gold & Troop bar -->
-        <div class="flex flex-col gap-1 shrink-0 w-28 md:w-36">
+        <div
+          class="player-info-economy flex flex-col gap-1 shrink-0 w-28 md:w-36"
+        >
           <div class="flex items-center gap-1">
             <div
               class="flex items-center justify-center px-1 py-0.5 border rounded-md border-yellow-400 font-bold text-yellow-400 text-sm lg:gap-1"
@@ -373,9 +377,11 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
           </div>
         </div>
         <!-- Right: Player identity + Units below -->
-        <div class="flex flex-col justify-between self-stretch flex-grow-1">
+        <div
+          class="player-info-details flex flex-col justify-between self-stretch flex-grow-1 min-w-0"
+        >
           <div
-            class="flex items-center gap-1 gap-y-2 md:gap-2 font-bold text-sm lg:text-lg ${this.getPlayerNameColor(
+            class="player-info-identity flex items-center gap-1 gap-y-2 md:gap-2 font-bold text-sm lg:text-lg min-w-0 ${this.getPlayerNameColor(
               isFriendly ?? false,
             )}"
           >
@@ -411,7 +417,9 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
             >
             ${allianceHtml ?? ""}
           </div>
-          <div class="flex flex-wrap gap-0.5 lg:gap-1 items-center mt-0.5">
+          <div
+            class="player-info-unit-grid flex flex-wrap gap-0.5 lg:gap-1 items-center mt-0.5"
+          >
             ${this.displayUnitCount(player, UnitType.City, cityIcon)}
             ${this.displayUnitCount(player, UnitType.Factory, factoryIcon)}
             ${this.displayUnitCount(player, UnitType.Port, portIcon)}
@@ -540,7 +548,7 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
         @contextmenu=${(e: MouseEvent) => e.preventDefault()}
       >
         <div
-          class="bg-gray-800/92 backdrop-blur-sm shadow-xs min-[1200px]:rounded-lg sm:rounded-b-lg shadow-lg text-white text-lg lg:text-base w-full sm:w-[720px] max-w-[96vw] overflow-hidden ${containerClasses}"
+          class="player-info-surface bg-gray-800/92 backdrop-blur-sm shadow-xs min-[1200px]:rounded-lg sm:rounded-b-lg shadow-lg text-white text-lg lg:text-base w-full sm:w-[720px] sm:max-w-[96vw] overflow-hidden ${containerClasses}"
         >
           ${this.player !== null ? this.renderPlayerInfo(this.player) : ""}
           ${this.unit !== null ? this.renderUnitInfo(this.unit) : ""}

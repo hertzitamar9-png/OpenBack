@@ -1,0 +1,46 @@
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+
+describe("mobile game HUD", () => {
+  const playerInfo = readFileSync(
+    "src/client/hud/layers/PlayerInfoOverlay.ts",
+    "utf8",
+  );
+  const controlPanel = readFileSync(
+    "src/client/hud/layers/ControlPanel.ts",
+    "utf8",
+  );
+  const unitDisplay = readFileSync(
+    "src/client/hud/layers/UnitDisplay.ts",
+    "utf8",
+  );
+  const index = readFileSync("index.html", "utf8");
+  const styles = readFileSync("src/client/styles.css", "utf8");
+
+  it("keeps the phone player panel edge-to-edge", () => {
+    expect(playerInfo).toContain("player-info-surface");
+    expect(playerInfo).toContain("w-full sm:w-[720px] sm:max-w-[96vw]");
+    expect(playerInfo).not.toContain("w-full sm:w-[720px] max-w-[96vw]");
+  });
+
+  it("provides stable responsive HUD hooks", () => {
+    expect(index).toContain('id="game-bottom-hud"');
+    expect(index).toContain("game-hud-primary");
+    expect(controlPanel).toContain("game-control-panel");
+    expect(unitDisplay).toContain("game-unit-grid");
+    expect(unitDisplay).toContain("game-unit-item");
+  });
+
+  it("defines a short-landscape layout without hiding controls", () => {
+    expect(styles).toMatch(
+      /@media \(orientation: landscape\)[^{]*\(max-height: 600px\)/,
+    );
+    expect(styles).toMatch(
+      /\.game-unit-grid\s*{[^}]*grid-template-columns:\s*repeat\(16,/s,
+    );
+    expect(styles).toContain("#game-bottom-hud");
+    expect(styles).not.toMatch(
+      /@media \(orientation: landscape\)[\s\S]*?\.game-unit-grid\s*{[^}]*display:\s*none/,
+    );
+  });
+});

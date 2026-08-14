@@ -173,7 +173,7 @@ export class UnitDisplay extends LitElement implements Controller {
     return html`
       <div class="border-t border-white/10 px-1 py-0.5 w-full">
         <div
-          class="grid grid-cols-8 sm:grid-cols-[repeat(16,minmax(0,1fr))] gap-px w-full"
+          class="game-unit-grid grid grid-cols-8 sm:grid-cols-[repeat(16,minmax(0,1fr))] gap-px w-full"
         >
           ${this.renderUnitItem(
             cityIcon,
@@ -312,7 +312,7 @@ export class UnitDisplay extends LitElement implements Controller {
 
     return html`
       <div
-        class="flex flex-col items-stretch min-w-0 relative"
+        class="game-unit-item flex flex-col items-stretch min-w-0 relative"
         @mouseenter=${() => {
           this._hoveredUnit = unitType;
           this.requestUpdate();
