@@ -1,3 +1,11 @@
+## OpenBack v0.34.136 - Touch-Safe Landscape Command
+
+- Rebuilt the short-landscape home composition for phones and tablets so it keeps the mobile controls, uses the complete width, fits live matches cleanly, and no longer needs a homepage scrollbar.
+- Fixed real touchscreen building placement by validating the exact release position instead of a stale mouse location, including devices that do not emit hover movement before a tap.
+- Made every selected-building tap exclusive to placement: tapping an invalid or enemy tile now cancels the building selection and can never turn into an accidental attack or open a player action menu.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.135 - Complete Mobile Command Screen
 
 - Fixed mobile building so touches that begin on HUD controls cannot trigger the battlefield, and a selected structure receives the placement tap without opening player, trade, or radial menus.

@@ -133,7 +133,7 @@ export class GameModeSelector extends LitElement {
 
     return html`
       <div
-        class="flex flex-col gap-3 sm:gap-4 w-full px-3 sm:px-0 mx-auto pb-3 sm:pb-0 touch-pan-y"
+        class="home-command-layout flex flex-col gap-3 sm:gap-4 w-full px-3 sm:px-0 mx-auto pb-3 sm:pb-0 touch-pan-y"
       >
         <!-- Solo: mobile only, top -->
         <div class="mobile-home-primary-actions lg:hidden h-14">
@@ -172,24 +172,26 @@ export class GameModeSelector extends LitElement {
         <!-- Game cards grid -->
         ${this.lobbies === null
           ? html`<div
-              class="flex items-center justify-center h-44 sm:h-[min(24rem,40vh)]"
+              class="home-lobby-loading flex items-center justify-center h-44 sm:h-[min(24rem,40vh)]"
             >
               <span
                 class="w-24 h-24 border-[6px] border-blue-500/30 border-t-blue-500 rounded-full animate-spin"
               ></span>
             </div>`
           : html`<div
-              class="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4 lg:h-[min(24rem,40vh)]"
+              class="home-lobby-grid grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4 lg:h-[min(24rem,40vh)]"
             >
               <!-- Left col: main card (desktop only) -->
               ${ffa
-                ? html`<div class="hidden lg:block">
+                ? html`<div class="desktop-lobby-feature hidden lg:block">
                     ${this.renderLobbyCard(ffa, this.getLobbyTitle(ffa))}
                   </div>`
                 : nothing}
 
               <!-- Right col: special + teams (desktop only) -->
-              <div class="hidden lg:flex lg:flex-col lg:gap-4">
+              <div
+                class="desktop-lobby-secondary hidden lg:flex lg:flex-col lg:gap-4"
+              >
                 ${special
                   ? html`<div class="flex-1 min-h-0">
                       ${this.renderSpecialLobbyCard(special)}
@@ -228,7 +230,9 @@ export class GameModeSelector extends LitElement {
           )}
         </div>
         <!-- Bottom row: create + ranked + join (desktop only) -->
-        <div class="hidden lg:grid grid-cols-3 gap-4 h-14">
+        <div
+          class="desktop-home-secondary-actions hidden lg:grid grid-cols-3 gap-4 h-14"
+        >
           ${this.renderSmallActionCard(
             translateText("main.create"),
             this.openHostLobby,

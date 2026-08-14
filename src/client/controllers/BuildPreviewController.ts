@@ -278,6 +278,13 @@ export class BuildPreviewController implements Controller {
 
         const unit = buildables.find((u) => u.type === requestedType);
         if (!unit) {
+          // A deliberate tap on an invalid/enemy tile cancels placement. Do
+          // this before the build event reaches any world-action listeners so
+          // the same tap can never become an accidental attack.
+          if (this.pendingConfirm !== null) {
+            this.removeGhostStructure();
+            return;
+          }
           Object.assign(this.ghostUnit.buildableUnit, {
             canBuild: false,
             canUpgrade: false,
@@ -668,6 +675,11 @@ export class BuildPreviewController implements Controller {
 
   private requestConfirmStructure(e: MouseUpEvent): void {
     if (!this.ghostUnit && !this.uiState.ghostStructure) return;
+    // Touchscreens do not produce a hover/mousemove before a tap. Always move
+    // the build cursor to the release itself so validation and placement use
+    // the tile under the player's finger rather than the previous cursor tile.
+    this.mousePos.x = e.x;
+    this.mousePos.y = e.y;
     const tile = this.currentCursorTileRef();
     if (
       this.ghostUnit?.buildableUnit.type === UnitType.Plane &&
@@ -686,10 +698,17 @@ export class BuildPreviewController implements Controller {
       this.pendingConfirm = null;
       return;
     }
+    // Never confirm with validation cached for a different tile. Queue this
+    // tap and ask renderGhost() to validate its exact location immediately.
+    if (tile !== this.validatedTileRef) {
+      this.pendingConfirm = e;
+      this.lastGhostQueryAt = 0;
+      return;
+    }
     if (this.isGhostReadyForConfirm()) {
       this.createStructure(e);
     } else {
-      this.pendingConfirm = e;
+      this.removeGhostStructure();
     }
   }
 

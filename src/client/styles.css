@@ -287,9 +287,74 @@ textarea:focus-visible {
 
 /* Short phone/tablet landscape keeps every game action on-screen. Events float
    above the controls instead of stealing horizontal room from the 16-unit bar. */
-@media (orientation: landscape) and (max-height: 600px) and (max-width: 1023px) {
+@media (orientation: landscape) and (max-height: 600px) and (max-width: 1366px) {
+  .main-layout-scroll {
+    overflow-y: hidden !important;
+  }
+
+  .home-command-layout {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
+    gap: 0.5rem !important;
+    padding: 0.5rem 0.75rem !important;
+    overflow: hidden;
+  }
+
+  .mobile-home-primary-actions,
+  .mobile-home-secondary-actions,
+  .mobile-lobby-mosaic {
+    display: grid !important;
+  }
+
+  .mobile-home-primary-actions,
+  .mobile-home-secondary-actions {
+    height: 2.75rem !important;
+  }
+
+  .mobile-home-primary-actions {
+    grid-column: 1;
+  }
+
+  .mobile-home-secondary-actions {
+    grid-column: 2;
+  }
+
+  .desktop-home-actions,
+  .desktop-home-secondary-actions,
+  .desktop-lobby-feature,
+  .desktop-lobby-secondary {
+    display: none !important;
+  }
+
+  .home-command-layout > ios-add-to-home-screen-banner {
+    display: none !important;
+  }
+
+  .home-lobby-grid,
+  .home-lobby-loading {
+    grid-column: 1 / -1;
+    min-height: 0;
+  }
+
+  .home-lobby-grid {
+    display: block !important;
+    height: auto !important;
+  }
+
+  .home-lobby-loading {
+    height: clamp(5.25rem, 24dvh, 7rem) !important;
+  }
+
+  .home-lobby-loading > span {
+    width: 3rem !important;
+    height: 3rem !important;
+    border-width: 0.25rem !important;
+  }
+
   .mobile-lobby-mosaic {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+    padding: 0;
   }
 
   .mobile-lobby-feature {
@@ -298,7 +363,7 @@ textarea:focus-visible {
 
   .mobile-lobby-feature > button,
   .mobile-lobby-secondary > button {
-    height: 8rem;
+    height: clamp(5.25rem, 24dvh, 7rem);
   }
 
   .player-info-surface {

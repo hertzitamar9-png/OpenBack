@@ -1115,7 +1115,11 @@ export class ClientGameRunner {
   }
 
   private inputEvent(event: MouseUpEvent) {
-    if (!this.isActive || this.renderer.uiState.ghostStructure !== null) {
+    if (
+      !this.isActive ||
+      event.isBuildPlacement ||
+      this.renderer.uiState.ghostStructure !== null
+    ) {
       return;
     }
     const cell = this.renderer.transformHandler.screenToWorldCoordinates(

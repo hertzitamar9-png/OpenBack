@@ -10,6 +10,8 @@ export class MouseUpEvent implements GameEvent {
   constructor(
     public readonly x: number,
     public readonly y: number,
+    /** This release belongs exclusively to the build-placement flow. */
+    public readonly isBuildPlacement: boolean = false,
   ) {}
 }
 
@@ -931,8 +933,8 @@ export class InputHandler {
     }
 
     const dist =
-      Math.abs(event.x - this.lastPointerDownX) +
-      Math.abs(event.y - this.lastPointerDownY);
+      Math.abs(event.clientX - this.lastPointerDownX) +
+      Math.abs(event.clientY - this.lastPointerDownY);
     if (dist < this.DRAG_THRESHOLD_PX) {
       // A selected build ghost owns the next primary tap on every input
       // device. Mobile normally emits TouchEvent so WarshipSelectionController
@@ -940,7 +942,9 @@ export class InputHandler {
       // while placing a structure opened the trade/build menu instead and the
       // BuildPreviewController never received the placement confirmation.
       if (this.uiState.ghostStructure !== null) {
-        this.eventBus.emit(new MouseUpEvent(event.x, event.y));
+        this.eventBus.emit(
+          new MouseUpEvent(event.clientX, event.clientY, true),
+        );
         event.preventDefault();
         return;
       }
@@ -950,7 +954,7 @@ export class InputHandler {
           event.preventDefault();
           return;
         }
-        this.eventBus.emit(new TouchEvent(event.x, event.y));
+        this.eventBus.emit(new TouchEvent(event.clientX, event.clientY));
         event.preventDefault();
         return;
       }
@@ -960,7 +964,7 @@ export class InputHandler {
         event.shiftKey ||
         this.gameView.inSpawnPhase() // No Radial Menu during spawn phase, only spawn point selection
       ) {
-        this.eventBus.emit(new MouseUpEvent(event.x, event.y));
+        this.eventBus.emit(new MouseUpEvent(event.clientX, event.clientY));
       } else {
         this.eventBus.emit(new ContextMenuEvent(event.clientX, event.clientY));
       }

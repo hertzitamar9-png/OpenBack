@@ -18,10 +18,14 @@ describe("mobile homepage match layout", () => {
   });
 
   it("keeps the phone composition through short landscape widths", () => {
+    expect(selector).toContain("home-command-layout");
     expect(selector).toContain("mobile-home-primary-actions lg:hidden");
     expect(selector).toContain("mobile-home-secondary-actions lg:hidden");
     expect(selector).toContain("mobile-lobby-mosaic lg:hidden");
     expect(selector).toContain("desktop-home-actions hidden lg:block");
+    expect(selector).toContain("desktop-home-secondary-actions");
+    expect(selector).toContain("desktop-lobby-feature");
+    expect(selector).toContain("desktop-lobby-secondary");
     expect(styles).toContain(
       "@media (max-width: 1023px) {\n  .mobile-lobby-mosaic",
     );
@@ -29,7 +33,13 @@ describe("mobile homepage match layout", () => {
       /\.mobile-lobby-feature\s*>\s*button\s*{[^}]*height:\s*11rem/s,
     );
     expect(styles).toMatch(
-      /@media \(orientation: landscape\)[^{]*\(max-height: 600px\)[^{]*\(max-width: 1023px\)[\s\S]*?\.mobile-lobby-mosaic\s*{[^}]*grid-template-columns:\s*repeat\(3,/s,
+      /@media \(orientation: landscape\)[^{]*\(max-height: 600px\)[^{]*\(max-width: 1366px\)[\s\S]*?\.mobile-lobby-mosaic\s*{[^}]*grid-template-columns:\s*repeat\(3,/s,
+    );
+    expect(styles).toMatch(
+      /@media \(orientation: landscape\)[\s\S]*?\.desktop-home-actions,[\s\S]*?\.desktop-home-secondary-actions,[\s\S]*?\.desktop-lobby-feature,[\s\S]*?\.desktop-lobby-secondary\s*{[^}]*display:\s*none\s*!important/s,
+    );
+    expect(styles).toMatch(
+      /@media \(orientation: landscape\)[\s\S]*?\.home-command-layout\s*{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+minmax\(0,\s*3fr\)/s,
     );
   });
 });

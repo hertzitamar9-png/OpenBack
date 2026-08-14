@@ -315,9 +315,43 @@ describe("InputHandler mobile build placement", () => {
     });
     window.dispatchEvent(up);
 
-    expect(ctx.mouseUps).toEqual([expect.objectContaining({ x: 120, y: 180 })]);
+    expect(ctx.mouseUps).toEqual([
+      expect.objectContaining({
+        x: 120,
+        y: 180,
+        isBuildPlacement: true,
+      }),
+    ]);
     expect(ctx.touches).toHaveLength(0);
     expect(ctx.contextMenus).toHaveLength(0);
+    ctx.handler.destroy();
+    ctx.canvas.remove();
+  });
+
+  it("uses standard client coordinates for a real touch placement", () => {
+    const ctx = setup(false, "City" as UIState["ghostStructure"]);
+    dispatchPointerDown(ctx.canvas, 7, { clientX: 164, clientY: 221 });
+    const up = new Event("pointerup", {
+      bubbles: true,
+      cancelable: true,
+    });
+    Object.assign(up, {
+      pointerId: 7,
+      pointerType: "touch",
+      button: 0,
+      clientX: 164,
+      clientY: 221,
+    });
+    window.dispatchEvent(up);
+
+    expect(ctx.mouseUps).toEqual([
+      expect.objectContaining({
+        x: 164,
+        y: 221,
+        isBuildPlacement: true,
+      }),
+    ]);
+    expect(ctx.touches).toHaveLength(0);
     ctx.handler.destroy();
     ctx.canvas.remove();
   });
