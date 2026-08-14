@@ -138,11 +138,10 @@ export class PlayPage extends LitElement {
                 <username-input
                   class="flex-1 min-w-0 h-10 sm:h-[50px]"
                 ></username-input>
-                <!-- Raised 3D shadow so the skin pops off the bar and is easy to spot. -->
                 <cosmetics-input
                   id="cosmetics-input-mobile"
                   show-select-label
-                  class="no-crazygames shrink-0 h-11 max-w-11 sm:h-full sm:max-w-none sm:max-h-[52px] aspect-square rounded-lg [box-shadow:0_3px_6px_#00000099,0_1px_2px_#000000cc]"
+                  class="no-crazygames shrink-0 h-11 w-11 sm:h-full sm:w-auto sm:max-h-[52px] aspect-square"
                 ></cosmetics-input>
               </div>
             </div>

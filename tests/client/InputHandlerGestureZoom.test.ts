@@ -2,6 +2,7 @@ import {
   ContextMenuEvent,
   DragEvent,
   InputHandler,
+  MouseUpEvent,
   RotateCameraEvent,
   TouchEvent,
   ZOOM_DELTA_DIVISOR,
@@ -56,7 +57,10 @@ function dispatchPointerCancel(target: EventTarget, pointerId: number): void {
   target.dispatchEvent(event);
 }
 
-function setup(threeDMode = false) {
+function setup(
+  threeDMode = false,
+  ghostStructure: UIState["ghostStructure"] = null,
+) {
   const canvas = document.createElement("div");
   document.body.appendChild(canvas);
 
@@ -66,11 +70,13 @@ function setup(threeDMode = false) {
   const drags: DragEvent[] = [];
   const rotations: RotateCameraEvent[] = [];
   const contextMenus: ContextMenuEvent[] = [];
+  const mouseUps: MouseUpEvent[] = [];
   eventBus.on(ZoomEvent, (e) => zooms.push(e));
   eventBus.on(TouchEvent, (e) => touches.push(e));
   eventBus.on(DragEvent, (e) => drags.push(e));
   eventBus.on(RotateCameraEvent, (e) => rotations.push(e));
   eventBus.on(ContextMenuEvent, (e) => contextMenus.push(e));
+  eventBus.on(MouseUpEvent, (e) => mouseUps.push(e));
 
   const gameView = {
     inSpawnPhase: () => false,
@@ -78,13 +84,22 @@ function setup(threeDMode = false) {
   } as unknown as GameView;
   const handler = new InputHandler(
     gameView,
-    { ghostStructure: null } as UIState,
+    { ghostStructure } as UIState,
     canvas,
     eventBus,
   );
   handler.initialize();
 
-  return { canvas, handler, zooms, touches, drags, rotations, contextMenus };
+  return {
+    canvas,
+    handler,
+    zooms,
+    touches,
+    drags,
+    rotations,
+    contextMenus,
+    mouseUps,
+  };
 }
 
 function dispatchMousePointer(
@@ -254,6 +269,33 @@ describe("InputHandler Safari trackpad pinch", () => {
       const event = dispatchGesture(ctx.canvas, type, { scale: 1.2 });
       expect(event.defaultPrevented).toBe(true);
     }
+  });
+});
+
+describe("InputHandler mobile build placement", () => {
+  it("routes a tap to structure placement while a build ghost is active", () => {
+    const ctx = setup(false, "City" as UIState["ghostStructure"]);
+    dispatchPointerDown(ctx.canvas, 1, { clientX: 120, clientY: 180 });
+    const up = new Event("pointerup", {
+      bubbles: true,
+      cancelable: true,
+    });
+    Object.assign(up, {
+      pointerId: 1,
+      pointerType: "touch",
+      button: 0,
+      clientX: 120,
+      clientY: 180,
+      x: 120,
+      y: 180,
+    });
+    window.dispatchEvent(up);
+
+    expect(ctx.mouseUps).toEqual([expect.objectContaining({ x: 120, y: 180 })]);
+    expect(ctx.touches).toHaveLength(0);
+    expect(ctx.contextMenus).toHaveLength(0);
+    ctx.handler.destroy();
+    ctx.canvas.remove();
   });
 });
 

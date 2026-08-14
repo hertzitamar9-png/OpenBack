@@ -47,4 +47,20 @@ describe("home selector input styling", () => {
       expect(selector).not.toContain("title=${buttonTitle}");
     }
   });
+
+  it("matches the compact mobile label and host sizing used by Select Flag", () => {
+    const flag = source("FlagInput.ts");
+    const cosmetic = source("CosmeticsInput.ts");
+    const playPage = source("components/PlayPage.ts");
+
+    expect(flag).toContain(
+      'class="text-[7px] sm:text-[10px] font-black tracking-wider text-white uppercase leading-tight sm:leading-none w-full text-center px-0.5 sm:px-1"',
+    );
+    expect(cosmetic).toContain(
+      'class="text-[7px] sm:text-[10px] font-black tracking-wider text-white uppercase leading-tight sm:leading-none w-full text-center px-0.5 sm:px-1"',
+    );
+    expect(playPage).not.toContain(
+      'id="cosmetics-input-mobile"\n                show-select-label\n                class="no-crazygames shrink-0 h-11 max-w-11 sm:h-full sm:max-w-none sm:max-h-[52px] aspect-square rounded-lg [box-shadow:',
+    );
+  });
 });

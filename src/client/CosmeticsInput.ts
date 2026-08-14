@@ -121,7 +121,7 @@ export class CosmeticsInput extends LitElement {
       return html`
         <button
           id="cosmetics-input"
-          class="pattern-btn m-0 p-0 border-0 w-full h-full flex cursor-pointer justify-center items-center focus:outline-none focus:ring-0 bg-surface rounded-lg overflow-hidden"
+          class="flag-btn p-0 m-0 border-0 w-full h-full flex cursor-pointer justify-center items-center focus:outline-none focus:ring-0 rounded-lg overflow-hidden"
           disabled
         >
           <span
@@ -150,7 +150,7 @@ export class CosmeticsInput extends LitElement {
     return html`
       <button
         id="cosmetics-input"
-        class="pattern-btn m-0 p-0 border-0 w-full h-full flex cursor-pointer justify-center items-center focus:outline-none focus:ring-0 transition-all duration-200 hover:-translate-y-0.5 hover:scale-110 bg-surface hover:brightness-[1.12] active:translate-y-0 active:scale-100 active:brightness-[0.95] rounded-lg overflow-hidden"
+        class="flag-btn p-0 m-0 border-0 w-full h-full flex cursor-pointer justify-center items-center focus:outline-none focus:ring-0 transition-all duration-200 hover:-translate-y-0.5 hover:scale-110 hover:brightness-[1.12] active:translate-y-0 active:scale-100 rounded-lg overflow-hidden"
         aria-label=${buttonLabel}
         @click=${this.onInputClick}
       >
@@ -163,9 +163,7 @@ export class CosmeticsInput extends LitElement {
         </span>
         ${showSelect
           ? html`<span
-              class="${this.adaptiveSize
-                ? "text-[7px] leading-tight px-0.5"
-                : "text-[10px] leading-none break-words px-1"} font-black text-white uppercase w-full text-center"
+              class="text-[7px] sm:text-[10px] font-black tracking-wider text-white uppercase leading-tight sm:leading-none w-full text-center px-0.5 sm:px-1"
             >
               ${translateText("cosmetics.select")}
             </span>`

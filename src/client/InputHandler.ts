@@ -927,6 +927,16 @@ export class InputHandler {
       Math.abs(event.x - this.lastPointerDownX) +
       Math.abs(event.y - this.lastPointerDownY);
     if (dist < this.DRAG_THRESHOLD_PX) {
+      // A selected build ghost owns the next primary tap on every input
+      // device. Mobile normally emits TouchEvent so WarshipSelectionController
+      // can choose between attack and radial-menu actions; routing that event
+      // while placing a structure opened the trade/build menu instead and the
+      // BuildPreviewController never received the placement confirmation.
+      if (this.uiState.ghostStructure !== null) {
+        this.eventBus.emit(new MouseUpEvent(event.x, event.y));
+        event.preventDefault();
+        return;
+      }
       if (event.pointerType === "touch") {
         if (this.suppressNextTap) {
           this.suppressNextTap = false;

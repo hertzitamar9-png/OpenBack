@@ -1,3 +1,10 @@
+## OpenBack v0.34.133 - Clean Mobile Building
+
+- Matched Select Cosmetic to the compact, borderless Select Flag control on phones, including the same text size, spacing, and hover treatment.
+- Fixed mobile build placement so tapping a valid location places the selected structure instead of opening the player, trade, or build-action menu.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.132 - Visible Battlefield Models
 
 - Corrected the 2D battlefield layer order so small-territory glow remains behind Cities, defenses, ships, trains, Aircraft, Tanks, and every other visible model instead of painting over them.
