@@ -1,3 +1,11 @@
+## OpenBack v0.34.135 - Complete Mobile Command Screen
+
+- Fixed mobile building so touches that begin on HUD controls cannot trigger the battlefield, and a selected structure receives the placement tap without opening player, trade, or radial menus.
+- Added a viewport-safe mobile unit information card that keeps the complete unit name, description, hint, and current cost visible above the build controls.
+- Replaced the clipped homepage match carousel with a balanced three-card layout that uses the phone screen cleanly in portrait, narrow, and landscape layouts.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.134 - Mobile Battlefield HUD
 
 - Made the upper player-information bar fill the complete phone width, including safe-area handling, instead of leaving an empty strip on the right.

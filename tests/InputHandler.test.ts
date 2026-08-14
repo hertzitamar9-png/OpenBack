@@ -247,13 +247,21 @@ describe("InputHandler AutoUpgrade", () => {
 
       inputHandler["userSettings"].leftClickOpensMenu = () => true;
 
+      const pointerDownEvent = new PointerEvent("pointerdown", {
+        button: 0,
+        clientX: 149,
+        clientY: 249,
+        pointerId: 1,
+      });
+      inputHandler["onPointerDown"](pointerDownEvent);
+      mockEmit.mockClear();
+
       const pointerEvent = new PointerEvent("pointerup", {
         button: 0,
         clientX: 150,
         clientY: 250,
+        pointerId: 1,
       });
-      inputHandler["lastPointerDownX"] = 149;
-      inputHandler["lastPointerDownY"] = 249;
 
       inputHandler["onPointerUp"](pointerEvent);
 

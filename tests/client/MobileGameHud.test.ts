@@ -31,6 +31,17 @@ describe("mobile game HUD", () => {
     expect(unitDisplay).toContain("game-unit-item");
   });
 
+  it("keeps complete unit information inside the mobile viewport", () => {
+    expect(unitDisplay).toContain("game-unit-tooltip");
+    expect(unitDisplay).toContain("game-unit-mobile-info");
+    expect(styles).toMatch(
+      /\.game-unit-mobile-info\s*{[^}]*max-width:\s*calc\(100vw - 1rem\)/s,
+    );
+    expect(styles).toMatch(
+      /\.game-unit-mobile-info\s*{[^}]*env\(safe-area-inset-bottom\)/s,
+    );
+  });
+
   it("defines a short-landscape layout without hiding controls", () => {
     expect(styles).toMatch(
       /@media \(orientation: landscape\)[^{]*\(max-height: 600px\)/,

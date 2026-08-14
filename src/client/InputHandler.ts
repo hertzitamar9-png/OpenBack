@@ -849,6 +849,13 @@ export class InputHandler {
     if (event.button > 0) {
       return;
     }
+    // Pointer-up is observed on window so a drag can finish outside the
+    // battlefield. Ignore sequences that never began on the canvas: taps on
+    // HUD controls otherwise reuse stale battlefield coordinates and can open
+    // the radial menu or confirm a build underneath the interface.
+    if (!this.pointers.has(event.pointerId)) {
+      return;
+    }
     const wasMultiTouch = this.multiTouchGesture;
     this.pointers.delete(event.pointerId);
     if (this.pointers.size > 0) {

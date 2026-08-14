@@ -127,13 +127,16 @@ export class GameModeSelector extends LitElement {
     const ffa = this.lobbies?.games?.["ffa"]?.[0];
     const teams = this.lobbies?.games?.["team"]?.[0];
     const special = this.lobbies?.games?.["special"]?.[0];
+    const mobileLobbies = [special, ffa, teams].filter(
+      (lobby): lobby is PublicGameInfo => lobby !== undefined,
+    );
 
     return html`
       <div
         class="flex flex-col gap-3 sm:gap-4 w-full px-3 sm:px-0 mx-auto pb-3 sm:pb-0 touch-pan-y"
       >
         <!-- Solo: mobile only, top -->
-        <div class="sm:hidden h-14">
+        <div class="mobile-home-primary-actions lg:hidden h-14">
           ${this.renderSmallActionCard(
             translateText("main.solo"),
             this.openSinglePlayerModal,
@@ -141,7 +144,9 @@ export class GameModeSelector extends LitElement {
           )}
         </div>
         <!-- Create/ranked/join: mobile only, below solo -->
-        <div class="sm:hidden grid grid-cols-3 gap-2 h-14">
+        <div
+          class="mobile-home-secondary-actions lg:hidden grid grid-cols-3 gap-2 h-14"
+        >
           ${this.renderSmallActionCard(
             translateText("main.create"),
             this.openHostLobby,
@@ -174,17 +179,17 @@ export class GameModeSelector extends LitElement {
               ></span>
             </div>`
           : html`<div
-              class="grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-4 sm:h-[min(24rem,40vh)]"
+              class="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4 lg:h-[min(24rem,40vh)]"
             >
               <!-- Left col: main card (desktop only) -->
               ${ffa
-                ? html`<div class="hidden sm:block">
+                ? html`<div class="hidden lg:block">
                     ${this.renderLobbyCard(ffa, this.getLobbyTitle(ffa))}
                   </div>`
                 : nothing}
 
               <!-- Right col: special + teams (desktop only) -->
-              <div class="hidden sm:flex sm:flex-col sm:gap-4">
+              <div class="hidden lg:flex lg:flex-col lg:gap-4">
                 ${special
                   ? html`<div class="flex-1 min-h-0">
                       ${this.renderSpecialLobbyCard(special)}
@@ -197,38 +202,25 @@ export class GameModeSelector extends LitElement {
                   : nothing}
               </div>
 
-              <!-- Phones use one snap carousel instead of a tall stack. The
-                   next card peeks in at the edge to make horizontal swiping
-                   discoverable without covering the footer. -->
-              <div
-                class="sm:hidden flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 -mx-1 px-1"
-              >
-                ${special
-                  ? html`<div
-                      class="shrink-0 w-[calc(100vw-3.25rem)] max-w-[25rem] snap-center"
+              <!-- Phones show every live match at once: one featured card and
+                   two compact cards below it. -->
+              <div class="mobile-lobby-mosaic lg:hidden">
+                ${mobileLobbies.map(
+                  (lobby, index) => html`
+                    <div
+                      class=${index === 0
+                        ? "mobile-lobby-feature"
+                        : "mobile-lobby-secondary"}
                     >
-                      ${this.renderSpecialLobbyCard(special)}
-                    </div>`
-                  : nothing}
-                ${ffa
-                  ? html`<div
-                      class="shrink-0 w-[calc(100vw-3.25rem)] max-w-[25rem] snap-center"
-                    >
-                      ${this.renderLobbyCard(ffa, this.getLobbyTitle(ffa))}
-                    </div>`
-                  : nothing}
-                ${teams
-                  ? html`<div
-                      class="shrink-0 w-[calc(100vw-3.25rem)] max-w-[25rem] snap-center"
-                    >
-                      ${this.renderLobbyCard(teams, this.getLobbyTitle(teams))}
-                    </div>`
-                  : nothing}
+                      ${this.renderLobbyCard(lobby, this.getLobbyTitle(lobby))}
+                    </div>
+                  `,
+                )}
               </div>
             </div>`}
 
         <!-- Solo: full width, desktop only -->
-        <div class="hidden sm:block h-14">
+        <div class="desktop-home-actions hidden lg:block h-14">
           ${this.renderSmallActionCard(
             translateText("main.solo"),
             this.openSinglePlayerModal,
@@ -236,7 +228,7 @@ export class GameModeSelector extends LitElement {
           )}
         </div>
         <!-- Bottom row: create + ranked + join (desktop only) -->
-        <div class="hidden sm:grid grid-cols-3 gap-4 h-14">
+        <div class="hidden lg:grid grid-cols-3 gap-4 h-14">
           ${this.renderSmallActionCard(
             translateText("main.create"),
             this.openHostLobby,

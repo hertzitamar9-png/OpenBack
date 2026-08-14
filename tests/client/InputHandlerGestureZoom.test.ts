@@ -273,6 +273,30 @@ describe("InputHandler Safari trackpad pinch", () => {
 });
 
 describe("InputHandler mobile build placement", () => {
+  it("ignores a touch release whose pointer sequence began in the HUD", () => {
+    const ctx = setup(false, "City" as UIState["ghostStructure"]);
+    const up = new Event("pointerup", {
+      bubbles: true,
+      cancelable: true,
+    });
+    Object.assign(up, {
+      pointerId: 44,
+      pointerType: "touch",
+      button: 0,
+      clientX: 0,
+      clientY: 0,
+      x: 0,
+      y: 0,
+    });
+    window.dispatchEvent(up);
+
+    expect(ctx.mouseUps).toHaveLength(0);
+    expect(ctx.touches).toHaveLength(0);
+    expect(ctx.contextMenus).toHaveLength(0);
+    ctx.handler.destroy();
+    ctx.canvas.remove();
+  });
+
   it("routes a tap to structure placement while a build ghost is active", () => {
     const ctx = setup(false, "City" as UIState["ghostStructure"]);
     dispatchPointerDown(ctx.canvas, 1, { clientX: 120, clientY: 180 });
