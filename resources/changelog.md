@@ -1,3 +1,11 @@
+## OpenBack v0.34.138 - Restored Living Seas
+
+- Restored the exact stable 3D wave height from the last good water release, removing the broken dark gaps caused by oversized waves.
+- Replaced the repeated pale oval pattern on classic 2D oceans with flowing directional tide shimmer, narrow moving crests, and shoreline foam.
+- Kept water animation decorative and readable so ships, borders, territory, and map detail remain clear.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.137 - Ready Fleet and Living Seas
 
 - Made Cities, Ports, defenses, trains, ships, and the complete classic battlefield model set finish decoding before the first playable frame instead of appearing late.

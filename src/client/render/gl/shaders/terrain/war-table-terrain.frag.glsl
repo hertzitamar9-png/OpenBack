@@ -52,18 +52,28 @@ void main() {
     color *= 1.0 + relief * 0.12 * detail + grain;
     if (shore) color *= 1.035;
   } else {
-    float waveA = sin(world.x * 0.11 + world.y * 0.07 + uTime * 0.55);
-    float waveB = sin(world.x * -0.045 + world.y * 0.13 - uTime * 0.38);
-    float waves = (waveA + waveB) * 0.5;
-    color *= 1.0 + waves * 0.035 * detail;
-    // Thin travelling crests bring the readable foam rhythm from the 3D sea
-    // to classic mode without obscuring borders, ships, or territory.
-    float oceanCrest = smoothstep(0.82, 0.97, waves) * detail;
-    float shorePulse = sin(world.x * 0.19 + world.y * 0.14 - uTime * 1.65);
-    float shoreFoam = shore ? smoothstep(0.38, 0.92, shorePulse) * detail : 0.0;
-    float foam = max(oceanCrest * 0.22, shoreFoam * 0.52);
-    color = mix(color, vec3(0.78, 0.94, 1.0), foam);
-    if (shore) color = mix(color, color + vec3(0.07, 0.10, 0.11), 0.30);
+    // Match the directional glimmer of the stable 3D sea. Long waves remain
+    // readable while panning, unlike the previous thresholded pattern which
+    // broke into repeated pale ovals across the ocean.
+    float broad = sin(dot(world, vec2(0.031, 0.017)) + uTime * 0.55);
+    float cross = sin(dot(world, vec2(-0.021, 0.039)) - uTime * 0.42);
+    float swell = sin(dot(world, vec2(0.010, -0.018)) + uTime * 0.24);
+    float wave = broad * 0.55 + cross * 0.35 + swell * 0.10;
+    float fine = sin((world.x - world.y) * 0.11 + uTime * 0.75) * 0.5 + 0.5;
+    float shimmer = clamp(0.30 + wave * 0.10 + fine * 0.045, 0.14, 0.62);
+    vec3 deep = color * 0.90;
+    vec3 highlight = color + vec3(0.025, 0.075, 0.095);
+    color = mix(deep, highlight, shimmer * detail);
+
+    float crestWave = broad * 0.72 + cross * 0.20 + swell * 0.08;
+    float openCrest = smoothstep(0.91, 0.985, crestWave) * 0.13 * detail;
+    float shoreBreak = sin(world.x * 0.18 + world.y * 0.13 - uTime * 1.8);
+    float coastalBreak = shore
+      ? smoothstep(0.58, 0.90, shoreBreak) * 0.55 * detail
+      : 0.0;
+    float foamCrest = max(openCrest, coastalBreak);
+    color = mix(color, vec3(0.90, 0.97, 1.0), foamCrest);
+    if (shore) color = mix(color, color + vec3(0.05, 0.08, 0.09), 0.32);
   }
 
   fragColor = vec4(clamp(color, 0.0, 1.0), 1.0);

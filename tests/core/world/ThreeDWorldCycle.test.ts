@@ -44,12 +44,9 @@ describe("deterministic 3D world cycle", () => {
   it("keeps 3D wave crests visibly raised above the ocean plane", () => {
     const day = threeDWorldCycle(0);
     const night = threeDWorldCycle(450);
-    expect(day.waveStrength * THREE_D_WAVE_HEIGHT_SCALE).toBeGreaterThanOrEqual(
-      5.5,
-    );
-    expect(
-      night.waveStrength * THREE_D_WAVE_HEIGHT_SCALE,
-    ).toBeGreaterThanOrEqual(9.0);
+    expect(THREE_D_WAVE_HEIGHT_SCALE).toBe(0.62);
+    expect(day.waveStrength * THREE_D_WAVE_HEIGHT_SCALE).toBeGreaterThan(0.4);
+    expect(night.waveStrength * THREE_D_WAVE_HEIGHT_SCALE).toBeGreaterThan(0.7);
   });
 
   it("turns current alignment into deterministic zero, one, or two ship steps", () => {

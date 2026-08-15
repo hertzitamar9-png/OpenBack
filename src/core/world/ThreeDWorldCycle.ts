@@ -11,7 +11,7 @@ export interface ThreeDWorldCycleState {
 const CYCLE_TICKS = 900;
 
 /** Visible crest height in 3D world units at full wave strength. */
-export const THREE_D_WAVE_HEIGHT_SCALE = 8.0;
+export const THREE_D_WAVE_HEIGHT_SCALE = 0.62;
 
 /** Low, ocean-facing land that the 3D night tide may cover temporarily. */
 export function isTidalCoast(

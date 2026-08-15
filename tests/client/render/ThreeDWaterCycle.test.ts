@@ -19,13 +19,15 @@ describe("3D water cycle shader", () => {
     expect(source).toContain("uTideHeight");
   });
 
-  it("keeps animated white crest lines visible on the classic 2D ocean", () => {
+  it("keeps directional tide shimmer without repeated oval foam on the classic 2D ocean", () => {
     const terrain = readFileSync(
       "src/client/render/gl/shaders/terrain/war-table-terrain.frag.glsl",
       "utf8",
     );
-    expect(terrain).toContain("oceanCrest");
-    expect(terrain).toContain("shoreFoam");
-    expect(terrain).toContain("vec3(0.78, 0.94, 1.0)");
+    expect(terrain).toContain("openCrest");
+    expect(terrain).toContain("coastalBreak");
+    expect(terrain).toContain("shimmer");
+    expect(terrain).not.toContain("oceanCrest");
+    expect(terrain).not.toContain("smoothstep(0.82, 0.97, waves)");
   });
 });
