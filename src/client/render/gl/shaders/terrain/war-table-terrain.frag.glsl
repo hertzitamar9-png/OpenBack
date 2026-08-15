@@ -56,7 +56,14 @@ void main() {
     float waveB = sin(world.x * -0.045 + world.y * 0.13 - uTime * 0.38);
     float waves = (waveA + waveB) * 0.5;
     color *= 1.0 + waves * 0.035 * detail;
-    if (shore) color = mix(color, color + vec3(0.07, 0.10, 0.11), 0.42);
+    // Thin travelling crests bring the readable foam rhythm from the 3D sea
+    // to classic mode without obscuring borders, ships, or territory.
+    float oceanCrest = smoothstep(0.82, 0.97, waves) * detail;
+    float shorePulse = sin(world.x * 0.19 + world.y * 0.14 - uTime * 1.65);
+    float shoreFoam = shore ? smoothstep(0.38, 0.92, shorePulse) * detail : 0.0;
+    float foam = max(oceanCrest * 0.22, shoreFoam * 0.52);
+    color = mix(color, vec3(0.78, 0.94, 1.0), foam);
+    if (shore) color = mix(color, color + vec3(0.07, 0.10, 0.11), 0.30);
   }
 
   fragColor = vec4(clamp(color, 0.0, 1.0), 1.0);

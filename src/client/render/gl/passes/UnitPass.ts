@@ -61,6 +61,7 @@ import {
 } from "../three-d/ThreeDCamera";
 import { getPaletteSize } from "../utils/ColorUtils";
 import { createProgram, shaderSrc } from "../utils/GlUtils";
+import { loadBattlefieldAtlas } from "./BattlefieldAtlasLoader";
 
 const unitAtlasUrl = assetUrl("atlases/unit-atlas.png");
 
@@ -247,6 +248,8 @@ export class UnitPass {
   private uThreeDViewProjection: WebGLUniformLocation;
   private uThreeDMapSize: WebGLUniformLocation;
   private uThreeDScreenScale: WebGLUniformLocation;
+  private uThreeDModelMask: WebGLUniformLocation;
+  private threeDModelMask = 0;
   private threeDTerrain: WebGLTexture | null = null;
   private threeDCamera: ThreeDCameraState | null = null;
 
@@ -368,13 +371,17 @@ export class UnitPass {
       this.program,
       "uThreeDScreenScale",
     )!;
-    gl.uniform1i(gl.getUniformLocation(this.program, "uThreeDTerrain"), 3);
+    this.uThreeDModelMask = gl.getUniformLocation(
+      this.program,
+      "uThreeDModelMask",
+    )!;
 
     // Texture unit bindings
     gl.useProgram(this.program);
     gl.uniform1i(gl.getUniformLocation(this.program, "uPalette"), 0);
     gl.uniform1i(gl.getUniformLocation(this.program, "uAtlas"), 1);
     gl.uniform1i(gl.getUniformLocation(this.program, "uAffiliation"), 2);
+    gl.uniform1i(gl.getUniformLocation(this.program, "uThreeDTerrain"), 3);
 
     // Create placeholder atlas texture (1x1 gray pixel)
     this.atlasTex = gl.createTexture()!;
@@ -430,11 +437,12 @@ export class UnitPass {
   }
 
   private async loadAtlas(): Promise<void> {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.src = unitAtlasUrl;
-    await img.decode();
+    const img = await loadBattlefieldAtlas(unitAtlasUrl);
     const gl = this.gl;
+    // Async decoding may resume after another pass changed the active texture
+    // unit. Always select the atlas slot explicitly before uploading; relying
+    // on constructor state could bind the ship atlas to an unrelated sampler.
+    gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, this.atlasTex);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
@@ -670,6 +678,15 @@ export class UnitPass {
     this.threeDTerrain = terrain;
   }
 
+  setThreeDReadyModelTypes(types: ReadonlySet<string>): void {
+    let mask = 0;
+    for (const type of types) {
+      const column = this.typeToAtlasCol.get(type);
+      if (column !== undefined && column < 31) mask |= 1 << column;
+    }
+    this.threeDModelMask = mask;
+  }
+
   /** Bind shared program state + uniforms (call before drawGround/drawMissiles). */
   private bindProgram(cameraMatrix: Float32Array): void {
     const gl = this.gl;
@@ -686,6 +703,7 @@ export class UnitPass {
     gl.uniform1f(this.uFlickerSpeed, us.flickerSpeed);
     gl.uniform3f(this.uAngryColor, us.angryR, us.angryG, us.angryB);
     gl.uniform1i(this.uAltView, this.altView ? 1 : 0);
+    gl.uniform1i(this.uThreeDModelMask, this.threeDModelMask);
     gl.uniform1f(this.uHBombGlowScale, us.hBombGlowScale);
     gl.uniform3f(
       this.uHBombGlowColor,

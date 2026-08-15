@@ -198,6 +198,7 @@ export class ThreeDUnitPass {
   private uniforms: Record<string, WebGLUniformLocation | null>;
   private ghostPreview: GhostPreviewData | null = null;
   private disposed = false;
+  private readonly loadedModelTypes = new Set<UnitType>();
 
   constructor(
     private gl: WebGL2RenderingContext,
@@ -233,13 +234,18 @@ export class ThreeDUnitPass {
           if (this.disposed) return;
           this.meshes.set(key, this.createMesh(mesh));
           this.batches.set(key, []);
+          this.loadedModelTypes.add(type);
         } catch (error) {
-          // A broken asset stays invisible rather than silently returning to
-          // the crude generated cubes that this catalog replaces.
+          // The classic sprite remains visible when a real model cannot load;
+          // never replace a failed asset with the old generated cubes.
           console.error(`Unable to load real 3D model for ${type}`, error);
         }
       }),
     );
+  }
+
+  readyModelTypes(): ReadonlySet<UnitType> {
+    return this.loadedModelTypes;
   }
 
   update(

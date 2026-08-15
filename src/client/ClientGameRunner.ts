@@ -77,6 +77,7 @@ import {
   MapRenderer,
   mobileRenderFrameIntervalMs,
   preloadAtlasData,
+  preloadBattlefieldAtlases,
   renderDpr,
   type RenderSettings,
   showGLGate,
@@ -570,9 +571,10 @@ async function createClientGame(
   // Kick off the font-atlas fetch so it overlaps with worker init; the
   // render passes need it parsed before createWebGLView runs.
   const atlasDataLoad = preloadAtlasData();
+  const battlefieldAtlasesLoad = preloadBattlefieldAtlases();
   const worker = new WorkerClient(lobbyConfig.gameStartInfo, clientID);
   await worker.initialize();
-  await atlasDataLoad;
+  await Promise.all([atlasDataLoad, battlefieldAtlasesLoad]);
   const gameView = new GameView(
     worker,
     config,

@@ -18,4 +18,14 @@ describe("3D water cycle shader", () => {
     expect(source).toContain("uDaylight");
     expect(source).toContain("uTideHeight");
   });
+
+  it("keeps animated white crest lines visible on the classic 2D ocean", () => {
+    const terrain = readFileSync(
+      "src/client/render/gl/shaders/terrain/war-table-terrain.frag.glsl",
+      "utf8",
+    );
+    expect(terrain).toContain("oceanCrest");
+    expect(terrain).toContain("shoreFoam");
+    expect(terrain).toContain("vec3(0.78, 0.94, 1.0)");
+  });
 });

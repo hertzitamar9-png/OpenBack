@@ -1,3 +1,12 @@
+## OpenBack v0.34.137 - Ready Fleet and Living Seas
+
+- Made Cities, Ports, defenses, trains, ships, and the complete classic battlefield model set finish decoding before the first playable frame instead of appearing late.
+- Fixed Transport Ships in 3D by keeping their classic visible model on-screen until the real 3D vessel is loaded and ready, eliminating permanently invisible or delayed ships.
+- Added moving white wave crests and shoreline foam to classic 2D oceans, and raised the real 3D ocean geometry substantially so waves have clearly visible height.
+- Locked the fitted phone homepage against empty rubber-band scrolling while preserving normal scrolling inside Tutorials, Blog, News, account, and other subpages.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.136 - Touch-Safe Landscape Command
 
 - Rebuilt the short-landscape home composition for phones and tablets so it keeps the mobile controls, uses the complete width, fits live matches cleanly, and no longer needs a homepage scrollbar.

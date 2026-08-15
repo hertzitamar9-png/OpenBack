@@ -45,11 +45,11 @@ describe("deterministic 3D world cycle", () => {
     const day = threeDWorldCycle(0);
     const night = threeDWorldCycle(450);
     expect(day.waveStrength * THREE_D_WAVE_HEIGHT_SCALE).toBeGreaterThanOrEqual(
-      2.4,
+      5.5,
     );
     expect(
       night.waveStrength * THREE_D_WAVE_HEIGHT_SCALE,
-    ).toBeGreaterThanOrEqual(3.5);
+    ).toBeGreaterThanOrEqual(9.0);
   });
 
   it("turns current alignment into deterministic zero, one, or two ship steps", () => {

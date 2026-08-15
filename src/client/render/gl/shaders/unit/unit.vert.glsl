@@ -15,6 +15,7 @@ uniform mat4 uThreeDViewProjection;
 uniform usampler2D uThreeDTerrain;
 uniform vec2 uThreeDMapSize;
 uniform vec2 uThreeDScreenScale;
+uniform int uThreeDModelMask;
 
 uniform float uUnitSize;
 uniform float uHBombGlowScale; // quad enlargement for the hydrogen bomb glow halo
@@ -86,8 +87,8 @@ void main() {
   // Ships and nuclear projectiles have dedicated terrain-anchored 3D models.
   // The ordinary tank and its terminal body remain the classic sprite. The
   // dedicated 3D pass adds only the raised turret/projectile presentation.
-  bool dedicatedThreeD = atlasCol <= 5.5 ||
-    abs(atlasCol - 8.0) < 0.5;
+  int modelBit = 1 << int(atlasCol + 0.5);
+  bool dedicatedThreeD = (uThreeDModelMask & modelBit) != 0;
   if (uThreeD && dedicatedThreeD) {
     gl_Position=vec4(2.0,2.0,0.0,1.0);
     return;

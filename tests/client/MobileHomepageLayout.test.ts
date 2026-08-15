@@ -42,4 +42,10 @@ describe("mobile homepage match layout", () => {
       /@media \(orientation: landscape\)[\s\S]*?\.home-command-layout\s*{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+minmax\(0,\s*3fr\)/s,
     );
   });
+
+  it("locks the fitted phone homepage while leaving subpages scrollable", () => {
+    expect(styles).toMatch(
+      /body:not\(\.openback-subpage-open\)\s+\.main-layout-scroll\s*{[^}]*overflow-y:\s*hidden\s*!important[^}]*overscroll-behavior:\s*none/s,
+    );
+  });
 });

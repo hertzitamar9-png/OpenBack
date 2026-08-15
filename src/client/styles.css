@@ -175,6 +175,11 @@ textarea:focus-visible {
 /* Phone and tablet ergonomics are centralized here so every current and future
    menu page inherits the same safe sizing, touch behavior and keyboard rules. */
 @media (max-width: 1023px) {
+  body:not(.openback-subpage-open) .main-layout-scroll {
+    overflow-y: hidden !important;
+    overscroll-behavior: none;
+  }
+
   body.openback-subpage-open page-footer,
   body.openback-modal-open page-footer {
     display: none !important;

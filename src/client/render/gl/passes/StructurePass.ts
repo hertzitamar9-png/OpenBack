@@ -41,6 +41,7 @@ import {
   STRUCTURES_EFFECT_BLOCK,
 } from "../utils/ColorUtils";
 import { createProgram, shaderSrc } from "../utils/GlUtils";
+import { loadBattlefieldAtlas } from "./BattlefieldAtlasLoader";
 
 import { assetUrl } from "src/core/AssetUrls";
 import structureFragSrc from "../shaders/structure/structure.frag.glsl?raw";
@@ -319,10 +320,7 @@ export class StructurePass {
   }
 
   private async loadAtlas(): Promise<void> {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.src = iconAtlasUrl;
-    await img.decode();
+    const img = await loadBattlefieldAtlas(iconAtlasUrl);
     const gl = this.gl;
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, this.atlasTex);
