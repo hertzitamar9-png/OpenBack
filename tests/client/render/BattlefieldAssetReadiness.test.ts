@@ -12,6 +12,10 @@ describe("battlefield asset readiness", () => {
     "utf8",
   );
   const renderer = readFileSync("src/client/render/gl/Renderer.ts", "utf8");
+  const atlasLoader = readFileSync(
+    "src/client/render/gl/passes/BattlefieldAtlasLoader.ts",
+    "utf8",
+  );
   const threeDUnits = readFileSync(
     "src/client/render/gl/three-d/ThreeDUnitPass.ts",
     "utf8",
@@ -27,6 +31,9 @@ describe("battlefield asset readiness", () => {
       /loadBattlefieldAtlas\(unitAtlasUrl\)[\s\S]*gl\.activeTexture\(gl\.TEXTURE1\)[\s\S]*gl\.bindTexture\(gl\.TEXTURE_2D, this\.atlasTex\)/,
     );
     expect(structurePass).toContain("loadBattlefieldAtlas(iconAtlasUrl)");
+    expect(atlasLoader).toMatch(
+      /image\.onload\s*=\s*async[\s\S]*await image\.decode\(\)[\s\S]*resolve\(image\)/,
+    );
   });
 
   it("keeps the classic ship visible until its 3D replacement is ready", () => {

@@ -13,7 +13,19 @@ export function loadBattlefieldAtlas(url: string): Promise<HTMLImageElement> {
     pending = new Promise<HTMLImageElement>((resolve, reject) => {
       const image = new Image();
       image.crossOrigin = "anonymous";
-      image.onload = () => resolve(image);
+      // `load` only guarantees that the bytes arrived. Chromium can still be
+      // decoding the PNG when WebGL uploads it, which leaves the atlas texture
+      // permanently transparent for that renderer. Wait for decode exactly as
+      // the original 2D passes did before sharing the image with WebGL.
+      image.onload = async () => {
+        try {
+          await image.decode();
+          resolve(image);
+        } catch (error) {
+          atlasImages.delete(url);
+          reject(error);
+        }
+      };
       image.onerror = () => reject(new Error(`Unable to load atlas: ${url}`));
       image.src = url;
     });

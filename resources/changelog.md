@@ -1,3 +1,12 @@
+## OpenBack v0.34.139 - Restored Classic Battlefield Art
+
+- Restored immediate 2D rendering for Cities, Ports, defenses, trains, ships, Aircraft, Tanks, and every other classic battlefield model by correcting the shared WebGL texture state that silently rejected their draw calls.
+- Restored visible Atom Bomb, Hydrogen Bomb, and projectile models together with their established destination markers.
+- Restored the complete OpenFront-style ship and nuclear trail renderer at its intended visibility, including player colors and equipped animated trail effects.
+- Made both battlefield atlases finish PNG decoding before WebGL uploads them so models are present from the first playable frame instead of appearing late or remaining transparent.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.138 - Restored Living Seas
 
 - Restored the exact stable 3D wave height from the last good water release, removing the broken dark gaps caused by oversized waves.

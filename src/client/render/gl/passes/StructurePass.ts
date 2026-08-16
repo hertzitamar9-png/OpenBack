@@ -462,6 +462,13 @@ export class StructurePass {
     gl.uniform1f(this.uHoverOwner, this.highlightOwner);
     const threeD = this.threeDCamera !== null && this.threeDTerrain !== null;
     gl.uniform1i(this.uThreeD, threeD ? 1 : 0);
+    // The integer terrain sampler remains part of the linked program in 2D.
+    // Bind its R8UI texture for every draw so WebGL does not reject the entire
+    // structure pass while validating samplers.
+    if (this.threeDTerrain !== null) {
+      gl.activeTexture(gl.TEXTURE4);
+      gl.bindTexture(gl.TEXTURE_2D, this.threeDTerrain);
+    }
     if (threeD) {
       const camera = this.threeDCamera!;
       const scale = threeDScreenFacingScale(camera);
@@ -472,8 +479,6 @@ export class StructurePass {
       );
       gl.uniform2f(this.uThreeDMapSize, camera.mapWidth, camera.mapHeight);
       gl.uniform2f(this.uThreeDScreenScale, scale[0], scale[1]);
-      gl.activeTexture(gl.TEXTURE4);
-      gl.bindTexture(gl.TEXTURE_2D, this.threeDTerrain);
     }
 
     gl.activeTexture(gl.TEXTURE0);

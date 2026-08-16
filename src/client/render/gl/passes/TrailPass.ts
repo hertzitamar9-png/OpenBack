@@ -11,7 +11,6 @@ import type { RenderSettings } from "../RenderSettings";
 import { getPaletteSize, MAX_TRAIL_COLORS } from "../utils/ColorUtils";
 import { createMapQuad, createProgram, shaderSrc } from "../utils/GlUtils";
 import { TILE_DEFINES } from "../utils/TileCodec";
-import { WAR_TABLE_OVERLAY } from "../war-table/WarTableStyle";
 
 import overlayVertSrc from "../shaders/map-overlay/overlay.vert.glsl?raw";
 import trailFragSrc from "../shaders/map-overlay/trail.frag.glsl?raw";
@@ -182,13 +181,7 @@ export class TrailPass {
     gl.useProgram(this.program);
     gl.uniformMatrix3fv(this.uCamera, false, cameraMatrix);
     gl.uniform2f(this.uMapSize, this.mapW, this.mapH);
-    gl.uniform1f(
-      this.uTrailAlpha,
-      Math.min(
-        this.settings.mapOverlay.trailAlpha,
-        1 - WAR_TABLE_OVERLAY.targetAlpha,
-      ),
-    );
+    gl.uniform1f(this.uTrailAlpha, this.settings.mapOverlay.trailAlpha);
     gl.uniform1f(this.uTime, (performance.now() - this.startTime) / 1000);
     gl.uniform1i(this.uAltView, this.altView ? 1 : 0);
 

@@ -716,6 +716,14 @@ export class UnitPass {
     gl.uniform1f(this.uUntargetableAlpha, us.untargetableAlpha);
     const threeD = this.threeDCamera !== null && this.threeDTerrain !== null;
     gl.uniform1i(this.uThreeD, threeD ? 1 : 0);
+    // WebGL validates every active sampler at draw time, even when a shader
+    // branch does not sample it. Keep the integer terrain sampler bound in
+    // classic 2D too; leaving it unbound makes the whole sprite draw fail
+    // silently, hiding ships, trains, bombs, aircraft, and tanks.
+    if (this.threeDTerrain !== null) {
+      gl.activeTexture(gl.TEXTURE3);
+      gl.bindTexture(gl.TEXTURE_2D, this.threeDTerrain);
+    }
     if (threeD) {
       const camera = this.threeDCamera!;
       const scale = threeDScreenFacingScale(camera);
@@ -726,8 +734,6 @@ export class UnitPass {
       );
       gl.uniform2f(this.uThreeDMapSize, camera.mapWidth, camera.mapHeight);
       gl.uniform2f(this.uThreeDScreenScale, scale[0], scale[1]);
-      gl.activeTexture(gl.TEXTURE3);
-      gl.bindTexture(gl.TEXTURE_2D, this.threeDTerrain);
     }
 
     gl.activeTexture(gl.TEXTURE0);

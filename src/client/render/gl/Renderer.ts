@@ -1604,8 +1604,11 @@ export class GPURenderer {
     // match. Clear the perspective state before the shared sprite passes;
     // otherwise their shaders keep projecting structures and mobile units
     // through the previous 3D camera, leaving only HUD counts visible.
-    this.unitPass.setThreeDProjection(null, null);
-    this.structurePass.setThreeDProjection(null, null);
+    // The shared sprite programs contain an integer terrain sampler for their
+    // optional 3D projection. Keep the texture bound in classic mode while
+    // clearing only the camera, otherwise WebGL rejects every sprite draw.
+    this.unitPass.setThreeDProjection(null, this.terrainBytesTex);
+    this.structurePass.setThreeDProjection(null, this.terrainBytesTex);
     this.renderOverlays(cam, zoom);
   }
 

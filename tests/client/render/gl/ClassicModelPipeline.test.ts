@@ -36,6 +36,19 @@ describe("classic model pipeline", () => {
     expect(fragment).toContain("nuclearFlames");
   });
 
+  it("keeps the full classic ship and nuke trail renderer", () => {
+    const pass = source("src/client/render/gl/passes/TrailPass.ts");
+    const fragment = source(
+      "src/client/render/gl/shaders/map-overlay/trail.frag.glsl",
+    );
+    expect(pass).toContain(
+      "gl.uniform1f(this.uTrailAlpha, this.settings.mapOverlay.trailAlpha)",
+    );
+    expect(fragment).toContain("uint owner = trailVal & 0xFFFu");
+    expect(fragment).toContain("uint isNuke = (trailVal >> 12) & 1u");
+    expect(fragment).toContain("uniform sampler2D  uEffect");
+  });
+
   it("draws small-territory glow behind units and structures", () => {
     const renderer = source("src/client/render/gl/Renderer.ts");
     const overlays = renderer.slice(renderer.indexOf("private renderOverlays"));
@@ -53,12 +66,29 @@ describe("classic model pipeline", () => {
       renderer.indexOf("if (compositingActive)"),
       renderer.indexOf("private isLightCompositingActive"),
     );
-    expect(twoDFrame).toContain("unitPass.setThreeDProjection(null, null)");
     expect(twoDFrame).toContain(
-      "structurePass.setThreeDProjection(null, null)",
+      "unitPass.setThreeDProjection(null, this.terrainBytesTex)",
+    );
+    expect(twoDFrame).toContain(
+      "structurePass.setThreeDProjection(null, this.terrainBytesTex)",
     );
     expect(
-      twoDFrame.indexOf("unitPass.setThreeDProjection(null, null)"),
+      twoDFrame.indexOf(
+        "unitPass.setThreeDProjection(null, this.terrainBytesTex)",
+      ),
     ).toBeLessThan(twoDFrame.indexOf("this.renderOverlays(cam, zoom)"));
+  });
+
+  it("binds integer terrain samplers before every classic sprite draw", () => {
+    const unitPass = source("src/client/render/gl/passes/UnitPass.ts");
+    const structurePass = source(
+      "src/client/render/gl/passes/StructurePass.ts",
+    );
+    expect(unitPass).toMatch(
+      /if \(this\.threeDTerrain !== null\)[\s\S]*gl\.activeTexture\(gl\.TEXTURE3\)/,
+    );
+    expect(structurePass).toMatch(
+      /if \(this\.threeDTerrain !== null\)[\s\S]*gl\.activeTexture\(gl\.TEXTURE4\)/,
+    );
   });
 });
