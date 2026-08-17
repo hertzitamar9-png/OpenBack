@@ -2,7 +2,11 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 describe("OpenBack Tactical theme", () => {
-  const theme = readFileSync("src/client/styles.css", "utf8");
+  const theme =
+    readFileSync("src/client/styles.css", "utf8") +
+    // OpenBack rules live in their own sheet so upstream styles.css stays
+    // untouched and merges cleanly; assert across both.
+    readFileSync("src/client/styles/openback.css", "utf8");
   const variables = readFileSync(
     "src/client/styles/core/variables.css",
     "utf8",

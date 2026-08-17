@@ -1,0 +1,567 @@
+/*
+ * OpenBack styling, deliberately kept out of styles.css.
+ *
+ * styles.css belongs to upstream. Every OpenBack rule lives here instead, and
+ * this sheet is imported after it so the cascade lets these rules win without
+ * editing upstream lines. Upstream CSS updates then land in styles.css and
+ * merge cleanly, because nothing of ours is in their file.
+ */
+
+/* Path is relative to this file, which sits one level deeper than styles.css. */
+@import "../hud/war-table/war-table-hud.css";
+
+/* Login/profile is an optional focused flow: obscure the main menu while it
+   is open, but keep the account page and its working Back arrow available. */
+body.account-flow-open #main-menu-shell {
+  background: #000 !important;
+}
+
+body.account-flow-open desktop-nav-bar,
+body.account-flow-open mobile-nav-bar,
+body.account-flow-open homepage-promos,
+body.account-flow-open page-footer {
+  display: none !important;
+}
+
+body.account-flow-open main-layout main {
+  background: #000 !important;
+  padding-top: 0 !important;
+}
+:root {
+  color-scheme: dark;
+  --ob-surface-base: #070c14;
+  --ob-surface-raised: #0c1727;
+  --ob-surface-overlay: rgb(12 23 39 / 94%);
+  --ob-action: #09a9ec;
+  --ob-action-hover: #32c2ff;
+  --ob-success: #18c76f;
+  --ob-warning: #f1b84b;
+  --ob-danger: #ef4f5f;
+  --ob-border: rgb(135 184 224 / 24%);
+  --ob-border-strong: rgb(70 192 255 / 52%);
+  --ob-text: #f4f8fc;
+  --ob-text-muted: #9fb1c5;
+  --ob-radius-sm: 0.5rem;
+  --ob-radius-md: 0.875rem;
+  --ob-shadow-panel: 0 18px 48px rgb(0 0 0 / 46%);
+  --ob-motion-fast: 120ms;
+  --ob-motion-normal: 200ms;
+}
+
+/* These two declarations used to sit inside upstream's own `body` rule; as an
+   override they need their selector back. */
+body {
+  background: var(--ob-surface-base);
+  color: var(--ob-text);
+}
+
+dialog,
+[role="dialog"] {
+  color: var(--ob-text);
+  background: var(--ob-surface-overlay);
+  border-color: var(--ob-border);
+  border-radius: var(--ob-radius-md);
+  box-shadow: var(--ob-shadow-panel);
+}
+
+button,
+[role="button"] {
+  transition-duration: var(--ob-motion-fast);
+  transition-property:
+    color, background-color, border-color, box-shadow, opacity, transform;
+}
+
+button:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--ob-action);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Phone and tablet ergonomics are centralized here so every current and future
+   menu page inherits the same safe sizing, touch behavior and keyboard rules. */
+@media (max-width: 1023px) {
+  body:not(.openback-subpage-open) .main-layout-scroll {
+    overflow-y: hidden !important;
+    overscroll-behavior: none;
+  }
+
+  body.openback-subpage-open page-footer,
+  body.openback-modal-open page-footer {
+    display: none !important;
+  }
+
+  /* The mobile top bar is persistent now, so sub-pages have to clear it or
+     their first row sits underneath the menu and back buttons. */
+  body.openback-subpage-open .page-content {
+    padding-top: calc(env(safe-area-inset-top) + 56px);
+  }
+
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+
+  /* A fingertip needs roughly 44px. Settings controls came in well under that:
+     a range input renders an 8px-tall track, which is close to ungrabbable on
+     a phone, and the dropdowns sat at 37-41px. Grow the hit area without
+     changing how the controls look. */
+  select {
+    min-height: 44px;
+  }
+
+  input[type="range"] {
+    min-height: 44px;
+    /* The track keeps its own height; this only enlarges what a finger can
+       land on, so the slider still looks the same. */
+    background-clip: content-box;
+  }
+
+  button,
+  [role="button"],
+  a {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Modal back buttons are a primary phone control and were 40px square. */
+  [data-modal-back] {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* The name and clan-tag fields on the home screen are the first things a
+     player touches and were only 24px tall. */
+  #page-play input[type="text"] {
+    min-height: 44px;
+  }
+
+  o-modal [data-modal-scroll] {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .player-info-surface {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  #game-bottom-hud,
+  .game-hud-primary,
+  .game-hud-controls,
+  .game-control-panel,
+  .game-unit-grid {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .game-unit-item {
+    touch-action: manipulation;
+  }
+
+  .game-unit-tooltip {
+    display: none;
+  }
+
+  .game-unit-mobile-info {
+    position: fixed;
+    left: 50%;
+    bottom: calc(8.75rem + env(safe-area-inset-bottom));
+    z-index: 220;
+    display: block;
+    width: max-content;
+    max-width: calc(100vw - 1rem);
+    max-height: min(32dvh, 13rem);
+    overflow-y: auto;
+    transform: translateX(-50%);
+    overscroll-behavior: contain;
+  }
+
+  .game-unit-info-description {
+    max-width: 24rem;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (min-width: 1024px) {
+  .game-unit-mobile-info {
+    display: none;
+  }
+}
+
+@media (max-width: 1023px) {
+  .mobile-lobby-mosaic {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.125rem 0 0.25rem;
+  }
+
+  .mobile-lobby-feature {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  .mobile-lobby-feature > button {
+    height: 11rem;
+  }
+
+  .mobile-lobby-secondary {
+    min-width: 0;
+  }
+
+  .mobile-lobby-secondary > button {
+    height: 8.5rem;
+  }
+}
+
+@media (max-width: 340px) {
+  .mobile-lobby-mosaic {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mobile-lobby-feature,
+  .mobile-lobby-secondary {
+    grid-column: 1;
+  }
+}
+
+/* Short phone/tablet landscape keeps every game action on-screen. Events float
+   above the controls instead of stealing horizontal room from the 16-unit bar. */
+@media (orientation: landscape) and (max-height: 600px) and (max-width: 1366px) {
+  .main-layout-scroll {
+    overflow-y: hidden !important;
+  }
+
+  .home-command-layout {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
+    gap: 0.5rem !important;
+    padding: 0.5rem 0.75rem !important;
+    overflow: hidden;
+  }
+
+  .mobile-home-primary-actions,
+  .mobile-home-secondary-actions,
+  .mobile-lobby-mosaic {
+    display: grid !important;
+  }
+
+  .mobile-home-primary-actions,
+  .mobile-home-secondary-actions {
+    height: 2.75rem !important;
+  }
+
+  .mobile-home-primary-actions {
+    grid-column: 1;
+  }
+
+  .mobile-home-secondary-actions {
+    grid-column: 2;
+  }
+
+  .desktop-home-actions,
+  .desktop-home-secondary-actions,
+  .desktop-lobby-feature,
+  .desktop-lobby-secondary {
+    display: none !important;
+  }
+
+  .home-command-layout > ios-add-to-home-screen-banner {
+    display: none !important;
+  }
+
+  .home-lobby-grid,
+  .home-lobby-loading {
+    grid-column: 1 / -1;
+    min-height: 0;
+  }
+
+  .home-lobby-grid {
+    display: block !important;
+    height: auto !important;
+  }
+
+  .home-lobby-loading {
+    height: clamp(5.25rem, 24dvh, 7rem) !important;
+  }
+
+  .home-lobby-loading > span {
+    width: 3rem !important;
+    height: 3rem !important;
+    border-width: 0.25rem !important;
+  }
+
+  .mobile-lobby-mosaic {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+    padding: 0;
+  }
+
+  .mobile-lobby-feature {
+    grid-column: auto;
+  }
+
+  .mobile-lobby-feature > button,
+  .mobile-lobby-secondary > button {
+    height: clamp(5.25rem, 24dvh, 7rem);
+  }
+
+  .player-info-surface {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    border-radius: 0 0 0.5rem 0.5rem;
+  }
+
+  .player-info-content {
+    padding-top: 0.125rem;
+    padding-bottom: 0.125rem;
+  }
+
+  .player-info-economy {
+    width: 7rem !important;
+  }
+
+  .player-info-identity {
+    gap: 0.25rem !important;
+    line-height: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .player-info-identity > span:not(.flex) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .player-info-unit-grid {
+    flex-wrap: nowrap;
+    gap: 1px !important;
+    overflow: hidden;
+  }
+
+  .player-info-unit-count {
+    width: clamp(1.7rem, 4.25vw, 2.25rem) !important;
+    min-width: 0;
+    height: 1.35rem !important;
+    padding: 0 !important;
+  }
+
+  #game-bottom-hud {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: end;
+  }
+
+  .game-hud-primary {
+    display: flex !important;
+    width: 100% !important;
+    min-width: 0;
+    grid-column: 1;
+  }
+
+  .game-hud-controls {
+    border-radius: 0.5rem 0.5rem 0 0;
+  }
+
+  .game-control-panel > div {
+    padding-top: 0.125rem !important;
+    padding-bottom: 0.125rem !important;
+  }
+
+  .game-unit-grid {
+    grid-template-columns: repeat(16, minmax(0, 1fr)) !important;
+  }
+
+  .game-unit-item > div:last-child {
+    height: 2.15rem;
+  }
+
+  .game-unit-mobile-info {
+    bottom: calc(4.75rem + env(safe-area-inset-bottom));
+    max-height: min(42dvh, 9rem);
+  }
+
+  .game-hud-events {
+    position: absolute;
+    right: max(0.25rem, env(safe-area-inset-right));
+    bottom: calc(4.75rem + env(safe-area-inset-bottom));
+    width: min(20rem, 42vw) !important;
+    max-height: 45dvh;
+    overflow: hidden;
+  }
+}
+
+@media (max-width: 639px) {
+  o-modal .p-8 {
+    padding: 1rem !important;
+  }
+
+  o-modal .p-6 {
+    padding: 0.875rem !important;
+  }
+
+  o-modal .px-6 {
+    padding-left: 0.875rem !important;
+    padding-right: 0.875rem !important;
+  }
+
+  o-modal .py-6 {
+    padding-top: 0.875rem !important;
+    padding-bottom: 0.875rem !important;
+  }
+
+  o-modal .gap-6,
+  o-modal .space-y-6 {
+    gap: 1rem !important;
+  }
+
+  o-modal .pt-\[14vh\],
+  o-modal .pt-\[16vh\] {
+    padding-top: 1rem !important;
+  }
+}
+
+@media (max-width: 374px) {
+  .modal-header-right {
+    display: flex !important;
+    width: 100%;
+    min-width: 0;
+    padding-left: 3.25rem;
+  }
+
+  .modal-header-right > * {
+    max-width: 100%;
+  }
+
+  page-footer footer {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
+}
+
+@media (max-width: 1023px) and (max-height: 700px) {
+  mobile-nav-bar > div:last-child {
+    gap: 0.35rem !important;
+    padding-top: max(0.75rem, env(safe-area-inset-top)) !important;
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom)) !important;
+  }
+
+  mobile-nav-bar .nav-menu-item,
+  mobile-nav-bar .nav-menu-item button {
+    font-size: clamp(16px, 2.5vh, 22px) !important;
+    padding-top: 0.15rem !important;
+    padding-bottom: 0.15rem !important;
+  }
+}
+
+/* 3D World keeps the same UI language while giving HUD surfaces physical
+   separation from the perspective battlefield. No layout dimensions change. */
+html.openback-3d-mode button,
+html.openback-3d-mode [role="button"] {
+  box-shadow:
+    0 3px 0 rgba(0, 0, 0, 0.46),
+    0 8px 18px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+  transition:
+    transform 100ms ease,
+    box-shadow 100ms ease;
+}
+
+html.openback-3d-mode button:active,
+html.openback-3d-mode [role="button"]:active {
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.5),
+    0 3px 8px rgba(0, 0, 0, 0.24),
+    inset 0 1px 4px rgba(0, 0, 0, 0.25);
+  transform: translateY(1px);
+}
+
+html.openback-3d-mode dialog,
+html.openback-3d-mode [role="dialog"] {
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.58),
+    0 0 0 1px rgba(92, 184, 255, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Overrides for upstream rules: restyle the error modal onto the OpenBack
+   surface rather than the plain white default. Kept as overrides so upstream's
+   own declarations stay where upstream wrote them. */
+#error-modal {
+  max-width: 575px;
+}
+
+#error-modal {
+  max-width: 350px;
+}
+
+#error-modal {
+  position: fixed;
+  padding: 1rem;
+  background: #070c14;
+  color: #fff;
+  border: 1px solid rgb(255 255 255 / 0.15);
+  border-radius: 1rem;
+  box-shadow: 0 24px 70px rgb(0 0 0 / 0.65);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10020;
+  width: calc(100% - 1.5rem);
+  max-width: 575px;
+  max-height: calc(100dvh - 1.5rem);
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+#error-modal pre {
+  overflow-x: auto;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  max-height: min(400px, 55dvh);
+  color: rgb(255 255 255 / 0.78);
+  font-size: 0.75rem;
+}
+
+#error-modal button.copy-btn {
+  min-height: 44px;
+  padding: 8px 16px;
+  margin-top: 10px;
+  background: var(--color-malibu-blue);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#error-modal button.close-btn {
+  color: white;
+  top: 0.5rem;
+  right: 0.5rem;
+  cursor: pointer;
+  background: rgb(255 255 255 / 0.08);
+  margin-right: 0px;
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: 0.75rem;
+}

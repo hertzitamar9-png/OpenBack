@@ -3,7 +3,11 @@ import { describe, expect, it } from "vitest";
 
 describe("mobile homepage match layout", () => {
   const selector = readFileSync("src/client/GameModeSelector.ts", "utf8");
-  const styles = readFileSync("src/client/styles.css", "utf8");
+  const styles =
+    readFileSync("src/client/styles.css", "utf8") +
+    // OpenBack rules live in their own sheet so upstream styles.css stays
+    // untouched and merges cleanly; assert across both.
+    readFileSync("src/client/styles/openback.css", "utf8");
 
   it("shows all three matches in a responsive mosaic instead of a carousel", () => {
     expect(selector).toContain("mobile-lobby-mosaic");

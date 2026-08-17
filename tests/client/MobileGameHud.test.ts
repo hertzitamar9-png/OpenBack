@@ -15,7 +15,11 @@ describe("mobile game HUD", () => {
     "utf8",
   );
   const index = readFileSync("index.html", "utf8");
-  const styles = readFileSync("src/client/styles.css", "utf8");
+  const styles =
+    readFileSync("src/client/styles.css", "utf8") +
+    // OpenBack rules live in their own sheet so upstream styles.css stays
+    // untouched and merges cleanly; assert across both.
+    readFileSync("src/client/styles/openback.css", "utf8");
 
   it("keeps the phone player panel edge-to-edge", () => {
     expect(playerInfo).toContain("player-info-surface");

@@ -79,11 +79,14 @@ import "./components/RankedModal";
 import "./components/baseComponents/Button";
 import "./components/baseComponents/Modal";
 import "./styles.css";
+// Imported after upstream's sheet so OpenBack rules win on the cascade without
+// upstream's file needing a single OpenBack line in it.
 import "./styles/core/typography.css";
 import "./styles/core/variables.css";
 import "./styles/layout/container.css";
 import "./styles/layout/header.css";
 import "./styles/modal/chat.css";
+import "./styles/openback.css";
 
 declare global {
   interface Window {
