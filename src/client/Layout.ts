@@ -1,8 +1,9 @@
 import { Platform } from "./Platform";
 
 export function initLayout() {
-  // Wait for play-page component to render before setting up hamburger menu
-  customElements.whenDefined("play-page").then(() => {
+  // The hamburger now lives in the persistent mobile top bar rather than in
+  // play-page, so wait for that component instead.
+  customElements.whenDefined("mobile-top-bar").then(() => {
     const hb = document.getElementById("hamburger-btn");
     const sidebar = document.getElementById("sidebar-menu");
     const backdrop = document.getElementById("mobile-menu-backdrop");

@@ -185,6 +185,12 @@ textarea:focus-visible {
     display: none !important;
   }
 
+  /* The mobile top bar is persistent now, so sub-pages have to clear it or
+     their first row sits underneath the menu and back buttons. */
+  body.openback-subpage-open .page-content {
+    padding-top: calc(env(safe-area-inset-top) + 56px);
+  }
+
   input,
   textarea,
   select {

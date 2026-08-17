@@ -4,7 +4,10 @@ import { crazyGamesSDK } from "src/client/CrazyGamesSDK";
 import { PauseGameIntentEvent } from "src/client/Transport";
 import { assetUrl } from "../../../core/AssetUrls";
 import { EventBus } from "../../../core/EventBus";
-import { UserSettings } from "../../../core/game/UserSettings";
+import {
+  FPS_LIMIT_OPTIONS,
+  UserSettings,
+} from "../../../core/game/UserSettings";
 import { Controller } from "../../Controller";
 import {
   AlternateViewEvent,
@@ -46,6 +49,33 @@ export class SettingsModal extends LitElement implements Controller {
   @state()
   private alternateView: boolean = false;
 
+  // Measured refresh rate of the panel. A browser cannot render above it, so
+  // higher caps are shown but flagged rather than silently doing nothing.
+  @state()
+  private displayHz: number | null = null;
+
+  private measureDisplayHz(): void {
+    if (typeof requestAnimationFrame !== "function") return;
+    const start = performance.now();
+    let frames = 0;
+    const sample = () => {
+      frames++;
+      const elapsed = performance.now() - start;
+      if (elapsed < 500) {
+        requestAnimationFrame(sample);
+        return;
+      }
+      this.displayHz = Math.round((frames / elapsed) * 1000);
+    };
+    requestAnimationFrame(sample);
+  }
+
+  private onFpsLimitChange = (e: Event) => {
+    const fps = Number((e.target as HTMLSelectElement).value);
+    this.userSettings.setFpsLimit(fps);
+    this.requestUpdate();
+  };
+
   @property({ type: Boolean })
   shouldPause = false;
 
@@ -67,6 +97,9 @@ export class SettingsModal extends LitElement implements Controller {
 
   public openModal() {
     this.isVisible = true;
+    // Re-measure each time: the window may have moved to another display.
+    this.displayHz = null;
+    this.measureDisplayHz();
     this.requestUpdate();
   }
 
@@ -229,6 +262,45 @@ export class SettingsModal extends LitElement implements Controller {
                 </div>
               </div>
             </button>
+
+            <div
+              class="flex gap-3 items-center w-full text-left p-3 hover:bg-slate-700 rounded-sm text-white transition-colors"
+            >
+              <img src=${settingsIcon} alt="frameRate" width="20" height="20" />
+              <div class="flex-1 min-w-0">
+                <div class="font-medium">
+                  ${translateText("user_setting.fps_limit")}
+                </div>
+                <div class="text-sm text-slate-400">
+                  ${this.displayHz === null
+                    ? translateText("user_setting.fps_limit_desc")
+                    : translateText("user_setting.fps_limit_detected", {
+                        hz: String(this.displayHz),
+                      })}
+                </div>
+                <select
+                  class="mt-2 w-full bg-slate-700 border border-slate-500 rounded-lg p-2 text-white"
+                  @change=${this.onFpsLimitChange}
+                >
+                  ${FPS_LIMIT_OPTIONS.map(
+                    (fps) => html`
+                      <option
+                        value=${fps}
+                        ?selected=${fps === this.userSettings.fpsLimit()}
+                      >
+                        ${fps === 0
+                          ? translateText("user_setting.fps_auto")
+                          : this.displayHz !== null && fps > this.displayHz + 5
+                            ? translateText("user_setting.fps_above_display", {
+                                fps: String(fps),
+                              })
+                            : `${fps} FPS`}
+                      </option>
+                    `,
+                  )}
+                </select>
+              </div>
+            </div>
 
             <div
               class="flex gap-3 items-center w-full text-left p-3 hover:bg-slate-700 rounded-sm text-white transition-colors"

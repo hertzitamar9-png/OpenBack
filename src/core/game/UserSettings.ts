@@ -13,6 +13,12 @@ import {
 import { Cosmetics } from "../CosmeticSchemas";
 import { PlayerPattern } from "../Schemas";
 
+// Selectable render frame-rate caps. 0 is "auto": follow the display on
+// desktop, keep the historical 60 cap on phones and tablets.
+export const FPS_LIMIT_OPTIONS: readonly number[] = [
+  0, 30, 60, 90, 120, 144, 165, 180,
+];
+
 export function getDefaultKeybinds(isMac: boolean): Record<string, string> {
   return {
     toggleView: "Space",
@@ -156,6 +162,22 @@ export class UserSettings {
 
   private setFloat(key: string, value: number) {
     this.setCached(key, value.toString());
+  }
+
+  // Frame-rate cap for map rendering, in frames per second. 0 means "auto":
+  // follow the display on desktop and hold the historical 60 cap on phones and
+  // tablets. A display can never be driven above its own refresh rate, so a
+  // value higher than the panel supports simply renders at the panel's rate.
+  fpsLimit(): number {
+    const value = this.getFloat("settings.fpsLimit", 0);
+    return FPS_LIMIT_OPTIONS.includes(value) ? value : 0;
+  }
+
+  setFpsLimit(fps: number): void {
+    this.setFloat(
+      "settings.fpsLimit",
+      FPS_LIMIT_OPTIONS.includes(fps) ? fps : 0,
+    );
   }
 
   emojis() {

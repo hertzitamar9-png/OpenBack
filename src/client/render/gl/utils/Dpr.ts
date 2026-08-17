@@ -8,6 +8,8 @@
  * must go through this so the canvas size, camera math, and text scaling stay
  * on the same coordinate system.
  */
+import { UserSettings } from "../../../../core/game/UserSettings";
+
 export interface RenderDeviceProfile {
   devicePixelRatio: number;
   viewportWidth: number;
@@ -48,6 +50,13 @@ export function renderDpr(): number {
 }
 
 export function mobileRenderFrameIntervalMs(): number {
+  // An explicit choice wins on every device. The browser still cannot exceed
+  // the panel's refresh rate, so a cap above it just renders at the panel rate.
+  const configured = new UserSettings().fpsLimit();
+  if (configured > 0) return 1000 / configured;
+
+  // "Auto": phones and tablets keep the historical 60 cap so a high-refresh
+  // panel does not burn battery driving the map, desktop follows the display.
   const isTouchPhoneOrTablet =
     window.innerWidth <= 1024 &&
     typeof window.matchMedia === "function" &&

@@ -1,5 +1,6 @@
 import {
   EFFECTS_KEY,
+  FPS_LIMIT_OPTIONS,
   PLAYER_STATS_COLUMNS_KEY,
   TEAM_STATS_COLUMNS_KEY,
   UserSettings,
@@ -137,5 +138,41 @@ describe("UserSettings stats columns", () => {
     expect(s.statsColumns("player")).toEqual(["gold"]);
     expect(s.statsColumns("team")).toEqual(["warships"]);
     expect(localStorage.getItem(TEAM_STATS_COLUMNS_KEY)).toBe('["warships"]');
+  });
+});
+
+describe("UserSettings frame-rate limit", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    (
+      UserSettings as unknown as { cache: Map<string, string | null> }
+    ).cache.clear();
+  });
+
+  it("defaults to 0, meaning auto", () => {
+    expect(new UserSettings().fpsLimit()).toBe(0);
+  });
+
+  it("stores and reads each offered cap", () => {
+    const s = new UserSettings();
+    for (const fps of FPS_LIMIT_OPTIONS) {
+      s.setFpsLimit(fps);
+      expect(s.fpsLimit()).toBe(fps);
+    }
+  });
+
+  it("offers the caps the settings screen advertises", () => {
+    expect([...FPS_LIMIT_OPTIONS]).toEqual([0, 30, 60, 90, 120, 144, 165, 180]);
+  });
+
+  it("falls back to auto for a cap that is not offered", () => {
+    const s = new UserSettings();
+    s.setFpsLimit(75);
+    expect(s.fpsLimit()).toBe(0);
+  });
+
+  it("falls back to auto when storage holds a non-numeric value", () => {
+    localStorage.setItem("settings.fpsLimit", "not-a-number");
+    expect(new UserSettings().fpsLimit()).toBe(0);
   });
 });

@@ -1,3 +1,13 @@
+## OpenBack v0.34.140 - Menu Everywhere and Chosen Frame Rate
+
+- Made the phone menu button stay on screen on every tab instead of only the Play screen, so News, Tutorials, Blog, Clans, Leaderboard, Store, Settings, and account pages can all reach the main menu without returning to Play first.
+- Added a phone back button beside the menu button that steps out one level at a time: from a page's own top level it returns to Play, while a page showing an inner view closes that view first.
+- Kept every sub-page clear of the persistent top bar so no page begins underneath the menu and back controls.
+- Added a frame rate limit setting offering 30, 60, 90, 120, 144, 165, and 180 frames per second, replacing the fixed 60 frames per second cap that phones and tablets were locked to.
+- Measured the screen's real refresh rate when the settings screen opens and marked the limits it cannot reach, so a chosen limit never silently does nothing.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.139 - Restored Classic Battlefield Art
 
 - Restored immediate 2D rendering for Cities, Ports, defenses, trains, ships, Aircraft, Tanks, and every other classic battlefield model by correcting the shared WebGL texture state that silently rejected their draw calls.

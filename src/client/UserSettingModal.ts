@@ -1,7 +1,11 @@
 import { html } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { formatKeyForDisplay, translateText } from "../client/Utils";
-import { getDefaultKeybinds, UserSettings } from "../core/game/UserSettings";
+import {
+  FPS_LIMIT_OPTIONS,
+  getDefaultKeybinds,
+  UserSettings,
+} from "../core/game/UserSettings";
 import "./components/baseComponents/setting/SettingKeybind";
 import { SettingKeybind } from "./components/baseComponents/setting/SettingKeybind";
 import "./components/baseComponents/setting/SettingNumber";
@@ -274,6 +278,18 @@ export class UserSettingModal extends BaseModal {
     } else {
       console.warn("Slider event missing detail.value", e);
     }
+  }
+
+  private changeFpsLimit(e: CustomEvent<{ value: number | string }>) {
+    const rawValue = e.detail?.value;
+    const value =
+      typeof rawValue === "number" ? rawValue : parseInt(String(rawValue), 10);
+    if (!Number.isFinite(value)) {
+      console.warn("Select event missing detail.value", e);
+      return;
+    }
+    this.userSettings.setFpsLimit(value);
+    this.requestUpdate();
   }
 
   private changeAttackRatioIncrement(
@@ -849,6 +865,19 @@ export class UserSettingModal extends BaseModal {
         .checked=${this.userSettings.performanceOverlay()}
         @change=${this.togglePerformanceOverlay}
       ></setting-toggle>
+
+      <!-- 🎞️ Frame rate limit -->
+      <setting-select
+        label=${translateText("user_setting.fps_limit")}
+        description=${translateText("user_setting.fps_limit_desc")}
+        .options=${FPS_LIMIT_OPTIONS.map((fps) => ({
+          value: fps,
+          label:
+            fps === 0 ? translateText("user_setting.fps_auto") : `${fps} FPS`,
+        }))}
+        .value=${String(this.userSettings.fpsLimit())}
+        @change=${this.changeFpsLimit}
+      ></setting-select>
 
       <!-- ⚔️ Attack Ratio -->
       <setting-slider
