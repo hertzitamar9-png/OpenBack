@@ -1,3 +1,9 @@
+## OpenBack v0.34.143 - Restored Required Copyright Notice
+
+- Restored the required "© OpenFront and Contributors" notice in the footer alongside the OpenBack modification credit, as the licence's additional terms require that notice to be preserved rather than replaced.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.142 - Phone Controls Sized For Fingers
 
 - Enlarged the settings sliders, which drew an eight pixel tall track that was close to impossible to grab on a phone, to a full finger-sized control without changing how they look.
