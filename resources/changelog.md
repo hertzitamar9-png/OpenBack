@@ -1,3 +1,11 @@
+## OpenBack v0.34.142 - Phone Controls Sized For Fingers
+
+- Enlarged the settings sliders, which drew an eight pixel tall track that was close to impossible to grab on a phone, to a full finger-sized control without changing how they look.
+- Enlarged every settings dropdown, the modal back buttons, the phone menu and back buttons, and the home screen name and clan tag fields to the standard forty-four pixel touch size.
+- Confirmed the home screen, settings, and tutorials pages fit a phone with no sideways scrolling after the change.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.141 - Back Steps Out One Level
 
 - Made the phone back button actually step out one level at a time on every page that has inner views: reading a tutorial or blog post returns to that tab's article list, a clan sub-view returns to the clan, and only a press from a tab's own top level returns to Play.

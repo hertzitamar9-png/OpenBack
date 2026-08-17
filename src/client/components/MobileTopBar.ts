@@ -90,7 +90,7 @@ export class MobileTopBar extends LitElement {
           <div class="col-start-1 justify-self-start flex items-center gap-1">
             <button
               id="hamburger-btn"
-              class="h-10 shrink-0 aspect-[4/3] flex text-white/90 rounded-md items-center justify-center transition-colors"
+              class="h-11 shrink-0 aspect-[4/3] flex text-white/90 rounded-md items-center justify-center transition-colors"
               data-i18n-aria-label="main.menu"
               aria-expanded="false"
               aria-controls="sidebar-menu"
@@ -116,7 +116,7 @@ export class MobileTopBar extends LitElement {
               ? html`
                   <button
                     id="mobile-back-btn"
-                    class="h-10 shrink-0 aspect-[4/3] flex text-white/90 rounded-md items-center justify-center transition-colors"
+                    class="h-11 shrink-0 aspect-[4/3] flex text-white/90 rounded-md items-center justify-center transition-colors"
                     data-i18n-aria-label="main.back"
                     data-i18n-title="main.back"
                     @click=${() => this.goBack()}
@@ -185,7 +185,7 @@ export class MobileTopBar extends LitElement {
             : html`
                 <div
                   aria-hidden="true"
-                  class="col-start-3 justify-self-end h-10 shrink-0 aspect-[4/3]"
+                  class="col-start-3 justify-self-end h-11 shrink-0 aspect-[4/3]"
                 ></div>
               `}
         </div>

@@ -197,11 +197,38 @@ textarea:focus-visible {
     font-size: 16px;
   }
 
+  /* A fingertip needs roughly 44px. Settings controls came in well under that:
+     a range input renders an 8px-tall track, which is close to ungrabbable on
+     a phone, and the dropdowns sat at 37-41px. Grow the hit area without
+     changing how the controls look. */
+  select {
+    min-height: 44px;
+  }
+
+  input[type="range"] {
+    min-height: 44px;
+    /* The track keeps its own height; this only enlarges what a finger can
+       land on, so the slider still looks the same. */
+    background-clip: content-box;
+  }
+
   button,
   [role="button"],
   a {
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Modal back buttons are a primary phone control and were 40px square. */
+  [data-modal-back] {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* The name and clan-tag fields on the home screen are the first things a
+     player touches and were only 24px tall. */
+  #page-play input[type="text"] {
+    min-height: 44px;
   }
 
   o-modal [data-modal-scroll] {
