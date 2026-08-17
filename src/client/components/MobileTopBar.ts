@@ -10,11 +10,12 @@ import { crazyGamesSDK } from "../CrazyGamesSDK";
  * so switching to any other tab hid `page-play` and took the menu button with
  * it, leaving no way to reach the menu from News, Clans, Settings and so on.
  *
- * The back button appears only on sub-pages. It asks the active page to close
- * its own inner view first by dispatching a cancelable `openback-back` event:
- * a page showing a single tutorial can consume it to return to the tutorial
- * list, so back walks out one level at a time and only leaves for Play once
- * the page is at its own top level.
+ * The back button appears only on sub-pages and steps out one level at a time:
+ * from a page showing a single tutorial it returns to the tutorial list, and
+ * only from a page's own top level does it return to Play. It does that by
+ * driving the page's existing header back button, so each page keeps the one
+ * definition of its own hierarchy. Pages without a modal header can instead
+ * claim the press by cancelling the `openback-back` event.
  */
 @customElement("mobile-top-bar")
 export class MobileTopBar extends LitElement {
@@ -41,14 +42,40 @@ export class MobileTopBar extends LitElement {
   }
 
   private goBack() {
-    const pageId = window.currentPageId ?? "page-play";
+    // Act on the page actually on screen rather than on `currentPageId`, which
+    // a page can leave stale when it closes or redirects itself. Otherwise the
+    // press is aimed at the wrong page and skips a level.
+    const page =
+      document.querySelector<HTMLElement>(".page-content:not(.hidden)") ??
+      document.getElementById(window.currentPageId ?? "page-play");
+    const pageId = page?.id ?? window.currentPageId ?? "page-play";
+
+    // Reuse the page's own header back button. Every modal already encodes its
+    // hierarchy there (an open article returns to the article list, a clan
+    // sub-view returns to the clan, and the top level closes), so driving that
+    // button keeps one definition of "one level out" instead of a second copy
+    // here that would drift.
+    const innerBack =
+      page?.querySelector<HTMLButtonElement>("[data-modal-back]");
+    if (innerBack) {
+      innerBack.click();
+      // If that press closed the page rather than stepping inside it, put the
+      // navigation state back on Play so the tabs agree with what is shown.
+      requestAnimationFrame(() => {
+        if (!page || page.classList.contains("hidden")) {
+          window.showPage?.("page-play");
+        }
+      });
+      return;
+    }
+
+    // Pages without a modal header can still claim the press themselves.
     const handled = !window.dispatchEvent(
       new CustomEvent("openback-back", {
         detail: pageId,
         cancelable: true,
       }),
     );
-    // Nothing claimed the press, so this page was already at its top level.
     if (!handled) window.showPage?.("page-play");
   }
 

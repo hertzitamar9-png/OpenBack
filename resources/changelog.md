@@ -1,3 +1,10 @@
+## OpenBack v0.34.141 - Back Steps Out One Level
+
+- Made the phone back button actually step out one level at a time on every page that has inner views: reading a tutorial or blog post returns to that tab's article list, a clan sub-view returns to the clan, and only a press from a tab's own top level returns to Play.
+- Aimed the back button at the page currently on screen instead of the last page the menu recorded, so a page that closes or redirects itself can no longer make one press skip a level.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.140 - Menu Everywhere and Chosen Frame Rate
 
 - Made the phone menu button stay on screen on every tab instead of only the Play screen, so News, Tutorials, Blog, Clans, Leaderboard, Store, Settings, and account pages can all reach the main menu without returning to Play first.
