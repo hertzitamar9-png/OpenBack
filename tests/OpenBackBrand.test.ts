@@ -1,4 +1,5 @@
-import en from "../resources/lang/en.json";
+// The shipped strings are upstream's file plus the OpenBack overlay.
+import { englishTranslations as en } from "../src/client/openback/Translations";
 import { applyOpenBackBrand } from "../src/client/Utils";
 
 // The UI rebrands upstream product references, but some strings exist to
@@ -17,7 +18,7 @@ describe("OpenBack rebranding leaves required licence notices alone", () => {
   });
 
   it("preserves the upstream copyright notice verbatim", () => {
-    const notice = en.main.copyright;
+    const notice = (en.main as Record<string, string>).copyright;
     expect(notice).toContain("© OpenFront and Contributors");
     expect(applyOpenBackBrand("main.copyright", notice)).toBe(notice);
   });
@@ -34,6 +35,8 @@ describe("OpenBack rebranding leaves required licence notices alone", () => {
 
   it("ships a copyright string that still credits upstream", () => {
     // Guards against the notice being edited back to OpenBack-only wording.
-    expect(en.main.copyright).toMatch(/OpenFront and Contributors/);
+    expect((en.main as Record<string, string>).copyright).toMatch(
+      /OpenFront and Contributors/,
+    );
   });
 });

@@ -2,6 +2,7 @@ import fs from "fs";
 import IntlMessageFormat from "intl-messageformat";
 import path from "path";
 import ts from "typescript";
+import { applyTranslationOverlay } from "../src/client/openback/Translations";
 
 const PROJECT_ROOT = path.join(__dirname, "..");
 const LANGUAGE_DIR = path.join(PROJECT_ROOT, "resources", "lang");
@@ -134,10 +135,19 @@ function loadTranslationFiles(): {
       continue;
     }
 
+    // The OpenBack overlay carries directives alongside strings ($comment, and
+    // $remove listing upstream keys we drop). They are not translations, so
+    // they are excluded before validating message syntax.
+    const withoutDirectives = Object.fromEntries(
+      Object.entries(parsed as Record<string, unknown>).filter(
+        ([key]) => !key.startsWith("$"),
+      ),
+    );
+
     files.push({
       file,
       flatMessages: flattenTranslations(
-        parsed as NestedTranslations,
+        withoutDirectives as NestedTranslations,
         file,
         "",
         {},
@@ -515,8 +525,14 @@ describe("Translation System", () => {
   });
 
   test("en.json keys stay in sync with source usage", () => {
+    // Upstream's file plus the OpenBack overlay is what the game actually
+    // ships, so source usage is checked against the merged result.
     const enJsonPath = path.join(LANGUAGE_DIR, "en.json");
-    const enJson = JSON.parse(fs.readFileSync(enJsonPath, "utf-8"));
+    const overlayPath = path.join(LANGUAGE_DIR, "en.openback.json");
+    const enJson = applyTranslationOverlay(
+      JSON.parse(fs.readFileSync(enJsonPath, "utf-8")),
+      JSON.parse(fs.readFileSync(overlayPath, "utf-8")),
+    );
     const allKeys = flattenKeys(enJson);
     const enKeySet = new Set(allKeys);
     const rootKeys = new Set(Object.keys(enJson as Record<string, unknown>));

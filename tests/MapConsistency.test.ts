@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { applyTranslationOverlay } from "../src/client/openback/Translations";
 import {
   type CustomTribe,
   GameMapName,
@@ -20,6 +21,12 @@ const ROOT = path.resolve(__dirname, "..");
 const MAP_GEN_MAPS = path.join(ROOT, "map-generator", "assets", "maps");
 const RESOURCES_MAPS = path.join(ROOT, "resources", "maps");
 const EN_JSON = path.join(ROOT, "resources", "lang", "en.json");
+const EN_OPENBACK_JSON = path.join(
+  ROOT,
+  "resources",
+  "lang",
+  "en.openback.json",
+);
 
 const allMapKeys = Object.keys(GameMapType) as GameMapName[];
 
@@ -49,7 +56,11 @@ const EN_JSON_META_KEYS = new Set([
 
 /** Get the en.json "map" section. */
 function getEnJsonMapSection(): Record<string, string> {
-  const content = JSON.parse(fs.readFileSync(EN_JSON, "utf8"));
+  // en.json is upstream's file; OpenBack's own map names live in the overlay.
+  // Merge them exactly as the game does so this checks the shipped strings.
+  const upstream = JSON.parse(fs.readFileSync(EN_JSON, "utf8"));
+  const overlay = JSON.parse(fs.readFileSync(EN_OPENBACK_JSON, "utf8"));
+  const content = applyTranslationOverlay(upstream, overlay);
   return content.map as Record<string, string>;
 }
 

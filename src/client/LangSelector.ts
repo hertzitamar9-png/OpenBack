@@ -5,8 +5,10 @@ import "./LanguageModal";
 import { LanguageModal } from "./LanguageModal";
 import { applyOpenBackBrand, formatDebugTranslation } from "./Utils";
 
-import en from "../../resources/lang/en.json" with { type: "json" };
+// English comes from upstream's file plus the OpenBack overlay, so
+// resources/lang/en.json can stay exactly as upstream ships it.
 import metadata from "../../resources/lang/metadata.json" with { type: "json" };
+import { englishTranslations as en } from "./openback/Translations";
 
 type LanguageMetadata = {
   code: string;

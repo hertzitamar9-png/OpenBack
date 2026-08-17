@@ -40,6 +40,17 @@ rules win without touching a single upstream line.
 Divergence in `styles.css` went from ~500 lines to exactly one (a font-family
 rename that has to stay inside upstream's `@theme` block).
 
+**Done: English translations.** `resources/lang/en.json` is upstream's file,
+byte-identical. OpenBack's 313 added strings, 25 changed values and 60 dropped
+keys live in `resources/lang/en.openback.json` and are merged over it by
+`src/client/openback/Translations.ts`. The overlay supports a `$remove` list so
+strings for features OpenBack does not ship can be dropped without editing
+upstream's file.
+
+The merge is exported as `applyTranslationOverlay`, and the tests use that same
+function, so a test can never validate different strings from the ones the game
+renders.
+
 ### 2. Override, don't rewrite
 
 When OpenBack changes an upstream rule, re-declare it in the OpenBack file
@@ -71,14 +82,14 @@ fingerprint diff made it obvious; a visual check would not have.
 
 Ranked by lines OpenBack changed inside upstream files:
 
-| File                               | Lines added / removed | Approach                                                                            |
-| ---------------------------------- | --------------------- | ----------------------------------------------------------------------------------- |
-| `resources/lang/en.json`           | +348 / -91            | Overlay: keep upstream file pristine, deep-merge `en.openback.json` over it at load |
-| `src/client/render/gl/Renderer.ts` | +459 / -40            | Hard. Real behaviour fork; needs hooks, not extraction                              |
-| `index.html`                       | +32 commits           | Inject OpenBack elements at runtime instead of editing markup                       |
-| `src/client/Main.ts`               | +30 commits           | Collapse to a single `import "./openback/Bootstrap"`                                |
-| `src/client/AccountModal.ts`       | +976 / -474           | Likely a genuine fork; evaluate separately                                          |
-| `resources/changelog.md`           | +1130 / -493          | Keep OpenBack notes in their own file                                               |
+| File | Lines added / removed | Approach |
+| ---- | --------------------- | -------- |
+
+| `src/client/render/gl/Renderer.ts` | +459 / -40 | Hard. Real behaviour fork; needs hooks, not extraction |
+| `index.html` | +32 commits | Inject OpenBack elements at runtime instead of editing markup |
+| `src/client/Main.ts` | +30 commits | Collapse to a single `import "./openback/Bootstrap"` |
+| `src/client/AccountModal.ts` | +976 / -474 | Likely a genuine fork; evaluate separately |
+| `resources/changelog.md` | +1130 / -493 | Keep OpenBack notes in their own file |
 
 Renderer and shader changes are the genuinely hard cases: they alter upstream
 behaviour rather than adding to it, so they need extension points upstream does
