@@ -78,22 +78,30 @@ inside upstream's `body` rule were copied out without their selector, producing
 invalid CSS that silently changed the page background and text colour. The
 fingerprint diff made it obvious; a visual check would not have.
 
-## Remaining work, worst first
+## What can and cannot be separated
 
-Ranked by lines OpenBack changed inside upstream files:
+Separation works when OpenBack **adds** to upstream. It fails when OpenBack
+**removes** upstream code, because no external file can un-load a script tag or
+un-import a module. Those deletions have to stay in upstream's file, so the file
+can never go pristine.
 
-| File | Lines added / removed | Approach |
-| ---- | --------------------- | -------- |
+Rank candidates by conflict risk, not by lines changed. `changelog.md` is
++1130/-493 but upstream has never touched it since the fork and it does not
+appear in the conflict set at all; separating it would be pure churn.
 
-| `src/client/render/gl/Renderer.ts` | +459 / -40 | Hard. Real behaviour fork; needs hooks, not extraction |
-| `index.html` | +32 commits | Inject OpenBack elements at runtime instead of editing markup |
-| `src/client/Main.ts` | +30 commits | Collapse to a single `import "./openback/Bootstrap"` |
-| `src/client/AccountModal.ts` | +976 / -474 | Likely a genuine fork; evaluate separately |
-| `resources/changelog.md` | +1130 / -493 | Keep OpenBack notes in their own file |
+| File                         | Shape                                                    | Verdict                                          |
+| ---------------------------- | -------------------------------------------------------- | ------------------------------------------------ |
+| `src/client/styles.css`      | additive + overridable                                   | **Done.** 2 lines from upstream                  |
+| `resources/lang/en.json`     | additive + overridable                                   | **Done.** Byte-identical                         |
+| `resources/changelog.md`     | large but never conflicts                                | Leave alone                                      |
+| `index.html`                 | +176/-123, removes CrazyGames SDK, Turnstile, ad scripts | Not separable; the removals are the point        |
+| `src/client/Main.ts`         | +213/-238, removes 16 upstream imports                   | Not separable for the same reason                |
+| `src/client/render/**`       | 110 commits changing upstream behaviour                  | Needs extension points upstream does not provide |
+| `src/client/AccountModal.ts` | +976/-474                                                | Probably a genuine fork                          |
 
-Renderer and shader changes are the genuinely hard cases: they alter upstream
-behaviour rather than adding to it, so they need extension points upstream does
-not currently provide.
+The renderer is the only remaining case with real upside, and it is not a
+file-moving exercise: it needs hooks designed into the render passes so OpenBack
+can alter behaviour without editing them. That is a design job, not a refactor.
 
 ## Rule of thumb
 
