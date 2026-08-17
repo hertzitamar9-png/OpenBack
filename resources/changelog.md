@@ -1,3 +1,10 @@
+## OpenBack v0.34.144 - Licence Notices Reach The Screen
+
+- Fixed the automatic renaming of upstream product references, which was also rewriting the required "© OpenFront and Contributors" notice into an OpenBack one before it reached the screen, leaving the footer and loading screen showing the wrong credit no matter what the text said.
+- Protected every notice that carries a copyright symbol or credits OpenFront Inc. from that renaming, so a notice added later cannot silently lose its required wording.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.143 - Complete Licence Notices
 
 - Restored the required "© OpenFront and Contributors" notice in the footer alongside the OpenBack modification credit, as the licence's additional terms require that notice to be preserved rather than replaced.

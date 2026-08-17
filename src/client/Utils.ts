@@ -18,10 +18,27 @@ import { Platform } from "./Platform";
 export const TUTORIAL_VIDEO_URL = "https://www.youtube.com/embed/7J5zwb_s_Cg";
 
 /**
+ * Strings that must reach the screen exactly as written, because a licence
+ * requires that wording. The licence's section 7(b) additional term obliges
+ * modified versions to preserve "© OpenFront and Contributors", and the asset
+ * licence requires crediting OpenFront Inc., so rebranding either would be a
+ * breach rather than a cosmetic change.
+ */
+const LEGAL_NOTICE_KEYS: ReadonlySet<string> = new Set([
+  "main.copyright",
+  "game_starting_modal.code_license",
+]);
+
+/**
  * Rebrand user-facing upstream product references. Source URLs and legal
  * attribution remain intact; only the name rendered in the OpenBack UI changes.
  */
-export function applyOpenBackBrand(_key: string, text: string): string {
+export function applyOpenBackBrand(key: string, text: string): string {
+  if (LEGAL_NOTICE_KEYS.has(key)) return text;
+  // Belt and braces: any string carrying a copyright sign or an explicit
+  // licence credit is a notice, so a future key cannot silently lose its
+  // required wording by being added without updating the list above.
+  if (text.includes("©") || /OpenFront Inc\./.test(text)) return text;
   return text
     .replace(/OpenFront\.io/g, "OpenBack")
     .replace(/Openfront\.io/g, "OpenBack")
