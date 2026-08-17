@@ -1,3 +1,10 @@
+## OpenBack v0.34.145 - Cleared Out The Old Host
+
+- Removed the leftover configuration, redirects, and environment handling for the previous hosting provider, which the game no longer runs on and which could still have redirected players to a retired address.
+- Kept the checks that still matter, so the site continues to record the exact version it is running and to shut down cleanly on restart.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.144 - Licence Notices Reach The Screen
 
 - Fixed the automatic renaming of upstream product references, which was also rewriting the required "© OpenFront and Contributors" notice into an OpenBack one before it reached the screen, leaving the footer and loading screen showing the wrong credit no matter what the text said.

@@ -221,9 +221,7 @@ const cosmetics = CosmeticsSchema.parse(cosmeticsJson);
 const tribeNameConfig = cosmetics.tribeNames;
 const TRIBE_PURCHASE_RATE_LIMIT_MS = 5_000;
 const databaseUrl = process.env.DATABASE_URL;
-const ephemeralHostedRuntime =
-  process.env.RENDER === "true" || Boolean(process.env.RENDER_SERVICE_ID);
-requireDurableAuthStorage(ServerEnv.env(), databaseUrl, ephemeralHostedRuntime);
+requireDurableAuthStorage(ServerEnv.env(), databaseUrl);
 const database = databaseUrl
   ? new Pool({
       connectionString: databaseUrl,

@@ -7,16 +7,9 @@ describe("ServerEnv.gitCommit", () => {
     vi.unstubAllEnvs();
   });
 
-  test("uses Render's deployed commit instead of a stale manual value", () => {
-    vi.stubEnv("GIT_COMMIT", "old-manual-commit");
-    vi.stubEnv("RENDER_GIT_COMMIT", "current-render-commit");
-    expect(ServerEnv.gitCommit()).toBe("current-render-commit");
-  });
-
-  test("keeps the explicit commit outside Render", () => {
-    vi.stubEnv("GIT_COMMIT", "local-commit");
-    vi.stubEnv("RENDER_GIT_COMMIT", "");
-    expect(ServerEnv.gitCommit()).toBe("local-commit");
+  test("uses the commit baked in at build time", () => {
+    vi.stubEnv("GIT_COMMIT", "built-commit");
+    expect(ServerEnv.gitCommit()).toBe("built-commit");
   });
 });
 
@@ -90,13 +83,6 @@ describe("ServerEnv.jwtAudience", () => {
     vi.stubEnv("DOMAIN", "");
     expect(ServerEnv.jwtAudience()).toBe("http://localhost:9000");
   });
-
-  test("does not expose Render's generated hostname as the public origin", () => {
-    vi.stubEnv("PUBLIC_ORIGIN", "");
-    vi.stubEnv("AUTH_ORIGIN", "");
-    vi.stubEnv("DOMAIN", "openback-cbe3.onrender.com");
-    expect(ServerEnv.jwtAudience()).toBe("https://openback.servegame.com");
-  });
 });
 
 describe("ServerEnv.jwtIssuer", () => {
@@ -121,12 +107,19 @@ describe("ServerEnv.cdnBase", () => {
     vi.unstubAllEnvs();
   });
 
-  test("uses the branded origin when a stale Render hostname is configured", () => {
+  test("uses the configured CDN origin when one is set", () => {
+    vi.stubEnv("CDN_BASE", "https://cdn.example.com");
+    expect(ServerEnv.cdnBase()).toBe("https://cdn.example.com");
+  });
+
+  test("falls back to the site origin, which must stay absolute", () => {
+    // The game worker is inlined as a same-origin Blob and cannot resolve
+    // root-relative URLs, so map binaries need a full origin to load.
     vi.stubEnv("CDN_BASE", "");
     vi.stubEnv("PUBLIC_ORIGIN", "");
     vi.stubEnv("AUTH_ORIGIN", "");
-    vi.stubEnv("DOMAIN", "openback-cbe3.onrender.com");
-    expect(ServerEnv.cdnBase()).toBe("https://openback.servegame.com");
+    vi.stubEnv("DOMAIN", "openback.dedyn.io");
+    expect(ServerEnv.cdnBase()).toBe("https://openback.dedyn.io");
   });
 });
 

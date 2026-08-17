@@ -118,10 +118,6 @@ export class ServerEnv {
       "",
     );
     if (!domain || domain === "localhost") return "http://localhost:9000";
-    // Render may retain its generated hostname in an older service-level env
-    // even after a custom subdomain is attached. Never leak that hostname into
-    // auth tokens, invite links, canonical tags, robots, or sitemaps.
-    if (domain.endsWith(".onrender.com")) return ServerEnv.brandedOrigin;
     return `https://${domain}`;
   }
 
@@ -233,14 +229,9 @@ export class ServerEnv {
     return process.env.OTEL_AUTH_HEADER ?? "";
   }
   static gitCommit(): string {
-    // Render supplies the exact source revision for every deploy. Prefer it
-    // over the legacy manual value so the client cannot advertise an old
-    // revision after a newer container is running.
-    const renderCommit = process.env.RENDER_GIT_COMMIT;
-    const v =
-      renderCommit !== undefined && renderCommit.length > 0
-        ? renderCommit
-        : process.env.GIT_COMMIT;
+    // Baked in at image build time, so the client can never advertise an older
+    // revision than the container actually runs.
+    const v = process.env.GIT_COMMIT;
     if (!v) {
       throw new Error("GIT_COMMIT not set");
     }

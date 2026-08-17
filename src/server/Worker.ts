@@ -124,18 +124,6 @@ export async function startWorker() {
 
   app.set("trust proxy", 3);
 
-  // Redirect Render's default *.onrender.com domain to the custom domain so
-  // only the branded subdomain is used.
-  const canonicalDomain = ServerEnv.canonicalHostname();
-  app.use((req, res, next) => {
-    const host = (req.headers.host?.split(":", 1)[0] ?? "").toLowerCase();
-    if (host.endsWith(".onrender.com") && host !== canonicalDomain) {
-      const target = `https://${canonicalDomain}${req.originalUrl}`;
-      return res.redirect(301, target);
-    }
-    next();
-  });
-
   app.use(compression());
 
   app.use(
