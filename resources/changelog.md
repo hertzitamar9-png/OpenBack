@@ -1,6 +1,9 @@
-## OpenBack v0.34.143 - Restored Required Copyright Notice
+## OpenBack v0.34.143 - Complete Licence Notices
 
 - Restored the required "© OpenFront and Contributors" notice in the footer alongside the OpenBack modification credit, as the licence's additional terms require that notice to be preserved rather than replaced.
+- Restored the same required notice on the game loading screen, which the licence names as one of the places the notice must appear.
+- Added the missing attribution for the inherited game artwork, which is shared under Creative Commons BY-SA 4.0 and requires crediting OpenFront Inc., together with a plain statement that OpenBack is a modified version rather than an official release.
+- Added a Credits link to the footer so the full attribution and licence notices can be reached from every screen instead of only while a match loads.
 
 Created by **frootz jhklphy**.
 

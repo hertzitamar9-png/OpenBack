@@ -24,10 +24,13 @@ export class GameStartingModal extends LitElement {
           ? "opacity-100 visible -translate-y-1/2"
           : "opacity-0 invisible -translate-y-[48%]"}"
       >
+        <!-- The loading screen is one of the surfaces the licence's additional
+             terms name for preserving the upstream copyright notice, so it
+             shares the same string as the footer instead of its own text. -->
         <div
           class="text-base font-medium tracking-wider uppercase text-white/40 mb-3"
         >
-          © OpenBack and Contributors
+          ${translateText("main.copyright")}
         </div>
         <a
           href="https://github.com/hertzitamar9-png/OpenBack/blob/main/CREDITS.md"

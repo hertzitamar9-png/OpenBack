@@ -57,6 +57,16 @@ export class Footer extends LitElement {
             data-i18n="main.terms_of_service"
           ></button>
           <span class="shrink-0" data-i18n="main.copyright"></span>
+          <!-- Credits carry the upstream and asset attributions the licences
+               require. Reachable from every page, not only while a game
+               loads. -->
+          <a
+            href="https://github.com/hertzitamar9-png/OpenBack/blob/main/CREDITS.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="shrink-0 hover:text-white transition-colors"
+            data-i18n="main.credits"
+          ></a>
           <button
             type="button"
             class="nav-menu-item shrink-0 hover:text-white transition-colors cursor-pointer"

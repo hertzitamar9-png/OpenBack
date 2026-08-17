@@ -10,6 +10,24 @@ OpenBack modifications by **frootz jhklphy** and contributors.
 OpenFront is licensed under AGPL-3.0.  
 See [Contributors](https://github.com/openfrontio/OpenFrontIO/graphs/contributors) for code contributors.
 
+© OpenFront and Contributors. OpenBack is a modified version of OpenFrontIO and
+is not an official OpenFront release or endorsed by OpenFront Inc. The complete
+corresponding source for the version served over the network is available at
+<https://github.com/hertzitamar9-png/OpenBack>.
+
+## Game Assets
+
+Inherited game assets under `resources/` originate from **OpenFront Inc.** and
+are licensed under
+[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). Attribution:
+**OpenFront Inc.** OpenBack's modifications to those assets are shared under the
+same CC BY-SA 4.0 terms.
+
+Upstream proprietary assets — anything in OpenFront's `proprietary/` folder, and
+premium skins, models, textures, sound effects, and music served from OpenFront's
+CDN, database, or API — are All Rights Reserved by OpenFront Inc., are **not**
+covered by the open licences, and are not redistributed by OpenBack.
+
 ## Map Data
 
 ### OpenBack Fictional Maps
