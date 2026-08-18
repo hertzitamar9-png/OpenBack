@@ -1,3 +1,10 @@
+## OpenBack v0.34.165 - A Cleaner Code
+
+- Set the login code in the game's own interface font instead of a typewriter face, so the digits read evenly and clearly.
+- Made the OpenBack logo in the email larger and sharper.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.164 - Names For The New Maps
 
 - Gave the seventeen maps added in the last update their proper display names, so they read as names like "Grand Earth" and "Shattered Expanse" in the map picker instead of their internal ids.

@@ -935,8 +935,9 @@ export function buildCodeEmail(
                         padding:32px 28px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
             <tr>
               <td align="center" style="padding-bottom:16px;">
-                <img src="${CODE_EMAIL_LOGO}" width="72" height="72" alt="OpenBack"
-                     style="display:block;border:0;border-radius:18px;" />
+                <img src="${CODE_EMAIL_LOGO}" width="96" height="96" alt="OpenBack"
+                     style="display:block;border:0;border-radius:24px;
+                            -ms-interpolation-mode:bicubic;" />
               </td>
             </tr>
             <tr>
@@ -954,8 +955,9 @@ export function buildCodeEmail(
             <tr>
               <td align="center" style="padding-bottom:24px;">
                 <div style="display:inline-block;background:#0a1424;border-radius:12px;
-                            padding:18px 28px;font-family:'Courier New',Courier,monospace;
-                            font-size:44px;line-height:52px;font-weight:700;letter-spacing:10px;
+                            padding:20px 30px 20px 34px;
+                            font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+                            font-size:42px;line-height:50px;font-weight:700;letter-spacing:6px;
                             color:#4fd1ff;">
                   ${code}
                 </div>
