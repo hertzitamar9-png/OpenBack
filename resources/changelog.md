@@ -1,3 +1,11 @@
+## OpenBack v0.34.153 - Water That Catches The Light
+
+- Lit the sea by the shape of its own surface, the same way the land is lit, so crests catch the light and troughs fall into shade and the water finally reads as moving water rather than a flat blue sheet.
+- Shortened the swells so waves rise and fall over a readable distance instead of stretching so far that the surface was almost level.
+- Put the white caps on the steep faces of real waves rather than scattering them, removing the pale oval blobs drifting across open water in 3D.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.152 - Real Moving Sea, No More Dark Patches
 
 - Removed the dark brown patches that appeared all over open water in 3D, caused by the solid board beneath the map surfacing through the deeper wave troughs.

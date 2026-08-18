@@ -255,6 +255,10 @@ uniform float uTideHeight;
 uniform float uWaveStrength;
 out vec2 vWorld;
 out float vWave;
+// Surface normal of the wave field, built the same way the terrain builds its
+// own: finite differences of height around the vertex. Without this the water
+// is lit uniformly and reads as a flat sheet however far the geometry moves.
+out vec3 vWaveNormal;
 // Slow, large-scale variation so the sea is not one uniform swell: some
 // stretches run high and some stay comparatively calm, and the pattern drifts.
 float swellRegion(vec2 p,float phase){
@@ -264,11 +268,14 @@ float swellRegion(vec2 p,float phase){
   return 1.0+0.55*(a*0.6+b*0.4);
 }
 float gerstnerWave(vec2 p,float phase){
-  float broad=sin(dot(p,vec2(0.090,0.034))+phase*0.075);
-  float cross=sin(dot(p,vec2(-0.052,0.112))-phase*0.052);
-  float swell=sin(dot(p,vec2(0.020,-0.036))+phase*0.031);
+  // Wavelengths around 35 world units. At the previous ~70 a two-unit crest
+  // spanned a 1:35 slope, so the surface was geometrically almost flat and
+  // nothing lit it; the mesh still carries about 6.7 vertices per wave here.
+  float broad=sin(dot(p,vec2(0.180,0.068))+phase*0.075);
+  float cross=sin(dot(p,vec2(-0.104,0.224))-phase*0.052);
+  float swell=sin(dot(p,vec2(0.040,-0.072))+phase*0.031);
   // A short chop rides on the long swell so crests are not all the same size.
-  float chop=sin(dot(p,vec2(0.210,0.170))+phase*0.140)*0.16;
+  float chop=sin(dot(p,vec2(0.420,0.340))+phase*0.140)*0.16;
   float body=broad*0.46+cross*0.29+swell*0.25+chop;
   return body*uWaveStrength*swellRegion(p,phase);
 }
@@ -276,7 +283,22 @@ void main(){
   vWorld=aPos.xz;
   // Interpolate the authoritative tick for smooth geometry without changing
   // any simulation state.
-  vWave=gerstnerWave(vWorld,uGameTick+fract(uTime*10.0));
+  float phase=uGameTick+fract(uTime*10.0);
+  vWave=gerstnerWave(vWorld,phase);
+
+  // Sample the wave a short distance either side to get the slope. The
+  // spacing is in world units, so the 2.0*e term keeps the normal correctly
+  // proportioned exactly as the terrain shader does with unit spacing.
+  // Must stay well inside one wavelength, or the difference averages the crest
+  // away and reports a flatter surface than the water actually has.
+  const float e=1.5;
+  float scale=${THREE_D_WAVE_HEIGHT_SCALE.toFixed(1)};
+  float hx0=gerstnerWave(vWorld-vec2(e,0.0),phase)*scale;
+  float hx1=gerstnerWave(vWorld+vec2(e,0.0),phase)*scale;
+  float hz0=gerstnerWave(vWorld-vec2(0.0,e),phase)*scale;
+  float hz1=gerstnerWave(vWorld+vec2(0.0,e),phase)*scale;
+  vWaveNormal=normalize(vec3(hx0-hx1,2.0*e,hz0-hz1));
+
   vec3 displaced=aPos;
   // Real vertical water: high crests rise, collapse at shore, and retreat with
   // the authoritative tide. Land remains a separate solid surface.
@@ -289,6 +311,7 @@ precision highp float;
 precision highp usampler2D;
 in vec2 vWorld;
 in float vWave;
+in vec3 vWaveNormal;
 uniform usampler2D uTerrain;
 uniform vec2 uMapSize;
 uniform float uTime;
@@ -311,16 +334,24 @@ void main(){
   vec3 deep=vec3(0.025,0.20,0.34);
   vec3 highlight=vec3(0.075,0.48,0.68);
   float shoreBreak=sin(vWorld.x*0.18+vWorld.y*0.13-uTime*1.8)*0.5+0.5;
-  // Open ocean gets only sparse, thin crest caps. The stronger white break is
-  // reserved for shoreline water so the board never becomes a tiled field of
-  // oversized white patches when viewed from above.
-  float openCrest=smoothstep(0.82,0.96,vWave)*0.16;
+  // Foam follows how steeply the surface is tilted, so it appears on the faces
+  // of real crests. Thresholding the wave value instead produced soft round
+  // patches, because a sum of sines peaks in blobs rather than in lines.
+  vec3 waveNormal=normalize(vWaveNormal);
+  vec2 waveSlope=vec2(-waveNormal.x,-waveNormal.z)/max(0.18,waveNormal.y);
+  float steepness=clamp(length(waveSlope),0.0,1.5);
+  float openCrest=smoothstep(0.22,0.42,steepness)*0.20;
   float coastalBreak=shoreline?smoothstep(0.58,0.90,shoreBreak)*0.72:0.0;
   float foamCrest=max(openCrest,coastalBreak);
   float crest=foamCrest;
   float shimmer=clamp(0.28+wave*0.10+fine*0.055+crest*0.24,0.12,0.68);
   vec3 water=mix(deep,highlight,shimmer);
   water=mix(water,vec3(0.92,0.98,1.0),foamCrest*0.78);
+  // Same directional lighting the terrain uses, so crests catch the light and
+  // troughs fall into shade: this is what makes the height readable.
+  float directional=clamp(0.5+dot(waveSlope,vec2(-0.68,-0.42))*0.9,0.0,1.0);
+  float lightLevel=clamp(0.62+directional*0.62,0.55,1.30);
+  water*=lightLevel;
   water*=mix(0.42,1.0,uDaylight);
   outColor=vec4(water,1.0);
 }`;
