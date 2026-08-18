@@ -1,3 +1,9 @@
+## OpenBack v0.34.168 - The Logo Travels With The Email
+
+- Attached the OpenBack logo to the login code email instead of linking to it, so it shows even in mail apps that refuse to load images from the web.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.167 - Log In Means Log In
 
 - Stopped Log in from accepting an email address that never signed up. It now says the address is not registered and sends you to Sign up, instead of quietly creating an account.

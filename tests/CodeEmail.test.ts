@@ -3,7 +3,10 @@
  * so the code rendered in whatever small default font the mail client used.
  */
 import { describe, expect, it } from "vitest";
-import { buildCodeEmail } from "../src/server/auth/AuthServer";
+import {
+  buildCodeEmail,
+  CODE_EMAIL_LOGO_CID,
+} from "../src/server/auth/AuthServer";
 
 describe("the login code email", () => {
   const { subject, text, html } = buildCodeEmail("928291", "sign-up");
@@ -27,6 +30,18 @@ describe("the login code email", () => {
       "https://openback.dedyn.io/icons/icon512_rounded.png",
     );
     expect(html).toContain('alt="OpenBack"');
+  });
+
+  it("can embed the logo instead of linking it", () => {
+    // Several clients block remote images, and Gmail blocks them outright on
+    // anything it filed as spam, so the SMTP path attaches its own copy.
+    const embedded = buildCodeEmail(
+      "928291",
+      "login",
+      `cid:${CODE_EMAIL_LOGO_CID}`,
+    );
+    expect(embedded.html).toContain(`src="cid:${CODE_EMAIL_LOGO_CID}"`);
+    expect(embedded.html).not.toContain("https://openback.dedyn.io/icons");
   });
 
   it("styles inline, since clients strip style blocks", () => {
