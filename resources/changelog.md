@@ -1,3 +1,11 @@
+## OpenBack v0.34.152 - Real Moving Sea, No More Dark Patches
+
+- Removed the dark brown patches that appeared all over open water in 3D, caused by the solid board beneath the map surfacing through the deeper wave troughs.
+- Doubled the detail of the ocean surface so waves bend the water properly instead of tilting it in wide flat sections.
+- Gave the sea varied weather: some stretches of ocean now run heavy while others stay calm, with a shorter chop riding over the long swell so crests are no longer all the same size.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.151 - Waves You Can Actually See
 
 - Raised the 3D wave crests so the sea visibly rises and falls beside the land instead of reading as a flat sheet, sized against real terrain heights rather than by eye.

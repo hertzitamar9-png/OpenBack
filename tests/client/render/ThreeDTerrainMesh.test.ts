@@ -7,6 +7,7 @@ import {
   buildWaterGrid,
   terrainEdgeCoordinates,
 } from "../../../src/client/render/gl/three-d/ThreeDTerrainMesh";
+import { THREE_D_WAVE_HEIGHT_SCALE } from "../../../src/core/world/ThreeDWorldCycle";
 
 describe("ThreeDTerrainMesh", () => {
   it("builds finite indexed terrain triangles", () => {
@@ -51,9 +52,32 @@ describe("ThreeDTerrainMesh", () => {
     for (const y of water.filter((_, index) => index % 3 === 1)) {
       expect(y).toBeCloseTo(-0.08, 5);
     }
-    expect(surface.water.indices.length).toBe(192 * 96 * 6);
+    // Density, not an exact grid: crests are displaced per vertex, so the mesh
+    // only needs enough vertices to bend into a wave rather than tilt flat.
+    expect(surface.water.indices.length).toBeGreaterThanOrEqual(192 * 96 * 6);
     expect(surface.base.positions.length / 3).toBe(8);
     expect(Math.min(...surface.base.positions)).toBeLessThanOrEqual(-40);
+  });
+
+  it("keeps the board below the deepest wave trough", () => {
+    // Regression guard. The board is opaque rock; when wave troughs dipped
+    // below its top it surfaced through the sea as dark brown patches all over
+    // open water. Troughs reach waterHeight + minTide - maxCrest.
+    const waterHeight = -0.08;
+    const surface = buildCompleteMapSurface(731, 413, waterHeight, -40);
+    const boardTop = Math.max(
+      ...surface.base.positions.filter((_, i) => i % 3 === 1),
+    );
+
+    const minTide = 0.18;
+    const maxWaveStrength = 1.2;
+    const maxRegionSwell = 1.55;
+    const deepestTrough =
+      waterHeight +
+      minTide -
+      THREE_D_WAVE_HEIGHT_SCALE * maxWaveStrength * maxRegionSwell;
+
+    expect(boardTop).toBeLessThan(deepestTrough);
   });
 
   it("subdivides the complete ocean so waves can displace real vertices", () => {

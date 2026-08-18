@@ -139,10 +139,16 @@ export function buildCompleteMapSurface(
   water: ThreeDTerrainMeshData;
   base: ThreeDTerrainMeshData;
 } {
-  const water = buildWaterGrid(width, height, 192, 96, waterHeight);
+  // Denser water grid: crests are Gerstner-displaced per vertex, so the mesh
+  // has to carry enough vertices to bend into a wave instead of tilting flat
+  // between widely spaced points.
+  const water = buildWaterGrid(width, height, 384, 192, waterHeight);
   return {
     water,
-    base: buildSolidMapBase(width, height, waterHeight - 0.92, bottom),
+    // The board top must stay below the deepest wave trough, or the opaque
+    // rock surfaces through the sea as dark patches. Troughs reach roughly
+    // waterHeight + minTide - maxCrest, so this leaves clear headroom.
+    base: buildSolidMapBase(width, height, waterHeight - 4.5, bottom),
   };
 }
 

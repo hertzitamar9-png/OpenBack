@@ -255,11 +255,22 @@ uniform float uTideHeight;
 uniform float uWaveStrength;
 out vec2 vWorld;
 out float vWave;
+// Slow, large-scale variation so the sea is not one uniform swell: some
+// stretches run high and some stay comparatively calm, and the pattern drifts.
+float swellRegion(vec2 p,float phase){
+  float a=sin(dot(p,vec2(0.0032,0.0021))+phase*0.011);
+  float b=sin(dot(p,vec2(-0.0018,0.0027))-phase*0.007);
+  // 0.45 calm .. 1.55 heavy
+  return 1.0+0.55*(a*0.6+b*0.4);
+}
 float gerstnerWave(vec2 p,float phase){
   float broad=sin(dot(p,vec2(0.090,0.034))+phase*0.075);
   float cross=sin(dot(p,vec2(-0.052,0.112))-phase*0.052);
   float swell=sin(dot(p,vec2(0.020,-0.036))+phase*0.031);
-  return (broad*0.46+cross*0.29+swell*0.25)*uWaveStrength;
+  // A short chop rides on the long swell so crests are not all the same size.
+  float chop=sin(dot(p,vec2(0.210,0.170))+phase*0.140)*0.16;
+  float body=broad*0.46+cross*0.29+swell*0.25+chop;
+  return body*uWaveStrength*swellRegion(p,phase);
 }
 void main(){
   vWorld=aPos.xz;
