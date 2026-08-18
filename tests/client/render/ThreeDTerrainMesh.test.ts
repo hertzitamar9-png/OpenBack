@@ -71,7 +71,7 @@ describe("ThreeDTerrainMesh", () => {
 
     const minTide = 0.18;
     const maxWaveStrength = 1.2;
-    const maxRegionSwell = 1.55;
+    const maxRegionSwell = 1.7;
     const deepestTrough =
       waterHeight +
       minTide -

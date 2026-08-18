@@ -148,7 +148,7 @@ export function buildCompleteMapSurface(
     // The board top must stay below the deepest wave trough, or the opaque
     // rock surfaces through the sea as dark patches. Troughs reach roughly
     // waterHeight + minTide - maxCrest, so this leaves clear headroom.
-    base: buildSolidMapBase(width, height, waterHeight - 4.5, bottom),
+    base: buildSolidMapBase(width, height, waterHeight - 14.0, bottom),
   };
 }
 

@@ -18,8 +18,13 @@ const CYCLE_TICKS = 900;
  * and a magnitude-30 peak about 46. At the old 0.62 the tallest crest reached
  * roughly 0.74 units - real geometry, but around 1.5% of a mountain, which is
  * why the sea read as a flat sheet no matter how the waves moved.
+ *
+ * At 4.0 the heaviest night crests reach about 8 units, so the biggest waves
+ * stand taller than a magnitude-10 hill (5.4). Matching the 46-unit polar
+ * peaks was asked for but is not playable: the sea would sit above nearly all
+ * land and the map would read as submerged.
  */
-export const THREE_D_WAVE_HEIGHT_SCALE = 1.8;
+export const THREE_D_WAVE_HEIGHT_SCALE = 4.0;
 
 /** Highest terrain magnitude the night tide can cover. */
 export const TIDAL_MAX_MAGNITUDE = 2;

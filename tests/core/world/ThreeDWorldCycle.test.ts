@@ -50,9 +50,10 @@ describe("deterministic 3D world cycle", () => {
     // a magnitude-10 hill is about 5.4 world units, so sub-unit waves vanish.
     expect(THREE_D_WAVE_HEIGHT_SCALE).toBeGreaterThanOrEqual(1.5);
     // ...but never so tall they tower over real hills.
-    expect(THREE_D_WAVE_HEIGHT_SCALE).toBeLessThan(4);
-    expect(day.waveStrength * THREE_D_WAVE_HEIGHT_SCALE).toBeGreaterThan(1.2);
-    expect(night.waveStrength * THREE_D_WAVE_HEIGHT_SCALE).toBeGreaterThan(2);
+    // ...but never so tall the sea sits above the land it surrounds.
+    expect(THREE_D_WAVE_HEIGHT_SCALE).toBeLessThan(8);
+    expect(day.waveStrength * THREE_D_WAVE_HEIGHT_SCALE).toBeGreaterThan(2.5);
+    expect(night.waveStrength * THREE_D_WAVE_HEIGHT_SCALE).toBeGreaterThan(4);
   });
 
   it("turns current alignment into deterministic zero, one, or two ship steps", () => {

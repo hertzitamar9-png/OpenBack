@@ -68,14 +68,11 @@ void main() {
     vec3 highlight = color + vec3(0.025, 0.075, 0.095);
     color = mix(deep, highlight, shimmer * seaDetail);
 
-    // Travelling crest lines, the same directional shape the shore break uses,
-    // applied across the whole ocean rather than only at the coast.
-    //
-    // The previous open-water crest thresholded a sum of three sines, and sine
-    // interference peaks in soft round patches: that is what produced the pale
-    // drifting ovals on open water. A single directional band cannot form them.
-    float openBreak = sin(world.x * 0.13 + world.y * 0.09 - uTime * 1.15);
-    float openCrest = smoothstep(0.70, 0.99, openBreak) * 0.20 * seaDetail;
+    // No crest caps on open water. A directional band avoided the pale ovals of
+    // the old thresholded pattern, but at map scale it simply became diagonal
+    // stripes across every ocean. The open sea now carries only the gradual
+    // shimmer above; white break stays where it belongs, at the shoreline.
+    float openCrest = 0.0;
     float shoreBreak = sin(world.x * 0.18 + world.y * 0.13 - uTime * 1.8);
     float coastalBreak = shore
       ? smoothstep(0.58, 0.90, shoreBreak) * 0.55 * seaDetail

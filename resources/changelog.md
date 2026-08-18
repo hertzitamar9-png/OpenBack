@@ -1,3 +1,10 @@
+## OpenBack v0.34.156 - Big Seas, Clean Oceans
+
+- Removed the diagonal streaks running across every ocean on the flat map, leaving the open sea with only its gradual shimmer and keeping white water at the shoreline where it belongs.
+- Made the 3D swells far larger, with the heaviest night waves now standing taller than a hill, and widened the difference between calm stretches of ocean and rough ones.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.155 - The Updating Screen Reaches Everyone
 
 - Made the updating screen appear for players who already have the game open, instead of only for people who happen to load the page during an update, so an update is never a silent disconnection.

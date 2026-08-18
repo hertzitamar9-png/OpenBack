@@ -264,8 +264,9 @@ out vec3 vWaveNormal;
 float swellRegion(vec2 p,float phase){
   float a=sin(dot(p,vec2(0.0032,0.0021))+phase*0.011);
   float b=sin(dot(p,vec2(-0.0018,0.0027))-phase*0.007);
-  // 0.45 calm .. 1.55 heavy
-  return 1.0+0.55*(a*0.6+b*0.4);
+  // 0.30 calm .. 1.70 heavy: a wide spread so some stretches are near glassy
+  // while others run genuinely rough.
+  return 1.0+0.70*(a*0.6+b*0.4);
 }
 float gerstnerWave(vec2 p,float phase){
   // Wavelengths around 35 world units. At the previous ~70 a two-unit crest
