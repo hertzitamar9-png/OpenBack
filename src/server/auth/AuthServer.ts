@@ -899,12 +899,94 @@ const VerifyCodeSchema = RequestCodeSchema.extend({
     .regex(/^\d{6}$/),
 });
 
+const CODE_EMAIL_LOGO = "https://openback.dedyn.io/icons/icon512_rounded.png";
+const CODE_EMAIL_FROM_NAME = "OpenBack";
+
+/**
+ * The one place the code email is composed, so the SMTP and Brevo API paths
+ * cannot drift apart. The SMTP path previously sent plain text only, which is
+ * why the code arrived in the client's default body font at its default size.
+ *
+ * Written as inline-styled tables on purpose: email clients strip <style>
+ * blocks and ignore most modern layout, so this is the form that survives.
+ */
+export function buildCodeEmail(
+  code: string,
+  action: string,
+): { subject: string; text: string; html: string } {
+  const subject = `Your OpenBack ${action} code`;
+  const text =
+    `Your OpenBack ${action} code is: ${code}
+
+` +
+    `It expires in 10 minutes.
+
+` +
+    `If you did not request this, you can ignore this email.`;
+  const html = `<!doctype html>
+<html>
+  <body style="margin:0;padding:0;background:#0a1424;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+           style="background:#0a1424;padding:32px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" cellpadding="0" cellspacing="0" width="100%"
+                 style="max-width:480px;background:#111f36;border-radius:16px;
+                        padding:32px 28px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+            <tr>
+              <td align="center" style="padding-bottom:16px;">
+                <img src="${CODE_EMAIL_LOGO}" width="72" height="72" alt="OpenBack"
+                     style="display:block;border:0;border-radius:18px;" />
+              </td>
+            </tr>
+            <tr>
+              <td align="center"
+                  style="font-size:22px;font-weight:700;color:#e8eef8;padding-bottom:8px;">
+                Your ${action} code
+              </td>
+            </tr>
+            <tr>
+              <td align="center"
+                  style="font-size:16px;line-height:24px;color:#8aa0c0;padding-bottom:24px;">
+                Enter this code in OpenBack to continue.
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding-bottom:24px;">
+                <div style="display:inline-block;background:#0a1424;border-radius:12px;
+                            padding:18px 28px;font-family:'Courier New',Courier,monospace;
+                            font-size:44px;line-height:52px;font-weight:700;letter-spacing:10px;
+                            color:#4fd1ff;">
+                  ${code}
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="font-size:16px;color:#8aa0c0;padding-bottom:8px;">
+                It expires in <strong style="color:#e8eef8;">10 minutes</strong>.
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="font-size:14px;line-height:20px;color:#6b7f9e;padding-top:16px;">
+                If you did not request this, you can ignore this email.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+  return { subject, text, html };
+}
+
 export async function sendCodeEmail(
   email: string,
   code: string,
   mode: EmailAuthMode = "login",
 ): Promise<string | null> {
   const action = mode === "signup" ? "sign-up" : "login";
+  const { subject, text, html } = buildCodeEmail(code, action);
   const brevoApiKey = process.env.BREVO_API_KEY;
   const brevoSenderEmail = process.env.BREVO_SENDER_EMAIL;
   if (brevoApiKey && brevoSenderEmail) {
@@ -918,15 +1000,12 @@ export async function sendCodeEmail(
       body: JSON.stringify({
         sender: {
           email: brevoSenderEmail,
-          name: process.env.BREVO_SENDER_NAME ?? "OpenBack",
+          name: process.env.BREVO_SENDER_NAME ?? CODE_EMAIL_FROM_NAME,
         },
         to: [{ email }],
-        subject: `Your OpenBack ${action} code`,
-        textContent: `Your OpenBack ${action} code is: ${code}\n\nIt expires in 10 minutes.`,
-        htmlContent:
-          `<p>Your OpenBack ${action} code is:</p>` +
-          `<p style="font-size:28px;font-weight:bold;letter-spacing:6px">${code}</p>` +
-          `<p>It expires in 10 minutes.</p>`,
+        subject,
+        textContent: text,
+        htmlContent: html,
       }),
       signal: AbortSignal.timeout(15_000),
     });
@@ -953,13 +1032,19 @@ export async function sendCodeEmail(
           : undefined,
     });
     await transporter.sendMail({
-      from:
-        process.env.SMTP_FROM ??
-        process.env.SMTP_USER ??
-        "no-reply@openback.app",
+      // A bare address shows in the inbox as "contact@openback.dedyn.io".
+      // Naming the sender makes the mail read as coming from OpenBack.
+      from: {
+        name: process.env.SMTP_FROM_NAME ?? CODE_EMAIL_FROM_NAME,
+        address:
+          process.env.SMTP_FROM ??
+          process.env.SMTP_USER ??
+          "no-reply@openback.app",
+      },
       to: email,
-      subject: `Your OpenBack ${action} code`,
-      text: `Your OpenBack ${action} code is: ${code}\n\nIt expires in 10 minutes.`,
+      subject,
+      text,
+      html,
     });
     return null;
   } catch (e) {

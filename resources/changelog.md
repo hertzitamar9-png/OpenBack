@@ -1,3 +1,10 @@
+## OpenBack v0.34.163 - A Readable Login Code
+
+- Redesigned the login and sign-up code email: the code now appears large and spaced out against the game's colours, with the OpenBack logo above it, instead of arriving as small plain text.
+- Made the email say it comes from OpenBack rather than showing only the raw address.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.162 - One Match Per Account
 
 - Allowed an account to be signed in on as many devices as you like, while limiting it to one match at a time.
