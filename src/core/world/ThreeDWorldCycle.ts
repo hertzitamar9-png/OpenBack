@@ -10,8 +10,16 @@ export interface ThreeDWorldCycleState {
 
 const CYCLE_TICKS = 900;
 
-/** Visible crest height in 3D world units at full wave strength. */
-export const THREE_D_WAVE_HEIGHT_SCALE = 0.62;
+/**
+ * Visible crest height in 3D world units at full wave strength.
+ *
+ * Sized against the terrain it sits beside rather than by eye. Land height is
+ * `(0.15 + (m/30)^2 * 31) * 1.5`, so a magnitude-10 hill stands about 5.4 units
+ * and a magnitude-30 peak about 46. At the old 0.62 the tallest crest reached
+ * roughly 0.74 units - real geometry, but around 1.5% of a mountain, which is
+ * why the sea read as a flat sheet no matter how the waves moved.
+ */
+export const THREE_D_WAVE_HEIGHT_SCALE = 1.8;
 
 /** Highest terrain magnitude the night tide can cover. */
 export const TIDAL_MAX_MAGNITUDE = 2;

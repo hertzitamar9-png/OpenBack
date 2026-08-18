@@ -46,9 +46,13 @@ describe("deterministic 3D world cycle", () => {
   it("keeps 3D wave crests visibly raised above the ocean plane", () => {
     const day = threeDWorldCycle(0);
     const night = threeDWorldCycle(450);
-    expect(THREE_D_WAVE_HEIGHT_SCALE).toBe(0.62);
-    expect(day.waveStrength * THREE_D_WAVE_HEIGHT_SCALE).toBeGreaterThan(0.4);
-    expect(night.waveStrength * THREE_D_WAVE_HEIGHT_SCALE).toBeGreaterThan(0.7);
+    // Crests must stand tall enough to read against the terrain beside them:
+    // a magnitude-10 hill is about 5.4 world units, so sub-unit waves vanish.
+    expect(THREE_D_WAVE_HEIGHT_SCALE).toBeGreaterThanOrEqual(1.5);
+    // ...but never so tall they tower over real hills.
+    expect(THREE_D_WAVE_HEIGHT_SCALE).toBeLessThan(4);
+    expect(day.waveStrength * THREE_D_WAVE_HEIGHT_SCALE).toBeGreaterThan(1.2);
+    expect(night.waveStrength * THREE_D_WAVE_HEIGHT_SCALE).toBeGreaterThan(2);
   });
 
   it("turns current alignment into deterministic zero, one, or two ship steps", () => {

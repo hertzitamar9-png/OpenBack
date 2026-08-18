@@ -83,7 +83,18 @@ describe("keep playing after the sun exploded", () => {
       "utf8",
     );
     expect(src).toContain("keptPlayingAfterBlast");
-    expect(src).toContain("renderPlasterSun");
     expect(src).toContain("triggerSunBlast");
+    // The banner itself is an OpenBack component, so upstream's win modal
+    // carries a single tag rather than a block of our markup.
+    expect(src).toContain("<openback-plaster-sun");
+  });
+
+  it("keeps the banner markup in an OpenBack file, not upstream's", () => {
+    const banner = readFileSync(
+      resolve(process.cwd(), "src/client/openback/PlasterSunBanner.ts"),
+      "utf8",
+    );
+    expect(banner).toContain("openback-plaster-sun");
+    expect(banner).toContain("win_modal.sun_already_exploded");
   });
 });

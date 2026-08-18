@@ -55,11 +55,16 @@ float noise2(vec2 p){
   return mix(mix(a,b,f.x),mix(c,d,f.x),f.y);
 }
 
-// Celestial bodies travel a shallow arc so they stay in the visible band above
-// the horizon instead of sliding off the top of a near top-down camera.
+// Celestial bodies travel a shallow arc inside the visible sky band.
+//
+// Sweeping x across the full 0..1 put the sun hard against the screen edge for
+// much of the cycle, and dipping to y=0.44 dropped it into the horizon wash
+// where belowHorizon fades everything into the ocean floor colour. Both axes
+// are inset so the sun and moon stay on screen and above the horizon.
 vec2 arcPosition(float phase){
-  float x=fract(phase);
-  return vec2(x,0.86-sin(x*3.14159265)*0.42);
+  float t=fract(phase);
+  float x=0.14+t*0.72;
+  return vec2(x,0.88-sin(t*3.14159265)*0.16);
 }
 
 void main(){

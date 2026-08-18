@@ -1,3 +1,10 @@
+## OpenBack v0.34.151 - Waves You Can Actually See
+
+- Raised the 3D wave crests so the sea visibly rises and falls beside the land instead of reading as a flat sheet, sized against real terrain heights rather than by eye.
+- Moved the sun and moon fully into view: they no longer travel to the screen edges or dip into the horizon haze where they could not be seen.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.150 - Leaving Always Asks, Even While Loading
 
 - Fixed the in-game exit button abandoning a live match with no confirmation whenever the game was still loading or running badly, because an unresolved player was being treated as an eliminated one.
