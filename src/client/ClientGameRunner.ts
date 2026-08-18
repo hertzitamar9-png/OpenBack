@@ -69,6 +69,7 @@ import { createCanvas } from "./Utils";
 import { WebGLFrameBuilder } from "./WebGLFrameBuilder";
 import { MapLayerController } from "./controllers/MapLayerController";
 import { createRenderer, GameRenderer } from "./hud/GameRenderer";
+import { shouldConfirmLeaving } from "./openback/LeaveGuard";
 import {
   applyGraphicsOverrides,
   createRenderSettings,
@@ -274,7 +275,12 @@ export function joinLobby(
   transport.connect(onconnect, onmessage);
   return {
     stop: (force: boolean = false) => {
-      if (!force && currentGameRunner?.shouldPreventWindowClose()) {
+      // No runner yet means the game is still coming up, which is exactly when
+      // a stray back gesture should be questioned rather than obeyed.
+      const preventClose = currentGameRunner
+        ? currentGameRunner.shouldPreventWindowClose()
+        : true;
+      if (!force && preventClose) {
         console.log("Player is active, prevent leaving game");
         return false;
       }
@@ -851,8 +857,12 @@ export class ClientGameRunner {
    * (when the player is not alive or doesn't exist)
    */
   public shouldPreventWindowClose(): boolean {
-    // Show confirmation dialog if player is alive in the game
-    return !!this.myPlayer?.isAlive();
+    // Ask unless we positively know the player is already out.
+    //
+    // myPlayer is undefined until the client resolves the local player, and a
+    // truthiness check reads that as "not alive", so a laggy or still-loading
+    // client abandoned a live match with no confirmation at all.
+    return shouldConfirmLeaving(this.myPlayer ?? null);
   }
 
   private async saveGame(update: WinUpdate) {

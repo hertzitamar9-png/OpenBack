@@ -1,3 +1,10 @@
+## OpenBack v0.34.154 - Back No Longer Abandons Your Match
+
+- Fixed the browser and phone back gesture leaving a live match without asking, which happened whenever the game was still starting up or running badly.
+- Made every way out of a match ask first unless you are already eliminated, including while the game is still loading.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.153 - Water That Catches The Light
 
 - Lit the sea by the shape of its own surface, the same way the land is lit, so crests catch the light and troughs fall into shade and the water finally reads as moving water rather than a flat blue sheet.
