@@ -52,9 +52,12 @@ void main() {
     color *= 1.0 + relief * 0.12 * detail + grain;
     if (shore) color *= 1.035;
   } else {
-    // Match the directional glimmer of the stable 3D sea. Long waves remain
-    // readable while panning, unlike the previous thresholded pattern which
-    // broke into repeated pale ovals across the ocean.
+    // Open water keeps most of its movement when the map is zoomed out. The
+    // shared `detail` term fades to zero below ~0.35 zoom, which left whole
+    // oceans flat and made the glimmer look like a shore-only effect.
+    float seaDetail = mix(0.6, 1.0, smoothstep(0.12, 1.0, uZoom))
+      * clamp(uQuality, 0.45, 1.0);
+
     float broad = sin(dot(world, vec2(0.031, 0.017)) + uTime * 0.55);
     float cross = sin(dot(world, vec2(-0.021, 0.039)) - uTime * 0.42);
     float swell = sin(dot(world, vec2(0.010, -0.018)) + uTime * 0.24);
@@ -63,13 +66,19 @@ void main() {
     float shimmer = clamp(0.30 + wave * 0.10 + fine * 0.045, 0.14, 0.62);
     vec3 deep = color * 0.90;
     vec3 highlight = color + vec3(0.025, 0.075, 0.095);
-    color = mix(deep, highlight, shimmer * detail);
+    color = mix(deep, highlight, shimmer * seaDetail);
 
-    float crestWave = broad * 0.72 + cross * 0.20 + swell * 0.08;
-    float openCrest = smoothstep(0.91, 0.985, crestWave) * 0.13 * detail;
+    // Travelling crest lines, the same directional shape the shore break uses,
+    // applied across the whole ocean rather than only at the coast.
+    //
+    // The previous open-water crest thresholded a sum of three sines, and sine
+    // interference peaks in soft round patches: that is what produced the pale
+    // drifting ovals on open water. A single directional band cannot form them.
+    float openBreak = sin(world.x * 0.13 + world.y * 0.09 - uTime * 1.15);
+    float openCrest = smoothstep(0.70, 0.99, openBreak) * 0.20 * seaDetail;
     float shoreBreak = sin(world.x * 0.18 + world.y * 0.13 - uTime * 1.8);
     float coastalBreak = shore
-      ? smoothstep(0.58, 0.90, shoreBreak) * 0.55 * detail
+      ? smoothstep(0.58, 0.90, shoreBreak) * 0.55 * seaDetail
       : 0.0;
     float foamCrest = max(openCrest, coastalBreak);
     color = mix(color, vec3(0.90, 0.97, 1.0), foamCrest);

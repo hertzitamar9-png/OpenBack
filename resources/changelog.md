@@ -1,3 +1,11 @@
+## OpenBack v0.34.147 - Living Water Across Every Ocean
+
+- Removed the pale drifting blobs on open water, which came from a wave pattern that peaked in round patches instead of travelling crests.
+- Extended the moving glimmer and crest lines across the whole ocean rather than only near coastlines.
+- Kept the sea moving when the map is zoomed out, where open water previously went completely still.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.146 - Leaving A Match Asks First
 
 - Added a confirmation before leaving a match, so a mis-tap on the exit button next to the ordinary settings no longer abandons the game outright.

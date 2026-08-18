@@ -28,6 +28,14 @@ describe("3D water cycle shader", () => {
     expect(terrain).toContain("coastalBreak");
     expect(terrain).toContain("shimmer");
     expect(terrain).not.toContain("oceanCrest");
+    // The drifting pale ovals came from thresholding a sum of three sines:
+    // sine interference peaks in round patches. A single directional band is
+    // used instead, so this term must not come back.
+    expect(terrain).not.toContain("crestWave");
+    expect(terrain).toContain("openBreak");
+    // Open water must keep moving when the map is zoomed out; the shared
+    // `detail` term fades to zero at low zoom and left whole oceans flat.
+    expect(terrain).toContain("seaDetail");
     expect(terrain).not.toContain("smoothstep(0.82, 0.97, waves)");
   });
 });
