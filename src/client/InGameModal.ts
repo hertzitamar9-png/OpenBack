@@ -13,7 +13,15 @@ import { translateText } from "./Utils";
  * While a pop-up is displayed we report gameplay as stopped to CrazyGames, and
  * resume it once dismissed.
  */
-function showDialog(props: Partial<ConfirmDialog>): Promise<boolean> {
+async function showDialog(props: Partial<ConfirmDialog>): Promise<boolean> {
+  // Wait for the component to be registered before creating it. On a slow load
+  // the element could otherwise be appended before its definition arrived, so
+  // it never rendered and never emitted confirm/cancel: the promise hung and
+  // the guarded action silently did nothing.
+  if (!customElements.get("confirm-dialog")) {
+    await customElements.whenDefined("confirm-dialog");
+  }
+
   const dialog = document.createElement("confirm-dialog") as ConfirmDialog;
   Object.assign(dialog, props);
 

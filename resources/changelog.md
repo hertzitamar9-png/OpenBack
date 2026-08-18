@@ -1,3 +1,10 @@
+## OpenBack v0.34.150 - Leaving Always Asks, Even While Loading
+
+- Fixed the in-game exit button abandoning a live match with no confirmation whenever the game was still loading or running badly, because an unresolved player was being treated as an eliminated one.
+- Made the confirmation wait for its dialog to be ready, so a slow load can no longer swallow the question and leave the button doing nothing.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.149 - Sun, Moon And A Sky Worth Looking At
 
 - Added a visible sun and moon that travel the sky on the day and night cycle, the sun casting a warm glow and spreading rays, the moon rising as the sun sets.

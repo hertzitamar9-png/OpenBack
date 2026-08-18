@@ -10,6 +10,7 @@ import { Controller } from "../../Controller";
 import { crazyGamesSDK } from "../../CrazyGamesSDK";
 import { showInGameAlert, showInGameConfirm } from "../../InGameModal";
 import { TogglePauseIntentEvent } from "../../InputHandler";
+import { shouldConfirmLeaving } from "../../openback/LeaveGuard";
 import { PauseGameIntentEvent, SendWinnerEvent } from "../../Transport";
 import { translateText } from "../../Utils";
 import { GameView } from "../../view";
@@ -235,8 +236,13 @@ export class GameRightSidebar extends LitElement implements Controller {
   }
 
   private async onExitButtonClick() {
-    const isAlive = this.game.myPlayer()?.isAlive();
-    if (isAlive) {
+    // Ask unless we positively know the player is already out.
+    //
+    // myPlayer() is null until the client has resolved the local player, so on
+    // a slow or laggy load `?.isAlive()` was undefined and the old truthiness
+    // check read "still loading" as "already dead" and left the match with no
+    // confirmation at all.
+    if (shouldConfirmLeaving(this.game?.myPlayer() ?? null)) {
       const isConfirmed = await showInGameConfirm(
         translateText("help_modal.exit_confirmation"),
       );
