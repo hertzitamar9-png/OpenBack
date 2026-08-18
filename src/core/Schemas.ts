@@ -114,7 +114,8 @@ export type ServerMessage =
   | ServerPrestartMessage
   | ServerErrorMessage
   | ServerLobbyInfoMessage
-  | ServerNewLobbyMessage;
+  | ServerNewLobbyMessage
+  | ServerActiveMatchMessage;
 
 export type ServerTurnMessage = z.infer<typeof ServerTurnMessageSchema>;
 export type ServerStartGameMessage = z.infer<
@@ -128,6 +129,9 @@ export type ServerLobbyInfoMessage = z.infer<
   typeof ServerLobbyInfoMessageSchema
 >;
 export type ServerNewLobbyMessage = z.infer<typeof ServerNewLobbyMessageSchema>;
+export type ServerActiveMatchMessage = z.infer<
+  typeof ServerActiveMatchMessageSchema
+>;
 export type ClientSendWinnerMessage = z.infer<typeof ClientSendWinnerSchema>;
 export type ClientSendLiveStatsMessage = z.infer<
   typeof ClientSendLiveStatsSchema
@@ -853,6 +857,15 @@ export const ServerNewLobbyMessageSchema = z.object({
   gameID: ID,
 });
 
+// Sent when this account is already in a different match. An account may be
+// signed in on any number of devices at once, but it occupies only one match,
+// so a join aimed elsewhere is answered with the match the account is already
+// in rather than seating it a second time.
+export const ServerActiveMatchMessageSchema = z.object({
+  type: z.literal("active_match"),
+  gameID: ID,
+});
+
 export const ServerMessageSchema = z.discriminatedUnion("type", [
   ServerTurnMessageSchema,
   ServerPrestartMessageSchema,
@@ -862,6 +875,7 @@ export const ServerMessageSchema = z.discriminatedUnion("type", [
   ServerErrorSchema,
   ServerLobbyInfoMessageSchema,
   ServerNewLobbyMessageSchema,
+  ServerActiveMatchMessageSchema,
 ]);
 
 //

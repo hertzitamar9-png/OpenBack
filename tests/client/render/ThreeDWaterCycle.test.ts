@@ -24,7 +24,17 @@ describe("3D water cycle shader", () => {
       "src/client/render/gl/shaders/terrain/war-table-terrain.frag.glsl",
       "utf8",
     );
-    expect(terrain).toContain("openCrest");
+    // Open water is lit by noise-driven glints rather than the zeroed crest
+    // placeholder that stood here while the sea had no light of its own.
+    expect(terrain).toContain("openGlint");
+    expect(terrain).toContain("valueNoise");
+    expect(terrain).not.toContain("openCrest");
+    // The glints must apply to all water, not be gated on the shore flag —
+    // that gating was the reason the open ocean read as flat.
+    expect(terrain).not.toMatch(/shore\s*\?[^;]*openGlint/);
+    // Several populations crossing at different headings and speeds, so the
+    // surface never drifts as one sheet in a single direction.
+    expect(terrain).toContain("glintLayer");
     expect(terrain).toContain("coastalBreak");
     expect(terrain).toContain("shimmer");
     expect(terrain).not.toContain("oceanCrest");

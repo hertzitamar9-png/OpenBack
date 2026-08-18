@@ -22,6 +22,9 @@ export class GameManager {
     private log: Logger,
     private readonly telemetry: MatchTelemetryEmitter = noopMatchTelemetryEmitter,
     private readonly telemetryBuildHash: string = "DEV",
+    // Called once per game as it is retired, so callers can drop state keyed
+    // on the game without GameManager needing to know what that state is.
+    private readonly onGameFinished: (gameId: GameID) => void = () => {},
   ) {
     setInterval(() => this.tick(), 1000);
   }
@@ -159,6 +162,11 @@ export class GameManager {
           game.end();
         } catch (error) {
           this.log.error(`error ending game ${id}: ${error}`);
+        }
+        try {
+          this.onGameFinished(id);
+        } catch (error) {
+          this.log.error(`error retiring game ${id}: ${error}`);
         }
       } else {
         active.set(id, game);

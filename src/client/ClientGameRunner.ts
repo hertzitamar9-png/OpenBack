@@ -35,6 +35,7 @@ import {
 } from "../core/game/UserSettings";
 import { WorkerClient } from "../core/worker/WorkerClient";
 import { getPersistentID } from "./Auth";
+import { ClientEnv } from "./ClientEnv";
 import { showInGameAlert } from "./InGameModal";
 import {
   AutoUpgradeEvent,
@@ -149,6 +150,19 @@ export function joinLobby(
       // Server tells us our assigned clientID
       clientID = message.myClientID;
       eventBus.emit(new LobbyInfoEvent(message.lobby, message.myClientID));
+      return;
+    }
+    if (message.type === "active_match") {
+      // This account is already in a match. Any number of devices may be
+      // signed in at once, but the account occupies one match at a time, so
+      // this device joins the match already in progress rather than opening a
+      // second one.
+      console.info(
+        `account already in match ${message.gameID}; joining that instead`,
+      );
+      window.location.href = `${window.location.origin}/${ClientEnv.workerPath(
+        message.gameID,
+      )}/game/${message.gameID}`;
       return;
     }
     if (message.type === "prestart") {

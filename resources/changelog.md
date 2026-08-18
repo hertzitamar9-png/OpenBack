@@ -1,3 +1,11 @@
+## OpenBack v0.34.162 - One Match Per Account
+
+- Allowed an account to be signed in on as many devices as you like, while limiting it to one match at a time.
+- Made a second device that tries to start or join a different match join the match the account is already playing instead, so two people on one account always end up in the same game.
+- Made a finished match release its players immediately, so the next game can be started straight away.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.161 - Light On The Whole Sea
 
 - Put sunlight glints across the entire ocean on the flat map instead of only where the water meets land, so the open sea sparkles too.

@@ -5,6 +5,7 @@ import ipAnonymize from "ip-anonymize";
 import http from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { Pool } from "pg";
 import { WebSocket, WebSocketServer } from "ws";
 import { z } from "zod";
 import { GameEnv } from "../core/configuration/Config";
@@ -17,6 +18,12 @@ import {
 } from "../core/Schemas";
 import { generateID, replacer } from "../core/Util";
 import { CreateGameInputSchema } from "../core/WorkerSchemas";
+import {
+  createInMemoryActiveMatchRegistry,
+  createPostgresActiveMatchRegistry,
+  planMatchClaim,
+  type ActiveMatchRegistry,
+} from "./ActiveMatchRegistry";
 import { registerAdminBotRoutes } from "./AdminBotRoutes";
 import { censorPlayer } from "./Censor";
 import { Client } from "./Client";
@@ -67,7 +74,32 @@ export async function startWorker() {
     // undefined.
     workerId,
   });
-  const gm = new GameManager(log, telemetry, buildHash);
+  // One live match per account, shared across workers. Postgres is the only
+  // state every worker can see; without it (dev, tests) the rule still holds
+  // within this process, which is the shape dev runs in.
+  const databaseUrl = process.env.DATABASE_URL;
+  const activeMatches: ActiveMatchRegistry = databaseUrl
+    ? createPostgresActiveMatchRegistry(
+        new Pool({
+          connectionString: databaseUrl,
+          ssl: databaseUrl.includes("localhost")
+            ? undefined
+            : { rejectUnauthorized: false },
+        }),
+        log,
+      )
+    : createInMemoryActiveMatchRegistry();
+  // Claims are released when a game finishes, so a crash or a deploy restart
+  // would otherwise strand this worker's claims and lock those accounts out.
+  activeMatches.releaseWorker(workerId).catch((e) => {
+    log.error("could not clear stale match claims", { error: String(e) });
+  });
+
+  const gm = new GameManager(log, telemetry, buildHash, (gameId) => {
+    activeMatches.releaseGame(gameId).catch((e) => {
+      log.error("could not release match claim", { gameId, error: String(e) });
+    });
+  });
   server.on("close", () => telemetry.stop());
 
   // Initialize lobby service (handles WebSocket upgrade routing)
@@ -436,6 +468,53 @@ export async function startWorker() {
           return;
         }
 
+        // One live match per account. The identity here is the JWT subject,
+        // which is the account's id, so it is shared by every device signed
+        // into that account. A claim on the game being joined is not a
+        // conflict — that is another device arriving at the match the account
+        // is already in, and the reconnect path below seats it as the player
+        // already there. A claim on a *different* game is answered by sending
+        // this device to that match instead of opening a second one.
+        //
+        // Checked before the Turnstile gate so a redirected device never
+        // spends its single-use token on a join it was never going to keep.
+        let matchClaimed = false;
+        try {
+          const plan = planMatchClaim({
+            requestedGameId: clientMsg.gameID,
+            existing: await activeMatches.activeMatch(persistentId),
+          });
+          if (plan.action === "redirect") {
+            log.info("account already in another match, redirecting", {
+              gameID: clientMsg.gameID,
+              activeGameID: plan.gameId,
+            });
+            ws.send(
+              JSON.stringify({ type: "active_match", gameID: plan.gameId }),
+            );
+            ws.close(1000, "Already in a match");
+            return;
+          }
+        } catch (e) {
+          // Fail open: a registry outage must not stop people playing. The
+          // worst case is the old behaviour, not a locked-out account.
+          log.error("could not read match claim", { error: String(e) });
+          matchClaimed = true;
+        }
+
+        // Bind the account to this match only once the join has actually been
+        // accepted, so a rejected join (full lobby, failed check) cannot leave
+        // a claim pointing at a game the player is not in.
+        const claimMatch = () => {
+          if (matchClaimed) return;
+          matchClaimed = true;
+          activeMatches
+            .claimMatch(persistentId, clientMsg.gameID, workerId)
+            .catch((e) => {
+              log.error("could not record match claim", { error: String(e) });
+            });
+        };
+
         if (clientMsg.type === "rejoin") {
           log.info("rejoining game", {
             gameID: clientMsg.gameID,
@@ -447,7 +526,9 @@ export async function startWorker() {
             clientMsg.gameID,
             clientMsg.lastTurn,
           );
-          if (!wasFound) {
+          if (wasFound) {
+            claimMatch();
+          } else {
             log.warn(
               `game ${clientMsg.gameID} not found on worker ${workerId}`,
             );
@@ -565,6 +646,7 @@ export async function startWorker() {
             verifySkipped ? undefined : { username, clanTag },
           )
         ) {
+          claimMatch();
           return;
         }
 
@@ -701,6 +783,8 @@ export async function startWorker() {
             workerId,
           });
           ws.close(1002, "Lobby full");
+        } else {
+          claimMatch();
         }
 
         // Handle other message types
