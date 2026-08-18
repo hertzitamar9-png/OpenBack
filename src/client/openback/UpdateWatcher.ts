@@ -17,6 +17,16 @@
 const POLL_MS = 2000;
 /** Tighter polling once an update is in progress, so the reload lands promptly. */
 const ACTIVE_POLL_MS = 1000;
+/** The window every player is promised, counted from the server's start time. */
+const WINDOW_SECONDS = 60;
+/**
+ * When the bar fills and the screen switches to its "done" message. The last
+ * few seconds are spent showing that message rather than a stalled bar, which
+ * is what makes the reload feel like a finish instead of an interruption.
+ */
+const DONE_AT_SECONDS = 57;
+/** How often the screen redraws itself, independent of the network. */
+const TICK_MS = 250;
 
 interface DeployStatus {
   state?: string;
@@ -28,6 +38,14 @@ interface DeployStatus {
 let overlay: HTMLElement | null = null;
 let sawUpdating = false;
 let updating = false;
+/**
+ * The window's start, latched the moment we first see it. The feed stops
+ * reporting a start time once the window closes, and a failed deploy can leave
+ * the feed unreachable entirely, so the countdown has to survive on its own.
+ */
+let windowStart = 0;
+let clock: number | null = null;
+let reloading = false;
 
 /** True while an update window is open. */
 export function isUpdating(): boolean {
@@ -54,8 +72,9 @@ function ensureOverlay(): HTMLElement {
     "text-align:center",
   ].join(";");
   el.innerHTML = `
-    <div style="font-size:1.35rem;font-weight:600">Updating the game…</div>
-    <div style="color:#8aa0c0;font-size:.95rem;max-width:32rem;line-height:1.5">
+    <div id="openback-update-title" style="font-size:1.35rem;font-weight:600">Updating the game…</div>
+    <div id="openback-update-note"
+         style="color:#8aa0c0;font-size:.95rem;max-width:32rem;line-height:1.5">
       A new version is being installed. This page will reload automatically when it's ready.
     </div>
     <div style="width:min(460px,100%);height:12px;border-radius:999px;background:#16233a;
@@ -74,21 +93,60 @@ function ensureOverlay(): HTMLElement {
   return el;
 }
 
-function paint(status: DeployStatus): void {
+function elapsed(): number {
+  return Date.now() / 1000 - windowStart;
+}
+
+function paint(): void {
   const el = ensureOverlay();
-  // The deploy holds the window open for a fixed minute, so the bar and the
-  // countdown share that budget and stay in step with the served page.
-  const budget = Math.max(status.eta && status.eta > 0 ? status.eta : 0, 60);
-  const elapsed = Date.now() / 1000 - (status.startedAt ?? 0);
-  const left = Math.max(0, Math.ceil(budget - elapsed));
+  const seconds = elapsed();
+  const left = Math.max(0, Math.ceil(WINDOW_SECONDS - seconds));
+  const done = seconds >= DONE_AT_SECONDS;
+
   const fill = el.querySelector<HTMLElement>("#openback-update-fill");
   const eta = el.querySelector<HTMLElement>("#openback-update-eta");
+  const title = el.querySelector<HTMLElement>("#openback-update-title");
+  const note = el.querySelector<HTMLElement>("#openback-update-note");
+
   if (fill) {
-    fill.style.width = `${Math.min(elapsed / budget, 1) * 94}%`;
+    const progress = Math.min(seconds / DONE_AT_SECONDS, 1);
+    fill.style.width = `${progress * 100}%`;
+  }
+  if (title) {
+    title.textContent = done ? "Update is done" : "Updating the game…";
+  }
+  if (note) {
+    note.textContent = done
+      ? "Reloading the new version…"
+      : "A new version is being installed. This page will reload automatically when it's ready.";
   }
   if (eta) {
-    eta.textContent = left > 0 ? `${left}s left` : "almost done…";
+    eta.textContent = done ? "reloading" : `${left}s left`;
   }
+}
+
+/**
+ * Drives the screen from the latched start time rather than from the feed, so
+ * the minute runs to completion — and never past it — whether the deploy
+ * finished early, is still grinding, or fell over and took the feed with it.
+ */
+function tick(): void {
+  paint();
+  if (elapsed() >= WINDOW_SECONDS && !reloading) {
+    reloading = true;
+    updating = false;
+    window.location.reload();
+  }
+}
+
+function startClock(startedAt: number): void {
+  if (windowStart === 0) {
+    // Trust the server's start time so every client shares one minute; fall
+    // back to now if the feed omitted it.
+    windowStart = startedAt > 0 ? startedAt : Date.now() / 1000;
+  }
+  clock ??= window.setInterval(tick, TICK_MS);
+  tick();
 }
 
 async function poll(): Promise<void> {
@@ -100,13 +158,12 @@ async function poll(): Promise<void> {
       if (status.state === "updating") {
         sawUpdating = true;
         updating = true;
-        paint(status);
+        startClock(status.startedAt ?? 0);
         delay = ACTIVE_POLL_MS;
       } else if (sawUpdating) {
-        updating = false;
-        // The window closed: come back on the new build.
-        window.location.reload();
-        return;
+        // The deploy finished early, but the window is still the promised
+        // minute for everyone. The clock reloads us when it is up.
+        delay = ACTIVE_POLL_MS;
       }
     }
   } catch {

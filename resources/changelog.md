@@ -1,3 +1,12 @@
+## OpenBack v0.34.159 - Finishing On Time
+
+- Brought back the moment at the end of an update where the screen says the update is done and that it is reloading the new version, held for the last three seconds before the page comes back.
+- Made the update screen run on its own clock instead of waiting on the server, so it fills steadily, finishes at the same instant for everyone, and never lingers.
+- Made an update take one minute even when it fails: a broken push now closes the window on time and reloads players back onto the working version instead of leaving them watching a stalled bar.
+- Moved the copyright line into the bottom-left corner as fine print, closing the gap it opened in the middle of the footer.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.158 - A Quieter Footer
 
 - Shortened the copyright line at the bottom of the menu and set it in fine print, so it stops crowding the footer while still naming OpenFront and stating that OpenBack modifies it.

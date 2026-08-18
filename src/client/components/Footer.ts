@@ -56,10 +56,6 @@ export class Footer extends LitElement {
             data-page="page-terms"
             data-i18n="main.terms_of_service"
           ></button>
-          <span
-            class="shrink-0 text-[9px] lg:text-[10px] text-white/40"
-            data-i18n="main.copyright"
-          ></span>
           <!-- Credits carry the upstream and asset attributions the licences
                require. Reachable from every page, not only while a game
                loads. -->
@@ -84,6 +80,10 @@ export class Footer extends LitElement {
             data-i18n="main.service_request"
           ></a>
         </div>
+        <span
+          class="block w-full px-3 text-left text-[9px] leading-tight text-white/40 sm:absolute sm:bottom-1 sm:left-3 sm:w-auto sm:px-0"
+          data-i18n="main.copyright"
+        ></span>
       </footer>
     `;
   }
