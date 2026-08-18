@@ -180,6 +180,20 @@ export class UserSettings {
     );
   }
 
+  /**
+   * Draw the sun, moon, stars and clouds in the 3D sky.
+   *
+   * Visual only: the daylight tint, the waves and the night tide keep running
+   * when this is off, so hiding the sky never changes how the game plays.
+   */
+  celestialBodies() {
+    return this.getBool("settings.celestialBodies", true);
+  }
+
+  toggleCelestialBodies() {
+    this.setBool("settings.celestialBodies", !this.celestialBodies());
+  }
+
   emojis() {
     return this.getBool("settings.emojis", true);
   }

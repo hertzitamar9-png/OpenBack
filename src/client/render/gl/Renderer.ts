@@ -11,6 +11,8 @@
 
 import type { Config } from "../../../core/configuration/Config";
 import type { MapLayer } from "../../../core/game/TerrainMapLoader";
+import { UserSettings } from "../../../core/game/UserSettings";
+import { sunBlastAmount } from "../../openback/SunBlast";
 import { translateText } from "../../Utils";
 import type { SpiralRibbon } from "../frame/SpiralTrails";
 import type {
@@ -161,6 +163,7 @@ export class GPURenderer {
   private worldTextPass: WorldTextPass;
   private worldEventPass: WorldEventPass | null = null;
   private threeDPass: ThreeDCompositePass | null = null;
+  private readonly userSettings = new UserSettings();
   private threeDWorldEventPass: ThreeDWorldEventPass | null = null;
   private threeDFogPass: ThreeDFogPass | null = null;
   private threeDUnitPass: ThreeDUnitPass | null = null;
@@ -1477,6 +1480,10 @@ export class GPURenderer {
       const territoryFlash = this.territoryFlash();
       const centerHeight = 0;
       this.threeDPass.setQuality(quality.terrainLodBias);
+      // Read every frame so the settings toggle applies immediately, without
+      // needing the renderer to be torn down and rebuilt.
+      this.threeDPass.setShowSky(this.userSettings.celestialBodies());
+      this.threeDPass.setSunBlast(sunBlastAmount());
       this.threeDFogPass?.setQuality(quality.particleScale);
       this.threeDWorldEventPass?.setQuality(quality.particleScale);
       this.railroadPass.prepareTextures();

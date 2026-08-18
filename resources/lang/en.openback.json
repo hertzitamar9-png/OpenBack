@@ -461,6 +461,8 @@
     "tank_mine": "Tank Mine"
   },
   "user_setting": {
+    "celestial_bodies_desc": "Show the sun, moon, stars and clouds. Waves and the night tide keep running either way.",
+    "celestial_bodies_label": "Sun, moon and sky",
     "confirm_leave_game": "Leave the game? Your current match will be abandoned.",
     "fps_above_display": "{fps} FPS (above your screen)",
     "fps_auto": "Auto (recommended)",
@@ -469,6 +471,7 @@
     "fps_limit_detected": "Your screen runs at about {hz} Hz. Higher limits will not go faster."
   },
   "win_modal": {
+    "sun_already_exploded": "The game is already done dont be weird even the sun exploded before you left",
     "youtube_tutorial": "Need help? Watch the tutorial"
   }
 }

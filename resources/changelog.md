@@ -1,3 +1,13 @@
+## OpenBack v0.34.149 - Sun, Moon And A Sky Worth Looking At
+
+- Added a visible sun and moon that travel the sky on the day and night cycle, the sun casting a warm glow and spreading rays, the moon rising as the sun sets.
+- Added stars that come out and twinkle at night, and slow drifting clouds during the day.
+- Added a setting to hide the sun, moon, stars, and clouds for players who prefer a plain sky. The daylight, the waves, and the night tide keep running either way, so hiding them never changes how the game plays.
+- Made the sun rise and detonate when a game is won, whitening the whole sky.
+- Added a bandaged sun with a message for anyone who keeps playing after the match is already decided.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.148 - The Night Tide Takes Ground
 
 - Made the night tide climb inland over low coastal ground instead of stopping at the first row of land, so the rising sea visibly takes territory during the night and hands it back at dawn.

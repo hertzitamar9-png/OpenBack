@@ -315,6 +315,11 @@ export class UserSettingModal extends BaseModal {
     );
   }
 
+  private toggleCelestialBodies() {
+    this.userSettings.toggleCelestialBodies();
+    this.requestUpdate();
+  }
+
   private toggleGoToPlayer() {
     this.userSettings.toggleGoToPlayer();
 
@@ -849,6 +854,15 @@ export class UserSettingModal extends BaseModal {
       ></setting-toggle>
 
       <!-- 🔍 Go to player -->
+      <setting-toggle
+        label="${translateText("user_setting.celestial_bodies_label")}"
+        description="${translateText("user_setting.celestial_bodies_desc")}"
+        id="celestial-bodies-toggle"
+        .checked=${this.userSettings.celestialBodies()}
+        @change=${this.toggleCelestialBodies}
+      ></setting-toggle>
+
+      <!-- 🌅 Go to player -->
       <setting-toggle
         label="${translateText("user_setting.go_to_player_label")}"
         description="${translateText("user_setting.go_to_player_desc")}"

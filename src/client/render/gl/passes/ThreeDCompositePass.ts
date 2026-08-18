@@ -32,7 +32,36 @@ in vec2 vUV;
 uniform float uTime;
 uniform float uTilt;
 uniform float uDaylight;
+// Position along the day/night cycle, 0..1. Drives where the sun and moon sit.
+uniform float uCyclePhase;
+// Player setting: hides the sun, moon, stars and clouds without touching the
+// daylight tint, the waves or the tide.
+uniform float uShowSky;
+// Win celebration: 0 = normal, rises toward 1 as the sun swells and detonates.
+uniform float uSunBlast;
 out vec4 outColor;
+
+float hash21(vec2 p){
+  p=fract(p*vec2(123.34,456.21));
+  p+=dot(p,p+45.32);
+  return fract(p.x*p.y);
+}
+
+float noise2(vec2 p){
+  vec2 i=floor(p),f=fract(p);
+  f=f*f*(3.0-2.0*f);
+  float a=hash21(i),b=hash21(i+vec2(1.0,0.0));
+  float c=hash21(i+vec2(0.0,1.0)),d=hash21(i+vec2(1.0,1.0));
+  return mix(mix(a,b,f.x),mix(c,d,f.x),f.y);
+}
+
+// Celestial bodies travel a shallow arc so they stay in the visible band above
+// the horizon instead of sliding off the top of a near top-down camera.
+vec2 arcPosition(float phase){
+  float x=fract(phase);
+  return vec2(x,0.86-sin(x*3.14159265)*0.42);
+}
+
 void main(){
   // Match the classic battlefield's unobtrusive dark surround. The terrain is
   // the board; a painted horizon must never look like a second detached map.
@@ -40,6 +69,51 @@ void main(){
   vec3 nightSky=vec3(0.006,0.012,0.035);
   vec3 daySky=vec3(0.055,0.22,0.42);
   vec3 sky=mix(nightSky,daySky,uDaylight);
+
+  float night=1.0-smoothstep(0.20,0.55,uDaylight);
+  float day=smoothstep(0.30,0.70,uDaylight);
+  float aboveHorizon=smoothstep(0.18,0.34,vUV.y);
+
+  // Stars: fixed points that fade in with the dark, twinkling slowly.
+  vec2 starCell=floor(vUV*vec2(220.0,150.0));
+  float starSeed=hash21(starCell);
+  float star=step(0.9955,starSeed);
+  float twinkle=0.65+0.35*sin(uTime*1.7+starSeed*40.0);
+  sky+=vec3(0.85,0.90,1.0)*star*twinkle*night*aboveHorizon*uShowSky;
+
+  // Daytime clouds: slow drifting bands, never over the lower horizon strip.
+  vec2 cloudUV=vUV*vec2(3.4,1.9)+vec2(uTime*0.010,0.0);
+  float clouds=smoothstep(0.56,0.86,noise2(cloudUV)*0.65+noise2(cloudUV*2.3)*0.35);
+  sky=mix(sky,vec3(0.86,0.90,0.95),clouds*0.30*day*aboveHorizon*uShowSky);
+
+  // The sun leads the cycle; the moon trails it by half a turn.
+  vec2 sunPos=arcPosition(uCyclePhase);
+  vec2 moonPos=arcPosition(uCyclePhase+0.5);
+  vec2 aspect=vec2(1.0,0.62);
+
+  float sunSwell=1.0+uSunBlast*7.0;
+  float sunDist=length((vUV-sunPos)*aspect);
+  float sunDisc=smoothstep(0.052*sunSwell,0.030*sunSwell,sunDist);
+  float sunGlow=smoothstep(0.34*sunSwell,0.0,sunDist);
+  // Sun rays: a soft star burst, brightest along a few spokes.
+  float angle=atan(vUV.y-sunPos.y,(vUV.x-sunPos.x)*aspect.x/aspect.y);
+  float rays=pow(max(0.0,0.5+0.5*sin(angle*8.0+uTime*0.25)),3.0);
+  float rayFall=smoothstep(0.42*sunSwell,0.04,sunDist);
+
+  float sunVisible=max(day,uSunBlast)*uShowSky;
+  sky+=vec3(1.0,0.86,0.55)*sunGlow*0.30*sunVisible;
+  sky+=vec3(1.0,0.90,0.62)*rays*rayFall*0.16*sunVisible;
+  sky=mix(sky,vec3(1.0,0.97,0.86),sunDisc*sunVisible);
+  // The detonation blanches the whole sky as it peaks.
+  sky=mix(sky,vec3(1.0,0.95,0.80),uSunBlast*uSunBlast*0.75*uShowSky);
+
+  float moonDist=length((vUV-moonPos)*aspect);
+  float moonDisc=smoothstep(0.036,0.022,moonDist);
+  float moonGlow=smoothstep(0.20,0.0,moonDist);
+  float moonVisible=night*uShowSky;
+  sky+=vec3(0.62,0.70,0.86)*moonGlow*0.16*moonVisible;
+  sky=mix(sky,vec3(0.92,0.94,1.0),moonDisc*moonVisible);
+
   vec3 oceanFloor=vec3(0.018,0.085,0.15);
   float belowHorizon=1.0-smoothstep(0.22,0.62,vUV.y);
   outColor=vec4(mix(sky,oceanFloor,belowHorizon)*vignette,1.0);
@@ -408,6 +482,13 @@ export class ThreeDCompositePass {
   private skyTime: WebGLUniformLocation | null;
   private skyTilt: WebGLUniformLocation | null;
   private skyDaylight: WebGLUniformLocation | null;
+  private skyCyclePhase: WebGLUniformLocation | null;
+  private skyShowSky: WebGLUniformLocation | null;
+  private skySunBlast: WebGLUniformLocation | null;
+  /** Player setting: draw the sun, moon, stars and clouds. */
+  private showSky = true;
+  /** 0 normally; drives the win-time sun detonation. */
+  private sunBlast = 0;
   private uniforms: Record<string, WebGLUniformLocation | null>;
   private borderState: WebGLTexture | null = null;
   private railroadState: WebGLTexture | null = null;
@@ -430,6 +511,9 @@ export class ThreeDCompositePass {
     this.skyTime = gl.getUniformLocation(this.skyProgram, "uTime");
     this.skyTilt = gl.getUniformLocation(this.skyProgram, "uTilt");
     this.skyDaylight = gl.getUniformLocation(this.skyProgram, "uDaylight");
+    this.skyCyclePhase = gl.getUniformLocation(this.skyProgram, "uCyclePhase");
+    this.skyShowSky = gl.getUniformLocation(this.skyProgram, "uShowSky");
+    this.skySunBlast = gl.getUniformLocation(this.skyProgram, "uSunBlast");
     this.uniforms = Object.fromEntries(
       [
         "uTerrain",
@@ -584,6 +668,21 @@ export class ThreeDCompositePass {
     };
   }
 
+  /**
+   * Show or hide the sun, moon, stars and clouds.
+   *
+   * Deliberately visual only: daylight tint, waves and the tide keep running so
+   * hiding the sky never changes how the game plays.
+   */
+  setShowSky(show: boolean): void {
+    this.showSky = show;
+  }
+
+  /** Drive the win-time sun detonation, 0..1. */
+  setSunBlast(amount: number): void {
+    this.sunBlast = Math.max(0, Math.min(1, amount));
+  }
+
   draw(
     width: number,
     height: number,
@@ -606,6 +705,9 @@ export class ThreeDCompositePass {
     gl.uniform1f(this.skyTilt, pitch);
     const worldCycle = threeDWorldCycle(gameTick);
     gl.uniform1f(this.skyDaylight, worldCycle.daylight);
+    gl.uniform1f(this.skyCyclePhase, worldCycle.phase);
+    gl.uniform1f(this.skyShowSky, this.showSky ? 1 : 0);
+    gl.uniform1f(this.skySunBlast, this.sunBlast);
     gl.bindVertexArray(this.skyVao);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 
