@@ -1,3 +1,10 @@
+## OpenBack v0.34.161 - Light On The Whole Sea
+
+- Put sunlight glints across the entire ocean on the flat map instead of only where the water meets land, so the open sea sparkles too.
+- Made the glints travel in several directions at once, some faster than others, and appear in different places over time rather than repeating the same pattern.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.160 - A Matching Pair
 
 - Gave the credits link its own icon beside the source-code logo at the bottom of the menu, so the two attribution links sit as a matching pair instead of one being a logo and the other a word in the link row.

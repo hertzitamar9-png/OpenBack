@@ -18,6 +18,30 @@ float hash21(vec2 p) {
   return fract(p.x * p.y);
 }
 
+float valueNoise(vec2 p) {
+  vec2 cell = floor(p);
+  vec2 f = fract(p);
+  vec2 w = f * f * (3.0 - 2.0 * f);
+  float a = hash21(cell);
+  float b = hash21(cell + vec2(1.0, 0.0));
+  float c = hash21(cell + vec2(0.0, 1.0));
+  float d = hash21(cell + vec2(1.0, 1.0));
+  return mix(mix(a, b, w.x), mix(c, d, w.x), w.y);
+}
+
+// One population of sun glints. Each has its own heading and speed, and its
+// own slower gate field that makes sparkles fade up and out in different
+// places over time, so the population is never just a fixed pattern sliding
+// rigidly across the map.
+float glintLayer(vec2 world, float scale, vec2 velocity, float phase, float t) {
+  vec2 p = (world + velocity * t) * scale + phase;
+  // Warping the sample by a second lookup keeps the field from repeating on
+  // the lattice the noise is built from.
+  float sparkle = valueNoise(p + valueNoise(p * 2.3 + phase) * 0.6);
+  float gate = valueNoise((world - velocity * t * 0.35) * scale * 0.22 + phase * 1.7);
+  return smoothstep(0.66, 0.95, sparkle) * smoothstep(0.30, 0.72, gate);
+}
+
 uint terrainAt(ivec2 p) {
   p = clamp(p, ivec2(0), ivec2(uMapSize) - 1);
   return texelFetch(uTerrainBytes, p, 0).r;
@@ -68,17 +92,41 @@ void main() {
     vec3 highlight = color + vec3(0.025, 0.075, 0.095);
     color = mix(deep, highlight, shimmer * seaDetail);
 
-    // No crest caps on open water. A directional band avoided the pale ovals of
-    // the old thresholded pattern, but at map scale it simply became diagonal
-    // stripes across every ocean. The open sea now carries only the gradual
-    // shimmer above; white break stays where it belongs, at the shoreline.
-    float openCrest = 0.0;
+    // Sun glints, everywhere on the water rather than only where it meets land.
+    // Two earlier attempts failed here for the same underlying reason: both a
+    // thresholded wave and a directional band carry a grain, and once the whole
+    // map is on screen that grain reads as pale ovals or diagonal stripes. Noise
+    // has no grain to line up, so it stays as scattered points of light.
+    //
+    // The sample frequency rises with zoom so a glint keeps roughly the same
+    // size on screen at every scale. Fixing it in tile space would shrink the
+    // sparkle below a pixel when zoomed out, where it would alias into a
+    // crawling fizz instead of reading as light on water.
+    float glintScale = mix(0.035, 0.115, smoothstep(0.15, 1.20, uZoom));
+    // Three populations crossing each other: one running right, one running
+    // left faster and finer, one drifting up the map slowly and coarsely.
+    // Velocity is applied in world units, so these are true tiles-per-second
+    // regardless of zoom, and no single direction dominates the surface.
+    float glints = glintLayer(world, glintScale, vec2(1.10, -0.55), 0.0, uTime);
+    glints = max(
+      glints,
+      glintLayer(world, glintScale * 1.6, vec2(-1.80, 0.40), 7.3, uTime)
+    );
+    glints = max(
+      glints,
+      glintLayer(world, glintScale * 0.7, vec2(-0.45, -1.25), 3.1, uTime)
+    );
+    // Only the top of the combined field lights up, so the sea stays mostly
+    // dark with points of light on it rather than uniformly brightened.
+    float openGlint = pow(glints, 1.6) * seaDetail;
+    color = mix(color, vec3(0.82, 0.93, 1.0), openGlint * 0.42);
+
+    // White break still belongs only at the shoreline.
     float shoreBreak = sin(world.x * 0.18 + world.y * 0.13 - uTime * 1.8);
     float coastalBreak = shore
       ? smoothstep(0.58, 0.90, shoreBreak) * 0.55 * seaDetail
       : 0.0;
-    float foamCrest = max(openCrest, coastalBreak);
-    color = mix(color, vec3(0.90, 0.97, 1.0), foamCrest);
+    color = mix(color, vec3(0.90, 0.97, 1.0), coastalBreak);
     if (shore) color = mix(color, color + vec3(0.05, 0.08, 0.09), 0.32);
   }
 
