@@ -1,3 +1,9 @@
+## OpenBack v0.34.158 - A Quieter Footer
+
+- Shortened the copyright line at the bottom of the menu and set it in fine print, so it stops crowding the footer while still naming OpenFront and stating that OpenBack modifies it.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.157 - One Shared Minute For Everyone
 
 - Made every player see the same one minute update pause at the same time, counted from when the update actually began, whether they were sitting in the menu or already playing.

@@ -56,7 +56,10 @@ export class Footer extends LitElement {
             data-page="page-terms"
             data-i18n="main.terms_of_service"
           ></button>
-          <span class="shrink-0" data-i18n="main.copyright"></span>
+          <span
+            class="shrink-0 text-[9px] lg:text-[10px] text-white/40"
+            data-i18n="main.copyright"
+          ></span>
           <!-- Credits carry the upstream and asset attributions the licences
                require. Reachable from every page, not only while a game
                loads. -->

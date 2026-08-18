@@ -4,7 +4,7 @@ import { applyOpenBackBrand } from "../src/client/Utils";
 
 // The UI rebrands upstream product references, but some strings exist to
 // satisfy a licence. Section 7(b) of the licence's additional terms obliges
-// modified versions to preserve "© OpenFront and Contributors", and the asset
+// modified versions to preserve "© OpenFront™ and Contributors", and the asset
 // licence requires crediting OpenFront Inc. Rewriting either to "OpenBack"
 // would be a licence breach, so those strings must survive verbatim.
 describe("OpenBack rebranding leaves required licence notices alone", () => {
@@ -19,12 +19,12 @@ describe("OpenBack rebranding leaves required licence notices alone", () => {
 
   it("preserves the upstream copyright notice verbatim", () => {
     const notice = (en.main as Record<string, string>).copyright;
-    expect(notice).toContain("© OpenFront and Contributors");
+    expect(notice).toContain("© OpenFront™ and Contributors");
     expect(applyOpenBackBrand("main.copyright", notice)).toBe(notice);
   });
 
   it("keeps the notice intact even for an unlisted key", () => {
-    const notice = "© OpenFront and Contributors";
+    const notice = "© OpenFront™ and Contributors";
     expect(applyOpenBackBrand("some.future.key", notice)).toBe(notice);
   });
 
@@ -36,7 +36,7 @@ describe("OpenBack rebranding leaves required licence notices alone", () => {
   it("ships a copyright string that still credits upstream", () => {
     // Guards against the notice being edited back to OpenBack-only wording.
     expect((en.main as Record<string, string>).copyright).toMatch(
-      /OpenFront and Contributors/,
+      /© OpenFront™ and Contributors/,
     );
   });
 });
