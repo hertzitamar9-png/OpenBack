@@ -78,6 +78,7 @@ import "./components/PlayPage";
 import "./components/RankedModal";
 import "./components/baseComponents/Button";
 import "./components/baseComponents/Modal";
+import { startUpdateWatcher } from "./openback/UpdateWatcher";
 import "./styles.css";
 // Imported after upstream's sheet so OpenBack rules win on the cascade without
 // upstream's file needing a single OpenBack line in it.
@@ -182,6 +183,9 @@ class Client {
   }> | null = null;
 
   async initialize(): Promise<void> {
+    // Already-open tabs cannot see the server-rendered updating page, so
+    // they watch the same deploy feed and show it themselves.
+    startUpdateWatcher();
     socialClient.start();
     crazyGamesSDK.maybeInit();
 

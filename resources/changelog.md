@@ -1,3 +1,10 @@
+## OpenBack v0.34.155 - The Updating Screen Reaches Everyone
+
+- Made the updating screen appear for players who already have the game open, instead of only for people who happen to load the page during an update, so an update is never a silent disconnection.
+- Made those pages reload themselves onto the new version as soon as the update finishes.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.154 - Back No Longer Abandons Your Match
 
 - Fixed the browser and phone back gesture leaving a live match without asking, which happened whenever the game was still starting up or running badly.
