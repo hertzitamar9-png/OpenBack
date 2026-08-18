@@ -8,8 +8,13 @@
  * screen up, then reloads onto the new build once the window closes.
  */
 
-/** How often to check. The status file is static and served by Caddy. */
-const POLL_MS = 5000;
+/**
+ * How often to check. The status file is static and served by Caddy, so this
+ * can be brisk: every client should raise the screen within a second or two of
+ * each other, and the countdown itself is derived from the server's own start
+ * time so the minute stays in step for everyone regardless.
+ */
+const POLL_MS = 2000;
 /** Tighter polling once an update is in progress, so the reload lands promptly. */
 const ACTIVE_POLL_MS = 1000;
 
@@ -22,6 +27,12 @@ interface DeployStatus {
 
 let overlay: HTMLElement | null = null;
 let sawUpdating = false;
+let updating = false;
+
+/** True while an update window is open. */
+export function isUpdating(): boolean {
+  return updating;
+}
 
 function ensureOverlay(): HTMLElement {
   if (overlay) return overlay;
@@ -88,9 +99,11 @@ async function poll(): Promise<void> {
       const status = (await response.json()) as DeployStatus;
       if (status.state === "updating") {
         sawUpdating = true;
+        updating = true;
         paint(status);
         delay = ACTIVE_POLL_MS;
       } else if (sawUpdating) {
+        updating = false;
         // The window closed: come back on the new build.
         window.location.reload();
         return;
@@ -98,7 +111,10 @@ async function poll(): Promise<void> {
     }
   } catch {
     // Server mid-swap. Keep the screen up and try again shortly.
-    if (sawUpdating) delay = ACTIVE_POLL_MS;
+    if (sawUpdating) {
+      updating = true;
+      delay = ACTIVE_POLL_MS;
+    }
   }
   window.setTimeout(() => void poll(), delay);
 }
@@ -106,5 +122,6 @@ async function poll(): Promise<void> {
 /** Begin watching. Safe to call once at start-up. */
 export function startUpdateWatcher(): void {
   if (typeof window === "undefined" || typeof fetch !== "function") return;
-  window.setTimeout(() => void poll(), POLL_MS);
+  // Check straight away so a player loading during a window sees it at once.
+  void poll();
 }

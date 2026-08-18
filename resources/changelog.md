@@ -1,3 +1,11 @@
+## OpenBack v0.34.157 - One Shared Minute For Everyone
+
+- Made every player see the same one minute update pause at the same time, counted from when the update actually began, whether they were sitting in the menu or already playing.
+- Made the game refuse to start a match while an update is running, so pressing play at the wrong moment no longer drops you into a game the server is about to restart.
+- Made the update screen appear immediately for anyone loading the site mid-update instead of after a delay.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.156 - Big Seas, Clean Oceans
 
 - Removed the diagonal streaks running across every ocean on the flat map, leaving the open sea with only its gradual shimmer and keeping white water at the shoreline where it belongs.

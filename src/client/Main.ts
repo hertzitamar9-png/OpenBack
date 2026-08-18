@@ -78,7 +78,7 @@ import "./components/PlayPage";
 import "./components/RankedModal";
 import "./components/baseComponents/Button";
 import "./components/baseComponents/Modal";
-import { startUpdateWatcher } from "./openback/UpdateWatcher";
+import { isUpdating, startUpdateWatcher } from "./openback/UpdateWatcher";
 import "./styles.css";
 // Imported after upstream's sheet so OpenBack rules win on the cascade without
 // upstream's file needing a single OpenBack line in it.
@@ -786,6 +786,14 @@ class Client {
 
   private async handleJoinLobby(event: CustomEvent<JoinLobbyEvent>) {
     const lobby = event.detail;
+    // Refuse to start anything while the server is being replaced. Every start
+    // route - solo, multiplayer, invites and matchmaking - passes through here,
+    // so this is the one place that can cancel them all. Starting mid-window
+    // would drop the player into a game the server is about to restart under.
+    if (isUpdating()) {
+      console.info("Update in progress, cancelling game start");
+      return;
+    }
     this.mostRecentJoinEvent = event.timeStamp;
     if (this.usernameInput && !this.usernameInput.canPlay()) {
       return;
