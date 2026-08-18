@@ -13,6 +13,20 @@ const CYCLE_TICKS = 900;
 /** Visible crest height in 3D world units at full wave strength. */
 export const THREE_D_WAVE_HEIGHT_SCALE = 0.62;
 
+/** Highest terrain magnitude the night tide can cover. */
+export const TIDAL_MAX_MAGNITUDE = 2;
+
+/**
+ * How far inland the tide reaches, in tiles, beyond the shoreline itself.
+ *
+ * Seeding only from ocean-facing tiles floods a single-tile ribbon: on the
+ * world map that is 94% of the coast but still under 4% of the land, so the
+ * sea visibly rose and then stopped dead at the first row of terrain. Letting
+ * it climb a few tiles inland over low ground is what makes a night tide read
+ * as the water taking ground.
+ */
+export const TIDAL_REACH_TILES = 3;
+
 /** Low, ocean-facing land that the 3D night tide may cover temporarily. */
 export function isTidalCoast(
   terrainByte: number,
@@ -20,7 +34,19 @@ export function isTidalCoast(
 ): boolean {
   const isLand = (terrainByte & 0x80) !== 0;
   const magnitude = terrainByte & 0x1f;
-  return isLand && touchesOcean && magnitude <= 2;
+  return isLand && touchesOcean && magnitude <= TIDAL_MAX_MAGNITUDE;
+}
+
+/**
+ * Low land the tide may climb onto once the water has already reached it.
+ *
+ * Identical to `isTidalCoast` except it does not require the tile to touch the
+ * ocean, because inland tiles are reached through already-flooded neighbours.
+ */
+export function isFloodableLand(terrainByte: number): boolean {
+  const isLand = (terrainByte & 0x80) !== 0;
+  const magnitude = terrainByte & 0x1f;
+  return isLand && magnitude <= TIDAL_MAX_MAGNITUDE;
 }
 
 /** Pure authoritative clock shared by simulation, replays, and rendering. */

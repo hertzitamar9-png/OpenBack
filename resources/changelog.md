@@ -1,3 +1,10 @@
+## OpenBack v0.34.148 - The Night Tide Takes Ground
+
+- Made the night tide climb inland over low coastal ground instead of stopping at the first row of land, so the rising sea visibly takes territory during the night and hands it back at dawn.
+- Roughly doubled the ground the tide covers at its peak while leaving higher ground untouched, so coastlines change overnight without swallowing the map.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.147 - Living Water Across Every Ocean
 
 - Removed the pale drifting blobs on open water, which came from a wave pattern that peaked in round patches instead of travelling crests.

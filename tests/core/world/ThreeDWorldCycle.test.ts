@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   THREE_D_WAVE_HEIGHT_SCALE,
+  TIDAL_REACH_TILES,
+  isFloodableLand,
   isTidalCoast,
   shipCurrentMultiplier,
   shipMovementSteps,
@@ -67,6 +69,23 @@ describe("deterministic 3D world cycle", () => {
     expect(isTidalCoast(0xc3, true)).toBe(false);
     expect(isTidalCoast(0xc1, false)).toBe(false);
     expect(isTidalCoast(0x41, true)).toBe(false);
+  });
+
+  it("lets the tide climb inland over low ground, but not over high ground", () => {
+    // Inland tiles are reached through flooded neighbours, so they must not be
+    // required to touch the ocean the way the shoreline seeds are.
+    expect(isFloodableLand(0xc1)).toBe(true); // low land, no ocean contact
+    expect(isTidalCoast(0xc1, false)).toBe(false);
+
+    // Height still stops it: the tide covers low ground only.
+    expect(isFloodableLand(0xc3)).toBe(false);
+    // Water is not land and is never "flooded" onto.
+    expect(isFloodableLand(0x41)).toBe(false);
+  });
+
+  it("reaches inland far enough to take ground, without swallowing the map", () => {
+    expect(TIDAL_REACH_TILES).toBeGreaterThan(0);
+    expect(TIDAL_REACH_TILES).toBeLessThanOrEqual(5);
   });
 
   it("keeps classic ship speed outside 3D mode", () => {

@@ -2,7 +2,12 @@ import { Execution, Game, MessageType, Player, Structures } from "../game/Game";
 import { TileRef } from "../game/GameMap";
 import { GameUpdateType, WorldEventKind } from "../game/GameUpdates";
 import { PseudoRandom } from "../PseudoRandom";
-import { isTidalCoast, threeDWorldCycle } from "../world/ThreeDWorldCycle";
+import {
+  isFloodableLand,
+  isTidalCoast,
+  threeDWorldCycle,
+  TIDAL_REACH_TILES,
+} from "../world/ThreeDWorldCycle";
 
 type ObjectiveReward = "gold" | "troops" | "radar" | "victory";
 const DISASTER_MESSAGES = {
@@ -105,6 +110,7 @@ export class WorldMechanicsExecution implements Execution {
   private lastSaturationCount = 0;
   private pendingDamageScans: DisasterDamageScan[] = [];
   private tidalCoast: TileRef[] = [];
+  private tidalExpanded = false;
   private tideScanCursor = 0;
   private tideApplyCursor = 0;
   private tidalTerrain = new Map<TileRef, TidalTerrainChange>();
@@ -187,18 +193,18 @@ export class WorldMechanicsExecution implements Execution {
         }
       }
       this.tideScanCursor = end;
+    } else if (!this.tidalExpanded) {
+      this.expandTidalReach();
+      this.tidalExpanded = true;
     }
 
     if (threeDWorldCycle(ticks).isNight) {
       const end = Math.min(this.tidalCoast.length, this.tideApplyCursor + 1800);
       for (; this.tideApplyCursor < end; this.tideApplyCursor++) {
         const tile = this.tidalCoast[this.tideApplyCursor];
-        if (
-          !isTidalCoast(
-            this.game.terrainByte(tile),
-            this.game.isOceanShore(tile),
-          )
-        ) {
+        // Inland tiles reached by the tide do not touch the ocean, so the
+        // shoreline predicate would reject them here.
+        if (!isFloodableLand(this.game.terrainByte(tile))) {
           continue;
         }
         const originalByte = this.game.terrainByte(tile);
@@ -215,6 +221,45 @@ export class WorldMechanicsExecution implements Execution {
 
     if (this.tidalTerrain.size > 0) this.restoreThreeDTide();
     this.tideApplyCursor = 0;
+  }
+
+  /**
+   * Grow the flooded set inland from the shoreline over low ground.
+   *
+   * A breadth-first walk across static terrain: no randomness and no game
+   * state, so every client and every replay derives the identical tile set
+   * from the map alone.
+   */
+  private expandTidalReach(): void {
+    if (TIDAL_REACH_TILES <= 0) return;
+    const seen = new Set<TileRef>(this.tidalCoast);
+    let frontier = [...this.tidalCoast];
+    const scratch: TileRef[] = [
+      0 as TileRef,
+      0 as TileRef,
+      0 as TileRef,
+      0 as TileRef,
+    ];
+
+    for (
+      let ring = 0;
+      ring < TIDAL_REACH_TILES && frontier.length > 0;
+      ring++
+    ) {
+      const next: TileRef[] = [];
+      for (const tile of frontier) {
+        const count = this.game.neighbors4(tile, scratch);
+        for (let i = 0; i < count; i++) {
+          const neighbor = scratch[i];
+          if (seen.has(neighbor)) continue;
+          if (!isFloodableLand(this.game.terrainByte(neighbor))) continue;
+          seen.add(neighbor);
+          this.tidalCoast.push(neighbor);
+          next.push(neighbor);
+        }
+      }
+      frontier = next;
+    }
   }
 
   private restoreThreeDTide(): void {
