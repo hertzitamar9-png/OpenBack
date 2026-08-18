@@ -31,6 +31,27 @@ export class Footer extends LitElement {
               draggable="false"
             />
           </a>
+          <!-- Credits is the other half of the attribution pair the licences
+               require, so it sits beside the repo link at matching weight. -->
+          <a
+            href="https://github.com/hertzitamar9-png/OpenBack/blob/main/CREDITS.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-i18n-title="main.credits"
+            data-i18n-aria-label="main.credits"
+            class="hidden lg:block opacity-60 hover:opacity-100 hover:scale-110 transition-all"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+              class="h-6 w-6 lg:h-7 lg:w-7 object-contain pointer-events-none text-white"
+            >
+              <path
+                d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-4.42 0-8 2.46-8 5.5V21a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-1.5c0-3.04-3.58-5.5-8-5.5Z"
+              />
+            </svg>
+          </a>
           <lang-selector
             class="relative lg:absolute lg:right-4 lg:top-0"
           ></lang-selector>
@@ -63,7 +84,7 @@ export class Footer extends LitElement {
             href="https://github.com/hertzitamar9-png/OpenBack/blob/main/CREDITS.md"
             target="_blank"
             rel="noopener noreferrer"
-            class="shrink-0 hover:text-white transition-colors"
+            class="shrink-0 hover:text-white transition-colors lg:hidden"
             data-i18n="main.credits"
           ></a>
           <button

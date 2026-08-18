@@ -1,3 +1,9 @@
+## OpenBack v0.34.160 - A Matching Pair
+
+- Gave the credits link its own icon beside the source-code logo at the bottom of the menu, so the two attribution links sit as a matching pair instead of one being a logo and the other a word in the link row.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.159 - Finishing On Time
 
 - Brought back the moment at the end of an update where the screen says the update is done and that it is reloading the new version, held for the last three seconds before the page comes back.
