@@ -1,3 +1,10 @@
+## OpenBack v0.34.167 - Log In Means Log In
+
+- Stopped Log in from accepting an email address that never signed up. It now says the address is not registered and sends you to Sign up, instead of quietly creating an account.
+- Kept guest progress safe: signing up still attaches your email to the account you were already playing on.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.166 - Knowing The Code Was Sent
 
 - Recorded the mail server's reply whenever a login code goes out, so a code that never arrives can be traced instead of guessed at.

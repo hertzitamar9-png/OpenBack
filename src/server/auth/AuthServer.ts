@@ -910,6 +910,35 @@ const CODE_EMAIL_FROM_NAME = "OpenBack";
  * Written as inline-styled tables on purpose: email clients strip <style>
  * blocks and ignore most modern layout, so this is the form that survives.
  */
+export type AuthCodePlan =
+  | { action: "send" }
+  | { action: "reject"; error: "account_exists"; nextAction: "login" }
+  | { action: "reject"; error: "not_registered"; nextAction: "signup" };
+
+/**
+ * Whether a code may be issued for this address, kept pure so the rule is
+ * testable and so request-code and verify-code cannot disagree.
+ *
+ * Deliberately ignores whether the browser holds a guest session. It used to
+ * grant an exception there — any signed-out visitor is given an anonymous
+ * account on page load, so that exception applied to everyone and "Log in"
+ * silently accepted addresses that had never signed up. Claiming a guest
+ * account still works: verify-code attaches the email to it in either mode,
+ * so signing up keeps the progress made while playing as a guest.
+ */
+export function planAuthCode(args: {
+  mode: "signup" | "login";
+  accountExists: boolean;
+}): AuthCodePlan {
+  if (args.mode === "signup" && args.accountExists) {
+    return { action: "reject", error: "account_exists", nextAction: "login" };
+  }
+  if (args.mode === "login" && !args.accountExists) {
+    return { action: "reject", error: "not_registered", nextAction: "signup" };
+  }
+  return { action: "send" };
+}
+
 export function buildCodeEmail(
   code: string,
   action: string,
@@ -1604,26 +1633,15 @@ export function authRouter(): express.Router {
       return;
     }
     const email = parsed.data.email.toLowerCase();
-    const accountExists = usersByEmail.has(email);
-    const sessionUser = userFromSession(req);
-    const canClaimAnonymousAccount = Boolean(sessionUser && !sessionUser.email);
-    if (parsed.data.mode === "signup" && accountExists) {
+    const plan = planAuthCode({
+      mode: parsed.data.mode,
+      accountExists: usersByEmail.has(email),
+    });
+    if (plan.action === "reject") {
       res.json({
         ok: false,
-        error: "account_exists",
-        nextAction: "login",
-      });
-      return;
-    }
-    if (
-      parsed.data.mode === "login" &&
-      !accountExists &&
-      !canClaimAnonymousAccount
-    ) {
-      res.json({
-        ok: false,
-        error: "not_registered",
-        nextAction: "signup",
+        error: plan.error,
+        nextAction: plan.nextAction,
       });
       return;
     }
@@ -1685,7 +1703,7 @@ export function authRouter(): express.Router {
       });
       return;
     }
-    if (mode === "login" && !existing && !(sessionUser && !sessionUser.email)) {
+    if (mode === "login" && !existing) {
       codes.delete(email);
       res.status(404).json({
         error: "not_registered",
