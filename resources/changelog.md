@@ -1,3 +1,9 @@
+## OpenBack v0.34.166 - Knowing The Code Was Sent
+
+- Recorded the mail server's reply whenever a login code goes out, so a code that never arrives can be traced instead of guessed at.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.165 - A Cleaner Code
 
 - Set the login code in the game's own interface font instead of a typewriter face, so the digits read evenly and clearly.

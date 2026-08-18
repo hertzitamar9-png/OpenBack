@@ -1033,7 +1033,7 @@ export async function sendCodeEmail(
           ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
           : undefined,
     });
-    await transporter.sendMail({
+    const info = await transporter.sendMail({
       // A bare address shows in the inbox as "contact@openback.dedyn.io".
       // Naming the sender makes the mail read as coming from OpenBack.
       from: {
@@ -1048,6 +1048,19 @@ export async function sendCodeEmail(
       text,
       html,
     });
+    // A resolved sendMail only means the server took the message. Record what
+    // it said, so "the code never arrived" can be told apart from "we never
+    // actually sent it" without guessing.
+    console.info(
+      "[auth] code email accepted by mail server",
+      JSON.stringify({
+        to: email,
+        messageId: info.messageId,
+        accepted: info.accepted,
+        rejected: info.rejected,
+        response: info.response,
+      }),
+    );
     return null;
   } catch (e) {
     console.error("[auth] failed to send email", e);
