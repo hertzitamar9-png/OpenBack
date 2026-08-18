@@ -1,3 +1,9 @@
+## OpenBack v0.34.170 - Where To Reach Us
+
+- Pointed the Service Request link in the menu at the new OpenBack contact address.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.169 - The Code Before You Open It
 
 - Put the login code at the front of the email's subject, so it reads straight from the inbox list without opening the message.
