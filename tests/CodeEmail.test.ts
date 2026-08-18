@@ -11,8 +11,17 @@ import {
 describe("the login code email", () => {
   const { subject, text, html } = buildCodeEmail("928291", "sign-up");
 
-  it("names the action in the subject", () => {
-    expect(subject).toBe("Your OpenBack sign-up code");
+  it("leads the subject with the code, which the inbox list shows in bold", () => {
+    expect(subject).toBe("928291 is your OpenBack sign-up code");
+    expect(subject.startsWith("928291")).toBe(true);
+  });
+
+  it("previews the code rather than the boilerplate", () => {
+    // Without a preheader the inbox snippet scrapes the body and shows the
+    // "if you did not request this" line instead of the code.
+    const preheader = html.slice(0, html.indexOf("<table"));
+    expect(preheader).toContain("928291");
+    expect(preheader).toContain("display:none");
   });
 
   it("shows the code at a size that can be read at a glance", () => {
@@ -49,6 +58,7 @@ describe("the login code email", () => {
   });
 
   it("keeps a plain-text alternative for clients that refuse HTML", () => {
+    expect(text.startsWith("928291")).toBe(true);
     expect(text).toContain("928291");
     expect(text).toContain("10 minutes");
     expect(text).not.toContain("<");
@@ -60,7 +70,14 @@ describe("the login code email", () => {
 
   it("uses the same wording for login", () => {
     expect(buildCodeEmail("111111", "login").subject).toBe(
-      "Your OpenBack login code",
+      "111111 is your OpenBack login code",
     );
+  });
+
+  it("sends no attachment, which the inbox would show as a file chip", () => {
+    expect(html).toContain(
+      "https://openback.dedyn.io/icons/icon512_rounded.png",
+    );
+    expect(html).not.toContain("cid:");
   });
 });

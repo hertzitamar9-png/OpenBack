@@ -940,8 +940,6 @@ export function planAuthCode(args: {
 }
 
 export const CODE_EMAIL_LOGO_CID = "openback-logo";
-/** Same image the site serves, read from disk so the mail carries its own copy. */
-const LOGO_FILE = "resources/icons/icon512_rounded.png";
 
 export function buildCodeEmail(
   code: string,
@@ -951,9 +949,9 @@ export function buildCodeEmail(
   // reference to an attached copy so the logo does not depend on a fetch.
   logoSrc: string = CODE_EMAIL_LOGO,
 ): { subject: string; text: string; html: string } {
-  const subject = `Your OpenBack ${action} code`;
+  const subject = `${code} is your OpenBack ${action} code`;
   const text =
-    `Your OpenBack ${action} code is: ${code}
+    `${code} is your OpenBack ${action} code.
 
 ` +
     `It expires in 10 minutes.
@@ -963,6 +961,10 @@ export function buildCodeEmail(
   const html = `<!doctype html>
 <html>
   <body style="margin:0;padding:0;background:#0a1424;">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;
+                mso-hide:all;font-size:1px;line-height:1px;color:#0a1424;">
+      ${code} — expires in 10 minutes.
+    </div>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
            style="background:#0a1424;padding:32px 16px;">
       <tr>
@@ -1026,7 +1028,6 @@ export async function sendCodeEmail(
 ): Promise<string | null> {
   const action = mode === "signup" ? "sign-up" : "login";
   const { subject, text, html } = buildCodeEmail(code, action);
-  const smtpMail = buildCodeEmail(code, action, `cid:${CODE_EMAIL_LOGO_CID}`);
   const brevoApiKey = process.env.BREVO_API_KEY;
   const brevoSenderEmail = process.env.BREVO_SENDER_EMAIL;
   if (brevoApiKey && brevoSenderEmail) {
@@ -1071,9 +1072,6 @@ export async function sendCodeEmail(
           ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
           : undefined,
     });
-    // Fall back to the hosted URL if the file is not where we expect: a missing
-    // logo must never stop a login code going out.
-    const embedLogo = fs.existsSync(LOGO_FILE);
     const info = await transporter.sendMail({
       // A bare address shows in the inbox as "contact@openback.dedyn.io".
       // Naming the sender makes the mail read as coming from OpenBack.
@@ -1087,16 +1085,7 @@ export async function sendCodeEmail(
       to: email,
       subject,
       text,
-      html: embedLogo ? smtpMail.html : html,
-      attachments: embedLogo
-        ? [
-            {
-              filename: "openback.png",
-              path: LOGO_FILE,
-              cid: CODE_EMAIL_LOGO_CID,
-            },
-          ]
-        : undefined,
+      html,
     });
     // A resolved sendMail only means the server took the message. Record what
     // it said, so "the code never arrived" can be told apart from "we never

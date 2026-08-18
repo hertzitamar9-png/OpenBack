@@ -1,3 +1,11 @@
+## OpenBack v0.34.169 - The Code Before You Open It
+
+- Put the login code at the front of the email's subject, so it reads straight from the inbox list without opening the message.
+- Made the inbox preview show the code and its expiry instead of the "if you did not request this" line.
+- Stopped attaching the logo, which made the inbox show a stray file next to the message.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.168 - The Logo Travels With The Email
 
 - Attached the OpenBack logo to the login code email instead of linking to it, so it shows even in mail apps that refuse to load images from the web.
