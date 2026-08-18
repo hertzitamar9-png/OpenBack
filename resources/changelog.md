@@ -1,3 +1,9 @@
+## OpenBack v0.34.164 - Names For The New Maps
+
+- Gave the seventeen maps added in the last update their proper display names, so they read as names like "Grand Earth" and "Shattered Expanse" in the map picker instead of their internal ids.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.163 - A Readable Login Code
 
 - Redesigned the login and sign-up code email: the code now appears large and spaced out against the game's colours, with the OpenBack logo above it, instead of arriving as small plain text.
