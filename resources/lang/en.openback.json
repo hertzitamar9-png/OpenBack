@@ -461,6 +461,7 @@
     "tank_mine": "Tank Mine"
   },
   "user_setting": {
+    "confirm_leave_game": "Leave the game? Your current match will be abandoned.",
     "fps_above_display": "{fps} FPS (above your screen)",
     "fps_auto": "Auto (recommended)",
     "fps_limit": "Frame rate limit",

@@ -9,6 +9,7 @@ import {
   UserSettings,
 } from "../../../core/game/UserSettings";
 import { Controller } from "../../Controller";
+import { showInGameConfirm } from "../../InGameModal";
 import {
   AlternateViewEvent,
   ToggleRenderDebugGuiEvent,
@@ -187,8 +188,13 @@ export class SettingsModal extends LitElement implements Controller {
     this.closeModal({ keepPause: true });
   }
 
-  private onExitButtonClick() {
-    // redirect to the home page
+  private async onExitButtonClick() {
+    // Leaving abandons the match, and the button sits next to ordinary
+    // settings, so a mis-tap should not end the game without asking.
+    const confirmed = await showInGameConfirm(
+      translateText("user_setting.confirm_leave_game"),
+    );
+    if (!confirmed) return;
     window.location.href = "/";
   }
 

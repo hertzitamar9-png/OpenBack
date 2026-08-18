@@ -1,3 +1,9 @@
+## OpenBack v0.34.146 - Leaving A Match Asks First
+
+- Added a confirmation before leaving a match, so a mis-tap on the exit button next to the ordinary settings no longer abandons the game outright.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.145 - Cleared Out The Old Host
 
 - Removed the leftover configuration, redirects, and environment handling for the previous hosting provider, which the game no longer runs on and which could still have redirected players to a retired address.
