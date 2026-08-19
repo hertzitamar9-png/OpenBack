@@ -1,3 +1,9 @@
+## OpenBack v0.36.175 - No Version Under The Flag
+
+- Removed the version number that OpenFront's latest update added beneath the language flag at the bottom of the menu.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.174 - Tidier Map Categories
 
 - Took OpenFront's latest change, which clears the older maps out of the New category so that list only shows what is actually new.

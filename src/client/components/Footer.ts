@@ -1,31 +1,11 @@
 import { LitElement, html } from "lit";
-import { customElement, state } from "lit/decorators.js";
-import version from "resources/version.txt?raw";
+import { customElement } from "lit/decorators.js";
 import { assetUrl } from "../../core/AssetUrls";
-import { composeVersionDisplay, desktopVersion } from "../DesktopShell";
-
-const gameVersion = (() => {
-  const trimmed = version.trim();
-  return trimmed.startsWith("v") ? trimmed : `v${trimmed}`;
-})();
 
 @customElement("page-footer")
 export class Footer extends LitElement {
-  // Starts as the game version alone and gains the shell version once the
-  // bridge answers, so the line is never blank while that call is in flight.
-  @state() private versionLabel = gameVersion;
-
   createRenderRoot() {
     return this;
-  }
-
-  connectedCallback() {
-    super.connectedCallback();
-    // desktopVersion() resolves null off the desktop shell and on its own
-    // timeout, so this can only ever leave the label as-is or extend it.
-    void desktopVersion().then((shellVersion) => {
-      this.versionLabel = composeVersionDisplay(gameVersion, shellVersion);
-    });
   }
 
   render() {
@@ -125,13 +105,6 @@ export class Footer extends LitElement {
           class="block w-full px-3 text-left text-[9px] leading-tight text-white/40 sm:absolute sm:bottom-1 sm:left-3 sm:w-auto sm:px-0"
           data-i18n="main.copyright"
         ></span>
-        <!-- The nav bar shows the game version alone so it reads the same
-             across web and Steam; the full string, shell version included,
-             lives down here where a player can quote it in a bug report. -->
-        <span
-          class="footer-version block w-full px-3 text-left text-[9px] leading-tight text-white/40 sm:absolute sm:bottom-1 sm:right-3 sm:w-auto sm:px-0 sm:text-right"
-          >${this.versionLabel}</span
-        >
       </footer>
     `;
   }
