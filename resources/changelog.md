@@ -1,3 +1,10 @@
+## OpenBack v0.36.180 - Shine On All The Water
+
+- Spread the soft shine that used to appear only where the sea meets the shore across the whole ocean, on both the flat map and in 3D, so open water catches the light instead of looking dead next to the coast.
+- Removed the crossing streaks from the flat map.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.179 - Your Game Will Resume
 
 - Made the update screen say your game will resume when it is done, rather than talking about reloading the page, when the update catches you mid-match.

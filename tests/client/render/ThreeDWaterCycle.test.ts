@@ -24,29 +24,20 @@ describe("3D water cycle shader", () => {
       "src/client/render/gl/shaders/terrain/war-table-terrain.frag.glsl",
       "utf8",
     );
-    // Open water carries travelling shiny streaks, not the zeroed crest
-    // placeholder that stood here while the sea had no light of its own.
-    expect(terrain).toContain("openStreak");
-    expect(terrain).toContain("valueNoise");
+    // The open sea carries the same pale shallow-water shine that makes a
+    // coastline glow, rather than the zeroed crest placeholder that stood
+    // here while the sea had no light of its own.
+    expect(terrain).toContain("shineTint");
     expect(terrain).not.toContain("openCrest");
-    // They apply to all water, not gated on the shore flag — that gating was
-    // the reason the open ocean read as flat.
-    expect(terrain).not.toMatch(/shore\s*\?[^;]*openStreak/);
-    // Four populations with different headings and speeds, so the surface
-    // never drifts as one sheet in a single direction, and each streak is
-    // broken into segments so the pattern cannot resolve into stripes.
-    expect(terrain).toContain("streakLayer");
-    // Compare on whitespace-normalised text so the assertion does not depend
-    // on how the call is wrapped.
-    const flat = terrain.replace(/\s+/g, " ");
-    const headings = [
-      ...flat.matchAll(/streakLayer\( world, vec2\(([-\d.]+), ([-\d.]+)\)/g),
-    ];
-    expect(headings.length).toBeGreaterThanOrEqual(3);
-    expect(headings.some(([, x]) => Number(x) > 0)).toBe(true);
-    expect(headings.some(([, x]) => Number(x) < 0)).toBe(true);
-    expect(headings.some(([, , y]) => Number(y) > 0)).toBe(true);
-    expect(headings.some(([, , y]) => Number(y) < 0)).toBe(true);
+    // Soft-edged and summed, never thresholded into bands: a hard cut is what
+    // turned earlier attempts into stripes and then into scratches.
+    expect(terrain).not.toContain("streakLayer");
+    // A wide smoothstep is what keeps the edges soft; a narrow one would
+    // cut the light back into bands.
+    expect(terrain).toContain("smoothstep(0.35, 0.95, shine)");
+    // It applies to all water, not gated on the shore flag — that gating was
+    // the reason the open ocean read as dead next to the coast.
+    expect(terrain).not.toMatch(/shore\s*\?[^;]*shineTint/);
     expect(terrain).toContain("coastalBreak");
     expect(terrain).toContain("shimmer");
     expect(terrain).not.toContain("oceanCrest");

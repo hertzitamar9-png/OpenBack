@@ -29,36 +29,6 @@ float valueNoise(vec2 p) {
   return mix(mix(a, b, w.x), mix(c, d, w.x), w.y);
 }
 
-// One population of shiny streaks: long, thin highlights lying across the
-// water and sliding along their own heading.
-//
-// `dir` is the direction of travel, so a population can run left-to-right,
-// right-to-left, up, down or any diagonal, and each carries its own speed.
-// The band itself is a narrow power of a sine, which is what gives the hard
-// glint rather than a soft blob.
-//
-// Left at that, every streak would be an unbroken stripe from edge to edge.
-// The segment gate breaks each one along its own length, keyed to which
-// wave-crest it belongs to, so streaks start and end at unrelated places and
-// the pattern never resolves into stripes.
-float streakLayer(
-  vec2 world,
-  vec2 dir,
-  float freq,
-  float speed,
-  float seed,
-  float t
-) {
-  vec2 d = normalize(dir);
-  vec2 perp = vec2(-d.y, d.x);
-  float phase = dot(world, d) * freq - t * speed + seed;
-  float band = pow(max(0.0, sin(phase)), 26.0);
-  float segment = valueNoise(
-    vec2(dot(world, perp) * 0.045 + seed, floor(phase / 6.2831853))
-  );
-  return band * smoothstep(0.40, 0.80, segment);
-}
-
 uint terrainAt(ivec2 p) {
   p = clamp(p, ivec2(0), ivec2(uMapSize) - 1);
   return texelFetch(uTerrainBytes, p, 0).r;
@@ -109,28 +79,22 @@ void main() {
     vec3 highlight = color + vec3(0.025, 0.075, 0.095);
     color = mix(deep, highlight, shimmer * seaDetail);
 
-    // Shiny streaks across the open sea. The frequency rises with zoom so a
-    // streak keeps roughly the same width on screen at every scale; fixed in
-    // tile space it would thin below a pixel when zoomed out and alias into a
-    // crawl instead of reading as light.
-    float streakFreq = mix(0.055, 0.140, smoothstep(0.15, 1.20, uZoom));
-    // Four populations, each with its own heading and speed, so no single
-    // direction or rhythm dominates: right-and-down, left-and-up, straight
-    // up the map, and a slow left-and-down drift.
-    float streaks = streakLayer(
-      world, vec2(1.00, 0.42), streakFreq, 1.15, 0.0, uTime
-    );
-    streaks = max(streaks, streakLayer(
-      world, vec2(-0.85, -0.55), streakFreq * 1.35, 0.70, 11.7, uTime
-    ));
-    streaks = max(streaks, streakLayer(
-      world, vec2(0.15, -1.00), streakFreq * 0.80, 1.60, 23.3, uTime
-    ));
-    streaks = max(streaks, streakLayer(
-      world, vec2(-0.60, 0.90), streakFreq * 1.10, 0.45, 37.9, uTime
-    ));
-    float openStreak = streaks * seaDetail;
-    color = mix(color, vec3(0.86, 0.95, 1.0), openStreak * 0.55);
+    // The shine. This is the same pale, shallow-water blue that makes a
+    // coastline glow; it used to appear only where water met land, which is
+    // why the open sea looked dead by comparison. Here it drifts across the
+    // whole ocean in broad, soft-edged patches.
+    //
+    // Three fields at different headings and speeds, summed rather than
+    // thresholded: a sharp cut is what turned earlier attempts into scratches
+    // and stripes. The wide smoothstep keeps every edge soft, so the light
+    // gathers and fades the way it does along a shore.
+    vec3 shineTint = vec3(0.392, 0.561, 1.0);
+    float s1 = sin(dot(world, vec2(0.023, 0.017)) + uTime * 0.35);
+    float s2 = sin(dot(world, vec2(-0.015, 0.026)) - uTime * 0.22);
+    float s3 = sin(dot(world, vec2(0.008, -0.021)) + uTime * 0.14);
+    float shine = (s1 * 0.45 + s2 * 0.33 + s3 * 0.22) * 0.5 + 0.5;
+    shine = smoothstep(0.35, 0.95, shine);
+    color = mix(color, shineTint, shine * 0.30 * seaDetail);
 
     // White break still belongs only at the shoreline.
     float shoreBreak = sin(world.x * 0.18 + world.y * 0.13 - uTime * 1.8);

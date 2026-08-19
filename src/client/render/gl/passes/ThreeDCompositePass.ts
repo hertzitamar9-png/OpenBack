@@ -351,6 +351,17 @@ void main(){
   float crest=foamCrest;
   float shimmer=clamp(0.28+wave*0.10+fine*0.055+crest*0.24,0.12,0.68);
   vec3 water=mix(deep,highlight,shimmer);
+  // The same pale shallow-water shine the flat map carries, and for the same
+  // reason: without it the only lit water in the scene is the strip against
+  // the coast, and the open sea reads as dead by comparison. Three fields at
+  // different headings and speeds, summed and softened rather than cut, so
+  // the light gathers in broad patches instead of hard bands.
+  vec3 shineTint=vec3(0.392,0.561,1.0);
+  float s1=sin(dot(vWorld,vec2(0.023,0.017))+uTime*0.35);
+  float s2=sin(dot(vWorld,vec2(-0.015,0.026))-uTime*0.22);
+  float s3=sin(dot(vWorld,vec2(0.008,-0.021))+uTime*0.14);
+  float shine=smoothstep(0.35,0.95,(s1*0.45+s2*0.33+s3*0.22)*0.5+0.5);
+  water=mix(water,shineTint,shine*0.26);
   water=mix(water,vec3(0.92,0.98,1.0),foamCrest*0.78);
   // Same directional lighting the terrain uses, so crests catch the light and
   // troughs fall into shade: this is what makes the height readable.
