@@ -1,3 +1,12 @@
+## OpenBack v0.36.178 - Water That Travels
+
+- Made the 3D sea move properly. The waves were jumping forward and snapping back ten times a second, so the crests juddered in place instead of rolling; they now travel steadily and their height reads as it should.
+- Replaced the flecks on the flat map with long shiny streaks that slide across the water, coming from four different directions at different speeds and breaking up as they go, so no two stretches of sea look alike.
+- Removed the duplicate profile button beside Sign In, so there is one account control instead of two.
+- Made the end of an update look finished: the bar turns green and a tick appears for the last three seconds, instead of a full bar that just sits there until the page reloads.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.177 - Shockwaves Stop Breaking Matches
 
 - Fixed the shader error that dropped players out of a match with a connection error the moment a shockwave effect was drawn.

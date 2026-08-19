@@ -83,10 +83,21 @@ describe("the update window as the player experiences it", () => {
     atSecond(56);
     await vi.advanceTimersByTimeAsync(300);
     expect(screen().title).toBe("Updating the game…");
+    expect(
+      document.querySelector<HTMLElement>("#openback-update-check")?.style
+        .display,
+    ).toBe("none");
 
     atSecond(57);
     await vi.advanceTimersByTimeAsync(300);
     expect(screen().title).toBe("Update is done");
+    // The finished state has to look finished: green bar and a tick, not a
+    // blue bar sitting at the end for three seconds.
+    const fill = document.querySelector<HTMLElement>("#openback-update-fill");
+    const check = document.querySelector<HTMLElement>("#openback-update-check");
+    // jsdom normalises the hex to rgb().
+    expect(fill?.style.background).toContain("rgb(22, 163, 74)");
+    expect(check?.style.display).toBe("flex");
     expect(screen().note).toBe("Reloading the new version…");
     expect(screen().width).toBe("100%");
     // Still on screen — the message is meant to be read, not flashed.

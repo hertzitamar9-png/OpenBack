@@ -24,17 +24,29 @@ describe("3D water cycle shader", () => {
       "src/client/render/gl/shaders/terrain/war-table-terrain.frag.glsl",
       "utf8",
     );
-    // Open water is lit by noise-driven glints rather than the zeroed crest
+    // Open water carries travelling shiny streaks, not the zeroed crest
     // placeholder that stood here while the sea had no light of its own.
-    expect(terrain).toContain("openGlint");
+    expect(terrain).toContain("openStreak");
     expect(terrain).toContain("valueNoise");
     expect(terrain).not.toContain("openCrest");
-    // The glints must apply to all water, not be gated on the shore flag —
-    // that gating was the reason the open ocean read as flat.
-    expect(terrain).not.toMatch(/shore\s*\?[^;]*openGlint/);
-    // Several populations crossing at different headings and speeds, so the
-    // surface never drifts as one sheet in a single direction.
-    expect(terrain).toContain("glintLayer");
+    // They apply to all water, not gated on the shore flag — that gating was
+    // the reason the open ocean read as flat.
+    expect(terrain).not.toMatch(/shore\s*\?[^;]*openStreak/);
+    // Four populations with different headings and speeds, so the surface
+    // never drifts as one sheet in a single direction, and each streak is
+    // broken into segments so the pattern cannot resolve into stripes.
+    expect(terrain).toContain("streakLayer");
+    // Compare on whitespace-normalised text so the assertion does not depend
+    // on how the call is wrapped.
+    const flat = terrain.replace(/\s+/g, " ");
+    const headings = [
+      ...flat.matchAll(/streakLayer\( world, vec2\(([-\d.]+), ([-\d.]+)\)/g),
+    ];
+    expect(headings.length).toBeGreaterThanOrEqual(3);
+    expect(headings.some(([, x]) => Number(x) > 0)).toBe(true);
+    expect(headings.some(([, x]) => Number(x) < 0)).toBe(true);
+    expect(headings.some(([, , y]) => Number(y) > 0)).toBe(true);
+    expect(headings.some(([, , y]) => Number(y) < 0)).toBe(true);
     expect(terrain).toContain("coastalBreak");
     expect(terrain).toContain("shimmer");
     expect(terrain).not.toContain("oceanCrest");

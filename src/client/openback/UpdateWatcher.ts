@@ -72,6 +72,16 @@ function ensureOverlay(): HTMLElement {
     "text-align:center",
   ].join(";");
   el.innerHTML = `
+    <div id="openback-update-check"
+         style="width:46px;height:46px;border-radius:999px;display:none;
+                align-items:center;justify-content:center;background:#16a34a;
+                box-shadow:0 0 22px rgba(34,197,94,.55)">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#ffffff"
+           stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <path d="M4 12.5 9.5 18 20 6.5" />
+      </svg>
+    </div>
     <div id="openback-update-title" style="font-size:1.35rem;font-weight:600">Updating the game…</div>
     <div id="openback-update-note"
          style="color:#8aa0c0;font-size:.95rem;max-width:32rem;line-height:1.5">
@@ -108,10 +118,20 @@ function paint(): void {
   const title = el.querySelector<HTMLElement>("#openback-update-title");
   const note = el.querySelector<HTMLElement>("#openback-update-note");
 
+  const check = el.querySelector<HTMLElement>("#openback-update-check");
   if (fill) {
     const progress = Math.min(seconds / DONE_AT_SECONDS, 1);
     fill.style.width = `${progress * 100}%`;
+    // Green and full the moment it is done, so the last seconds read as
+    // "finished" rather than as a bar that stalled at the end.
+    fill.style.background = done
+      ? "linear-gradient(90deg,#16a34a,#4ade80)"
+      : "linear-gradient(90deg,#0ea5e9,#4fd1ff)";
+    fill.style.boxShadow = done
+      ? "0 0 16px rgba(34,197,94,.6)"
+      : "0 0 16px rgba(14,165,233,.55)";
   }
+  if (check) check.style.display = done ? "flex" : "none";
   if (title) {
     title.textContent = done ? "Update is done" : "Updating the game…";
   }
@@ -121,7 +141,7 @@ function paint(): void {
       : "A new version is being installed. This page will reload automatically when it's ready.";
   }
   if (eta) {
-    eta.textContent = done ? "reloading" : `${left}s left`;
+    eta.textContent = done ? "done — reloading" : `${left}s left`;
   }
 }
 

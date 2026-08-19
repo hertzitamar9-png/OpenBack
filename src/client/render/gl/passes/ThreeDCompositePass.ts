@@ -282,9 +282,13 @@ float gerstnerWave(vec2 p,float phase){
 }
 void main(){
   vWorld=aPos.xz;
-  // Interpolate the authoritative tick for smooth geometry without changing
-  // any simulation state.
-  float phase=uGameTick+fract(uTime*10.0);
+  // Wall-clock phase, continuous and monotonic. Adding a sawtooth to the
+  // integer tick looked like interpolation but the two were never in step:
+  // fract() snapped back to zero ten times a second while the tick stepped on
+  // its own schedule, so the phase lurched forward and back and the crests
+  // juddered in place instead of travelling. The water is presentation only,
+  // so it can follow the clock without touching simulation state.
+  float phase=uTime*10.0;
   vWave=gerstnerWave(vWorld,phase);
 
   // Sample the wave a short distance either side to get the slope. The

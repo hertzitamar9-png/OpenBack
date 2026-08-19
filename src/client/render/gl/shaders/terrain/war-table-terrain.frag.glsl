@@ -29,17 +29,34 @@ float valueNoise(vec2 p) {
   return mix(mix(a, b, w.x), mix(c, d, w.x), w.y);
 }
 
-// One population of sun glints. Each has its own heading and speed, and its
-// own slower gate field that makes sparkles fade up and out in different
-// places over time, so the population is never just a fixed pattern sliding
-// rigidly across the map.
-float glintLayer(vec2 world, float scale, vec2 velocity, float phase, float t) {
-  vec2 p = (world + velocity * t) * scale + phase;
-  // Warping the sample by a second lookup keeps the field from repeating on
-  // the lattice the noise is built from.
-  float sparkle = valueNoise(p + valueNoise(p * 2.3 + phase) * 0.6);
-  float gate = valueNoise((world - velocity * t * 0.35) * scale * 0.22 + phase * 1.7);
-  return smoothstep(0.66, 0.95, sparkle) * smoothstep(0.30, 0.72, gate);
+// One population of shiny streaks: long, thin highlights lying across the
+// water and sliding along their own heading.
+//
+// `dir` is the direction of travel, so a population can run left-to-right,
+// right-to-left, up, down or any diagonal, and each carries its own speed.
+// The band itself is a narrow power of a sine, which is what gives the hard
+// glint rather than a soft blob.
+//
+// Left at that, every streak would be an unbroken stripe from edge to edge.
+// The segment gate breaks each one along its own length, keyed to which
+// wave-crest it belongs to, so streaks start and end at unrelated places and
+// the pattern never resolves into stripes.
+float streakLayer(
+  vec2 world,
+  vec2 dir,
+  float freq,
+  float speed,
+  float seed,
+  float t
+) {
+  vec2 d = normalize(dir);
+  vec2 perp = vec2(-d.y, d.x);
+  float phase = dot(world, d) * freq - t * speed + seed;
+  float band = pow(max(0.0, sin(phase)), 26.0);
+  float segment = valueNoise(
+    vec2(dot(world, perp) * 0.045 + seed, floor(phase / 6.2831853))
+  );
+  return band * smoothstep(0.40, 0.80, segment);
 }
 
 uint terrainAt(ivec2 p) {
@@ -92,34 +109,28 @@ void main() {
     vec3 highlight = color + vec3(0.025, 0.075, 0.095);
     color = mix(deep, highlight, shimmer * seaDetail);
 
-    // Sun glints, everywhere on the water rather than only where it meets land.
-    // Two earlier attempts failed here for the same underlying reason: both a
-    // thresholded wave and a directional band carry a grain, and once the whole
-    // map is on screen that grain reads as pale ovals or diagonal stripes. Noise
-    // has no grain to line up, so it stays as scattered points of light.
-    //
-    // The sample frequency rises with zoom so a glint keeps roughly the same
-    // size on screen at every scale. Fixing it in tile space would shrink the
-    // sparkle below a pixel when zoomed out, where it would alias into a
-    // crawling fizz instead of reading as light on water.
-    float glintScale = mix(0.035, 0.115, smoothstep(0.15, 1.20, uZoom));
-    // Three populations crossing each other: one running right, one running
-    // left faster and finer, one drifting up the map slowly and coarsely.
-    // Velocity is applied in world units, so these are true tiles-per-second
-    // regardless of zoom, and no single direction dominates the surface.
-    float glints = glintLayer(world, glintScale, vec2(1.10, -0.55), 0.0, uTime);
-    glints = max(
-      glints,
-      glintLayer(world, glintScale * 1.6, vec2(-1.80, 0.40), 7.3, uTime)
+    // Shiny streaks across the open sea. The frequency rises with zoom so a
+    // streak keeps roughly the same width on screen at every scale; fixed in
+    // tile space it would thin below a pixel when zoomed out and alias into a
+    // crawl instead of reading as light.
+    float streakFreq = mix(0.055, 0.140, smoothstep(0.15, 1.20, uZoom));
+    // Four populations, each with its own heading and speed, so no single
+    // direction or rhythm dominates: right-and-down, left-and-up, straight
+    // up the map, and a slow left-and-down drift.
+    float streaks = streakLayer(
+      world, vec2(1.00, 0.42), streakFreq, 1.15, 0.0, uTime
     );
-    glints = max(
-      glints,
-      glintLayer(world, glintScale * 0.7, vec2(-0.45, -1.25), 3.1, uTime)
-    );
-    // Only the top of the combined field lights up, so the sea stays mostly
-    // dark with points of light on it rather than uniformly brightened.
-    float openGlint = pow(glints, 1.6) * seaDetail;
-    color = mix(color, vec3(0.82, 0.93, 1.0), openGlint * 0.42);
+    streaks = max(streaks, streakLayer(
+      world, vec2(-0.85, -0.55), streakFreq * 1.35, 0.70, 11.7, uTime
+    ));
+    streaks = max(streaks, streakLayer(
+      world, vec2(0.15, -1.00), streakFreq * 0.80, 1.60, 23.3, uTime
+    ));
+    streaks = max(streaks, streakLayer(
+      world, vec2(-0.60, 0.90), streakFreq * 1.10, 0.45, 37.9, uTime
+    ));
+    float openStreak = streaks * seaDetail;
+    color = mix(color, vec3(0.86, 0.95, 1.0), openStreak * 0.55);
 
     // White break still belongs only at the shoreline.
     float shoreBreak = sin(world.x * 0.18 + world.y * 0.13 - uTime * 1.8);
