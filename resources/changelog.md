@@ -1,3 +1,9 @@
+## OpenBack v0.36.174 - Tidier Map Categories
+
+- Took OpenFront's latest change, which clears the older maps out of the New category so that list only shows what is actually new.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.173 - Caught Up With OpenFront
 
 - Brought in ninety-three OpenFront changes, including the detailed lobby browser, the Inventory page that gathers flags and cosmetics in one place, clearer verified names with a clan tag picker, cosmetic shockwave effects, and a long list of fixes to nukes, teams, and territory capture.
