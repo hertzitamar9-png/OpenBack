@@ -65,8 +65,12 @@ COPY --from=build /usr/src/app/static ./static
 
 COPY resources ./resources
 
-# Remove maps because they are not used by the server.
-RUN rm -rf ./resources/maps
+# Upstream drops the map data here because its deployment puts a CDN in front
+# of the game and serves maps from a bucket. OpenBack has no CDN: the server is
+# the only thing answering asset requests, so the manifests and terrain binaries
+# have to ship in the image or every map fails to load. They go next to the
+# thumbnails the build already emits, which is where /maps is served from.
+RUN cp -r ./resources/maps/. ./static/maps/ && rm -rf ./resources/maps
 COPY tsconfig.json ./
 COPY src ./src
 

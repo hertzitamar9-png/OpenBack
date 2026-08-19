@@ -1,3 +1,9 @@
+## OpenBack v0.36.176 - Maps That Actually Load
+
+- Fixed every map failing to load. The map data was being stripped out of the server image, so picking a map left the game unable to fetch it.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.175 - No Version Under The Flag
 
 - Removed the version number that OpenFront's latest update added beneath the language flag at the bottom of the menu.
