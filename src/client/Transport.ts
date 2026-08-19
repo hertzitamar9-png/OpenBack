@@ -93,7 +93,6 @@ export class BuildUnitIntentEvent implements GameEvent {
     public readonly tile: TileRef,
     public readonly rocketDirectionUp?: boolean,
     public readonly amount?: number,
-    public readonly troops?: number,
   ) {}
 }
 
@@ -184,13 +183,6 @@ export class MoveWarshipIntentEvent implements GameEvent {
 
 export class SendKickPlayerIntentEvent implements GameEvent {
   constructor(public readonly target: string) {}
-}
-
-export class SendSetPlayerTeamIntentEvent implements GameEvent {
-  constructor(
-    public readonly target: string,
-    public readonly team: string | null,
-  ) {}
 }
 
 export class SendUpdateGameConfigIntentEvent implements GameEvent {
@@ -286,10 +278,6 @@ export class Transport {
 
     this.eventBus.on(SendKickPlayerIntentEvent, (e) =>
       this.onSendKickPlayerIntent(e),
-    );
-
-    this.eventBus.on(SendSetPlayerTeamIntentEvent, (e) =>
-      this.onSendSetPlayerTeamIntent(e),
     );
 
     this.eventBus.on(SendUpdateGameConfigIntentEvent, (e) =>
@@ -598,7 +586,6 @@ export class Transport {
       unit: event.unit,
       tile: event.tile,
       rocketDirectionUp: event.rocketDirectionUp,
-      troops: event.troops,
       amount: event.amount,
     });
   }
@@ -687,14 +674,6 @@ export class Transport {
     });
   }
 
-  private onSendSetPlayerTeamIntent(event: SendSetPlayerTeamIntentEvent) {
-    this.sendIntent({
-      type: "set_player_team",
-      targetClientID: event.target,
-      team: event.team,
-    });
-  }
-
   private onSendUpdateGameConfigIntent(event: SendUpdateGameConfigIntentEvent) {
     this.sendIntent({
       type: "update_game_config",
@@ -769,4 +748,11 @@ export class Transport {
 
     this.socket = null;
   }
+}
+
+export class SendSetPlayerTeamIntentEvent implements GameEvent {
+  constructor(
+    public readonly target: string,
+    public readonly team: string | null,
+  ) {}
 }

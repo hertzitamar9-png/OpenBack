@@ -7,8 +7,7 @@ import type {
   ClanMemberStats,
 } from "../../ClanApi";
 import { showToast, translateText } from "../../Utils";
-import "../PlayerAvatar";
-import "../PlayerName";
+import { playerNameLink } from "../ui/PlayerNameLink";
 import "./ClanStatsBreakdown";
 export { renderLoadingSpinner } from "../BaseModal";
 export { showToast };
@@ -153,6 +152,7 @@ export function renderServerPagination(
 
 export function renderMemberSearchInput(
   onInput: (e: Event) => void,
+  value: string,
   placeholderKey = "clan_modal.search_members_placeholder",
   trailing?: TemplateResult,
 ): TemplateResult {
@@ -160,6 +160,7 @@ export function renderMemberSearchInput(
     <div class="relative w-full sm:flex-1 sm:min-w-0">
       <input
         type="text"
+        .value=${value}
         @input=${onInput}
         class="w-full h-10 pl-10 pr-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/20 focus:outline-none focus:ring-2 focus:ring-malibu-blue/50 focus:border-malibu-blue/50 transition-all font-medium hover:bg-white/10 text-sm"
         placeholder="${translateText(placeholderKey)}"
@@ -377,10 +378,11 @@ export function renderMemberStats(
   `;
 }
 
+// `host` raises the `view-profile` event that opens the profile modal.
 export function renderMemberRow(
   member: ClanMember,
   myPublicId: string | null,
-  onViewProfile?: (publicId: string) => void,
+  host: HTMLElement,
 ): TemplateResult {
   const isMe = member.publicId === myPublicId;
   return html`
@@ -391,11 +393,6 @@ export function renderMemberRow(
         : "bg-white/5 border-white/10"}"
     >
       <div class="flex items-center gap-3">
-        <player-avatar
-          size="2rem"
-          .src=${member.profilePictureUrl}
-          .label=${member.username ?? member.publicId}
-        ></player-avatar>
         <div
           class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0
             ${isMe
@@ -407,14 +404,7 @@ export function renderMemberRow(
         <div class="flex-1 min-w-0 flex flex-col">
           <div class="flex items-center justify-between gap-2">
             <div class="min-w-0">
-              <player-name
-                .username=${member.username}
-                .publicId=${member.publicId}
-                .nameClass=${"font-bold text-blue-300 truncate text-base hover:underline"}
-                .onNameClick=${onViewProfile
-                  ? () => onViewProfile(member.publicId)
-                  : null}
-              ></player-name>
+              ${playerNameLink(host, member.username, member.publicId)}
             </div>
             <div class="flex items-center gap-2 shrink-0">
               <span

@@ -154,7 +154,10 @@ export class LeaderboardPlayerList extends LitElement {
       const nextLadders = { ...this.ladders };
       for (const rankedType of RANKED_TYPES) {
         const ladder = this.ladders[rankedType];
-        const nextPlayers = (result[rankedType] ?? []).map(toPlayerEntry);
+        const ladders = result as Partial<
+          Record<RankedType, Parameters<typeof toPlayerEntry>[0][]>
+        >;
+        const nextPlayers = (ladders[rankedType] ?? []).map(toPlayerEntry);
         if (nextPlayers.length > 0) receivedAny = true;
 
         const existingIds = new Set(

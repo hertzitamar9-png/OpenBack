@@ -166,6 +166,18 @@ export const UserMeResponseSchema = z.object({
     profilePictureUrl: z.string().optional(),
     deathTutorialSeen: z.boolean().optional(),
   }),
+  // The caller's active account ban, shown to them (localized client-side), or
+  // null. `category` is a server enum but kept as a string here so an
+  // unrecognised value degrades gracefully. Optional so an older API that
+  // predates the field is treated as "no ban".
+  ban: z
+    .object({
+      category: z.string(),
+      reason: z.string().nullable(),
+      expiresAt: z.iso.datetime().nullable(),
+    })
+    .nullable()
+    .optional(),
   player: z.object({
     publicId: z.string(),
     adfree: z.boolean(),
@@ -221,6 +233,10 @@ export const UserMeResponseSchema = z.object({
           role: z.enum(["leader", "officer", "member"]),
           joinedAt: z.iso.datetime(),
           memberCount: z.number().int().min(1),
+          // Clan currency — see ClanInfoSchema in ClanApiSchemas.ts for the
+          // format. Decimal bigint strings; optional for older responses.
+          softBalance: z.string().optional(),
+          hardBalance: z.string().optional(),
         }),
       )
       .optional(),
@@ -469,8 +485,6 @@ const RecentRankedStatsSchema = z.object({
   all: PlayerRecentStatsSchema,
   [RankedType.OneVOne]: PlayerRecentStatsSchema.optional(),
   [RankedType.TwoVTwo]: PlayerRecentStatsSchema.optional(),
-  [RankedType.ThreeVThree]: PlayerRecentStatsSchema.optional(),
-  [RankedType.FourVFour]: PlayerRecentStatsSchema.optional(),
 });
 
 export const PlayerRecentStatsTreeSchema = z.object({
@@ -528,6 +542,10 @@ export const PlayerProfileSchema = z.object({
         role: z.enum(["leader", "officer", "member"]),
         joinedAt: z.iso.datetime(),
         memberCount: z.number().int().min(1),
+        // Clan currency — see ClanInfoSchema in ClanApiSchemas.ts for the
+        // format. Decimal bigint strings; optional for older responses.
+        softBalance: z.string().optional(),
+        hardBalance: z.string().optional(),
       }),
     )
     .optional(),
@@ -633,8 +651,6 @@ export const RankedLeaderboardResponseSchema = z.object({
   // appear on both with a different elo and rank. Defaulted because an API
   // deployment that predates the 2v2 ladder omits the key entirely.
   [RankedType.TwoVTwo]: RankedLeaderboardEntrySchema.array().default([]),
-  [RankedType.ThreeVThree]: RankedLeaderboardEntrySchema.array().default([]),
-  [RankedType.FourVFour]: RankedLeaderboardEntrySchema.array().default([]),
 });
 export type RankedLeaderboardResponse = z.infer<
   typeof RankedLeaderboardResponseSchema

@@ -342,7 +342,6 @@ export class NationExecution implements Execution {
         tile,
         undefined,
         undefined,
-        0,
       ),
     );
   }

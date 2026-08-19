@@ -76,6 +76,7 @@ const DEEP_WATER_BASE: readonly [number, number, number] = hexToRgb(
  */
 /** Encode one terrain byte → RGBA, writing into `out[offset..offset+3]`. */
 export interface TerrainColorOverrides {
+  backgroundColor?: readonly [number, number, number];
   oceanColor?: readonly [number, number, number];
   sandColor?: readonly [number, number, number];
   plainsColor?: readonly [number, number, number];

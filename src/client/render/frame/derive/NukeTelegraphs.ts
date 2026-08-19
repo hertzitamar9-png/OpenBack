@@ -1,5 +1,5 @@
-import type { NukeTelegraphData, UnitState } from "../../types";
 import { NUKE_MAGNITUDES, UT_PLANE, UT_TANK } from "../../types";
+import type { NukeTelegraphData, UnitState } from "../../types";
 
 // Must match RelationMatrix.ts
 const RELATION_FRIENDLY = 1;
@@ -47,6 +47,8 @@ export function extractNukeTelegraphs(
   localPlayerID = 0,
   relationMatrix?: Uint8Array,
   relationSize = 0,
+  motionPlans?: ReadonlyMap<number, { startTick: number }>,
+  currentTick = 0,
 ): NukeTelegraphData[] {
   const telegraphs: NukeTelegraphData[] = [];
   for (const u of units.values()) {

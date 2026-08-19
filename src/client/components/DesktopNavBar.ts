@@ -4,6 +4,8 @@ import { assetUrl } from "../../core/AssetUrls";
 import { socialAttention, type SocialAttentionStage } from "../SocialAttention";
 import { NavNotificationsController } from "./NavNotificationsController";
 import "./PartyStatus";
+import "./NavAccountMenu";
+import "./NavUtilityIcons";
 
 @customElement("desktop-nav-bar")
 export class DesktopNavBar extends LitElement {
@@ -86,26 +88,6 @@ export class DesktopNavBar extends LitElement {
           data-i18n="main.play"
         ></button>
         <!-- Desktop Navigation Menu Items -->
-        <div class="relative">
-          <button
-            class="nav-menu-item ${currentPage === "page-news"
-              ? "active"
-              : ""} text-white/70 hover:text-malibu-blue  font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue "
-            data-page="page-news"
-            data-i18n="main.news"
-            @click=${this._notifications.onNewsClick}
-          ></button>
-          ${this._notifications.showNewsDot()
-            ? html`
-                <span
-                  class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-ping"
-                ></span>
-                <span
-                  class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"
-                ></span>
-              `
-            : ""}
-        </div>
         <div class="relative no-crazygames">
           <button
             class="nav-menu-item ${currentPage === "page-item-store"
@@ -127,9 +109,11 @@ export class DesktopNavBar extends LitElement {
             : ""}
         </div>
         <button
-          class="nav-menu-item text-white/70 hover:text-malibu-blue  font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue "
-          data-page="page-settings"
-          data-i18n="main.settings"
+          class="nav-menu-item ${currentPage === "page-inventory"
+            ? "active"
+            : ""} text-white/70 hover:text-malibu-blue font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue"
+          data-page="page-inventory"
+          data-i18n="main.inventory"
         ></button>
         <button
           class="nav-menu-item text-white/70 hover:text-malibu-blue  font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue "
@@ -141,23 +125,12 @@ export class DesktopNavBar extends LitElement {
           data-page="page-clan"
           data-i18n="main.clans"
         ></button>
-        <div class="relative">
-          <button
-            class="nav-menu-item text-white/70 hover:text-malibu-blue  font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue "
-            data-page="page-help"
-            data-i18n="main.help"
-            @click=${this._notifications.onHelpClick}
-          ></button>
-          ${this._notifications.showHelpDot()
-            ? html`
-                <span
-                  class="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full animate-ping"
-                ></span>
-                <span
-                  class="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full"
-                ></span>
-              `
-            : ""}
+        <!-- Utility cluster: bell, help and the profile control are account
+             /notification affordances, not page links, so they sit tight
+             together behind a divider instead of in the nav item list. -->
+        <div class="flex items-center gap-1 pl-5 ml-1 border-l border-white/10">
+          <nav-utility-icons size="desktop"></nav-utility-icons>
+          <nav-account-menu variant="desktop"></nav-account-menu>
         </div>
         <button
           id="nav-account-button"

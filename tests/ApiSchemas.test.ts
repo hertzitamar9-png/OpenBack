@@ -24,6 +24,39 @@ import {
   UserMeResponseSchema,
 } from "../src/core/ApiSchemas";
 
+describe("UserMeResponseSchema ban", () => {
+  const ban = UserMeResponseSchema.shape.ban;
+
+  it("accepts an active temporary ban", () => {
+    const r = ban.safeParse({
+      category: "cheating",
+      reason: "aimbot in ranked",
+      expiresAt: "2026-08-01T00:00:00.000Z",
+    });
+    expect(r.success).toBe(true);
+  });
+
+  it("accepts a permanent ban (null reason and expiry)", () => {
+    const r = ban.safeParse({
+      category: "other",
+      reason: null,
+      expiresAt: null,
+    });
+    expect(r.success).toBe(true);
+  });
+
+  it("treats null and a missing field as 'no ban'", () => {
+    expect(ban.safeParse(null).success).toBe(true);
+    expect(ban.safeParse(undefined).success).toBe(true);
+  });
+
+  it("rejects a ban with no category", () => {
+    expect(ban.safeParse({ reason: null, expiresAt: null }).success).toBe(
+      false,
+    );
+  });
+});
+
 describe("GoogleUserSchema", () => {
   it("accepts a valid email", () => {
     const result = GoogleUserSchema.safeParse({ email: "user@example.com" });
@@ -200,6 +233,82 @@ describe("PlayerProfileSchema clans", () => {
       PlayerProfileSchema.safeParse({ ...base, clans: [{ tag: "ALP" }] })
         .success,
     ).toBe(false);
+  });
+
+  it("keeps clan balances as strings rather than coercing to numbers", () => {
+    const result = PlayerProfileSchema.safeParse({
+      ...base,
+      clans: [{ ...clan, softBalance: "1000", hardBalance: "0" }],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.clans?.[0].softBalance).toBe("1000");
+      expect(result.data.clans?.[0].hardBalance).toBe("0");
+    }
+  });
+
+  it("preserves a balance beyond Number.MAX_SAFE_INTEGER exactly", () => {
+    const huge = "9007199254740993";
+    const result = PlayerProfileSchema.safeParse({
+      ...base,
+      clans: [{ ...clan, softBalance: huge, hardBalance: huge }],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.clans?.[0].softBalance).toBe(huge);
+    }
+  });
+
+  it("accepts a clan entry without balances (older API)", () => {
+    const result = PlayerProfileSchema.safeParse({ ...base, clans: [clan] });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.clans?.[0].softBalance).toBeUndefined();
+      expect(result.data.clans?.[0].hardBalance).toBeUndefined();
+    }
+  });
+
+  it("rejects numeric balances", () => {
+    expect(
+      PlayerProfileSchema.safeParse({
+        ...base,
+        clans: [{ ...clan, softBalance: 1000 }],
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("UserMeResponseSchema clan balances", () => {
+  const clans = UserMeResponseSchema.shape.player.shape.clans;
+  const clan = {
+    tag: "ALP",
+    name: "Alpha Clan",
+    role: "leader",
+    joinedAt: "2024-02-01T12:00:00.000Z",
+    memberCount: 12,
+  };
+
+  it("keeps balances as strings on the caller's own clans", () => {
+    const r = clans.safeParse([
+      { ...clan, softBalance: "150", hardBalance: "25" },
+    ]);
+    expect(r.success).toBe(true);
+    if (r.success) {
+      expect(r.data?.[0].softBalance).toBe("150");
+      expect(r.data?.[0].hardBalance).toBe("25");
+    }
+  });
+
+  it("accepts clans without balances (older API)", () => {
+    const r = clans.safeParse([clan]);
+    expect(r.success).toBe(true);
+    if (r.success) {
+      expect(r.data?.[0].softBalance).toBeUndefined();
+    }
+  });
+
+  it("rejects numeric balances", () => {
+    expect(clans.safeParse([{ ...clan, hardBalance: 25 }]).success).toBe(false);
   });
 });
 

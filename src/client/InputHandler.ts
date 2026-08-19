@@ -556,8 +556,8 @@ export class InputHandler {
       let deltaX = 0;
       let deltaY = 0;
 
-      // Skip if shift is held down
-      if (this.activeKeys.has(this.keybinds.shiftKey)) {
+      // Skip if select warship modifier is held down
+      if (this.activeKeys.has(this.keybinds.boxSelectWarships)) {
         return;
       }
 
@@ -632,12 +632,26 @@ export class InputHandler {
 
       if (e.code === "Escape") {
         e.preventDefault();
-        this.eventBus.emit(new CloseViewEvent());
+        let closedUI = false;
+
+        if (this.uiState.ghostStructure !== null) {
         this.setGhostStructure(null);
-        if (this.selectionBoxActive || this.multiSelectionActive) {
+          closedUI = true;
+        }
+
+        if (this.selectionBoxActive) {
           this.selectionBoxActive = false;
-          this.multiSelectionActive = false;
           this.eventBus.emit(new WarshipSelectionBoxCancelEvent());
+          closedUI = true;
+        }
+
+        this.eventBus.emit(new CloseViewEvent());
+
+        if (
+          !closedUI &&
+          (this.unitSelectionActive || this.multiSelectionActive)
+        ) {
+          this.eventBus.emit(new UnitSelectionEvent(null, false));
         }
       }
 
@@ -659,6 +673,14 @@ export class InputHandler {
           e.code === "Equal" ||
           e.code === "NumpadAdd" ||
           e.code === "NumpadSubtract");
+
+      const isConfiguredKeybind =
+        Object.values(this.keybinds).includes(e.code) ||
+        this.keybindAndEvent.some(([k]) => this.keybindMatchesEvent(e, k));
+
+      if (isConfiguredKeybind && !isBrowserZoomCombo) {
+        e.preventDefault();
+      }
 
       if (
         !isBrowserZoomCombo &&
@@ -682,7 +704,7 @@ export class InputHandler {
           this.keybinds.centerCamera,
           "ControlLeft",
           "ControlRight",
-          this.keybinds.shiftKey,
+          this.keybinds.boxSelectWarships,
           this.keybinds.emojiMenuModifier,
           this.keybinds.buildMenuModifier,
           this.keybinds.altKey,
@@ -691,9 +713,9 @@ export class InputHandler {
         this.activeKeys.add(e.code);
       }
 
-      // Shift = warship box selection mode.
+      // warship box selection mode.
       // If a ghost structure is active, discard it first.
-      if (e.code === this.keybinds.shiftKey) {
+      if (e.code === this.keybinds.boxSelectWarships) {
         if (this.uiState.ghostStructure !== null) {
           this.setGhostStructure(null);
         }
@@ -739,7 +761,7 @@ export class InputHandler {
 
       // Reset crosshair when Shift is released (unless selection box or multi-selection still active)
       if (
-        e.code === this.keybinds.shiftKey &&
+        e.code === this.keybinds.boxSelectWarships &&
         !this.selectionBoxActive &&
         !this.multiSelectionActive
       ) {
@@ -962,7 +984,8 @@ export class InputHandler {
       if (
         !this.userSettings.leftClickOpensMenu() ||
         event.shiftKey ||
-        this.gameView.inSpawnPhase() // No Radial Menu during spawn phase, only spawn point selection
+        this.gameView.inSpawnPhase() || // No Radial Menu during spawn phase, only spawn point selection
+        this.uiState.ghostStructure !== null // Block radial menu on left click if building
       ) {
         this.eventBus.emit(new MouseUpEvent(event.clientX, event.clientY));
       } else {
@@ -1105,7 +1128,7 @@ export class InputHandler {
       // started, continue emitting selection box updates
       if (
         this.selectionBoxActive ||
-        this.activeKeys.has(this.keybinds.shiftKey) ||
+        this.activeKeys.has(this.keybinds.boxSelectWarships) ||
         this.longPressActive
       ) {
         this.selectionBoxActive = true;

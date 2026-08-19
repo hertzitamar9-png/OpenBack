@@ -28,6 +28,7 @@ import type {
   PlayerStatic,
   PlayerStatusData,
   RendererConfig,
+  TerrainRect,
   UnitState,
   WorldEventFx,
 } from "../types";
@@ -241,12 +242,19 @@ export class MapRenderer {
   ): void {
     this.renderer?.updateFogReveals(reveals);
   }
+  triggerBlockedFlash(tileX: number, tileY: number): void {
+    this.renderer?.triggerBlockedFlash(tileX, tileY);
+  }
   applyRailroadDust(tileRefs: number[]): void {
     this.renderer?.applyRailroadDust(tileRefs);
   }
-  /** Refresh terrain texels whose underlying terrain byte changed (water nukes). */
-  applyTerrainDelta(refs: readonly number[], terrainBytes: Uint8Array): void {
-    this.renderer?.applyTerrainDelta(refs, terrainBytes);
+  /**
+   * Refresh terrain texels whose underlying terrain byte changed (water
+   * nukes). Each rect's bytes are stored row-major, concatenated in `bytes`
+   * in rect order.
+   */
+  applyTerrainRects(rects: readonly TerrainRect[], bytes: Uint8Array): void {
+    this.renderer?.applyTerrainRects(rects, bytes);
   }
 
   /** Rebuild the terrain texture from current settings (e.g. ocean color). */

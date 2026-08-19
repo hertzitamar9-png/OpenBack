@@ -9,6 +9,7 @@
  */
 
 import terrainVertSrc from "../shaders/terrain/terrain.vert.glsl?raw";
+import type { TerrainRect } from "../../types";
 import terrainFragSrc from "../shaders/terrain/war-table-terrain.frag.glsl?raw";
 import {
   buildTerrainRGBA,
@@ -39,6 +40,8 @@ export class TerrainPass {
   private mapH: number;
   // Base ocean (deep water) color; reused by applyTerrainDelta and rebuilds.
   private terrainColors: TerrainColorOverrides | undefined;
+  // Scratch RGBA buffer for rect sub-uploads; grown as needed and reused.
+  private rgbaScratch = new Uint8Array(0);
   // Scratch buffer for 1×1 sub-uploads; reused across applyTerrainDelta calls.
   private pixelScratch = new Uint8Array(4);
 
@@ -128,6 +131,41 @@ export class TerrainPass {
    * produces. A later full re-upload (setTerrainColors) regenerates from
    * terrainSource, whose backing game map already reflects these conversions.
    */
+  applyTerrainRects(rects: readonly TerrainRect[], bytes: Uint8Array): void {
+    if (rects.length === 0) return;
+    const gl = this.gl;
+    gl.bindTexture(gl.TEXTURE_2D, this.tex);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    let offset = 0;
+    for (const r of rects) {
+      const count = r.w * r.h;
+      if (this.rgbaScratch.length < count * 4) {
+        this.rgbaScratch = new Uint8Array(count * 4);
+      }
+      for (let i = 0; i < count; i++) {
+        encodeTerrainTile(
+          bytes[offset + i],
+          this.rgbaScratch,
+          i * 4,
+          this.terrainColors,
+        );
+      }
+      gl.texSubImage2D(
+        gl.TEXTURE_2D,
+        0,
+        r.x,
+        r.y,
+        r.w,
+        r.h,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        this.rgbaScratch,
+        0,
+      );
+      offset += count;
+    }
+  }
+
   applyTerrainDelta(refs: readonly number[], bytes: Uint8Array): void {
     if (refs.length === 0) return;
     // Full-map fast path: rebuild the entire RGBA texture in one upload.

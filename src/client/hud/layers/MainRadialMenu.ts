@@ -23,6 +23,14 @@ const swordIcon = assetUrl("images/SwordIconWhite.svg");
 
 import { ContextMenuEvent } from "../../InputHandler";
 
+function emptyPlayerActions(): PlayerActions {
+  return {
+    canAttack: false,
+    buildableUnits: [],
+    canSendEmojiAllPlayers: false,
+  };
+}
+
 export class MainRadialMenu implements Controller {
   private radialMenu: RadialMenu;
 
@@ -30,10 +38,6 @@ export class MainRadialMenu implements Controller {
   private chatIntegration: ChatIntegration;
 
   private clickedTile: TileRef | null = null;
-  private actionQueryInFlight = false;
-  private refreshRequested = false;
-  private pendingScreenPosition: { x: number; y: number } | null = null;
-  private queryGeneration = 0;
 
   getTickIntervalMs() {
     return 500;
@@ -86,12 +90,29 @@ export class MainRadialMenu implements Controller {
       if (!this.game.isValidCoord(worldCoords.x, worldCoords.y)) {
         return;
       }
-      if (this.game.myPlayer() === null) {
+      const clickedTile = this.game.ref(worldCoords.x, worldCoords.y);
+      this.clickedTile = clickedTile;
+
+      // Spectators (replay, dead, pre-spawn): skip the action radial and open
+      // the read-only PlayerPanel directly when right-clicking on a player.
+      if (this.game.isSpectator()) {
+        if (this.game.owner(clickedTile).isPlayer()) {
+          this.playerPanel.show(emptyPlayerActions(), clickedTile);
+        }
         return;
       }
-      this.clickedTile = this.game.ref(worldCoords.x, worldCoords.y);
-      this.queryGeneration++;
-      this.requestActions(this.clickedTile, event.x, event.y);
+
+      const myPlayer = this.game.myPlayer();
+      if (myPlayer === null) return;
+      myPlayer.actions(clickedTile).then((actions) => {
+        this.updatePlayerActions(
+          myPlayer,
+          actions,
+          clickedTile,
+          event.x,
+          event.y,
+        );
+      });
     });
   }
 
@@ -107,7 +128,7 @@ export class MainRadialMenu implements Controller {
     const tileOwner = this.game.owner(tile);
     const recipient = tileOwner.isPlayer() ? (tileOwner as PlayerView) : null;
 
-    if (myPlayer && recipient) {
+    if (recipient) {
       this.chatIntegration.setupChatModal(myPlayer, recipient);
     }
 
@@ -150,59 +171,15 @@ export class MainRadialMenu implements Controller {
 
   async tick() {
     if (!this.radialMenu.isMenuVisible() || this.clickedTile === null) return;
-    this.requestActions(this.clickedTile);
-  }
-
-  private requestActions(
-    tile: TileRef,
-    screenX: number | null = null,
-    screenY: number | null = null,
-  ): void {
-    if (this.actionQueryInFlight) {
-      this.refreshRequested = true;
-      if (screenX !== null && screenY !== null) {
-        this.pendingScreenPosition = { x: screenX, y: screenY };
-      }
-      return;
-    }
-    const player = this.game.myPlayer();
-    if (!player) return;
-    const generation = this.queryGeneration;
-    this.actionQueryInFlight = true;
-    player
-      .actions(tile)
-      .then((actions) => {
-        if (generation !== this.queryGeneration || this.clickedTile !== tile) {
-          return;
-        }
-        return this.updatePlayerActions(
-          player,
-          actions,
-          tile,
-          screenX,
-          screenY,
-        );
-      })
-      .catch((error) => console.error("Failed to open action menu", error))
-      .finally(() => {
-        this.actionQueryInFlight = false;
-        if (this.refreshRequested && this.clickedTile !== null) {
-          this.refreshRequested = false;
-          const position = this.pendingScreenPosition;
-          this.pendingScreenPosition = null;
-          this.requestActions(
-            this.clickedTile,
-            position?.x ?? null,
-            position?.y ?? null,
-          );
-        }
-      });
+    const myPlayer = this.game.myPlayer();
+    if (myPlayer === null) return;
+    const tile = this.clickedTile;
+    myPlayer.actions(tile).then((actions) => {
+      this.updatePlayerActions(myPlayer, actions, tile);
+    });
   }
 
   closeMenu() {
-    this.queryGeneration++;
-    this.refreshRequested = false;
-    this.pendingScreenPosition = null;
     if (this.radialMenu.isMenuVisible()) {
       this.radialMenu.hideRadialMenu();
     }

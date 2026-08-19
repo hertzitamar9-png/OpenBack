@@ -12,6 +12,7 @@ function unit(overrides: Partial<UnitState> = {}): UnitState {
   return {
     id: 1,
     unitType: UT_TANK,
+    waitTicks: 0,
     ownerID: 1,
     lastOwnerID: null,
     pos: 505,

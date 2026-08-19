@@ -549,7 +549,15 @@ export class GameView implements GameMap {
         ) {
           this._structuresDirty = true;
         }
+        const hasMotionPlan = this.unitMotionPlans.has(update.id);
+        const oldPos = unit.state.pos;
+        const oldLastPos = unit.state.lastPos;
         unit.update(update);
+        if (hasMotionPlan) {
+          unit.state.pos = oldPos;
+          unit.state.lastPos = oldLastPos;
+          unit.lastPos.pop();
+        }
       } else {
         unit = new UnitView(this, update);
         this._units.set(update.id, unit);
@@ -775,6 +783,8 @@ export class GameView implements GameMap {
       // carried over on the frame from the last rebuild.
       f.relationMatrix,
       f.relationSize,
+      this.unitMotionPlans,
+      gu.tick,
     );
     f.attackRings = this._myPlayer
       ? extractAttackRingsFromIds(
@@ -1377,6 +1387,9 @@ export class GameView implements GameMap {
   }
   config(): Config {
     return this._config;
+  }
+  isSpectator(): boolean {
+    return !this.myPlayer()?.isAlive() || this._config.isReplay();
   }
   units(...types: UnitType[]): UnitView[] {
     if (types.length === 0) {

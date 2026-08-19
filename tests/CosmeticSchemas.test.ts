@@ -116,7 +116,7 @@ describe("Effect cosmetic schemas", () => {
       });
     });
 
-    it("requires spiral radius/strands/rotationSpeed, radius > 0, integer strands", () => {
+    it("requires spiral radius/strands/rotationSpeed and positive dimensions", () => {
       const valid = {
         type: "spiral",
         colors: ["#f00", "#00f"],
@@ -137,7 +137,7 @@ describe("Effect cosmetic schemas", () => {
       expect(
         TrailEffectAttributesSchema.safeParse({ ...valid, strands: 2.5 })
           .success,
-      ).toBe(false);
+      ).toBe(true);
       expect(
         TrailEffectAttributesSchema.safeParse({ ...valid, strands: 0 }).success,
       ).toBe(false);
@@ -536,6 +536,44 @@ describe("NukeExplosionAttributesSchema", () => {
         type: "shockwave",
         nukeType: "atom",
       }).success,
+    ).toBe(false);
+  });
+});
+
+describe("NukeExplosionAttributesSchema embers", () => {
+  const base = {
+    nukeType: "atom" as const,
+    colors: ["#ffffff", "#ff8a28"],
+    size: 20,
+    speed: 5,
+    thickness: 1,
+    transitionSpeed: 0,
+  };
+
+  it("accepts a valid embers style", () => {
+    expect(
+      NukeExplosionAttributesSchema.safeParse({
+        ...base,
+        type: "embers",
+        density: 100,
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejects embers with a non-positive density", () => {
+    expect(
+      NukeExplosionAttributesSchema.safeParse({
+        ...base,
+        type: "embers",
+        density: 0,
+      }).success,
+    ).toBe(false);
+  });
+
+  it("rejects embers missing density", () => {
+    expect(
+      NukeExplosionAttributesSchema.safeParse({ ...base, type: "embers" })
+        .success,
     ).toBe(false);
   });
 });

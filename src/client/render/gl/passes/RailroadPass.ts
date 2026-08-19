@@ -16,6 +16,7 @@
  *   RGBA32F paletteTex        → player color lookup
  */
 
+import type { TerrainRect } from "../../types";
 import type { GhostPreviewData } from "../../types";
 import type { RenderSettings } from "../RenderSettings";
 import overlayVertSrc from "../shaders/map-overlay/overlay.vert.glsl?raw";
@@ -206,6 +207,29 @@ export class RailroadPass {
     });
 
     this.vao = createMapQuad(gl, mapW, mapH);
+  }
+
+  applyTerrainRects(rects: readonly TerrainRect[], bytes: Uint8Array): void {
+    if (rects.length === 0) return;
+    const gl = this.gl;
+    gl.bindTexture(gl.TEXTURE_2D, this.terrainTex);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    let offset = 0;
+    for (const r of rects) {
+      gl.texSubImage2D(
+        gl.TEXTURE_2D,
+        0,
+        r.x,
+        r.y,
+        r.w,
+        r.h,
+        gl.RED_INTEGER,
+        gl.UNSIGNED_BYTE,
+        bytes,
+        offset,
+      );
+      offset += r.w * r.h;
+    }
   }
 
   uploadRailroadState(railroadState: Uint8Array): void {

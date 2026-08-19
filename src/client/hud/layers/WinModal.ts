@@ -1,4 +1,4 @@
-import { html, LitElement } from "lit";
+import { html, LitElement, type TemplateResult } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { translateText, TUTORIAL_VIDEO_URL } from "../../../client/Utils";
 import { assetUrl } from "../../../core/AssetUrls";
@@ -6,6 +6,15 @@ import { EventBus } from "../../../core/EventBus";
 import { RankedType } from "../../../core/game/Game";
 import { GameUpdateType } from "../../../core/game/GameUpdates";
 import { getUserMe, markDeathTutorialSeen } from "../../Api";
+import "../../components/CosmeticCard";
+import {
+  fetchCosmetics,
+  purchaseCosmetic,
+  resolveCosmetics,
+} from "../../Cosmetics";
+import { cosmeticSelectionLabel } from "../../components/CosmeticPresentation";
+import "../../components/PurchaseButton";
+import "../../components/SteamWishlist";
 import { Controller } from "../../Controller";
 import { crazyGamesSDK } from "../../CrazyGamesSDK";
 import { DeathMedia, selectDeathMedia } from "../../DeathMedia";
@@ -35,6 +44,9 @@ export class WinModal extends LitElement implements Controller {
 
   @state()
   private deathMedia: DeathMedia | null = null;
+
+  @state()
+  private patternContent: TemplateResult | null = null;
 
   private _title: string;
 
@@ -140,6 +152,49 @@ export class WinModal extends LitElement implements Controller {
     this.keptPlayingAfterBlast = true;
     this.hide();
   };
+
+  async loadPatternContent() {
+    const me = await getUserMe();
+    const cosmetics = await fetchCosmetics();
+
+    const purchasable = resolveCosmetics(cosmetics, me, null).filter(
+      (r) => r.type === "pattern" && r.relationship === "purchasable",
+    );
+
+    if (purchasable.length === 0) {
+      this.patternContent = html``;
+      return;
+    }
+
+    // Shuffle the array and take patterns. Will always be 3 wide to allow scrolling
+    const shuffled = [...purchasable].sort(() => Math.random() - 0.5);
+    const selected = shuffled.slice(0, Math.min(3, shuffled.length));
+
+    this.patternContent = html`
+      <div class="flex gap-4 flex-nowrap justify-start items-start">
+        ${selected.map(
+          (resolved) => html`
+            <div data-win-cosmetic-promo class="flex w-40 flex-col gap-2">
+              <cosmetic-card
+                .resolved=${resolved}
+                .interactive=${false}
+              ></cosmetic-card>
+              <purchase-button
+                .product=${resolved.cosmetic?.product ?? null}
+                .priceHard=${resolved.cosmetic?.priceHard ?? null}
+                .priceSoft=${resolved.cosmetic?.priceSoft ?? null}
+                .rarity=${resolved.cosmetic?.rarity ?? "common"}
+                .itemName=${cosmeticSelectionLabel(resolved)}
+                .onPurchaseDollar=${() => purchaseCosmetic(resolved, "dollar")}
+                .onPurchaseHard=${() => purchaseCosmetic(resolved, "hard")}
+                .onPurchaseSoft=${() => purchaseCosmetic(resolved, "soft")}
+              ></purchase-button>
+            </div>
+          `,
+        )}
+      </div>
+    `;
+  }
 
   show() {
     crazyGamesSDK.gameplayStop();

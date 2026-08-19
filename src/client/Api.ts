@@ -37,18 +37,30 @@ import {
   ArchivedAnalyticsRecordSchema,
   GameInfo,
 } from "../core/Schemas";
-import { getAuthHeader, getPlayToken, logOut, userAuth } from "./Auth";
+import { UserSettings } from "../core/game/UserSettings";
+import {
+  getAuthHeader,
+  getPlayToken,
+  isSessionActive,
+  logOut,
+  userAuth,
+} from "./Auth";
 import { ClientEnv } from "./ClientEnv";
 
 export async function fetchPlayerById(
   playerId: string,
 ): Promise<PlayerProfile | false> {
   try {
+    const userAuthResult = await userAuth();
+    if (!userAuthResult) return false;
+    const { jwt } = userAuthResult;
+
     const url = `${getApiBase()}/player/${encodeURIComponent(playerId)}`;
 
     const res = await fetch(url, {
       headers: {
         Accept: "application/json",
+        Authorization: `Bearer ${jwt}`,
       },
     });
 
@@ -136,7 +148,6 @@ export async function fetchPublicPlayerGames(
     const res = await fetch(url.toString(), {
       headers: { Accept: "application/json" },
     });
-    if (res.status === 404) return { results: [], nextCursor: null };
     if (!res.ok) {
       console.warn(
         "fetchPublicPlayerGames: unexpected status",
@@ -163,6 +174,13 @@ export async function fetchPublicPlayerGames(
 }
 
 let __userMe: Promise<UserMeResponse | false> | null = null;
+
+// The profile outlives the session it describes unless this is dropped with
+// it: getUserMe answers from the cache before it checks authentication, so a
+// consumer calling it after a background logout would read the expired
+// account straight back. Handled here rather than in Auth, which cannot
+// import this module — the dependency runs the other way.
+document.addEventListener("session-cleared", () => invalidateUserMe());
 export async function getUserMe(): Promise<UserMeResponse | false> {
   if (__userMe !== null) {
     return __userMe;
@@ -171,7 +189,7 @@ export async function getUserMe(): Promise<UserMeResponse | false> {
     try {
       const userAuthResult = await userAuth();
       if (!userAuthResult) return false;
-      const { jwt } = userAuthResult;
+      const { jwt, claims } = userAuthResult;
 
       // Get the user object
       const response = await fetch(getApiBase() + "/users/@me", {
@@ -180,6 +198,9 @@ export async function getUserMe(): Promise<UserMeResponse | false> {
         },
       });
       if (response.status === 401) {
+        // Clearing the session announces itself (see clearLocalSession), so
+        // consumers holding account state don't mistake this for the
+        // transient failure the `false` below also represents.
         await logOut();
         return false;
       }
@@ -191,7 +212,14 @@ export async function getUserMe(): Promise<UserMeResponse | false> {
         console.error("Invalid response", error);
         return false;
       }
-      return hasLinkedAccount(result.data) ? result.data : false;
+      // Activate this player's cosmetic selections (and adopt any made while
+      // logged out) before the profile is handed to callers — but not if the
+      // session changed (logout, account switch) while the request was in
+      // flight: a stale response must not reactivate the old player's scope.
+      if (isSessionActive(claims.sub)) {
+        UserSettings.setPlayerId(result.data.player.publicId);
+      }
+      return result.data;
     } catch (e) {
       return false;
     }
@@ -1015,15 +1043,17 @@ export async function createNextLobby(
 }
 
 export function getApiBase() {
-  const audience = getAudience();
-  if (audience === "localhost") {
+  const domainname = getAudience();
+
+  if (domainname === "localhost") {
     const apiDomain = process.env.API_DOMAIN;
-    if (apiDomain && apiDomain !== "undefined") return `https://${apiDomain}`;
-    return localStorage.getItem("apiHost") ?? window.location.origin;
+    if (apiDomain) {
+      return `https://${apiDomain}`;
+    }
+    return localStorage.getItem("apiHost") ?? "http://localhost:8787";
   }
-  return window.location.hostname === "localhost"
-    ? `https://api.${audience}`
-    : window.location.origin;
+
+  return `https://api.${domainname}`;
 }
 
 export function getAudience() {
@@ -1192,7 +1222,6 @@ export async function fetchTribeLeaderboard(): Promise<
 }
 
 export async function getNews(): Promise<NewsItem[]> {
-  if (getAudience() === "localhost") return newsItemsFallback as NewsItem[];
   try {
     const res = await fetch(`${getApiBase()}/news.json`, {
       headers: { Accept: "application/json" },
@@ -1251,4 +1280,54 @@ async function getServedConfig<T>(
 // Fails closed: any error, non-200, or legacy payload lands on the bundled empty feed.
 export async function getStreams(): Promise<StreamsFeed> {
   return getServedConfig("streams.json", StreamsFeedSchema, streamsFallback);
+}
+
+export type DeleteAccountResult =
+  | { ok: true }
+  // 401: missing/unknown/expired refresh token — already logged out, and the
+  // server cleared the cookie.
+  | { ok: false; code: "logged_out" }
+  // 403: refused by policy. `message` is the server's player-facing reason
+  // (root player / banned account), shown as-is.
+  | { ok: false; code: "forbidden"; message?: string }
+  // 409: the player authored content other players depend on — deletion needs
+  // support. The body's message is for support, not end users.
+  | { ok: false; code: "blocked" }
+  // Anything else, including 429 rate limiting: the client shows a
+  // "contact support" failure.
+  | { ok: false; code: "failed" };
+
+export async function deleteAccount(): Promise<DeleteAccountResult> {
+  try {
+    const response = await fetch(`${getApiBase()}/users/@me`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    if (response.status === 401) {
+      return { ok: false, code: "logged_out" };
+    }
+    if (response.status === 403) {
+      const body = await response.json().catch(() => null);
+      return {
+        ok: false,
+        code: "forbidden",
+        message: typeof body?.message === "string" ? body.message : undefined,
+      };
+    }
+    if (response.status === 409) {
+      return { ok: false, code: "blocked" };
+    }
+    if (!response.ok) {
+      console.error(
+        "deleteAccount: request failed",
+        response.status,
+        response.statusText,
+      );
+      return { ok: false, code: "failed" };
+    }
+    return { ok: true };
+  } catch (e) {
+    console.error("deleteAccount: request failed", e);
+    return { ok: false, code: "failed" };
+  }
 }

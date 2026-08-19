@@ -78,6 +78,7 @@ export class BuildPreviewController implements Controller {
   /** Current ghost (null when no build type is active). */
   private ghostUnit: { buildableUnit: BuildableUnit } | null = null;
   private readonly connectedAllySmallIds: Set<number> = new Set();
+  private readonly usedSafetyAllies: Set<number> = new Set();
   private readonly mousePos = { x: 0, y: 0 };
   private lastGhostQueryAt: number = 0;
   private ghostQueryInFlight = false;
@@ -739,6 +740,12 @@ export class BuildPreviewController implements Controller {
       this.removeGhostStructure();
     } else if (this.ghostUnit.buildableUnit.canBuild) {
       const unitType = this.ghostUnit.buildableUnit.type;
+      const targetTile = this.game.ref(tile.x, tile.y);
+
+      if (this.shouldBlockRecentAllyNuke(targetTile, unitType)) {
+        return;
+      }
+
       const isNuke = unitType === UnitType.AtomBomb;
       const rocketDirectionUp =
         unitType === UnitType.AtomBomb || unitType === UnitType.HydrogenBomb
@@ -747,15 +754,9 @@ export class BuildPreviewController implements Controller {
       this.eventBus.emit(
         new BuildUnitIntentEvent(
           unitType,
-          this.game.ref(tile.x, tile.y),
+          targetTile,
           rocketDirectionUp,
           isNuke ? this.uiState.upgradeMultiplier || 1 : undefined,
-          unitType === UnitType.Plane
-            ? Math.floor(
-                (this.game.myPlayer()?.troops() ?? 0) *
-                  this.uiState.attackRatio,
-              )
-            : undefined,
         ),
       );
       if (!shouldPreserveGhostAfterBuild(unitType)) {
@@ -764,6 +765,63 @@ export class BuildPreviewController implements Controller {
     } else {
       this.removeGhostStructure();
     }
+  }
+
+  private shouldBlockRecentAllyNuke(
+    tile: TileRef,
+    unitType: UnitType,
+  ): boolean {
+    const duration = this.userSettings.nukeAllianceSafetyDuration();
+    if (
+      duration <= 0 ||
+      (unitType !== UnitType.AtomBomb &&
+        unitType !== UnitType.HydrogenBomb &&
+        unitType !== UnitType.MIRV)
+    ) {
+      return false;
+    }
+
+    const alliances = this.game.myPlayer()?.alliances();
+    if (!alliances?.length) return false;
+
+    const currentTick = this.game.ticks();
+    const freshAllies = new Map<number, number>();
+    for (const a of alliances) {
+      if (
+        !this.usedSafetyAllies.has(a.id) &&
+        currentTick - a.createdAt <= duration
+      ) {
+        freshAllies.set(this.game.player(a.other).smallID(), a.id);
+      }
+    }
+    if (freshAllies.size === 0) return false;
+
+    const broken =
+      unitType === UnitType.MIRV
+        ? [this.game.ownerID(tile)]
+        : listNukeBreakAlliance({
+            game: this.game,
+            targetTile: tile,
+            magnitude: this.game.config().nukeMagnitudes(unitType),
+            threshold: this.game.config().nukeAllianceBreakThreshold(),
+          });
+
+    let blocked = false;
+    for (const smallId of broken) {
+      const allianceId = freshAllies.get(smallId);
+      if (allianceId !== undefined) {
+        this.usedSafetyAllies.add(allianceId);
+        blocked = true;
+      }
+    }
+
+    if (blocked) {
+      this.view.triggerBlockedFlash(
+        this.game.x(tile) + 0.5,
+        this.game.y(tile) + 0.5,
+      );
+    }
+    return blocked;
   }
 
   private moveGhost(e: MouseMoveEvent) {

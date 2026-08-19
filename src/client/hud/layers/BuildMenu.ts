@@ -460,12 +460,6 @@ export class BuildMenu extends LitElement implements Controller {
           tile,
           rocketDirectionUp,
           undefined,
-          buildableUnit.type === UnitType.Plane
-            ? Math.floor(
-                (this.game.myPlayer()?.troops() ?? 0) *
-                  this.uiState.attackRatio,
-              )
-            : undefined,
         ),
       );
     }

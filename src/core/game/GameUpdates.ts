@@ -5,6 +5,7 @@ import {
   Gold,
   MessageType,
   NameViewData,
+  NukeState,
   PlayerID,
   PlayerType,
   Team,
@@ -226,6 +227,7 @@ export interface UnitUpdate {
   reachedTarget: boolean;
   warshipState?: WarshipState;
   transportShipState?: TransportShipState;
+  nukeState?: NukeState;
   targetable: boolean;
   markedForDeletion: number | false;
   targetUnitId?: number; // Only for trade ships

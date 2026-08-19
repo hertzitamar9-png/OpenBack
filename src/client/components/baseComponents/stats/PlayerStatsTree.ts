@@ -188,7 +188,11 @@ export class PlayerStatsTreeView extends LitElement {
       if (!rankedRecent) return undefined;
       return this.selectedRankedType === ALL_SELECTION
         ? rankedRecent.all
-        : rankedRecent[this.selectedRankedType];
+        : (
+            rankedRecent as Partial<
+              Record<RankedType, (typeof rankedRecent)["all"]>
+            >
+          )[this.selectedRankedType];
     }
 
     const typeRecent = recent[this.selectedType];

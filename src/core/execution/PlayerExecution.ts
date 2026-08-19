@@ -3,22 +3,18 @@ import {
   Cell,
   Execution,
   Game,
-  MessageType,
   Player,
+  PlayerType,
   Structures,
   UnitType,
 } from "../game/Game";
 import { GameMap, TileRef } from "../game/GameMap";
+import {
+  bumpTraversalGeneration,
+  tileTraversalScratch,
+  TileTraversalScratch,
+} from "../game/TileTraversalScratch";
 import { calculateBoundingBox, getMode, inscribed, simpleHash } from "../Util";
-import { hasPlaneBeachhead, isPlaneBeachhead } from "./AnnexationExemptions";
-
-interface ClusterTraversalState {
-  visited: Uint16Array;
-  gen: number;
-}
-
-// Per-game traversal state used by calculateClusters() to avoid per-player buffers.
-const traversalStates = new WeakMap<Game, ClusterTraversalState>();
 
 export class PlayerExecution implements Execution {
   private readonly ticksPerClusterCalc = 20;
@@ -28,20 +24,9 @@ export class PlayerExecution implements Execution {
   private mg: Game;
   // Direct GameMap reference to skip the Game delegation hop in hot loops.
   private map: GameMap;
-  private mapState: Uint16Array;
-  private mapTerrain: Uint8Array;
   private active = true;
   // Reusable neighbor buffer to avoid closures/allocation in cluster checks.
   private nbuf: TileRef[] = [0, 0, 0, 0];
-  private diagNbuf: TileRef[] = [0, 0, 0, 0, 0, 0, 0, 0];
-  private encirclements = new Map<
-    number,
-    { since: number; lastSeen: number }
-  >();
-  private warExhaustionTicks = 0;
-  private lastExhaustionBand = 0;
-  private lastStructureOwnershipCheck = -1;
-  private lastStructureCount = -1;
 
   constructor(private player: Player) {}
 
@@ -52,8 +37,6 @@ export class PlayerExecution implements Execution {
   init(mg: Game, ticks: number) {
     this.mg = mg;
     this.map = mg.map();
-    this.mapState = this.map.tileStateBuffer();
-    this.mapTerrain = this.map.terrainBuffer();
     this.config = mg.config();
     this.lastCalc =
       ticks + (simpleHash(this.player.id()) % this.ticksPerClusterCalc);
@@ -61,73 +44,48 @@ export class PlayerExecution implements Execution {
 
   tick(ticks: number) {
     this.player.decayRelations();
-    const units = this.player.units();
-    if (
-      this.lastStructureOwnershipCheck !== this.player.lastTileChange() ||
-      this.lastStructureCount !== units.length
-    ) {
-      for (const u of units) {
-        const isReadyVehicle =
-          (u.type() === UnitType.Plane || u.type() === UnitType.Tank) &&
-          u.isLoaded() === true;
-        if (!Structures.has(u.type()) && !isReadyVehicle) {
-          continue;
-        }
-
-        const owner = this.mg.owner(u.tile());
-        if (!owner.isPlayer()) {
-          u.delete();
-          continue;
-        }
-        if (owner === this.player) {
-          continue;
-        }
-
-        const captor = this.mg.player(owner.id());
-        if (u.type() === UnitType.DefensePost) {
-          u.delete(true, captor);
-        } else {
-          captor.captureUnit(u);
-        }
+    for (const u of this.player.units()) {
+      if (!Structures.has(u.type())) {
+        continue;
       }
 
-      // A parked tank is physically based at the military base on its tile.
-      // Launched tanks (loaded=false) remain independent until their mission
-      // ends, but a ready tank cannot survive losing or destroying its base.
-      const activeBaseTiles = new Set(
-        this.player
-          .units(UnitType.MilitaryBase)
-          .filter((base) => base.isActive() && !base.isUnderConstruction())
-          .map((base) => base.tile()),
-      );
-      for (const tank of this.player.units(UnitType.Tank)) {
-        if (
-          tank.isActive() &&
-          tank.isLoaded() === true &&
-          !activeBaseTiles.has(tank.tile())
-        ) {
-          tank.delete(false);
-        }
+      const owner = this.mg!.owner(u.tile());
+      if (!owner?.isPlayer()) {
+        u.delete();
+        continue;
       }
-      this.lastStructureOwnershipCheck = this.player.lastTileChange();
-      this.lastStructureCount = this.player.units().length;
+      if (owner === this.player) {
+        continue;
+      }
+
+      const captor = this.mg!.player(owner.id());
+      if (u.type() === UnitType.DefensePost) {
+        u.delete(true, captor);
+      } else {
+        captor.captureUnit(u);
+      }
     }
 
     if (!this.player.isAlive()) {
       this.removeOnDeath();
       this.active = false;
+      // OFM live standings: finishing place = non-bot players still standing when
+      // we fell, + 1 (we are the last of them). players() is alive-only and we
+      // just dropped to zero tiles, so it already excludes us. Bots are fill, not
+      // competitors, so they don't count. Deterministic (same on every client).
+      // Fallback path: conquest deaths are stamped in GameImpl.conquerPlayer (so a
+      // game-ending tick still records it); recordDeathPosition is first-write-wins.
+      const stillStanding = this.mg
+        .players()
+        .filter((p) => p.type() !== PlayerType.Bot).length;
+      this.mg.stats().recordDeathPosition(this.player, stillStanding + 1);
       this.mg.stats().playerKilled(this.player, ticks);
       return;
     }
 
-    const exhaustion = this.updateWarExhaustion();
-    const troopInc = this.config.troopIncreaseRate(this.player) * exhaustion;
+    const troopInc = this.config.troopIncreaseRate(this.player);
     this.player.addTroops(troopInc);
-    const goldFromWorkers = BigInt(
-      Math.floor(
-        Number(this.config.goldAdditionRate(this.player)) * exhaustion,
-      ),
-    );
+    const goldFromWorkers = this.config.goldAdditionRate(this.player);
     this.player.addGold(goldFromWorkers);
 
     // Record stats
@@ -153,10 +111,7 @@ export class PlayerExecution implements Execution {
       ticks - this.lastCalc > this.ticksPerClusterCalc ||
       this.player.numTilesOwned() < 100
     ) {
-      if (
-        this.player.lastTileChange() >= this.lastCalc ||
-        this.encirclements.size > 0
-      ) {
+      if (this.player.lastTileChange() >= this.lastCalc) {
         this.lastCalc = ticks;
         const start = performance.now();
         this.removeClusters();
@@ -169,12 +124,10 @@ export class PlayerExecution implements Execution {
   }
 
   private removeClusters() {
-    const calcTick = this.mg.ticks();
     const clusters = this.calculateClusters();
 
     if (clusters.length === 0) {
       this.player.largestClusterBoundingBox = null;
-      this.encirclements.clear();
       return;
     }
 
@@ -210,17 +163,13 @@ export class PlayerExecution implements Execution {
         this.removeCluster(cluster);
       }
     }
-
-    for (const [anchor, state] of this.encirclements) {
-      if (state.lastSeen !== calcTick) this.encirclements.delete(anchor);
-    }
   }
 
   private surroundedBySamePlayer(
     cluster: readonly TileRef[],
     clusterBox: { min: Cell; max: Cell },
   ): false | Player {
-    let enemyID = 0;
+    const enemies = new Set<number>();
 
     let minX = Infinity,
       minY = Infinity,
@@ -236,14 +185,13 @@ export class PlayerExecution implements Execution {
       const numNeighbors = map.neighbors4(tile, this.nbuf);
       for (let i = 0; i < numNeighbors; i++) {
         const n = this.nbuf[i];
-        const ownerId = this.mapState[n] & 0xfff;
+        const ownerId = map.ownerID(n);
         if (ownerId === 0) {
           // Unowned neighbor: the cluster is not fully surrounded.
           return false;
         }
         if (ownerId !== mySmallID) {
-          if (enemyID !== 0 && enemyID !== ownerId) return false;
-          enemyID = ownerId;
+          enemies.add(ownerId);
           const px = map.x(n);
           const py = map.y(n);
           minX = Math.min(minX, px);
@@ -252,15 +200,15 @@ export class PlayerExecution implements Execution {
           maxY = Math.max(maxY, py);
         }
       }
-      if (enemyID === 0) {
+      if (enemies.size !== 1) {
         return false;
       }
     }
-    if (enemyID === 0) {
+    if (enemies.size !== 1) {
       return false;
     }
 
-    const enemy = this.mg.playerBySmallID(enemyID) as Player;
+    const enemy = this.mg.playerBySmallID(Array.from(enemies)[0]) as Player;
     const localEnemyBox = {
       min: new Cell(minX, minY),
       max: new Cell(maxX, maxY),
@@ -280,13 +228,13 @@ export class PlayerExecution implements Execution {
     const map = this.map;
     const mySmallID = this.player.smallID();
     for (const tr of cluster) {
-      if ((this.mapTerrain[tr] & 0xc0) === 0xc0 || map.isOnEdgeOfMap(tr)) {
+      if (map.isShore(tr) || map.isOnEdgeOfMap(tr)) {
         return false;
       }
       const numNeighbors = map.neighbors4(tr, this.nbuf);
       for (let i = 0; i < numNeighbors; i++) {
         const n = this.nbuf[i];
-        const ownerId = this.mapState[n] & 0xfff;
+        const ownerId = map.ownerID(n);
         if (ownerId !== 0 && ownerId !== mySmallID) {
           hasEnemy = true;
           const x = map.x(n);
@@ -307,16 +255,8 @@ export class PlayerExecution implements Execution {
   }
 
   private removeCluster(cluster: readonly TileRef[]) {
-    // Aircraft deployment protects every current cluster, including territory
-    // gained by the expanding landing wave, from free surrounded annexation.
-    if (this.player.hasLandAnnexationProtection()) return;
-
-    // Airborne beachheads must be conquered through normal attacks. Their
-    // intentionally surrounded placement must not trigger free annexation.
-    if (isPlaneBeachhead(this.mg, this.player, cluster)) return;
-
     for (const t of cluster) {
-      if ((this.mapState[t] & 0xfff) !== this.player.smallID()) {
+      if (this.mg?.ownerID(t) !== this.player?.smallID()) {
         // Other removeCluster operations could change tile owners,
         // so double check.
         return;
@@ -327,47 +267,19 @@ export class PlayerExecution implements Execution {
     if (capturing === null) {
       return;
     }
-    // A plane beachhead may expand only through normal combat; it cannot use
-    // surrounded-cluster annexation against the much larger defender either.
-    if (hasPlaneBeachhead(this.mg, capturing)) return;
-
-    if (this.config.worldMechanics().encirclement) {
-      let anchor = Number.MAX_SAFE_INTEGER;
-      for (const tile of cluster) anchor = Math.min(anchor, tile);
-      const now = this.mg.ticks();
-      let state = this.encirclements.get(anchor);
-      if (!state) {
-        state = { since: now, lastSeen: now };
-        this.encirclements.set(anchor, state);
-        this.mg.displayMessage(
-          "events_display.encirclement_started",
-          MessageType.ENCIRCLEMENT_STARTED,
-          this.player.id(),
-          undefined,
-          { enemy: capturing.name() },
-        );
-      }
-      state.lastSeen = now;
-
-      // A pocket loses readiness every two-second evaluation. Larger pockets
-      // drain proportionally, but the loss is capped so an encirclement never
-      // deletes an army in a single update.
-      const share = Math.min(
-        1,
-        cluster.length / Math.max(1, this.player.numTilesOwned()),
-      );
-      this.player.removeTroops(
-        Math.max(1, Math.floor(this.player.troops() * share * 0.0125)),
-      );
-
-      // Fifteen seconds gives the defender time to reopen a corridor. Only a
-      // continuously closed pocket is annexed.
-      if (now - state.since < 150) return;
-      this.encirclements.delete(anchor);
-    }
 
     const firstTile = cluster[0];
-    if (!firstTile) {
+    if (firstTile === undefined) {
+      return;
+    }
+
+    // The checks above only ever looked at this one cluster of border tiles,
+    // but the fill below hands over the whole territory the cluster sits on.
+    // Those are different sets: every hole in a territory — an enemy enclave,
+    // a nuke crater — gives it another border cluster, so a cluster that
+    // passes can be wrapped around a hole in the middle of a wide open
+    // empire. Verify the land actually changing hands is sealed in.
+    if (!this.isEnclosed(firstTile)) {
       return;
     }
 
@@ -376,10 +288,10 @@ export class PlayerExecution implements Execution {
       this.traversalState().visited,
       [firstTile],
       (tile, cb) => this.mg.forEachNeighbor(tile, cb),
-      (tile) => (this.mapState[tile] & 0xfff) === this.player.smallID(),
+      (tile) => this.mg.ownerID(tile) === this.player.smallID(),
     );
 
-    if (this.player.numTilesOwned() === tiles.size) {
+    if (this.player.numTilesOwned() === tiles.length) {
       this.mg.conquerPlayer(capturing, this.player);
     }
 
@@ -388,34 +300,53 @@ export class PlayerExecution implements Execution {
     }
   }
 
-  private updateWarExhaustion(): number {
-    if (!this.config.worldMechanics().warExhaustion) return 1;
-    const fighting =
-      this.player.outgoingAttacks().length > 0 ||
-      this.player.incomingAttacks().length > 0;
-    if (fighting) {
-      this.warExhaustionTicks = Math.min(6_000, this.warExhaustionTicks + 1);
-    } else {
-      // Recovery is deliberately slower than accumulation: repeated short
-      // wars still cost something, while sustained peace fully restores the
-      // economy.
-      this.warExhaustionTicks = Math.max(0, this.warExhaustionTicks - 0.25);
+  /**
+   * Whether the player's territory reachable from `start` is walled in by
+   * other players: walking from it through our own tiles and any unclaimed
+   * land can never reach water or the edge of the map, so the only way out
+   * is across someone else's territory.
+   *
+   * Unclaimed land is walked through rather than treated as a way out — a
+   * crater inside our own land is a hole, not an exit — but water and the
+   * map edge end it, matching what the cluster checks already require of the
+   * tiles they inspect.
+   */
+  private isEnclosed(start: TileRef): boolean {
+    const map = this.map;
+    const mySmallID = this.player.smallID();
+    const state = this.traversalState();
+    const gen = bumpTraversalGeneration(state);
+    const visited = state.visited;
+    const stack = state.stack;
+    stack.length = 0;
+    visited[start] = gen;
+    stack.push(start);
+
+    while (stack.length > 0) {
+      const tile = stack.pop()!;
+      if (map.isOnEdgeOfMap(tile)) {
+        return false;
+      }
+      const numNeighbors = map.neighbors4(tile, this.nbuf);
+      for (let i = 0; i < numNeighbors; i++) {
+        const n = this.nbuf[i];
+        if (visited[n] === gen) {
+          continue;
+        }
+        const ownerId = map.ownerID(n);
+        if (ownerId !== 0 && ownerId !== mySmallID) {
+          // Someone else's tile — part of the wall, so stop here.
+          continue;
+        }
+        if (ownerId === 0 && !map.isLand(n)) {
+          // Open water is a way out.
+          return false;
+        }
+        visited[n] = gen;
+        stack.push(n);
+      }
     }
-    const factor = Math.max(0.45, 1 - this.warExhaustionTicks / 10_000);
-    const band = Math.floor((1 - factor) / 0.1);
-    if (band > this.lastExhaustionBand && band > 0) {
-      this.lastExhaustionBand = band;
-      this.mg.displayMessage(
-        "events_display.war_exhaustion",
-        MessageType.WAR_EXHAUSTION,
-        this.player.id(),
-        undefined,
-        { penalty: Math.round((1 - factor) * 100) },
-      );
-    } else if (band < this.lastExhaustionBand) {
-      this.lastExhaustionBand = band;
-    }
-    return factor;
+    return true;
   }
 
   private getCapturingPlayer(cluster: readonly TileRef[]): Player | null {
@@ -425,7 +356,7 @@ export class PlayerExecution implements Execution {
     for (const t of cluster) {
       const numNeighbors = map.neighbors4(t, this.nbuf);
       for (let i = 0; i < numNeighbors; i++) {
-        const ownerId = this.mapState[this.nbuf[i]] & 0xfff;
+        const ownerId = map.ownerID(this.nbuf[i]);
         if (ownerId === 0 || ownerId === mySmallID) {
           continue;
         }
@@ -473,28 +404,23 @@ export class PlayerExecution implements Execution {
 
     const clusters: TileRef[][] = [];
 
-    for (const startTile of borderTiles) {
-      if (visited[startTile] === currentGen) continue;
+    // Set.forEach instead of for..of: iterating a large Set allocates an
+    // iterator-result object per element, and border sets can be huge.
+    const neighborFn = (tile: TileRef, cb: (neighbor: TileRef) => void) =>
+      this.mg.forEachNeighborWithDiag(tile, cb);
+    const includeFn = (tile: TileRef) => borderTiles.has(tile);
+    borderTiles.forEach((startTile) => {
+      if (visited[startTile] === currentGen) return;
 
-      const cluster: TileRef[] = [];
-      const stack: TileRef[] = [startTile];
-      visited[startTile] = currentGen;
-      cluster.push(startTile);
-      while (stack.length > 0) {
-        const tile = stack.pop()!;
-        const count = this.map.neighbors8(tile, this.diagNbuf);
-        for (let i = 0; i < count; i++) {
-          const neighbor = this.diagNbuf[i];
-          if (visited[neighbor] === currentGen || !borderTiles.has(neighbor)) {
-            continue;
-          }
-          visited[neighbor] = currentGen;
-          cluster.push(neighbor);
-          stack.push(neighbor);
-        }
-      }
+      const cluster = this.floodFillWithGen(
+        currentGen,
+        visited,
+        [startTile],
+        neighborFn,
+        includeFn,
+      );
       clusters.push(cluster);
-    }
+    });
     return clusters;
   }
 
@@ -509,47 +435,33 @@ export class PlayerExecution implements Execution {
     return this.active;
   }
 
-  private traversalState(): ClusterTraversalState {
-    const totalTiles = this.mg.width() * this.mg.height();
-    let state = traversalStates.get(this.mg);
-    if (!state || state.visited.length < totalTiles) {
-      state = {
-        // One shared generation buffer serves every player. Uint16 halves the
-        // permanent traversal allocation on every map (150 MB saved on Grand
-        // Earth); the rare wrap simply clears the buffer.
-        visited: new Uint16Array(totalTiles),
-        gen: 0,
-      };
-      traversalStates.set(this.mg, state);
-    }
-    return state;
+  private traversalState(): TileTraversalScratch {
+    return tileTraversalScratch(this.mg);
   }
 
   private bumpGeneration(): number {
-    const state = this.traversalState();
-    state.gen++;
-    if (state.gen === 0xffff) {
-      state.visited.fill(0);
-      state.gen = 1;
-    }
-    return state.gen;
+    return bumpTraversalGeneration(this.traversalState());
   }
 
   private floodFillWithGen(
     currentGen: number,
-    visited: Uint16Array,
+    visited: Uint32Array,
     startTiles: TileRef[],
     neighborFn: (tile: TileRef, callback: (neighbor: TileRef) => void) => void,
     includeFn: (tile: TileRef) => boolean,
-  ): Set<TileRef> {
-    const result = new Set<TileRef>();
-    const stack: TileRef[] = [];
+  ): TileRef[] {
+    // The visited generation array already deduplicates, so the result can be
+    // a plain array (in mark order) — far cheaper than a Set of the same
+    // size. The DFS stack is reused across fills via the traversal state.
+    const result: TileRef[] = [];
+    const stack = this.traversalState().stack;
+    stack.length = 0;
 
     for (const start of startTiles) {
       if (visited[start] === currentGen) continue;
       if (!includeFn(start)) continue;
       visited[start] = currentGen;
-      result.add(start);
+      result.push(start);
       stack.push(start);
     }
 
@@ -561,7 +473,7 @@ export class PlayerExecution implements Execution {
         return;
       }
       visited[neighbor] = currentGen;
-      result.add(neighbor);
+      result.push(neighbor);
       stack.push(neighbor);
     };
 

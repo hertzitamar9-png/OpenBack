@@ -1,11 +1,31 @@
 import { LitElement, html } from "lit";
-import { customElement } from "lit/decorators.js";
+import { customElement, state } from "lit/decorators.js";
+import version from "resources/version.txt?raw";
 import { assetUrl } from "../../core/AssetUrls";
+import { composeVersionDisplay, desktopVersion } from "../DesktopShell";
+
+const gameVersion = (() => {
+  const trimmed = version.trim();
+  return trimmed.startsWith("v") ? trimmed : `v${trimmed}`;
+})();
 
 @customElement("page-footer")
 export class Footer extends LitElement {
+  // Starts as the game version alone and gains the shell version once the
+  // bridge answers, so the line is never blank while that call is in flight.
+  @state() private versionLabel = gameVersion;
+
   createRenderRoot() {
     return this;
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    // desktopVersion() resolves null off the desktop shell and on its own
+    // timeout, so this can only ever leave the label as-is or extend it.
+    void desktopVersion().then((shellVersion) => {
+      this.versionLabel = composeVersionDisplay(gameVersion, shellVersion);
+    });
   }
 
   render() {

@@ -29,16 +29,6 @@ import { TribeSpawner } from "./TribeSpawner";
 import { UpgradeStructureExecution } from "./UpgradeStructureExecution";
 import { PlayerSpawner } from "./utils/PlayerSpawner";
 
-const SHARED_CONTROL_PRIMARY_INTENTS = new Set<StampedIntent["type"]>([
-  "allianceRequest",
-  "allianceReject",
-  "breakAlliance",
-  "allianceExtension",
-  "embargo",
-  "embargo_all",
-  "toggle_pause",
-]);
-
 export class Executor {
   // private random = new PseudoRandom(999)
   private random: PseudoRandom;
@@ -65,28 +55,6 @@ export class Executor {
       return new NoOpExecution();
     }
 
-    // One controller leaving must not disconnect a country that is still
-    // actively controlled by friends. Shared countries remain playable for
-    // the duration of the match/reconnect window.
-    if (
-      intent.type === "mark_disconnected" &&
-      player.controllerClientIDs().length > 1
-    ) {
-      return new NoOpExecution();
-    }
-
-    // Co-command permissions: every controller may expand, fight, build and
-    // move units. The country's primary commander alone handles diplomacy,
-    // embargo policy and pausing, preventing two friends from issuing
-    // contradictory sovereign decisions in the same turn.
-    if (
-      player.controllerClientIDs().length > 1 &&
-      player.clientID() !== intent.clientID &&
-      SHARED_CONTROL_PRIMARY_INTENTS.has(intent.type)
-    ) {
-      return new NoOpExecution();
-    }
-
     // create execution
     switch (intent.type) {
       case "attack": {
@@ -104,7 +72,14 @@ export class Executor {
       case "move_warship":
         return new MoveWarshipExecution(player, intent.unitIds, intent.tile);
       case "spawn":
-        return new SpawnExecution(this.gameID, player.info(), intent.tile);
+        // fromIntent: this one came off the wire, so it is subject to the
+        // spawn-phase gate that internal spawns are not.
+        return new SpawnExecution(
+          this.gameID,
+          player.info(),
+          intent.tile,
+          true,
+        );
       case "boat":
         return new TransportShipExecution(player, intent.dst, intent.troops);
       case "allianceRequest":
@@ -136,7 +111,6 @@ export class Executor {
           intent.tile,
           intent.rocketDirectionUp,
           intent.amount,
-          intent.troops,
         );
       case "allianceExtension": {
         return new AllianceExtensionExecution(player, intent.recipient);

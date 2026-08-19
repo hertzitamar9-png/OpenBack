@@ -1,26 +1,44 @@
 import { html, LitElement, TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import type { FriendEntry, PlayerProfile } from "../../core/ApiSchemas";
-import { fetchPlayerById } from "../Api";
+import type { FriendEntry } from "../../core/ApiSchemas";
 import {
   acceptFriendRequest,
-  blockPlayer,
   deleteFriendRequest,
-  fetchBlockedPlayers,
   fetchFriendRequests,
   fetchFriends,
   removeFriend,
   sendFriendRequest,
-  unblockPlayer,
 } from "../FriendsApi";
-import { showInGameConfirm } from "../InGameModal";
-import { socialClient, type PendingSocialInvite } from "../SocialClient";
 import { showToast, translateText } from "../Utils";
-import "./CopyButton";
-import "./PlayerAvatar";
-import "./SocialChat";
+import { playerNameLink } from "./ui/PlayerNameLink";
 
 const PAGE_LIMIT = 20;
+
+/**
+ * Accept a pasted profile share link (`…#modal=profile&publicID=abc12345`) and
+ * keep only the id, mirroring the private-lobby join box. Only strings that are
+ * actually URLs are touched: usernames render as `wonder #5005`, so a bare `#`
+ * must be left alone.
+ */
+export function extractPublicIdFromUrl(input: string): string {
+  // Schemes are case-insensitive, so `HTTPS://…` is a real link too.
+  if (!/^https?:\/\//i.test(input)) return input;
+  let url: URL;
+  try {
+    url = new URL(input);
+  } catch {
+    // Half-typed and malformed URLs land here on every keystroke — expected,
+    // so don't log; just hand the raw text back for the server to reject.
+    return input;
+  }
+  // Modals are hash-routed (`…/#modal=profile&publicID=abc12345`), so the id is
+  // in the fragment, not the query string — `url.searchParams` is always empty
+  // here. Parse the fragment's own `key=value&…` pairs instead.
+  const params = new URLSearchParams(url.hash.replace(/^#/, ""));
+  const publicId = params.get("publicID");
+  if (publicId === null || publicId === "") return input;
+  return publicId;
+}
 
 @customElement("friends-list")
 export class FriendsList extends LitElement {
@@ -29,8 +47,6 @@ export class FriendsList extends LitElement {
   }
 
   @property({ type: String }) myPublicId = "";
-  @property({ type: String }) clanTag = "";
-  @property({ type: String }) pendingFriendId = "";
 
   @state() private loading = true;
   @state() private actionPending = false;
@@ -40,46 +56,18 @@ export class FriendsList extends LitElement {
   @state() private incoming: FriendEntry[] = [];
   @state() private outgoing: FriendEntry[] = [];
   @state() private addInput = "";
-  @state() private blocked: FriendEntry[] = [];
-  @state() private socialInvites: PendingSocialInvite[] = [];
-  @state() private selectedProfile: PlayerProfile | null = null;
-  private linkPrompted = false;
-
-  private readonly realtimeListener = () => void this.loadAll(false);
-  private readonly inviteListener = (event: Event) => {
-    this.socialInvites =
-      (event as CustomEvent<PendingSocialInvite[]>).detail ?? [];
-  };
 
   connectedCallback(): void {
     super.connectedCallback();
-    document.addEventListener("social-friends-changed", this.realtimeListener);
-    document.addEventListener("social-presence-changed", this.realtimeListener);
-    document.addEventListener("social-invites-changed", this.inviteListener);
-    this.socialInvites = socialClient.getPendingInvites();
     void this.loadAll();
   }
 
-  disconnectedCallback(): void {
-    document.removeEventListener(
-      "social-friends-changed",
-      this.realtimeListener,
-    );
-    document.removeEventListener(
-      "social-presence-changed",
-      this.realtimeListener,
-    );
-    document.removeEventListener("social-invites-changed", this.inviteListener);
-    super.disconnectedCallback();
-  }
-
-  private async loadAll(showLoading = true): Promise<void> {
-    if (showLoading) this.loading = true;
+  private async loadAll(): Promise<void> {
+    this.loading = true;
     try {
-      const [requests, firstPage, blocked] = await Promise.all([
+      const [requests, firstPage] = await Promise.all([
         fetchFriendRequests(),
         fetchFriends(1, PAGE_LIMIT),
-        fetchBlockedPlayers(),
       ]);
       if (requests) {
         this.incoming = requests.incoming;
@@ -89,21 +77,6 @@ export class FriendsList extends LitElement {
         this.friends = firstPage.results;
         this.friendsTotal = firstPage.total;
         this.friendsPage = firstPage.page;
-      }
-      if (blocked) this.blocked = blocked.results;
-      if (!this.linkPrompted && this.pendingFriendId) {
-        this.linkPrompted = true;
-        this.addInput = this.pendingFriendId;
-        const linkedProfile = await fetchPlayerById(this.pendingFriendId);
-        const linkedName = linkedProfile
-          ? linkedProfile.displayName
-          : undefined;
-        const accepted = await showInGameConfirm(
-          translateText("friends.link_request_confirm", {
-            player: linkedName?.trim() ? linkedName : this.pendingFriendId,
-          }),
-        );
-        if (accepted) await this.handleSend();
       }
     } finally {
       this.loading = false;
@@ -149,7 +122,13 @@ export class FriendsList extends LitElement {
   }
 
   private async handleSend(): Promise<void> {
-    const target = this.addInput.trim();
+    // Names render as `wonder #5005` — with a non-breaking space (see
+    // usernameText) that survives a copy-paste — but resolve on the stored
+    // `wonder.5005` form, so accept either. `\s` covers the nbsp. Public ids
+    // never contain "#".
+    const target = extractPublicIdFromUrl(this.addInput.trim())
+      .trim()
+      .replace(/\s*#\s*/g, ".");
     if (!target) return;
     if (target === this.myPublicId) {
       showToast(translateText("friends.cannot_friend_self"), "red");
@@ -169,10 +148,16 @@ export class FriendsList extends LitElement {
         await this.loadAll();
       } else {
         showToast(translateText("friends.request_sent"), "green");
-        this.outgoing = [
-          ...this.outgoing,
-          { publicId: target, createdAt: new Date().toISOString() },
-        ];
+        // Refetch rather than inserting the raw input: the target may have
+        // been typed as a username, and the server-returned entry carries
+        // the real publicId + account username (so the verified check shows).
+        // If the refetch fails the list is just stale until the next load —
+        // never insert `target`, which may not be a publicId.
+        const requests = await fetchFriendRequests();
+        if (requests) {
+          this.incoming = requests.incoming;
+          this.outgoing = requests.outgoing;
+        }
       }
     } finally {
       this.actionPending = false;
@@ -227,7 +212,7 @@ export class FriendsList extends LitElement {
 
   private async handleRemove(publicId: string): Promise<void> {
     if (this.actionPending) return;
-    const confirmed = await showInGameConfirm(
+    const confirmed = window.confirm(
       translateText("friends.confirm_remove", { publicId }),
     );
     if (!confirmed) return;
@@ -245,73 +230,6 @@ export class FriendsList extends LitElement {
     } finally {
       this.actionPending = false;
     }
-  }
-
-  private openChat(publicId: string): void {
-    document.dispatchEvent(
-      new CustomEvent("open-friend-chat", { detail: { publicId } }),
-    );
-  }
-
-  private async openProfile(publicId: string): Promise<void> {
-    const profile = await fetchPlayerById(publicId);
-    if (profile) this.selectedProfile = profile;
-  }
-
-  private async openParty(publicId: string): Promise<void> {
-    const delivered = await socialClient.inviteToParty(publicId);
-    showToast(
-      translateText(
-        delivered
-          ? "friends.party_invite_sent"
-          : "friends.party_invite_pending",
-      ),
-      "green",
-    );
-  }
-
-  private async handleBlock(publicId: string): Promise<void> {
-    if (
-      !(await showInGameConfirm(
-        translateText("friends.confirm_block", { publicId }),
-      ))
-    )
-      return;
-    const result = await blockPlayer(publicId);
-    if (result !== true) {
-      showToast(translateText("friends.error_generic"), "red");
-      return;
-    }
-    await this.loadAll(false);
-  }
-
-  private async copyFriendLink(): Promise<void> {
-    const link = `${window.location.origin}/friend/${encodeURIComponent(this.myPublicId)}`;
-    await navigator.clipboard.writeText(link);
-    showToast(translateText("friends.link_copied"), "green");
-  }
-
-  private displayName(entry: FriendEntry): string {
-    const name = entry.displayName?.trim();
-    return name && name.length > 0 ? name : entry.publicId;
-  }
-
-  private lastSeen(entry: FriendEntry): string {
-    if (entry.online) return translateText("friends.online_now");
-    if (!entry.lastSeenAt) return translateText("friends.offline");
-    const minutes = Math.max(
-      0,
-      Math.floor((Date.now() - new Date(entry.lastSeenAt).getTime()) / 60000),
-    );
-    if (minutes < 60)
-      return translateText("friends.last_online", { time: `${minutes}m` });
-    if (minutes < 1440)
-      return translateText("friends.last_online", {
-        time: `${Math.floor(minutes / 60)}h ${minutes % 60}m`,
-      });
-    return translateText("friends.last_online", {
-      time: `${Math.floor(minutes / 1440)}d ${Math.floor((minutes % 1440) / 60)}h`,
-    });
   }
 
   private errorKey(err: string): string {
@@ -344,125 +262,10 @@ export class FriendsList extends LitElement {
 
     return html`
       <div class="flex flex-col gap-6">
-        ${this.renderTeamInfo()} ${this.renderProfile()}
-        ${this.renderShareLink()} ${this.renderAddSection()}
-        ${this.renderRequestsSection()} ${this.renderSocialInvites()}
-        ${this.renderFriendsSection()} ${this.renderBlockedSection()}
-        <social-chat
-          .friends=${this.friends}
-          .myPublicId=${this.myPublicId}
-          .clanTag=${this.clanTag}
-        ></social-chat>
+        ${this.renderTeamInfo()} ${this.renderAddSection()}
+        ${this.renderRequestsSection()} ${this.renderFriendsSection()}
       </div>
     `;
-  }
-
-  private renderProfile(): TemplateResult | "" {
-    const profile = this.selectedProfile;
-    if (!profile) return "";
-    return html`<div
-      class="rounded-xl border border-malibu-blue/25 bg-surface p-5"
-    >
-      <div class="flex items-start gap-4">
-        <div
-          class="h-14 w-2 rounded-full"
-          style=${`background:${profile.bannerColor ?? "#1689d8"}`}
-        ></div>
-        <div class="min-w-0 flex-1">
-          <div class="text-lg font-black text-white">
-            ${profile.displayName ?? profile.publicId}
-          </div>
-          <div class="text-xs text-white/45">
-            ${profile.clanTag ? `[${profile.clanTag}] · ` : ""}${profile.elo ??
-            0}
-            OB${profile.rank ? ` · #${profile.rank}` : ""}
-          </div>
-          ${profile.bio
-            ? html`<p class="mt-2 text-sm text-white/70">${profile.bio}</p>`
-            : ""}
-        </div>
-        <button
-          class="text-xl text-white/45 hover:text-white"
-          @click=${() => (this.selectedProfile = null)}
-        >
-          ×
-        </button>
-      </div>
-    </div>`;
-  }
-
-  private renderSocialInvites(): TemplateResult | "" {
-    if (this.socialInvites.length === 0) return "";
-    return html`<div
-      class="rounded-xl border border-cyan-400/20 bg-cyan-400/5 p-6"
-    >
-      <h3 class="mb-4 text-lg font-bold text-white">
-        ${translateText("friends.game_party_requests")}
-      </h3>
-      <div class="space-y-2">
-        ${this.socialInvites.map((invite) => {
-          const incoming = invite.to === this.myPublicId;
-          const targetName =
-            this.friends.find((friend) => friend.publicId === invite.to)
-              ?.displayName ?? invite.to;
-          const label =
-            invite.payload.kind === "party"
-              ? translateText("friends.party_request_from", {
-                  player: invite.fromName,
-                })
-              : translateText("friends.game_request_from", {
-                  player: invite.fromName,
-                });
-          return html`<div
-            class="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 p-3"
-          >
-            <span class="min-w-0 flex-1 truncate text-sm text-white/80"
-              >${incoming
-                ? label
-                : translateText("friends.waiting_for_response", {
-                    player: targetName,
-                  })}</span
-            >
-            ${incoming
-              ? html`
-                  <button
-                    class="rounded-lg bg-green-600 px-3 py-1.5 text-[10px] font-bold uppercase text-white"
-                    @click=${() => socialClient.acceptInvite(invite)}
-                  >
-                    ${translateText("friends.accept")}
-                  </button>
-                  <button
-                    class="rounded-lg bg-red-600 px-3 py-1.5 text-[10px] font-bold uppercase text-white"
-                    @click=${() =>
-                      socialClient.respondToInvite(invite.id, false)}
-                  >
-                    ${translateText("friends.deny")}
-                  </button>
-                `
-              : html`<button
-                  class="rounded-lg bg-red-600 px-3 py-1.5 text-[10px] font-bold uppercase text-white"
-                  @click=${() => socialClient.cancelInvite(invite.id)}
-                >
-                  ${translateText("common.cancel")}
-                </button>`}
-          </div>`;
-        })}
-      </div>
-    </div>`;
-  }
-
-  private renderShareLink(): TemplateResult {
-    return html`<button
-      class="w-full rounded-xl border border-malibu-blue/30 bg-malibu-blue/10 px-5 py-4 text-left transition-colors hover:bg-malibu-blue/15"
-      @click=${() => void this.copyFriendLink()}
-    >
-      <div class="text-xs font-black uppercase tracking-wider text-malibu-blue">
-        ${translateText("friends.copy_friend_link")}
-      </div>
-      <div class="mt-1 truncate text-xs text-white/55">
-        ${window.location.origin}/friend/${this.myPublicId}
-      </div>
-    </button>`;
   }
 
   private renderTeamInfo(): TemplateResult {
@@ -490,13 +293,15 @@ export class FriendsList extends LitElement {
             type="text"
             .value=${this.addInput}
             @input=${(e: Event) =>
-              (this.addInput = (e.target as HTMLInputElement).value)}
+              (this.addInput = extractPublicIdFromUrl(
+                (e.target as HTMLInputElement).value,
+              ))}
             @keydown=${(e: KeyboardEvent) => {
               if (e.key === "Enter") void this.handleSend();
             }}
             class="flex-1 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-malibu-blue/50 focus:border-malibu-blue/50 transition-all font-mono text-sm"
             placeholder=${translateText("friends.public_id_placeholder")}
-            maxlength="22"
+            maxlength="200"
             ?disabled=${this.actionPending}
           />
           <button
@@ -511,7 +316,8 @@ export class FriendsList extends LitElement {
     `;
   }
 
-  private renderRequestsSection(): TemplateResult {
+  private renderRequestsSection(): TemplateResult | "" {
+    if (this.incoming.length === 0 && this.outgoing.length === 0) return "";
     return html`
       <div class="bg-white/5 rounded-xl border border-white/10 p-6">
         <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
@@ -546,11 +352,6 @@ export class FriendsList extends LitElement {
               </div>
             `
           : ""}
-        ${this.incoming.length === 0 && this.outgoing.length === 0
-          ? html`<p class="text-sm text-white/45">
-              ${translateText("friends.no_pending_requests")}
-            </p>`
-          : ""}
       </div>
     `;
   }
@@ -563,18 +364,8 @@ export class FriendsList extends LitElement {
       <div
         class="flex items-center gap-3 bg-white/5 rounded-lg border border-white/10 p-3"
       >
-        <player-avatar
-          size="2.5rem"
-          .src=${entry.profilePictureUrl}
-          .label=${this.displayName(entry)}
-        ></player-avatar>
         <div class="flex-1 min-w-0">
-          <div class="truncate text-sm font-bold text-white">
-            ${this.displayName(entry)}
-          </div>
-          <div class="truncate font-mono text-[10px] text-white/35">
-            ${entry.publicId}
-          </div>
+          ${playerNameLink(this, entry.username, entry.publicId)}
           <div class="text-white/30 text-[10px] mt-0.5">
             ${this.formatDate(entry.createdAt)}
           </div>
@@ -642,62 +433,20 @@ export class FriendsList extends LitElement {
               <div
                 class="flex items-center gap-3 bg-white/5 rounded-lg border border-white/10 p-3"
               >
-                <player-avatar
-                  size="2.5rem"
-                  .src=${f.profilePictureUrl}
-                  .label=${this.displayName(f)}
-                ></player-avatar>
                 <div class="flex-1 min-w-0">
-                  <div class="flex items-center gap-2">
-                    <span
-                      class="h-2 w-2 rounded-full ${f.online
-                        ? "bg-green-400"
-                        : "bg-white/25"}"
-                    ></span>
-                    <span class="truncate text-sm font-bold text-white"
-                      >${this.displayName(f)}</span
-                    >
-                  </div>
-                  <div class="truncate font-mono text-[10px] text-white/30">
-                    ${f.publicId}
-                  </div>
+                  ${playerNameLink(this, f.username, f.publicId)}
                   <div class="text-white/30 text-[10px] mt-0.5">
-                    ${this.lastSeen(f)} ·
                     ${translateText("friends.friends_since", {
                       date: this.formatDate(f.createdAt),
                     })}
                   </div>
                 </div>
                 <button
-                  @click=${() => void this.openProfile(f.publicId)}
-                  class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg bg-white/10 text-white/75 border border-white/10 hover:bg-white/20 shrink-0"
-                >
-                  ${translateText("friends.profile")}
-                </button>
-                <button
-                  @click=${() => this.openChat(f.publicId)}
-                  class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/30 transition-all shrink-0"
-                >
-                  ${translateText("friends.chat")}
-                </button>
-                <button
-                  @click=${() => void this.openParty(f.publicId)}
-                  class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/30 transition-all shrink-0"
-                >
-                  ${translateText("friends.party")}
-                </button>
-                <button
                   @click=${() => void this.handleRemove(f.publicId)}
                   ?disabled=${this.actionPending}
                   class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-all disabled:opacity-50 disabled:pointer-events-none shrink-0"
                 >
                   ${translateText("friends.remove")}
-                </button>
-                <button
-                  @click=${() => void this.handleBlock(f.publicId)}
-                  class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg bg-red-950/40 text-red-300 border border-red-500/20 hover:bg-red-900/50 shrink-0"
-                >
-                  ${translateText("friends.block")}
                 </button>
               </div>
             `,
@@ -718,35 +467,5 @@ export class FriendsList extends LitElement {
           : ""}
       </div>
     `;
-  }
-
-  private renderBlockedSection(): TemplateResult | "" {
-    if (this.blocked.length === 0) return "";
-    return html`<div class="rounded-xl border border-white/10 bg-white/5 p-6">
-      <h3 class="mb-4 text-lg font-bold text-white">
-        ${translateText("friends.blocked_players")}
-      </h3>
-      <div class="space-y-2">
-        ${this.blocked.map(
-          (entry) =>
-            html` <div
-              class="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 p-3"
-            >
-              <span class="min-w-0 flex-1 truncate text-sm font-bold text-white"
-                >${this.displayName(entry)}</span
-              >
-              <button
-                class="rounded-lg border border-white/10 bg-white/10 px-3 py-1.5 text-[10px] font-bold uppercase text-white/70"
-                @click=${async () => {
-                  if ((await unblockPlayer(entry.publicId)) === true)
-                    await this.loadAll(false);
-                }}
-              >
-                ${translateText("friends.unblock")}
-              </button>
-            </div>`,
-        )}
-      </div>
-    </div>`;
   }
 }

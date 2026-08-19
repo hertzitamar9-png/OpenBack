@@ -13,7 +13,13 @@ export function finishAccountNavLoading(): void {
 // response: a linked identity shows its avatar/badge, everything else shows the
 // signed-out prompt. Extracted from Main.ts so the identity precedence — which
 // now includes Steam — is unit-testable in jsdom.
+// The most recent /users/@me the nav button rendered. Consumers that need
+// account state outside the render path read it through
+// latestUserMeResponse() rather than refetching.
+let lastUserMeResponse: UserMeResponse | false | null = null;
+
 export function updateAccountNavButton(userMeResponse: UserMeResponse | false) {
+  lastUserMeResponse = userMeResponse;
   const button = document.getElementById("nav-account-button");
   const mobileButton = document.getElementById("mobile-nav-account-button");
   if (!button && !mobileButton) return;
@@ -201,4 +207,8 @@ export function updateAccountNavButton(userMeResponse: UserMeResponse | false) {
   }
 
   showSignIn();
+}
+
+export function latestUserMeResponse(): UserMeResponse | false | null {
+  return lastUserMeResponse;
 }

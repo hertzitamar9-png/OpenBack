@@ -3,12 +3,14 @@ import { customElement, property, state } from "lit/decorators.js";
 import { ClientEnv } from "src/client/ClientEnv";
 import { UserSettings } from "../../core/game/UserSettings";
 import { crazyGamesSDK } from "../CrazyGamesSDK";
-import { showInGameAlert } from "../InGameModal";
-import { copyToClipboard, translateText } from "../Utils";
+import { copyToClipboard, showToast, translateText } from "../Utils";
 
 @customElement("copy-button")
 export class CopyButton extends LitElement {
   @property({ type: String, attribute: "lobby-id" }) lobbyId = "";
+  @property({ type: String, attribute: "lobby-suffix" }) lobbySuffix = "";
+  @property({ type: Boolean, attribute: "include-lobby-query" })
+  includeLobbyQuery = false;
   @property({ type: String, attribute: "copy-text" }) copyText = "";
   @property({ type: String, attribute: "display-text" }) displayText = "";
   // Rich label override (e.g. a username split into colored base and
@@ -21,9 +23,7 @@ export class CopyButton extends LitElement {
   @property({ type: Boolean, attribute: "show-copy-icon" })
   showCopyIcon = true;
   @property({ type: Boolean }) compact = false;
-  @property({ type: Boolean, attribute: "no-truncate" }) noTruncate = false;
 
-  @state() private copySuccess = false;
   @state() private lobbyIdVisible = true;
 
   private userSettings: UserSettings = new UserSettings();
@@ -38,10 +38,6 @@ export class CopyButton extends LitElement {
   ) {
     if (changedProperties.has("lobbyId")) {
       this.lobbyIdVisible = this.userSettings.lobbyIdVisibility();
-      this.copySuccess = false;
-    }
-    if (changedProperties.has("copyText")) {
-      this.copySuccess = false;
     }
     if (
       changedProperties.has("showVisibilityToggle") ||
@@ -67,7 +63,11 @@ export class CopyButton extends LitElement {
   }
 
   private async buildCopyUrl(): Promise<string> {
-    return `${ClientEnv.shareOrigin()}/game/${this.lobbyId}`;
+    let url = `${window.location.origin}/${ClientEnv.workerPath(this.lobbyId)}/game/${this.lobbyId}`;
+    if (this.includeLobbyQuery) {
+      url += `?lobby&s=${encodeURIComponent(this.lobbySuffix)}`;
+    }
+    return url;
   }
 
   private async resolveCopyText(): Promise<string | null> {
@@ -82,14 +82,16 @@ export class CopyButton extends LitElement {
   async handleCopy() {
     const text = await this.resolveCopyText();
     if (!text) {
-      await showInGameAlert("Could not copy the game ID.");
+      alert("Error copying game id");
       return;
     }
-    await copyToClipboard(
-      text,
-      () => (this.copySuccess = true),
-      () => (this.copySuccess = false),
-    );
+
+    try {
+      await copyToClipboard(text);
+      showToast(translateText("common.copied"), "green");
+    } catch {
+      showToast(translateText("error_modal.failed_copy"), "red");
+    }
   }
 
   private canCopy() {
@@ -102,11 +104,7 @@ export class CopyButton extends LitElement {
     const rawLabel =
       this.displayContent ??
       (this.displayText || this.lobbyId || this.copyText);
-    const label = this.copySuccess
-      ? translateText("common.copied")
-      : allowMask && !this.lobbyIdVisible
-        ? this.maskLabel
-        : rawLabel;
+    const label = allowMask && !this.lobbyIdVisible ? this.maskLabel : rawLabel;
     const disabledClass = canCopy ? "" : "opacity-60 cursor-not-allowed";
     const toggleDisabled = !this.lobbyId;
     const toggleClass = toggleDisabled ? "opacity-60 cursor-not-allowed" : "";
@@ -128,10 +126,7 @@ export class CopyButton extends LitElement {
 
     return html`
       <div
-        class="flex items-center gap-0.5 bg-white/5 rounded-lg px-2 py-1 border border-white/10 ${this
-          .noTruncate
-          ? ""
-          : "max-w-[220px]"} flex-nowrap"
+        class="flex items-center gap-0.5 bg-white/5 rounded-lg px-2 py-1 border border-white/10 max-w-[220px] flex-nowrap"
       >
         ${this.showVisibilityToggle
           ? html`<button
@@ -178,10 +173,7 @@ export class CopyButton extends LitElement {
           @click=${this.handleCopy}
           @dblclick=${this.enableSelectAll}
           @mouseleave=${this.clearSelectAll}
-          class="font-mono text-xs font-bold text-white px-2 cursor-pointer select-none min-w-[80px] text-center ${this
-            .noTruncate
-            ? ""
-            : "truncate"} tracking-wider bg-transparent border-0 ${disabledClass}"
+          class="font-mono text-xs font-bold text-white px-2 cursor-pointer select-none min-w-[80px] text-center truncate tracking-wider bg-transparent border-0 ${disabledClass}"
           title="${translateText("common.click_to_copy")}"
           aria-label="${translateText("common.click_to_copy")}"
           ?disabled=${!canCopy}
