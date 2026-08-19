@@ -57,8 +57,15 @@ void main() {
   float extent = (r + aThickness) * MARGIN;
   vec2 worldPos = center + (aPos - 0.5) * 2.0 * extent;
 
+  // Perspective divide, and drop anchors behind or level with the camera. In
+  // 3D mode uCamera is a projection, so a point at or behind the eye divides
+  // by ~zero and the quad smears across the whole screen instead of vanishing.
   vec3 clip = uCamera * vec3(worldPos, 1.0);
-  gl_Position = vec4(clip.xy, 0.0, 1.0);
+  if (clip.z <= 0.0001) {
+    gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+    return;
+  }
+  gl_Position = vec4(clip.xy / clip.z, 0.0, 1.0);
 
   // vLocalPos stays normalized to the ring radius (dist 1.0 = radius r), so
   // scale by extent/r instead of the fixed margin.

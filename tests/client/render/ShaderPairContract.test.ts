@@ -17,8 +17,9 @@ const SHADER_ROOT = "src/client/render/gl/shaders";
 function declarations(source: string, keyword: "in" | "out"): Set<string> {
   const names = new Set<string>();
   // e.g. "flat in vec3 vColor0;" / "out float vAlpha;"
+  const qualifier = String.raw`(?:flat\s+|smooth\s+|noperspective\s+)?`;
   const pattern = new RegExp(
-    `^\s*(?:flat\s+|smooth\s+|noperspective\s+)?${keyword}\s+\w+\s+(\w+)\s*;`,
+    String.raw`^\s*` + qualifier + keyword + String.raw`\s+\w+\s+(\w+)\s*;`,
     "gm",
   );
   for (const match of source.matchAll(pattern)) names.add(match[1]);
