@@ -1,3 +1,9 @@
+## OpenBack v0.36.179 - Your Game Will Resume
+
+- Made the update screen say your game will resume when it is done, rather than talking about reloading the page, when the update catches you mid-match.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.178 - Water That Travels
 
 - Made the 3D sea move properly. The waves were jumping forward and snapping back ten times a second, so the crests juddered in place instead of rolling; they now travel steadily and their height reads as it should.

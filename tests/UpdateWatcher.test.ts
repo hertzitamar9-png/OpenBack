@@ -39,6 +39,9 @@ beforeEach(() => {
     value: { reload },
   });
   document.body.innerHTML = "";
+  // The in-game marker is a body class, so it has to be cleared between cases
+  // or one test's match state decides the next test's wording.
+  document.body.className = "";
 });
 
 function screen() {
@@ -180,5 +183,40 @@ describe("the update window as the player experiences it", () => {
     expect(isUpdating()).toBe(false);
     expect(document.querySelector("#openback-update-overlay")).toBeNull();
     expect(reload).not.toHaveBeenCalled();
+  });
+
+  it("promises the game will resume when the player is mid-match", async () => {
+    // Main marks the body while a match is running, and the HUD keys its own
+    // layout off the same class.
+    document.body.classList.add("in-game");
+    vi.stubGlobal("fetch", statusFeed("updating"));
+    const { startUpdateWatcher } = await freshWatcher();
+
+    atSecond(0);
+    startUpdateWatcher();
+    await vi.advanceTimersByTimeAsync(0);
+
+    atSecond(10);
+    await vi.advanceTimersByTimeAsync(300);
+    expect(screen().note).toBe(
+      "A new version is being installed. Your game will resume when it's done.",
+    );
+
+    atSecond(57);
+    await vi.advanceTimersByTimeAsync(300);
+    expect(screen().note).toBe("Resuming your game…");
+  });
+
+  it("talks about reloading when the player is only on the menu", async () => {
+    vi.stubGlobal("fetch", statusFeed("updating"));
+    const { startUpdateWatcher } = await freshWatcher();
+
+    atSecond(0);
+    startUpdateWatcher();
+    await vi.advanceTimersByTimeAsync(0);
+
+    atSecond(10);
+    await vi.advanceTimersByTimeAsync(300);
+    expect(screen().note).toContain("This page will reload");
   });
 });

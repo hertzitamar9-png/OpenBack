@@ -107,6 +107,15 @@ function elapsed(): number {
   return Date.now() / 1000 - windowStart;
 }
 
+/**
+ * Whether the player is in a match right now. Main toggles this class on the
+ * body when a game starts and ends, and the HUD already keys its own layout
+ * off it, so it is the same signal the rest of the client trusts.
+ */
+function inGame(): boolean {
+  return document.body.classList.contains("in-game");
+}
+
 function paint(): void {
   const el = ensureOverlay();
   const seconds = elapsed();
@@ -136,9 +145,16 @@ function paint(): void {
     title.textContent = done ? "Update is done" : "Updating the game…";
   }
   if (note) {
-    note.textContent = done
-      ? "Reloading the new version…"
-      : "A new version is being installed. This page will reload automatically when it's ready.";
+    const playing = inGame();
+    if (done) {
+      note.textContent = playing
+        ? "Resuming your game…"
+        : "Reloading the new version…";
+    } else {
+      note.textContent = playing
+        ? "A new version is being installed. Your game will resume when it's done."
+        : "A new version is being installed. This page will reload automatically when it's ready.";
+    }
   }
   if (eta) {
     eta.textContent = done ? "done — reloading" : `${left}s left`;
