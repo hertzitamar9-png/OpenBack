@@ -1,3 +1,9 @@
+## OpenBack v0.34.172 - Said Once
+
+- Stopped the login code email repeating itself in the inbox preview.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.171 - The Code Comes First
 
 - Made the code appear at the start of the subject line even when the mail app reads right to left, so the digits are the first thing on the row rather than the last.

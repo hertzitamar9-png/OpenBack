@@ -961,12 +961,6 @@ export function buildCodeEmail(
   const html = `<!doctype html>
 <html>
   <body style="margin:0;padding:0;background:#0a1424;">
-    <div style="display:none;max-height:0;overflow:hidden;opacity:0;
-                mso-hide:all;font-size:1px;line-height:1px;color:#0a1424;">
-      Your ${action} code. Enter this code in OpenBack to continue. ${code}. It
-      expires in 10 minutes. If you did not request this, you can ignore this
-      email.
-    </div>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
            style="background:#0a1424;padding:32px 16px;">
       <tr>

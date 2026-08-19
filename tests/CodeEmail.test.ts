@@ -30,14 +30,14 @@ describe("the login code email", () => {
     expect(body).toContain("Enter this code in OpenBack to continue");
   });
 
-  it("previews the code rather than the boilerplate", () => {
-    // Without a preheader the inbox snippet scrapes the body and shows the
-    // "if you did not request this" line instead of the code.
-    const preheader = html.slice(0, html.indexOf("<table"));
-    expect(preheader).toContain("928291");
-    expect(preheader).toContain("Enter this code in OpenBack to continue");
-    expect(preheader).toContain("10 minutes");
-    expect(preheader).toContain("display:none");
+  it("says everything once", () => {
+    // A hidden preheader is shown *before* the body, not instead of it, so
+    // anything it repeats appears twice on the inbox row. The body already
+    // leads with the instruction and the code, so it speaks for itself.
+    expect(
+      html.split("Enter this code in OpenBack to continue").length - 1,
+    ).toBe(1);
+    expect(html).not.toContain("display:none");
   });
 
   it("shows the code at a size that can be read at a glance", () => {
