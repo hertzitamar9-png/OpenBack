@@ -1,3 +1,10 @@
+## OpenBack v0.34.173 - Caught Up With OpenFront
+
+- Brought in ninety-three OpenFront changes, including the detailed lobby browser, the Inventory page that gathers flags and cosmetics in one place, clearer verified names with a clan tag picker, cosmetic shockwave effects, and a long list of fixes to nukes, teams, and territory capture.
+- Kept everything OpenBack adds: the update screen, one match per account, the leave confirmation, the 3D sea and sky, the mobile menus, and the login-code emails.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.172 - Said Once
 
 - Stopped the login code email repeating itself in the inbox preview.
