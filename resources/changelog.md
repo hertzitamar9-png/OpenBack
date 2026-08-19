@@ -1,3 +1,9 @@
+## OpenBack v0.36.177 - Shockwaves Stop Breaking Matches
+
+- Fixed the shader error that dropped players out of a match with a connection error the moment a shockwave effect was drawn.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.176 - Maps That Actually Load
 
 - Fixed every map failing to load. The map data was being stripped out of the server image, so picking a map left the game unable to fetch it.

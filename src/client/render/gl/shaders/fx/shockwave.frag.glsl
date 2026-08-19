@@ -2,6 +2,7 @@
 precision highp float;
 
 uniform float uRingWidth;
+uniform float uTime;      // seconds — animates procedural styles
 
 in vec2  vLocalPos;
 flat in float vAlpha;   // 1 - lifetime progress (fades out over the effect)
@@ -27,8 +28,22 @@ vec3 colorAt(float i) {
 
 out vec4 fragColor;
 
-void main() {
-  float dist = length(vLocalPos);
+// --- cheap 1D value noise -------------------------------------------------
+float hash11(float p) {
+  p = fract(p * 0.1031);
+  p *= p + 33.33;
+  p *= p + p;
+  return fract(p);
+}
+float vnoise(float x) {
+  float i = floor(x);
+  float f = fract(x);
+  float u = f * f * (3.0 - 2.0 * f);
+  return mix(hash11(i), hash11(i + 1.0), u);
+}
+
+// Classic expanding white ring (SAM, and nuke style 0).
+void classicRing(float dist) {
   float ringDist = abs(dist - 1.0);
   float ring = 1.0 - smoothstep(0.0, uRingWidth, ringDist);
   if (ring < 0.01) discard;
