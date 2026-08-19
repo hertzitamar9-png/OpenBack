@@ -1,4 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+
+// OpenBack renders its own dialogs; the component reports failures through
+// the in-game alert rather than the browser's.
+const showInGameAlertMock = vi.fn();
+vi.mock("../../src/client/InGameModal", () => ({
+  showInGameAlert: (message: string) => showInGameAlertMock(message),
+}));
 import type { PurchaseButton } from "../../src/client/components/PurchaseButton";
 import { alignPurchaseRows } from "../../src/client/components/PurchaseButton";
 
@@ -75,8 +82,8 @@ describe("PurchaseButton", () => {
   });
 
   it("clears busy state and reports a synchronous purchase throw", async () => {
-    const alertMock = vi.fn();
-    vi.stubGlobal("alert", alertMock);
+    const alertMock = showInGameAlertMock;
+    alertMock.mockClear();
     vi.spyOn(console, "error").mockImplementation(() => undefined);
     button = document.createElement("purchase-button") as PurchaseButton;
     button.dollarPrice = "$5";
@@ -97,8 +104,8 @@ describe("PurchaseButton", () => {
   });
 
   it("clears busy state and handles a rejected purchase callback", async () => {
-    const alertMock = vi.fn();
-    vi.stubGlobal("alert", alertMock);
+    const alertMock = showInGameAlertMock;
+    alertMock.mockClear();
     vi.spyOn(console, "error").mockImplementation(() => undefined);
     button = document.createElement("purchase-button") as PurchaseButton;
     button.dollarPrice = "$5";

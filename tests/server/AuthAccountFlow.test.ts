@@ -220,7 +220,7 @@ describe("email account lifecycle", () => {
     expect(calculateObLoss(100, 10_000)).toBe(1);
   });
 
-  test("claims an anonymous profile when login email is not registered", async () => {
+  test("claims an anonymous profile when signing up, and refuses to log in an unregistered email", async () => {
     const email = `claim-${Date.now()}@example.com`;
     const refresh = await fetch(`${origin}/auth/refresh`, { method: "POST" });
     const refreshBody = (await refresh.json()) as { jwt: string };
@@ -246,17 +246,33 @@ describe("email account lifecycle", () => {
       player: { publicId: string };
     };
 
+    // Log in means log in: an address that never signed up is refused and
+    // pointed at sign-up, rather than quietly becoming an account.
     const loginCodeResponse = await postJson(
       "/auth/request-code",
       { email, mode: "login" },
       cookie,
     );
     expect(loginCodeResponse.status).toBe(200);
-    const loginCode = (await loginCodeResponse.json()) as { devCode: string };
+    expect(await loginCodeResponse.json()).toMatchObject({
+      ok: false,
+      error: "not_registered",
+      nextAction: "signup",
+    });
+
+    // Signing up still claims the guest account, so nothing played as a guest
+    // is lost.
+    const signupCodeResponse = await postJson(
+      "/auth/request-code",
+      { email, mode: "signup" },
+      cookie,
+    );
+    expect(signupCodeResponse.status).toBe(200);
+    const loginCode = (await signupCodeResponse.json()) as { devCode: string };
 
     const verified = await postJson(
       "/auth/verify-code",
-      { email, code: loginCode.devCode, mode: "login" },
+      { email, code: loginCode.devCode, mode: "signup" },
       cookie,
     );
     expect(verified.status).toBe(200);

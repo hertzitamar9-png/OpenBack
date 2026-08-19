@@ -60,9 +60,6 @@ export class DeleteAccountDialog extends LitElement {
     return html`
       <div
         class="fixed inset-0 z-[10020] flex items-center justify-center bg-black/80"
-        @click=${(e: Event) => {
-          if (e.target === e.currentTarget) this.handleCancel();
-        }}
       >
         <div
           class="relative mx-4 w-full max-w-md p-6 rounded-2xl border border-red-500/50 bg-surface shadow-2xl"

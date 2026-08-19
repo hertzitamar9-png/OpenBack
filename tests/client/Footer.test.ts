@@ -23,7 +23,7 @@ describe("Footer service request", () => {
     expect(composeUrl.pathname).toBe("/mail/");
     expect(composeUrl.searchParams.get("view")).toBe("cm");
     expect(composeUrl.searchParams.get("to")).toBe(
-      "openback.servegame@gmail.com",
+      "openback.dedyn.io@gmail.com",
     );
     const body = composeUrl.searchParams.get("body") ?? "";
     expect(body).toContain("problem or question");

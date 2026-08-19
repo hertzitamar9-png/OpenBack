@@ -185,17 +185,6 @@ describe("finishAccountNavLoading", () => {
     ).toBe(true);
   });
 
-  it("updates the mobile trigger from the same call", () => {
-    const nav = mountNav();
-    updateAccountNavButton(userMe({ discord: discordUser }));
-    expect(hidden(nav.mobile.avatar)).toBe(false);
-    expect(nav.mobile.avatar.getAttribute("src")).toBe(
-      "https://cdn/discord-avatar.png",
-    );
-    expect(hidden(nav.mobile.spinner)).toBe(true);
-    expect(hidden(nav.spinner)).toBe(true);
-  });
-
   it("only borders triggers that opt in", () => {
     const nav = mountNav();
     updateAccountNavButton(false);

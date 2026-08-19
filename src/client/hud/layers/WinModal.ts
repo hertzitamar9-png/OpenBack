@@ -1,4 +1,4 @@
-import { html, LitElement, type TemplateResult } from "lit";
+import { html, LitElement, nothing, type TemplateResult } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { translateText, TUTORIAL_VIDEO_URL } from "../../../client/Utils";
 import { assetUrl } from "../../../core/AssetUrls";
@@ -73,6 +73,10 @@ export class WinModal extends LitElement implements Controller {
           ${this._title || ""}
         </h2>
         ${this.renderDeathMedia()}
+        <!-- Only the cosmetics promotion: the Steam wishlist and Discord
+             boxes upstream rotates through are external promotions, which
+             this fork does not carry. -->
+        ${this.patternContent ? this.renderPatternButton() : nothing}
         <div
           class="${this.showButtons
             ? "mt-4 flex justify-between gap-2.5 shrink-0"
@@ -152,6 +156,26 @@ export class WinModal extends LitElement implements Controller {
     this.keptPlayingAfterBlast = true;
     this.hide();
   };
+
+  renderPatternButton() {
+    return html`
+      <div class="text-center mb-6 bg-black/30 p-2.5 rounded-sm">
+        <h3 class="text-xl font-semibold text-white mb-3">
+          ${translateText("win_modal.support_openfront")}
+        </h3>
+        <p class="text-white mb-3">
+          ${translateText("win_modal.territory_pattern")}
+        </p>
+        <div
+          class="mx-auto w-full overflow-x-auto overflow-y-visible rounded-sm"
+        >
+          <div class="flex min-w-max items-start justify-start gap-4 px-1 py-1">
+            ${this.patternContent}
+          </div>
+        </div>
+      </div>
+    `;
+  }
 
   async loadPatternContent() {
     const me = await getUserMe();

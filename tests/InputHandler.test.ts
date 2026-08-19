@@ -312,6 +312,7 @@ describe("InputHandler AutoUpgrade", () => {
       });
       inputHandler["lastPointerDownX"] = 149;
       inputHandler["lastPointerDownY"] = 249;
+      inputHandler["pointers"].set(pointerEvent.pointerId, pointerEvent);
 
       inputHandler["onPointerUp"](pointerEvent);
 
@@ -335,6 +336,7 @@ describe("InputHandler AutoUpgrade", () => {
       });
       inputHandler["lastPointerDownX"] = 149;
       inputHandler["lastPointerDownY"] = 249;
+      inputHandler["pointers"].set(pointerEvent.pointerId, pointerEvent);
 
       inputHandler["onPointerUp"](pointerEvent);
 
@@ -358,6 +360,7 @@ describe("InputHandler AutoUpgrade", () => {
       });
       inputHandler["lastPointerDownX"] = 149;
       inputHandler["lastPointerDownY"] = 249;
+      inputHandler["pointers"].set(pointerEvent.pointerId, pointerEvent);
 
       inputHandler["onPointerUp"](pointerEvent);
 

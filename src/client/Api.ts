@@ -1043,17 +1043,15 @@ export async function createNextLobby(
 }
 
 export function getApiBase() {
-  const domainname = getAudience();
-
-  if (domainname === "localhost") {
+  const audience = getAudience();
+  if (audience === "localhost") {
     const apiDomain = process.env.API_DOMAIN;
-    if (apiDomain) {
-      return `https://${apiDomain}`;
-    }
-    return localStorage.getItem("apiHost") ?? "http://localhost:8787";
+    if (apiDomain && apiDomain !== "undefined") return `https://${apiDomain}`;
+    return localStorage.getItem("apiHost") ?? window.location.origin;
   }
-
-  return `https://api.${domainname}`;
+  return window.location.hostname === "localhost"
+    ? `https://api.${audience}`
+    : window.location.origin;
 }
 
 export function getAudience() {

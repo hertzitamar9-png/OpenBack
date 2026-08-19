@@ -25,6 +25,21 @@ function clusterRemoverFor(game: Game, player: Player) {
   return (cluster: TileRef[]) => internals.removeCluster(cluster);
 }
 
+// OpenBack turns encirclement into a siege: a pocket must stay continuously
+// sealed for fifteen seconds before it changes hands, draining troops in the
+// meantime, so the defender has a chance to reopen a corridor. Annexation
+// therefore takes two passes with the clock advanced between them.
+function annexAfterSiege(
+  game: Game,
+  player: Player,
+  cluster: TileRef[],
+): void {
+  const remove = clusterRemoverFor(game, player);
+  remove(cluster);
+  for (let i = 0; i < 151; i++) game.executeNextTick();
+  remove(cluster);
+}
+
 let game: Game;
 let defender: Player;
 let attacker: Player;
@@ -104,7 +119,7 @@ describe("annexation only takes territory that is actually enclosed", () => {
     const attackerTilesBefore = attacker.numTilesOwned();
     const pocketSize = defender.numTilesOwned();
 
-    clusterRemoverFor(game, defender)(cluster);
+    annexAfterSiege(game, defender, cluster);
 
     expect(defender.numTilesOwned()).toBe(0);
     expect(attacker.numTilesOwned()).toBe(attackerTilesBefore + pocketSize);

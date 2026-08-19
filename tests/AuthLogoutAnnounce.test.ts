@@ -1,8 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../src/core/game/UserSettings", () => ({
-  UserSettings: { setPlayerId: vi.fn() },
-}));
+vi.mock("../src/core/game/UserSettings", () => {
+  // ThemeProvider constructs one at import time, so the mock has to be a
+  // class as well as carrying the static the auth path calls.
+  class UserSettings {
+    graphicsOverrides() {
+      return {};
+    }
+  }
+  return {
+    UserSettings: Object.assign(UserSettings, { setPlayerId: vi.fn() }),
+  };
+});
 vi.mock("../src/client/SteamSDK", () => ({
   steamSDK: { isOnSteam: () => false, getTicket: async () => null },
 }));

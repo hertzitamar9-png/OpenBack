@@ -43,8 +43,6 @@ export class UnitImpl implements Unit {
   private _loaded: boolean | undefined;
   private _trainType: TrainType | undefined;
   // Nuke only
-  private _trajectoryIndex: number = 0;
-  private _trajectory: TrajectoryTile[];
   private _trajectoryAngle = 0;
   private _launchPhase = 0;
   private _deletionAt: number | null = null;
@@ -535,22 +533,28 @@ export class UnitImpl implements Unit {
   }
 
   setTrajectoryIndex(i: number): void {
-    const max = this._trajectory.length - 1;
-    this._trajectoryIndex = i < 0 ? 0 : i > max ? max : i;
+    // Written straight into the state rather than through updateNukeState:
+    // that emits a unit update, and the index advances every tick, so routing
+    // it there would put a per-tick update on the wire for every nuke in
+    // flight. Clients derive the position from the motion plan instead.
+    const state = this.nukeState();
+    const max = state.trajectory.length - 1;
+    state.trajectoryIndex = i < 0 ? 0 : i > max ? max : i;
   }
 
   setTrajectory(trajectory: TrajectoryTile[]): void {
-    this._trajectory = trajectory;
-    this._trajectoryIndex = 0;
+    const state = this.nukeState();
+    state.trajectory = trajectory;
+    this.updateNukeState({ trajectoryIndex: 0 });
     this.mg.addUpdate(this.toUpdate());
   }
 
   trajectoryIndex(): number {
-    return this._trajectoryIndex;
+    return this._nukeState?.trajectoryIndex ?? 0;
   }
 
   trajectory(): TrajectoryTile[] {
-    return this._trajectory;
+    return this._nukeState?.trajectory ?? [];
   }
 
   setTrajectoryAngle(angle: number): void {

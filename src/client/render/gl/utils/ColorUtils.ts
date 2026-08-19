@@ -112,7 +112,9 @@ export function encodeTerrainTile(
     plains: plainsColor ?? [190, 220, 138],
     highland: highlandColor ?? [200, 183, 138],
     mountain: mountainColor ?? [230, 230, 230],
-    peak: [60, 60, 60],
+    // Impassable tiles take the map background so they blend with the area
+    // outside the map quad; the override keeps them matched to the clear colour.
+    peak: overrides?.backgroundColor ?? [60, 60, 60],
   };
 
   // Impassable terrain: render as the map background colour so it blends

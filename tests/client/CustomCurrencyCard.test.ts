@@ -1,3 +1,8 @@
+const showOpenBackAlertMock = vi.fn();
+vi.mock("../../src/client/InGameModal", () => ({
+  showOpenBackAlert: (opts: unknown) => showOpenBackAlertMock(opts),
+}));
+
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createCustomCurrencyCheckout } from "../../src/client/Api";
 import "../../src/client/components/CustomCurrencyCard";
@@ -15,7 +20,8 @@ describe("CustomCurrencyCard", () => {
   beforeEach(() => {
     vi.mocked(createCustomCurrencyCheckout).mockReset();
     vi.mocked(createCustomCurrencyCheckout).mockResolvedValue(false);
-    alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    alertSpy = showOpenBackAlertMock;
+    showOpenBackAlertMock.mockClear();
     card = document.createElement("custom-currency-card") as CustomCurrencyCard;
     document.body.appendChild(card);
   });
@@ -94,6 +100,8 @@ describe("CustomCurrencyCard", () => {
     await vi.waitFor(() =>
       expect(createCustomCurrencyCheckout).toHaveBeenCalledWith(240),
     );
-    expect(alertSpy).toHaveBeenCalledWith("store.checkout_failed");
+    expect(alertSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ message: "store.checkout_failed" }),
+    );
   });
 });

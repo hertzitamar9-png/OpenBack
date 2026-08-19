@@ -1,3 +1,4 @@
+import { showInGameConfirm } from "../InGameModal";
 import { html, LitElement, TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import type { FriendEntry } from "../../core/ApiSchemas";
@@ -212,7 +213,7 @@ export class FriendsList extends LitElement {
 
   private async handleRemove(publicId: string): Promise<void> {
     if (this.actionPending) return;
-    const confirmed = window.confirm(
+    const confirmed = await showInGameConfirm(
       translateText("friends.confirm_remove", { publicId }),
     );
     if (!confirmed) return;

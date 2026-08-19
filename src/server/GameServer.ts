@@ -1,3 +1,4 @@
+import { ColoredTeams } from "../core/game/Game";
 import { createHash } from "crypto";
 import ipAnonymize from "ip-anonymize";
 import { Logger } from "winston";
@@ -168,6 +169,7 @@ export class GameServer {
   private static readonly MAX_PENDING_LIVE_STATS_ROUNDS = 20;
 
   private _hasEnded = false;
+  private selectedTeams = new Map<ClientID, string>();
 
   // Whether this private lobby is visible in the public lobby browser.
   // Deliberately kept out of gameConfig so update_game_config can't set it;
@@ -409,6 +411,14 @@ export class GameServer {
   }
 
   public updateGameConfig(gameConfig: Partial<GameConfig>): void {
+    if (
+      (gameConfig.gameMode !== undefined &&
+        gameConfig.gameMode !== this.gameConfig.gameMode) ||
+      (gameConfig.playerTeams !== undefined &&
+        gameConfig.playerTeams !== this.gameConfig.playerTeams)
+    ) {
+      this.selectedTeams.clear();
+    }
     if (gameConfig.gameMap !== undefined) {
       this.gameConfig.gameMap = gameConfig.gameMap;
     }
@@ -460,6 +470,12 @@ export class GameServer {
     }
     if (gameConfig.playerTeams !== undefined) {
       this.gameConfig.playerTeams = gameConfig.playerTeams;
+    }
+    if (gameConfig.teamAssignmentMode !== undefined) {
+      this.gameConfig.teamAssignmentMode = gameConfig.teamAssignmentMode;
+      if (gameConfig.teamAssignmentMode === "balanced") {
+        this.selectedTeams.clear();
+      }
     }
     if (gameConfig.goldMultiplier !== undefined) {
       this.gameConfig.goldMultiplier = gameConfig.goldMultiplier ?? undefined;
@@ -597,6 +613,68 @@ export class GameServer {
         return finish({ status: 200 });
       }
 
+      case "set_player_team": {
+        if (this.hasStarted()) {
+          return finish({ status: 409, error: "game already started" });
+        }
+        if (this.gameConfig.gameMode !== GameMode.Team) {
+          return finish({
+            status: 409,
+            error: "team selection requires a team game",
+          });
+        }
+        const assignmentMode = this.gameConfig.teamAssignmentMode ?? "self";
+        if (assignmentMode === "balanced") {
+          return finish({
+            status: 403,
+            error: "teams are automatically balanced",
+          });
+        }
+        if (
+          assignmentMode === "host" &&
+          !actor.isLobbyCreator &&
+          !actor.isAdmin
+        ) {
+          return finish({
+            status: 403,
+            error: "only the lobby creator assigns teams",
+          });
+        }
+        if (
+          assignmentMode === "self" &&
+          stamped.targetClientID !== actor.clientID &&
+          !actor.isLobbyCreator &&
+          !actor.isAdmin
+        ) {
+          return finish({
+            status: 403,
+            error: "players may only choose their own team",
+          });
+        }
+        if (
+          !this.activeClients.some(
+            (client) => client.clientID === stamped.targetClientID,
+          )
+        ) {
+          return finish({ status: 404, error: "player is not in this lobby" });
+        }
+        if (stamped.team === null) {
+          this.selectedTeams.delete(stamped.targetClientID);
+        } else {
+          const numberedTeam =
+            /^Team ([1-9]|[1-9][0-9]|[1-3][0-9]{2}|400)$/.test(stamped.team);
+          if (
+            !Object.values(ColoredTeams).includes(stamped.team) &&
+            !numberedTeam
+          ) {
+            return finish({ status: 400, error: "invalid team" });
+          }
+          this.selectedTeams.set(stamped.targetClientID, stamped.team);
+        }
+        this.broadcastLobbyInfo();
+        return finish({ status: 200 });
+      }
+
       case "update_game_config": {
         if (!actor.isLobbyCreator && !actor.isAdminBot) {
           return finish({
@@ -647,7 +725,9 @@ export class GameServer {
           this.startsAt = undefined;
         } else {
           this.setStartsAt(
-            Date.now() + (this.gameConfig.startDelay ?? 0) * 1000,
+            // Three seconds by default: the countdown is cancellable, so the
+            // host can call it back after a mis-click.
+            Date.now() + (this.gameConfig.startDelay ?? 3) * 1000,
           );
         }
         return finish({ status: 200 });
@@ -1329,10 +1409,13 @@ export class GameServer {
         username: c.username,
         clanTag: c.clanTag ?? null,
         clientID: c.clientID,
+        publicId: c.publicId,
+        profilePictureUrl: c.profilePictureUrl,
         cosmetics: c.cosmetics,
         isLobbyCreator: this.lobbyCreatorID === c.clientID,
         friends: friendsFor(c),
         teamIndex: this.matchmakingTeamIndex(c),
+        selectedTeam: this.selectedTeams.get(c.clientID),
       })),
       tribes: this.tribes,
     });
@@ -1680,6 +1763,7 @@ export class GameServer {
             clanTag: null,
             clientID: c.clientID,
             teamIndex: this.matchmakingTeamIndex(c),
+            selectedTeam: this.selectedTeams.get(c.clientID) ?? null,
           };
         }
         // A TEAMMATE reveal is deliberately narrower than the others. Seeing a
@@ -1695,9 +1779,12 @@ export class GameServer {
           username: c.username,
           clanTag: teammateOnly || hideClanTags ? null : (c.clanTag ?? null),
           clientID: c.clientID,
+          publicId: c.publicId,
+          profilePictureUrl: c.profilePictureUrl,
           friends: teammateOnly ? undefined : friendsFor(c),
           verified: c.cosmetics?.verified,
           teamIndex: this.matchmakingTeamIndex(c),
+          selectedTeam: this.selectedTeams.get(c.clientID) ?? null,
         };
       }),
       lobbyCreatorClientID: this.lobbyCreatorID,

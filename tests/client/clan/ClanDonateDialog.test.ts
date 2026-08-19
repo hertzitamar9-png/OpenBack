@@ -207,7 +207,7 @@ describe("clan-donate-dialog", () => {
     expect(donated).toHaveBeenCalledTimes(1);
   });
 
-  it("emits cancel from the Cancel button and the backdrop", async () => {
+  it("emits cancel from the Cancel button, and not from the backdrop", async () => {
     const cancel = vi.fn();
     dialog.addEventListener("cancel", cancel);
     const cancelButton = Array.from(document.querySelectorAll("button")).find(
@@ -216,8 +216,10 @@ describe("clan-donate-dialog", () => {
     cancelButton.click();
     expect(cancel).toHaveBeenCalledTimes(1);
 
+    // Dismissal is bound to an explicit button: a stray click on the backdrop
+    // must not discard a donation the player is part-way through.
     q<HTMLElement>(".fixed.inset-0")!.click();
-    expect(cancel).toHaveBeenCalledTimes(2);
+    expect(cancel).toHaveBeenCalledTimes(1);
   });
 
   it("still allows a donation when the wallet balance is unknown", async () => {

@@ -233,7 +233,7 @@ export class HostLobbyModal extends BaseModal {
       secondsRemaining === null
         ? this.clients.length === 1
           ? translateText("host_modal.waiting")
-          : translateText("host_modal.start")
+          : translateText("game_settings.start")
         : translateText("host_modal.starting_in", {
             time: renderDuration(secondsRemaining),
           });
@@ -255,13 +255,13 @@ export class HostLobbyModal extends BaseModal {
         .onInput=${this.handleSharedControlSizeInput}
       ></toggle-input-card>`,
       html`<toggle-input-card
-        .labelKey=${"host_modal.max_timer"}
+        .labelKey=${"game_settings.max_timer"}
         .checked=${this.maxTimer}
         .inputMin=${1}
         .inputMax=${120}
         .inputValue=${this.maxTimerValue}
-        .inputAriaLabel=${translateText("host_modal.max_timer")}
-        .inputPlaceholder=${translateText("host_modal.mins_placeholder")}
+        .inputAriaLabel=${translateText("game_settings.max_timer")}
+        .inputPlaceholder=${translateText("game_settings.mins_placeholder")}
         .defaultInputValue=${30}
         .minValidOnEnable=${1}
         .onToggle=${this.handleMaxTimerToggle}
@@ -289,7 +289,7 @@ export class HostLobbyModal extends BaseModal {
         .inputStep=${1}
         .inputValue=${this.spawnImmunityDurationMinutes}
         .inputAriaLabel=${translateText("host_modal.player_immunity_duration")}
-        .inputPlaceholder=${translateText("host_modal.mins_placeholder")}
+        .inputPlaceholder=${translateText("game_settings.mins_placeholder")}
         .defaultInputValue=${5}
         .minValidOnEnable=${0}
         .onToggle=${this.handleSpawnImmunityToggle}
@@ -297,14 +297,14 @@ export class HostLobbyModal extends BaseModal {
         .onKeyDown=${this.handleSpawnImmunityDurationKeyDown}
       ></toggle-input-card>`,
       html`<toggle-input-card
-        .labelKey=${"host_modal.custom_alliances"}
+        .labelKey=${"game_settings.custom_alliances"}
         .checked=${this.customAlliances}
         .inputMin=${0}
         .inputMax=${15}
         .inputStep=${1}
         .inputValue=${this.customAllianceMinutes}
-        .inputAriaLabel=${translateText("host_modal.custom_alliances")}
-        .inputPlaceholder=${translateText("host_modal.mins_placeholder")}
+        .inputAriaLabel=${translateText("game_settings.custom_alliances")}
+        .inputPlaceholder=${translateText("game_settings.mins_placeholder")}
         .defaultInputValue=${0}
         .minValidOnEnable=${0}
         .zeroLabel=${`(${translateText("public_game_modifier.disable_alliances")})`}
@@ -313,14 +313,14 @@ export class HostLobbyModal extends BaseModal {
         .onKeyDown=${this.handleCustomAllianceMinutesKeyDown}
       ></toggle-input-card>`,
       html`<toggle-input-card
-        .labelKey=${"host_modal.gold_multiplier"}
+        .labelKey=${"game_settings.gold_multiplier"}
         .checked=${this.goldMultiplier}
         .inputId=${"gold-multiplier-value"}
         .inputMin=${0.1}
         .inputMax=${1000}
         .inputStep=${"any"}
         .inputValue=${this.goldMultiplierValue}
-        .inputAriaLabel=${translateText("host_modal.gold_multiplier")}
+        .inputAriaLabel=${translateText("game_settings.gold_multiplier")}
         .inputPlaceholder=${translateText(
           "host_modal.gold_multiplier_placeholder",
         )}
@@ -331,14 +331,14 @@ export class HostLobbyModal extends BaseModal {
         .onKeyDown=${this.handleGoldMultiplierValueKeyDown}
       ></toggle-input-card>`,
       html`<toggle-input-card
-        .labelKey=${"host_modal.starting_gold"}
+        .labelKey=${"game_settings.starting_gold"}
         .checked=${this.startingGold}
         .inputId=${"starting-gold-value"}
         .inputMin=${0.1}
         .inputMax=${1000}
         .inputStep=${"any"}
         .inputValue=${this.startingGoldValue}
-        .inputAriaLabel=${translateText("host_modal.starting_gold")}
+        .inputAriaLabel=${translateText("game_settings.starting_gold")}
         .inputPlaceholder=${translateText(
           "host_modal.starting_gold_placeholder",
         )}
@@ -365,14 +365,14 @@ export class HostLobbyModal extends BaseModal {
 
     const hostCheatInputCards = [
       html`<toggle-input-card
-        .labelKey=${"host_modal.gold_multiplier"}
+        .labelKey=${"game_settings.gold_multiplier"}
         .checked=${this.hostCheatGoldMultiplier}
         .inputId=${"host-cheat-gold-multiplier-value"}
         .inputMin=${0.1}
         .inputMax=${1000}
         .inputStep=${"any"}
         .inputValue=${this.hostCheatGoldMultiplierValue}
-        .inputAriaLabel=${translateText("host_modal.gold_multiplier")}
+        .inputAriaLabel=${translateText("game_settings.gold_multiplier")}
         .inputPlaceholder=${translateText(
           "host_modal.gold_multiplier_placeholder",
         )}
@@ -383,14 +383,14 @@ export class HostLobbyModal extends BaseModal {
         .onKeyDown=${this.handleHostCheatGoldMultiplierValueKeyDown}
       ></toggle-input-card>`,
       html`<toggle-input-card
-        .labelKey=${"host_modal.starting_gold"}
+        .labelKey=${"game_settings.starting_gold"}
         .checked=${this.hostCheatStartingGold}
         .inputId=${"host-cheat-starting-gold-value"}
         .inputMin=${0.1}
         .inputMax=${1000}
         .inputStep=${"any"}
         .inputValue=${this.hostCheatStartingGoldValue}
-        .inputAriaLabel=${translateText("host_modal.starting_gold")}
+        .inputAriaLabel=${translateText("game_settings.starting_gold")}
         .inputPlaceholder=${translateText(
           "host_modal.starting_gold_placeholder",
         )}
@@ -430,22 +430,22 @@ export class HostLobbyModal extends BaseModal {
                 titleKey: "host_modal.options_title",
                 bots: {
                   value: this.bots,
-                  labelKey: "host_modal.bots",
+                  labelKey: "game_settings.bots",
                   disabledKey: "host_modal.bots_disabled",
                 },
                 nations: {
                   value: this.nations,
                   defaultValue: this.defaultNationCount,
-                  labelKey: "host_modal.nations",
+                  labelKey: "game_settings.nations",
                   disabledKey: "host_modal.nations_disabled",
                 },
                 toggles: [
                   {
-                    labelKey: "host_modal.instant_build",
+                    labelKey: "game_settings.instant_build",
                     checked: this.instantBuild,
                   },
                   {
-                    labelKey: "host_modal.random_spawn",
+                    labelKey: "game_settings.random_spawn",
                     checked: this.randomSpawn,
                   },
                   {
@@ -457,15 +457,15 @@ export class HostLobbyModal extends BaseModal {
                     checked: this.donateTroops,
                   },
                   {
-                    labelKey: "host_modal.infinite_gold",
+                    labelKey: "game_settings.infinite_gold",
                     checked: this.infiniteGold,
                   },
                   {
-                    labelKey: "host_modal.infinite_troops",
+                    labelKey: "game_settings.infinite_troops",
                     checked: this.infiniteTroops,
                   },
                   {
-                    labelKey: "host_modal.compact_map",
+                    labelKey: "game_settings.compact_map",
                     checked: this.compactMap,
                   },
                   {
@@ -473,11 +473,11 @@ export class HostLobbyModal extends BaseModal {
                     checked: this.anonymizeNames,
                   },
                   {
-                    labelKey: "host_modal.water_nukes",
+                    labelKey: "game_settings.water_nukes",
                     checked: this.waterNukes,
                   },
                   {
-                    labelKey: "host_modal.doomsday_clock",
+                    labelKey: "game_settings.doomsday_clock",
                     checked: this.doomsdayClock,
                     doomsdayClockSpeed: this.doomsdayClockSpeed,
                   },
@@ -513,11 +513,11 @@ export class HostLobbyModal extends BaseModal {
                 visible: this.hostCheatsEnabled,
                 toggles: [
                   {
-                    labelKey: "host_modal.infinite_gold",
+                    labelKey: "game_settings.infinite_gold",
                     checked: this.hostCheatInfiniteGold,
                   },
                   {
-                    labelKey: "host_modal.infinite_troops",
+                    labelKey: "game_settings.infinite_troops",
                     checked: this.hostCheatInfiniteTroops,
                   },
                 ],
@@ -830,10 +830,10 @@ export class HostLobbyModal extends BaseModal {
     const { labelKey, checked } = customEvent.detail;
 
     switch (labelKey) {
-      case "host_modal.instant_build":
+      case "game_settings.instant_build":
         this.handleInstantBuildChange(checked);
         break;
-      case "host_modal.random_spawn":
+      case "game_settings.random_spawn":
         this.handleRandomSpawnChange(checked);
         break;
       case "host_modal.donate_gold":
@@ -842,24 +842,24 @@ export class HostLobbyModal extends BaseModal {
       case "host_modal.donate_troops":
         this.handleDonateTroopsChange(checked);
         break;
-      case "host_modal.infinite_gold":
+      case "game_settings.infinite_gold":
         this.handleInfiniteGoldChange(checked);
         break;
-      case "host_modal.infinite_troops":
+      case "game_settings.infinite_troops":
         this.handleInfiniteTroopsChange(checked);
         break;
-      case "host_modal.compact_map":
+      case "game_settings.compact_map":
         this.handleCompactMapChange(checked);
         break;
       case "host_modal.anonymous_players":
         this.anonymizeNames = checked;
         this.putGameConfig();
         break;
-      case "host_modal.water_nukes":
+      case "game_settings.water_nukes":
         this.waterNukes = checked;
         this.putGameConfig();
         break;
-      case "host_modal.doomsday_clock":
+      case "game_settings.doomsday_clock":
         this.doomsdayClock = checked;
         this.putGameConfig();
         break;
@@ -900,11 +900,11 @@ export class HostLobbyModal extends BaseModal {
     const { labelKey, checked } = customEvent.detail;
 
     switch (labelKey) {
-      case "host_modal.infinite_gold":
+      case "game_settings.infinite_gold":
         this.hostCheatInfiniteGold = checked;
         this.putGameConfig();
         break;
-      case "host_modal.infinite_troops":
+      case "game_settings.infinite_troops":
         this.hostCheatInfiniteTroops = checked;
         this.putGameConfig();
         break;

@@ -1,3 +1,4 @@
+import { showInGameAlert } from "../InGameModal";
 import { LitElement, html, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { ClientEnv } from "src/client/ClientEnv";
@@ -82,7 +83,7 @@ export class CopyButton extends LitElement {
   async handleCopy() {
     const text = await this.resolveCopyText();
     if (!text) {
-      alert("Error copying game id");
+      void showInGameAlert("Could not copy the game ID.");
       return;
     }
 
