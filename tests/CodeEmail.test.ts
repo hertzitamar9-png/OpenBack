@@ -12,8 +12,22 @@ describe("the login code email", () => {
   const { subject, text, html } = buildCodeEmail("928291", "sign-up");
 
   it("leads the subject with the code, which the inbox list shows in bold", () => {
-    expect(subject).toBe("928291 is your OpenBack sign-up code");
-    expect(subject.startsWith("928291")).toBe(true);
+    expect(subject).toBe("‎928291 is your OpenBack sign-up code");
+  });
+
+  it("pins the subject left-to-right so the code stays first", () => {
+    // Without the mark, a right-to-left interface moves a leading number to
+    // the far end of the line, burying the digits.
+    expect(subject.startsWith("‎")).toBe(true);
+    expect(subject.replace("‎", "").startsWith("928291")).toBe(true);
+  });
+
+  it("drops the heading that only repeated the subject", () => {
+    // The wording still appears in the hidden preview line; what should be
+    // gone is the visible heading above the code.
+    const body = html.slice(html.indexOf("<table"));
+    expect(body).not.toContain("Your sign-up code");
+    expect(body).toContain("Enter this code in OpenBack to continue");
   });
 
   it("previews the code rather than the boilerplate", () => {
@@ -21,6 +35,8 @@ describe("the login code email", () => {
     // "if you did not request this" line instead of the code.
     const preheader = html.slice(0, html.indexOf("<table"));
     expect(preheader).toContain("928291");
+    expect(preheader).toContain("Enter this code in OpenBack to continue");
+    expect(preheader).toContain("10 minutes");
     expect(preheader).toContain("display:none");
   });
 
@@ -70,7 +86,7 @@ describe("the login code email", () => {
 
   it("uses the same wording for login", () => {
     expect(buildCodeEmail("111111", "login").subject).toBe(
-      "111111 is your OpenBack login code",
+      "‎111111 is your OpenBack login code",
     );
   });
 

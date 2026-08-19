@@ -1,3 +1,11 @@
+## OpenBack v0.34.171 - The Code Comes First
+
+- Made the code appear at the start of the subject line even when the mail app reads right to left, so the digits are the first thing on the row rather than the last.
+- Removed the heading inside the email that only repeated the subject.
+- Put the full wording in the inbox preview instead, so the code and what it is for are readable without opening anything.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.34.170 - Where To Reach Us
 
 - Pointed the Service Request link in the menu at the new OpenBack contact address.

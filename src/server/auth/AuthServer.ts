@@ -949,7 +949,7 @@ export function buildCodeEmail(
   // reference to an attached copy so the logo does not depend on a fetch.
   logoSrc: string = CODE_EMAIL_LOGO,
 ): { subject: string; text: string; html: string } {
-  const subject = `${code} is your OpenBack ${action} code`;
+  const subject = `‎${code} is your OpenBack ${action} code`;
   const text =
     `${code} is your OpenBack ${action} code.
 
@@ -963,7 +963,9 @@ export function buildCodeEmail(
   <body style="margin:0;padding:0;background:#0a1424;">
     <div style="display:none;max-height:0;overflow:hidden;opacity:0;
                 mso-hide:all;font-size:1px;line-height:1px;color:#0a1424;">
-      ${code} — expires in 10 minutes.
+      Your ${action} code. Enter this code in OpenBack to continue. ${code}. It
+      expires in 10 minutes. If you did not request this, you can ignore this
+      email.
     </div>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
            style="background:#0a1424;padding:32px 16px;">
@@ -977,12 +979,6 @@ export function buildCodeEmail(
                 <img src="${logoSrc}" width="96" height="96" alt="OpenBack"
                      style="display:block;border:0;border-radius:24px;
                             -ms-interpolation-mode:bicubic;" />
-              </td>
-            </tr>
-            <tr>
-              <td align="center"
-                  style="font-size:22px;font-weight:700;color:#e8eef8;padding-bottom:8px;">
-                Your ${action} code
               </td>
             </tr>
             <tr>
