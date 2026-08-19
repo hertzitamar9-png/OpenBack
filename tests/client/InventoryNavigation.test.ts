@@ -60,7 +60,10 @@ describe("Inventory navigation", () => {
       path.join(process.cwd(), "index.html"),
       "utf8",
     );
-    expect(source).toContain('<inventory-modal\n          id="page-inventory"');
+    // Git checks index.html out with CRLF on Windows, so compare against
+    // normalised text rather than only passing on Linux.
+    const normalized = source.replace(/\r\n/g, "\n");
+    expect(normalized).toContain('<inventory-modal\n          id="page-inventory"');
     expect(source).not.toContain("<cosmetics-modal");
     expect(source).not.toContain("<flag-input-modal");
   });
