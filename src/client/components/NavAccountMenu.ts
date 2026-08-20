@@ -24,14 +24,13 @@ type MenuItem = {
 };
 
 /**
- * The nav profile control: the account avatar/sign-in trigger plus, once signed
- * in, a chevron that opens the account menu (account settings, username,
- * subscription, log out). Game settings live in the dedicated nav gear.
+ * The nav profile control: signed-out users get one direct Sign In / Sign Up
+ * button. Once signed in, the avatar and chevron open the account actions menu
+ * (account settings, username, subscription, log out). Game settings live in
+ * the dedicated nav gear.
  *
- * The trigger keeps `nav-menu-item[data-page="page-account"]`, so the signed-out
- * state still falls through to Navigation's delegated router and opens the
- * account modal. Signed in, the click is intercepted here and toggles the menu
- * instead.
+ * The component owns the click in both states so signed-out users never see a
+ * redundant one-item dropdown before reaching the account screen.
  *
  * `variant="desktop"` also carries the legacy element ids the imperative
  * updaters (NavAccountButton, CrazyGamesAccountButton) drive; every instance
@@ -127,6 +126,7 @@ export class NavAccountMenu extends LitElement {
     event: CustomEvent<UserMeResponse | false>,
   ) => {
     this.userMeResponse = event.detail;
+    if (!this.isSignedIn()) this.menuOpen = false;
     // A CrazyGames sign-in surfaces as a userMeResponse, so re-read the SDK
     // profile alongside it.
     this.refreshCrazyGamesUser();
@@ -171,27 +171,17 @@ export class NavAccountMenu extends LitElement {
   };
 
   private handleTriggerClick = (e: MouseEvent) => {
-    // The menu is the account affordance in every state, so the delegated nav
-    // router never gets this click — the "View account" / "Sign in" items open
-    // the modal instead.
     e.preventDefault();
     e.stopPropagation();
+    if (!this.isSignedIn()) {
+      this.signIn();
+      return;
+    }
     this.menuOpen = !this.menuOpen;
   };
 
   private items(): MenuItem[] {
-    // Signed out, the account menu only owns the sign-in route. Game settings
-    // are always available from the dedicated nav gear beside News and Help.
-    if (!this.isSignedIn()) {
-      return [
-        {
-          key: "sign-in",
-          labelKey: "main.sign_in",
-          icon: iconUser,
-          onSelect: () => this.signIn(),
-        },
-      ];
-    }
+    if (!this.isSignedIn()) return [];
 
     const player =
       this.userMeResponse === false ? null : this.userMeResponse.player;
@@ -355,6 +345,7 @@ export class NavAccountMenu extends LitElement {
   private renderChevron(): TemplateResult {
     return html`
       <svg
+        data-account-chevron
         class="w-3 h-3 shrink-0 transition-transform ${this.menuOpen
           ? "rotate-180"
           : ""}"
@@ -439,13 +430,16 @@ export class NavAccountMenu extends LitElement {
   // Desktop nav pill. Ids are load-bearing: NavAccountButton and
   // CrazyGamesAccountButton drive this instance by id.
   private renderDesktopTrigger(): TemplateResult {
+    const signedIn = this.isSignedIn();
     return html`
       <button
         id="nav-account-button"
         data-account-trigger
         data-account-border
-        aria-haspopup="menu"
-        aria-expanded=${this.menuOpen ? "true" : "false"}
+        aria-haspopup=${ifDefined(signedIn ? "menu" : undefined)}
+        aria-expanded=${ifDefined(
+          signedIn ? (this.menuOpen ? "true" : "false") : undefined,
+        )}
         @click=${this.handleTriggerClick}
         class="nav-menu-item relative h-10 rounded-full flex items-center justify-center gap-2 px-3 bg-transparent border border-white/20 text-white/80 hover:text-white cursor-pointer transition-colors [&.active]:text-white"
         data-page="page-account"
@@ -464,18 +458,21 @@ export class NavAccountMenu extends LitElement {
           data-i18n="main.sign_in"
         >
         </span>
-        ${this.renderChevron()}
+        ${signedIn ? this.renderChevron() : nothing}
       </button>
     `;
   }
 
   // Mobile top-bar trigger: avatar or person icon only, plus the chevron.
   private renderMobileTrigger(): TemplateResult {
+    const signedIn = this.isSignedIn();
     return html`
       <button
         data-account-trigger
-        aria-haspopup="menu"
-        aria-expanded=${this.menuOpen ? "true" : "false"}
+        aria-haspopup=${ifDefined(signedIn ? "menu" : undefined)}
+        aria-expanded=${ifDefined(
+          signedIn ? (this.menuOpen ? "true" : "false") : undefined,
+        )}
         @click=${this.handleTriggerClick}
         class="nav-menu-item h-10 flex items-center justify-center gap-1 pl-1 pr-1.5 rounded-full text-white/90 cursor-pointer transition-colors"
         data-page="page-account"
@@ -493,7 +490,7 @@ export class NavAccountMenu extends LitElement {
              the affordance, so keep the element (the shared updater toggles it)
              but never show text. -->
         <span data-account-signin-text class="hidden"></span>
-        ${this.renderChevron()}
+        ${signedIn ? this.renderChevron() : nothing}
       </button>
     `;
   }

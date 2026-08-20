@@ -79,6 +79,7 @@ import "./components/DetailedGameViewModal";
 import "./components/Footer";
 import "./components/MainLayout";
 import "./components/MobileNavBar";
+import "./components/MobileTopBar";
 import "./components/PlayPage";
 import "./components/RankedModal";
 import "./components/SocialInvitePopup";

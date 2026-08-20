@@ -31,6 +31,7 @@ vi.mock("../../src/client/Utils", () => ({
   showToast,
 }));
 
+import { appRouter } from "../../src/client/AppRouter";
 import { NavAccountMenu } from "../../src/client/components/NavAccountMenu";
 import { updateAccountNavButton } from "../../src/client/NavAccountButton";
 import type { UserMeResponse } from "../../src/core/ApiSchemas";
@@ -68,6 +69,8 @@ describe("nav-account-menu", () => {
     vi.clearAllMocks();
     isOnCrazyGames.mockReturnValue(false);
     getUserProfile.mockResolvedValue(null);
+    appRouter.reset();
+    history.replaceState(null, "", "/");
     window.showPage = undefined;
   });
 
@@ -85,15 +88,21 @@ describe("nav-account-menu", () => {
     await el.updateComplete;
   }
 
-  it("keeps game settings out of the signed-out account menu", async () => {
+  it("opens Account directly for signed-out users without a menu or chevron", async () => {
     fireUserMe(false);
     await el.updateComplete;
-    await click(trigger());
-    expect(itemKeys()).toEqual(["sign-in"]);
-
     const showPage = vi.fn();
     window.showPage = showPage;
-    await click(document.querySelector('[data-menu-item="sign-in"]')!);
+
+    expect(trigger().getAttribute("aria-haspopup")).toBeNull();
+    expect(trigger().getAttribute("aria-expanded")).toBeNull();
+    expect(trigger().querySelector("[data-account-chevron]")).toBeNull();
+
+    await click(trigger());
+
+    expect(menu()).toBeNull();
+    expect(itemKeys()).toEqual([]);
+    expect(location.pathname).toBe("/account");
     expect(showPage).toHaveBeenCalledWith("page-account", {});
   });
 
@@ -105,13 +114,32 @@ describe("nav-account-menu", () => {
     } as unknown as UserMeResponse);
     await el.updateComplete;
     await click(trigger());
-    expect(itemKeys()).toEqual(["sign-in"]);
+    expect(itemKeys()).toEqual([]);
+    expect(menu()).toBeNull();
+    expect(location.pathname).toBe("/account");
+  });
+
+  it("uses the same one-click signed-out control on mobile", async () => {
+    el.variant = "mobile";
+    fireUserMe(false);
+    await el.updateComplete;
+    const showPage = vi.fn();
+    window.showPage = showPage;
+
+    expect(trigger().querySelector("[data-account-chevron]")).toBeNull();
+    expect(trigger().getAttribute("aria-haspopup")).toBeNull();
+    await click(trigger());
+
+    expect(menu()).toBeNull();
+    expect(location.pathname).toBe("/account");
+    expect(showPage).toHaveBeenCalledWith("page-account", {});
   });
 
   it("toggles the menu for a signed-in user", async () => {
     fireUserMe(userMe());
     await el.updateComplete;
     await click(trigger());
+    expect(trigger().querySelector("[data-account-chevron]")).not.toBeNull();
     expect(menu()).not.toBeNull();
     expect(trigger().getAttribute("aria-expanded")).toBe("true");
     await click(trigger());
@@ -177,8 +205,8 @@ describe("nav-account-menu", () => {
     fireUserMe(false);
     await el.updateComplete;
     await click(trigger());
-    await click(document.querySelector('[data-menu-item="sign-in"]')!);
     expect(showAuthPrompt).toHaveBeenCalledTimes(1);
+    expect(menu()).toBeNull();
   });
 
   it("logs out only after the confirmation is accepted", async () => {

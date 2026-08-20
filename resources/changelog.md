@@ -1,3 +1,9 @@
+## OpenBack v0.36.187 - One Click To Sign In
+
+- Turned the signed-out header account control into one direct Sign In / Sign Up button on desktop and mobile, removing the redundant dropdown and chevron now that Settings has its own navigation button.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.186 - Clean Links Everywhere
 
 - Gave every OpenBack page and selectable tab a readable link that can be copied, refreshed, and opened directly.
