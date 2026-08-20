@@ -1,3 +1,4 @@
+import { experienceModeFromConfigView } from "../ExperienceMode";
 import { Execution, Game, MessageType, Player, Structures } from "../game/Game";
 import { TileRef } from "../game/GameMap";
 import { GameUpdateType, WorldEventKind } from "../game/GameUpdates";
@@ -128,7 +129,7 @@ export class WorldMechanicsExecution implements Execution {
     this.processDisasterDamageScans();
     const mechanics = this.game.config().worldMechanics();
     this.restoreTerrain(ticks);
-    if (this.game.config().experienceMode() === "3d") {
+    if (experienceModeFromConfigView(this.game.config()) === "3d") {
       this.processThreeDTide(ticks);
     } else if (this.tidalTerrain.size > 0) {
       this.restoreThreeDTide();

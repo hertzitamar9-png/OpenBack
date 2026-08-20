@@ -1,4 +1,5 @@
 import { EventBus, GameEvent } from "../core/EventBus";
+import { experienceModeFromConfigView } from "../core/ExperienceMode";
 import { PlayerBuildableUnitType, UnitType } from "../core/game/Game";
 import { UserSettings } from "../core/game/UserSettings";
 import { Platform } from "./Platform";
@@ -1190,7 +1191,10 @@ export class InputHandler {
   private isThreeDMode(): boolean {
     // Some lightweight embeds and test harnesses intentionally expose only
     // interaction state. Treat a missing configuration as classic 2D.
-    return this.gameView.config?.().experienceMode?.() === "3d";
+    const config = this.gameView.config?.();
+    return (
+      config !== undefined && experienceModeFromConfigView(config) === "3d"
+    );
   }
 
   private setGhostStructure(ghostStructure: PlayerBuildableUnitType | null) {

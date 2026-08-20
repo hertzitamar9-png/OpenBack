@@ -34,3 +34,14 @@ export function isExperienceMismatch(
 ): boolean {
   return requestedMode !== undefined && requestedMode !== lobbyMode;
 }
+
+/** Read the canonical accessor while tolerating legacy lightweight adapters. */
+export function experienceModeFromConfigView(config: {
+  experienceMode?: () => ExperienceMode;
+  worldMechanics?: () => { threeDMode?: boolean };
+}): ExperienceMode {
+  return (
+    config.experienceMode?.() ??
+    (config.worldMechanics?.().threeDMode === true ? "3d" : "2d")
+  );
+}

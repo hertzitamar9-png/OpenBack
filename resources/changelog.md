@@ -1,3 +1,10 @@
+## OpenBack v0.36.190 - Twin World Compatibility
+
+- Kept Immersive camera controls and living-world tides working through older lightweight game adapters while the new Twin World experience setting rolls out.
+- Repaired account responses for players whose new competitive ranking record contains only one experience, preserving sign-in, profile currency, and ranked progress.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.189 - Twin World Foundations
 
 - Separated Classic 2D and Immersive 3D multiplayer lobbies so invitations and party joins cannot place players into the wrong world.

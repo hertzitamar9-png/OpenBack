@@ -223,7 +223,7 @@ export const UserMeResponseSchema = z.object({
         threeVthree: z.object({ elo: z.number().optional() }).optional(),
         fourVfour: z.object({ elo: z.number().optional() }).optional(),
         experiences: z
-          .record(
+          .partialRecord(
             z.enum(["2d", "3d"]),
             z.partialRecord(
               z.enum(RankedType),
