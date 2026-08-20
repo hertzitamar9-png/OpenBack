@@ -1,3 +1,9 @@
+## OpenBack v0.36.191 - Footer Icons Restored
+
+- Restored the repository and credits icons to their original centered footer bar while keeping every language flag vertically centered inside that same bar.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.190 - Twin World Compatibility
 
 - Kept Immersive camera controls and living-world tides working through older lightweight game adapters while the new Twin World experience setting rolls out.
