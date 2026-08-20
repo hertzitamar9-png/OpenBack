@@ -14,7 +14,7 @@ export class Footer extends LitElement {
         class="[.in-game_&]:hidden bg-zinc-900/95 backdrop-blur-md flex flex-col items-center justify-center gap-1 py-2 lg:gap-1 lg:pt-1 lg:pb-3 text-white/50 w-full border-t border-white/10 shrink-0 relative z-30"
       >
         <div
-          class="flex h-7 lg:h-auto items-center justify-center gap-6 lg:pt-2 w-full relative"
+          class="flex h-7 lg:h-auto items-center justify-center gap-6 lg:pt-0 w-full relative lg:absolute lg:inset-0 lg:pointer-events-none"
         >
           <a
             href="https://github.com/hertzitamar9-png/OpenBack"
@@ -22,7 +22,7 @@ export class Footer extends LitElement {
             rel="noopener noreferrer"
             data-i18n-title="main.upstream_source"
             data-i18n-aria-label="main.upstream_source"
-            class="hidden lg:block opacity-60 hover:opacity-100 hover:scale-110 transition-all"
+            class="hidden lg:block opacity-60 hover:opacity-100 hover:scale-110 transition-all lg:pointer-events-auto"
           >
             <img
               src=${assetUrl("icons/github-mark-white.svg")}
@@ -39,7 +39,7 @@ export class Footer extends LitElement {
             rel="noopener noreferrer"
             data-i18n-title="main.credits"
             data-i18n-aria-label="main.credits"
-            class="hidden lg:block opacity-60 hover:opacity-100 hover:scale-110 transition-all"
+            class="hidden lg:block opacity-60 hover:opacity-100 hover:scale-110 transition-all lg:pointer-events-auto"
           >
             <svg
               viewBox="0 0 24 24"
@@ -53,7 +53,7 @@ export class Footer extends LitElement {
             </svg>
           </a>
           <lang-selector
-            class="relative lg:absolute lg:right-4 lg:top-0"
+            class="relative lg:absolute lg:right-4 lg:top-1/2 lg:-translate-y-1/2 lg:pointer-events-auto"
           ></lang-selector>
         </div>
         <div

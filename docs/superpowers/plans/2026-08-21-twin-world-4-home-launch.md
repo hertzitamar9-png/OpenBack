@@ -19,7 +19,7 @@
 - 3D checkboxes are removed from Solo and Host.
 - Existing experience-less URLs migrate to 2D.
 - Primary previews remain sharp on high-density desktop displays.
-- Final release is v0.36.188 and credits **frootz jhklphy**.
+- Final release is v0.36.189 and credits **frootz jhklphy**.
 
 ---
 
@@ -296,7 +296,7 @@ git commit -m "Launch 3D as its own experience"
 - [ ] **Step 1: Add release entry and enable the gate**
 
 ```md
-## OpenBack v0.36.188 - Twin Worlds
+## OpenBack v0.36.189 - Twin Worlds
 
 - Separated Classic 2D and Immersive 3D into complete experiences with their own games, ranked ladders, statistics, achievements, and cosmetic loadouts inside one shared OpenBack account.
 - Rebuilt Home around one 2D/3D world switch and larger high-resolution live map previews.

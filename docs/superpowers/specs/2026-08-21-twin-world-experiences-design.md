@@ -251,7 +251,7 @@ This program is too large for one unsafe all-at-once patch. It is delivered thro
 3. **Cosmetic separation:** compatibility metadata, experience loadouts, Store/Inventory routes, previews, persistence, and migration.
 4. **Twin World launch:** high-resolution map preview generation, expanded home layout, experience switch, setup entry points, removal of modifier checkboxes, responsive/browser QA, release notes, and feature-gate enablement.
 
-No intermediate stage exposes a half-separated competitive system to players. The final player-facing launch is OpenBack v0.36.188 and credits **frootz jhklphy**. If implementation requires more than one player-visible release, each additional release increments the patch and receives its own changelog entry under the project rules.
+No intermediate stage exposes a half-separated competitive system to players. The final player-facing launch is OpenBack v0.36.189 and credits **frootz jhklphy**. If implementation requires more than one player-visible release, each additional release increments the patch and receives its own changelog entry under the project rules.
 
 ## Testing and verification
 

@@ -1,3 +1,9 @@
+## OpenBack v0.36.188 - Centered Language Flag
+
+- Centered every language flag against the full desktop footer bar instead of the shorter icon row, keeping wide, square, and tall flags aligned consistently.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.187 - One Click To Sign In
 
 - Turned the signed-out header account control into one direct Sign In / Sign Up button on desktop and mobile, removing the redundant dropdown and chevron now that Settings has its own navigation button.
