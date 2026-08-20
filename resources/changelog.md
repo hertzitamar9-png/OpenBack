@@ -1,3 +1,9 @@
+## OpenBack v0.36.184 - One Matching Header Set
+
+- Matched the Settings gear's resting colour, hover colour, stroke weight, and focus treatment to the neighboring News and Help icons so none appears darker or glows more strongly.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.183 - Settings Where They Belong
 
 - Moved Game settings out of the account dropdown and into a dedicated white gear matching News and Help on desktop and mobile.

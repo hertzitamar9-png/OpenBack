@@ -48,6 +48,12 @@ describe("nav utility icons", () => {
     expect(
       settings.querySelector('[data-interface-icon="gear"]'),
     ).not.toBeNull();
+    expect(
+      settings
+        .querySelector('[data-interface-icon="gear"]')
+        ?.getAttribute("stroke-width"),
+    ).toBe("1.8");
+    expect(settings.className).not.toContain("drop-shadow");
 
     settings.click();
     expect(showPage).toHaveBeenCalledWith("page-settings");

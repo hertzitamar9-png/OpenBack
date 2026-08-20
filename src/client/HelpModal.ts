@@ -129,7 +129,7 @@ export class HelpModal extends BaseModal {
               data-help-section-icon="openback-units"
               class="text-blue-400"
             >
-              ${gearIcon("w-6 h-6")}
+              ${gearIcon("w-6 h-6", "2")}
             </div>
             <h3
               class="text-xl font-bold uppercase tracking-widest text-white/90"

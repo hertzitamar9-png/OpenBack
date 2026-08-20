@@ -1,7 +1,10 @@
 import { html, type TemplateResult } from "lit";
 
 /** OpenBack's shared outlined settings gear; colour follows currentColor. */
-export function gearIcon(className = "w-5 h-5"): TemplateResult {
+export function gearIcon(
+  className = "w-5 h-5",
+  strokeWidth = "1.8",
+): TemplateResult {
   return html`<svg
     data-interface-icon="gear"
     class=${className}
@@ -9,7 +12,7 @@ export function gearIcon(className = "w-5 h-5"): TemplateResult {
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    stroke-width="2"
+    stroke-width=${strokeWidth}
     stroke-linecap="round"
     stroke-linejoin="round"
     aria-hidden="true"
