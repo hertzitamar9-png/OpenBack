@@ -10,7 +10,7 @@ const url = (path: string) => new URL(path, "https://openback.test");
 
 describe("AppRoutes", () => {
   it.each<[string, AppRouteTarget]>([
-    ["/", { pageId: "page-play" }],
+    ["/play/2d", { pageId: "page-play", experienceMode: "2d" }],
     ["/news", { pageId: "page-news" }],
     ["/help", { pageId: "page-help" }],
     ["/help/troubleshooting", { pageId: "page-troubleshooting" }],
@@ -27,10 +27,16 @@ describe("AppRoutes", () => {
     ["/terms", { pageId: "page-terms" }],
     ["/privacy", { pageId: "page-privacy" }],
     ["/language", { pageId: "page-language" }],
-    ["/solo", { pageId: "page-single-player" }],
-    ["/ranked", { pageId: "page-ranked" }],
-    ["/multiplayer/host", { pageId: "page-host-lobby" }],
-    ["/multiplayer/join", { pageId: "page-join-lobby" }],
+    ["/solo/2d", { pageId: "page-single-player", experienceMode: "2d" }],
+    ["/ranked/2d", { pageId: "page-ranked", experienceMode: "2d" }],
+    [
+      "/multiplayer/host/2d",
+      { pageId: "page-host-lobby", experienceMode: "2d" },
+    ],
+    [
+      "/multiplayer/join/2d",
+      { pageId: "page-join-lobby", experienceMode: "2d" },
+    ],
     [
       "/store/cosmetics/flags",
       {
@@ -62,6 +68,23 @@ describe("AppRoutes", () => {
   });
 
   it.each([
+    ["/", "/play/2d", { pageId: "page-play", experienceMode: "2d" }],
+    [
+      "/solo",
+      "/solo/2d",
+      { pageId: "page-single-player", experienceMode: "2d" },
+    ],
+    ["/ranked", "/ranked/2d", { pageId: "page-ranked", experienceMode: "2d" }],
+    [
+      "/multiplayer/host",
+      "/multiplayer/host/2d",
+      { pageId: "page-host-lobby", experienceMode: "2d" },
+    ],
+    [
+      "/multiplayer/join",
+      "/multiplayer/join/2d",
+      { pageId: "page-join-lobby", experienceMode: "2d" },
+    ],
     ["/store", "/store/packs", { pageId: "page-item-store", tab: "packs" }],
     [
       "/inventory",
@@ -122,7 +145,7 @@ describe("AppRoutes", () => {
   ])("rejects malformed or unknown route %s", (path) => {
     expect(parseAppUrl(url(path))).toEqual({
       kind: "invalid",
-      fallback: { pageId: "page-play" },
+      fallback: { pageId: "page-play", experienceMode: "2d" },
     });
   });
 

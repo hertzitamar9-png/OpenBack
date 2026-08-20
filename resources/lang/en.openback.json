@@ -218,7 +218,6 @@
     "start_delay_placeholder": "3",
     "starting_gold_placeholder": "5",
     "strategic_objectives": "Strategic Objectives",
-    "three_d_mode": "3D World",
     "title": "Create Private Lobby"
   },
   "ios_banner": {
@@ -349,8 +348,7 @@
     "fog_of_war": "Fog of War",
     "living_world": "Living World",
     "natural_disasters": "Natural Disasters",
-    "strategic_objectives": "Strategic Objectives",
-    "three_d_mode": "3D World"
+    "strategic_objectives": "Strategic Objectives"
   },
   "social_chat": {
     "clan_chat": "Clan Chat",

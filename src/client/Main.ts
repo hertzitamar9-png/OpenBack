@@ -151,7 +151,8 @@ declare global {
     "join-changed": CustomEvent;
     "open-matchmaking": CustomEvent<
       | {
-          mode?: "1v1" | "2v2";
+          mode?: "1v1" | "2v2" | "3v3" | "4v4";
+          teamSize?: 1 | 2 | 3 | 4;
           experienceMode?: "2d" | "3d";
         }
       | undefined
@@ -1068,7 +1069,11 @@ class Client {
   // no-op — don't force them back into a queue they left.
   private handleMatchmakingRequeue(
     event: CustomEvent<
-      { mode?: "1v1" | "2v2"; experienceMode?: "2d" | "3d" } | undefined
+      | {
+          mode?: "1v1" | "2v2" | "3v3" | "4v4";
+          experienceMode?: "2d" | "3d";
+        }
+      | undefined
     >,
   ) {
     if (this.matchmakingModal?.requeue()) {
@@ -1082,13 +1087,21 @@ class Client {
 
   private handleOpenMatchmaking(
     event: CustomEvent<
-      { mode?: "1v1" | "2v2"; experienceMode?: "2d" | "3d" } | undefined
+      | {
+          mode?: "1v1" | "2v2" | "3v3" | "4v4";
+          teamSize?: 1 | 2 | 3 | 4;
+          experienceMode?: "2d" | "3d";
+        }
+      | undefined
     >,
   ) {
     if (!this.matchmakingModal) return;
     // Always set the mode: dispatchers without a detail (homepage button,
     // requeue URL) mean 1v1 and must reset a lingering 2v2 selection.
-    this.matchmakingModal.mode = event.detail?.mode === "2v2" ? "2v2" : "1v1";
+    const teamSize = event.detail?.teamSize ?? 1;
+    this.matchmakingModal.mode =
+      event.detail?.mode ??
+      (`${teamSize}v${teamSize}` as typeof this.matchmakingModal.mode);
     this.matchmakingModal.experienceMode =
       event.detail?.experienceMode === "3d" ? "3d" : "2d";
     this.matchmakingModal.open();

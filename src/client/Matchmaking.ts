@@ -30,7 +30,7 @@ export class MatchmakingModal extends BaseModal {
   private intentionalClose = false;
   // Which queue to join; set by Main from the open-matchmaking event
   // before the modal opens.
-  public mode: "1v1" | "2v2" = "1v1";
+  public mode: "1v1" | "2v2" | "3v3" | "4v4" = "1v1";
   public experienceMode: "2d" | "3d" = "2d";
   @state() private connected = false;
   @state() private socket: WebSocket | null = null;
@@ -52,7 +52,7 @@ export class MatchmakingModal extends BaseModal {
   protected renderHeaderSlot() {
     return modalHeader({
       title: translateText(
-        this.mode === "2v2"
+        this.mode !== "1v1"
           ? "matchmaking_modal.title_2v2"
           : "matchmaking_modal.title",
       ),
@@ -398,9 +398,13 @@ export class MatchmakingModal extends BaseModal {
     }
 
     const row =
-      this.mode === "2v2"
-        ? userMe.player.leaderboard?.twoVtwo
-        : userMe.player.leaderboard?.oneVone;
+      this.mode === "4v4"
+        ? userMe.player.leaderboard?.fourVfour
+        : this.mode === "3v3"
+          ? userMe.player.leaderboard?.threeVthree
+          : this.mode === "2v2"
+            ? userMe.player.leaderboard?.twoVtwo
+            : userMe.player.leaderboard?.oneVone;
     this.elo = row?.elo ?? translateText("matchmaking_modal.no_elo");
     this.selectedClanTag = this.selectedClanFrom(userMe);
 

@@ -9,9 +9,11 @@ import {
   Quads,
   Trios,
 } from "../core/game/Game";
-import { PublicGameInfo, PublicGames } from "../core/Schemas";
+import { ExperienceMode, PublicGameInfo, PublicGames } from "../core/Schemas";
 import { appRouter } from "./AppRouter";
+import "./components/ExperienceSwitch";
 import "./components/IOSAddToHomeScreenBanner";
+import { experienceContext } from "./ExperienceContext";
 import { HostLobbyModal } from "./HostLobbyModal";
 import { JoinLobbyModal } from "./JoinLobbyModal";
 import { requireLifetimeAccess } from "./LifetimeAccess";
@@ -36,6 +38,7 @@ export class GameModeSelector extends LitElement {
   @state() private lobbies: PublicGames | null = null;
   @state() private mapAspectRatios: Map<GameMapType, number> = new Map();
   @state() private inputValid: boolean = true;
+  @state() private experienceMode: ExperienceMode = experienceContext.get();
   private serverTimeOffset: number = 0;
   private defaultLobbyTime: number = 0;
 
@@ -63,6 +66,7 @@ export class GameModeSelector extends LitElement {
       "username-validity-change",
       this.handleValidityChange,
     );
+    window.addEventListener("experience-changed", this.handleExperienceChanged);
     // Pick up the current value in case username-input validated before us.
     const usernameInput = document.querySelector(
       "username-input",
@@ -78,11 +82,31 @@ export class GameModeSelector extends LitElement {
       "username-validity-change",
       this.handleValidityChange,
     );
+    window.removeEventListener(
+      "experience-changed",
+      this.handleExperienceChanged,
+    );
     super.disconnectedCallback();
   }
 
   private handleValidityChange = (e: Event) => {
     this.inputValid = (e as CustomEvent).detail?.isValid ?? true;
+  };
+
+  private handleExperienceChanged = (event: Event) => {
+    this.experienceMode = (
+      event as CustomEvent<{ mode: ExperienceMode }>
+    ).detail.mode;
+  };
+
+  private selectExperience = (event: Event) => {
+    const mode = (event as CustomEvent<{ mode: ExperienceMode }>).detail.mode;
+    experienceContext.select(mode, "user");
+    this.experienceMode = mode;
+    void appRouter.navigate(
+      { pageId: "page-play", experienceMode: mode },
+      { replace: true },
+    );
   };
 
   public stop() {
@@ -125,9 +149,16 @@ export class GameModeSelector extends LitElement {
   }
 
   render() {
-    const ffa = this.lobbies?.games?.["ffa"]?.[0];
-    const teams = this.lobbies?.games?.["team"]?.[0];
-    const special = this.lobbies?.games?.["special"]?.[0];
+    const selectLobby = (lobbies: PublicGameInfo[] | undefined) =>
+      lobbies?.find(
+        (lobby) =>
+          lobby.experienceMode === this.experienceMode ||
+          (lobby.experienceMode === undefined &&
+            (lobby.gameConfig?.experienceMode ?? "2d") === this.experienceMode),
+      );
+    const ffa = selectLobby(this.lobbies?.games?.["ffa"]);
+    const teams = selectLobby(this.lobbies?.games?.["team"]);
+    const special = selectLobby(this.lobbies?.games?.["special"]);
     const mobileLobbies = [special, ffa, teams].filter(
       (lobby): lobby is PublicGameInfo => lobby !== undefined,
     );
@@ -136,6 +167,10 @@ export class GameModeSelector extends LitElement {
       <div
         class="home-command-layout flex flex-col gap-3 sm:gap-4 w-full px-3 sm:px-0 mx-auto pb-3 sm:pb-0 touch-pan-y"
       >
+        <experience-switch
+          .mode=${this.experienceMode}
+          @experience-select=${this.selectExperience}
+        ></experience-switch>
         <!-- Solo: mobile only, top -->
         <div class="mobile-home-primary-actions lg:hidden h-14">
           ${this.renderSmallActionCard(
@@ -180,7 +215,7 @@ export class GameModeSelector extends LitElement {
               ></span>
             </div>`
           : html`<div
-              class="home-lobby-grid grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4 lg:h-[min(24rem,40vh)]"
+              class="home-lobby-grid grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4 lg:h-[min(20rem,30vh)]"
             >
               <!-- Left col: main card (desktop only) -->
               ${ffa
@@ -262,32 +297,49 @@ export class GameModeSelector extends LitElement {
   private openRankedMenu = async () => {
     if (!this.validateUsername()) return;
     if (!(await requireLifetimeAccess("ranked"))) return;
-    void appRouter.navigate({ pageId: "page-ranked" });
+    void appRouter.navigate({
+      pageId: "page-ranked",
+      experienceMode: this.experienceMode,
+    });
   };
 
   private openSinglePlayerModal = () => {
     if (!this.validateUsername()) return;
-    (
-      document.querySelector("single-player-modal") as SinglePlayerModal
-    )?.open();
+    const modal = document.querySelector(
+      "single-player-modal",
+    ) as SinglePlayerModal | null;
+    modal?.setExperienceMode(this.experienceMode);
+    modal?.open();
   };
 
   private openHostLobby = async () => {
     if (!this.validateUsername()) return;
     if (!(await requireLifetimeAccess("multiplayer"))) return;
-    (document.querySelector("host-lobby-modal") as HostLobbyModal)?.open();
+    const modal = document.querySelector(
+      "host-lobby-modal",
+    ) as HostLobbyModal | null;
+    modal?.setExperienceMode(this.experienceMode);
+    modal?.open();
   };
 
   private openJoinLobby = async () => {
     if (!this.validateUsername()) return;
     if (!(await requireLifetimeAccess("multiplayer"))) return;
-    (document.querySelector("join-lobby-modal") as JoinLobbyModal)?.open();
+    const modal = document.querySelector(
+      "join-lobby-modal",
+    ) as JoinLobbyModal | null;
+    modal?.setExperienceMode(this.experienceMode);
+    modal?.open({ experienceMode: this.experienceMode });
   };
 
   // Number of open hosted lobbies waiting in the browser; shown as a chip
   // on the Join button.
   private hostedLobbyCount(): number {
-    return this.lobbies?.games?.hosted?.length ?? 0;
+    return (
+      this.lobbies?.games?.hosted?.filter(
+        (lobby) => (lobby.experienceMode ?? "2d") === this.experienceMode,
+      ).length ?? 0
+    );
   }
 
   private renderSmallActionCard(
@@ -321,7 +373,16 @@ export class GameModeSelector extends LitElement {
     titleContent: string | TemplateResult,
   ) {
     const mapType = lobby.gameConfig!.gameMap as GameMapType;
-    const mapImageSrc = terrainMapFileLoader.getMapData(mapType).webpPath;
+    const mapData = terrainMapFileLoader.getMapData(mapType);
+    const mapImageSrc =
+      this.experienceMode === "3d"
+        ? (mapData.webp3dPath ?? mapData.webpPath)
+        : mapData.webpPath;
+    const mapImageSrcset = `${mapImageSrc} 1x, ${
+      this.experienceMode === "3d"
+        ? (mapData.webp3d2xPath ?? mapImageSrc)
+        : (mapData.webp2xPath ?? mapImageSrc)
+    } 2x`;
     const aspectRatio = this.mapAspectRatios.get(mapType);
     // Use object-contain for extreme aspect ratios (e.g. Amazon River ~20:1) so
     // the full map is visible instead of being cropped by object-cover.
@@ -369,11 +430,13 @@ export class GameModeSelector extends LitElement {
           ${mapImageSrc
             ? html`<img
                 src="${mapImageSrc}"
+                srcset="${mapImageSrcset}"
+                sizes="(min-width: 1024px) 70vw, 100vw"
                 alt="${mapName ?? lobby.gameConfig?.gameMap ?? "map"}"
                 draggable="false"
                 class="absolute inset-0 w-full h-full ${useContain
                   ? "object-contain"
-                  : "object-cover object-center scale-[1.05]"} [image-rendering:auto]"
+                  : "object-cover object-center"} [image-rendering:auto]"
               />`
             : null}
         </div>

@@ -56,6 +56,9 @@ export class BinaryLoaderGameMapLoader implements GameMapLoader {
         }),
       ),
       webpPath: mapAssetUrl("thumbnail.webp"),
+      webp2xPath: mapAssetUrl("thumbnail@2x.webp"),
+      webp3dPath: mapAssetUrl("thumbnail-3d.webp"),
+      webp3d2xPath: mapAssetUrl("thumbnail-3d@2x.webp"),
       layerPng: (layerId: string) =>
         fetch(mapAssetUrl(`${layerId}.png`))
           .then((res) => {

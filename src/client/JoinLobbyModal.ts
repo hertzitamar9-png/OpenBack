@@ -13,6 +13,7 @@ import { assetUrl } from "../core/AssetUrls";
 import { EventBus } from "../core/EventBus";
 import {
   ClientInfo,
+  ExperienceMode,
   GAME_ID_REGEX,
   GameConfig,
   GameInfo,
@@ -61,13 +62,18 @@ export class JoinLobbyModal extends BaseModal {
   // the pre-join form.
   @state() private hostedLobbies: PublicGameInfo[] = [];
   @state() private hostedLobbiesLoaded = false;
+  private preferredExperienceMode: ExperienceMode = "2d";
 
   private leaveLobbyOnClose = true;
   private countdownTimerId: number | null = null;
   private handledJoinTimeout = false;
 
   private readonly hostedLobbySocket = new PublicLobbySocket((lobbies) => {
-    this.hostedLobbies = lobbies.games?.hosted ?? [];
+    this.hostedLobbies = (lobbies.games?.hosted ?? []).filter(
+      (lobby) =>
+        (lobby.experienceMode ?? lobby.gameConfig?.experienceMode ?? "2d") ===
+        this.preferredExperienceMode,
+    );
     this.hostedLobbiesLoaded = true;
   });
 
@@ -398,6 +404,9 @@ export class JoinLobbyModal extends BaseModal {
     // disarmLeaveOnClose() runs, no close cascade can re-arm it and
     // disconnect the player mid game-start.
     this.leaveLobbyOnClose = true;
+    if (args?.experienceMode === "2d" || args?.experienceMode === "3d") {
+      this.preferredExperienceMode = args.experienceMode;
+    }
     this.hostedLobbiesLoaded = false;
     void this.hostedLobbySocket.start();
     const lobbyId = typeof args?.lobbyId === "string" ? args.lobbyId : "";
@@ -1227,5 +1236,9 @@ export class JoinLobbyModal extends BaseModal {
     }
     window.location.href = url;
     return true;
+  }
+
+  public setExperienceMode(mode: ExperienceMode): void {
+    this.preferredExperienceMode = mode;
   }
 }

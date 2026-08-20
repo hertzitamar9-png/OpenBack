@@ -249,31 +249,40 @@ export class MasterLobbyService {
     // Scheduled types only: hosted lobbies are started by their host, never
     // given a countdown or replaced by the master.
     for (const type of SCHEDULED_PUBLIC_GAME_TYPES) {
-      const lobbies = lobbiesByType[type];
+      for (const experienceMode of ["2d", "3d"] as const) {
+        const lobbies = lobbiesByType[type].filter(
+          (lobby) =>
+            lobby.experienceMode === experienceMode ||
+            (lobby.experienceMode === undefined && experienceMode === "2d"),
+        );
 
-      // Always ensure the next lobby has a timer, even if the queue is
-      // already full. This prevents a race where two lobbies are created before
-      // either receives a startsAt (IPC round-trip delay), leaving both stuck
-      // without a countdown.
-      const nextLobby = lobbies[0];
-      if (nextLobby && nextLobby.startsAt === undefined) {
+        // Always ensure the next lobby has a timer, even if the queue is
+        // already full. This prevents a race where two lobbies are created before
+        // either receives a startsAt (IPC round-trip delay), leaving both stuck
+        // without a countdown.
+        const nextLobby = lobbies[0];
+        if (nextLobby && nextLobby.startsAt === undefined) {
+          this.sendMessageToWorker({
+            type: "updateLobby",
+            gameID: nextLobby.gameID,
+            startsAt: Date.now() + ServerEnv.gameCreationRate(),
+          });
+        }
+
+        if (lobbies.length >= QUEUED_LOBBIES_PER_TYPE / 2) {
+          continue;
+        }
+
         this.sendMessageToWorker({
-          type: "updateLobby",
-          gameID: nextLobby.gameID,
-          startsAt: Date.now() + ServerEnv.gameCreationRate(),
-        });
+          type: "createGame",
+          gameID: generateID(),
+          gameConfig: {
+            ...(await this.playlist.gameConfig(type)),
+            experienceMode,
+          },
+          publicGameType: type,
+        } satisfies MasterCreateGame);
       }
-
-      if (lobbies.length >= QUEUED_LOBBIES_PER_TYPE) {
-        continue;
-      }
-
-      this.sendMessageToWorker({
-        type: "createGame",
-        gameID: generateID(),
-        gameConfig: await this.playlist.gameConfig(type),
-        publicGameType: type,
-      } satisfies MasterCreateGame);
     }
   }
 

@@ -1,3 +1,13 @@
+## OpenBack v0.36.192 - Twin Worlds
+
+- Added one clear Classic 2D / Immersive 3D switch to Home and carried the selected world through Solo, hosted and joined multiplayer, public lobbies, parties, and ranked 1v1 through 4v4.
+- Expanded Home across wide desktop screens while keeping every primary action visible above the footer at 720p and preserving a fitted, non-scrolling mobile layout.
+- Separated scheduled public matches by world and removed 3D from the ordinary Solo and Host modifier checklist.
+- Rebuilt all map previews as quality-88 Classic and shaded-relief Immersive variants with density-aware 2x sources, removing the forced image enlargement that made large cards blurry.
+- Restored repository and credits icons to their original footer row while centering the language flag against the complete footer.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.191 - Footer Icons Restored
 
 - Restored the repository and credits icons to their original centered footer bar while keeping every language flag vertically centered inside that same bar.

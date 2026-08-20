@@ -860,8 +860,9 @@ async function startMatchmakingPolling(gm: GameManager) {
   // One checkin serves exactly one queue, so a host serving both modes
   // runs one long-poll loop per mode.
   for (const experienceMode of ["2d", "3d"] as const) {
-    startMatchmakingLoop(gm, "1v1", experienceMode);
-    startMatchmakingLoop(gm, "2v2", experienceMode);
+    for (const mode of ["1v1", "2v2", "3v3", "4v4"] as const) {
+      startMatchmakingLoop(gm, mode, experienceMode);
+    }
   }
 }
 
@@ -875,7 +876,7 @@ const MatchmakingAssignmentSchema = z.object({
 
 function startMatchmakingLoop(
   gm: GameManager,
-  mode: "1v1" | "2v2",
+  mode: "1v1" | "2v2" | "3v3" | "4v4",
   experienceMode: "2d" | "3d",
 ) {
   startPolling(
@@ -931,10 +932,8 @@ function startMatchmakingLoop(
               `Unexpected ${mode} assignment shape: ${z.prettifyError(parsed.error)}`,
             );
           }
-          const baseConfig =
-            mode === "2v2"
-              ? playlist.getRankedConfig(2)
-              : playlist.get1v1Config();
+          const teamSize = Number(mode[0]) as 1 | 2 | 3 | 4;
+          const baseConfig = playlist.getRankedConfig(teamSize);
           const assignedConfig = {
             ...(data.gameConfig ?? baseConfig),
             experienceMode,

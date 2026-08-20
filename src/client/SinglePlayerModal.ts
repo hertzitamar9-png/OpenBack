@@ -500,10 +500,6 @@ export class SinglePlayerModal extends BaseModal {
                     labelKey: "single_modal.living_world",
                     checked: this.livingWorld,
                   },
-                  {
-                    labelKey: "single_modal.three_d_mode",
-                    checked: this.experienceMode === "3d",
-                  },
                 ],
                 inputCards,
               },
@@ -572,7 +568,6 @@ export class SinglePlayerModal extends BaseModal {
       this.naturalDisasters !== DEFAULT_OPTIONS.naturalDisasters ||
       this.fogOfWar !== DEFAULT_OPTIONS.fogOfWar ||
       this.livingWorld !== DEFAULT_OPTIONS.livingWorld ||
-      this.experienceMode !== DEFAULT_OPTIONS.experienceMode ||
       this.disabledUnits.length > 0
     );
   }
@@ -710,9 +705,6 @@ export class SinglePlayerModal extends BaseModal {
         break;
       case "single_modal.living_world":
         this.livingWorld = checked;
-        break;
-      case "single_modal.three_d_mode":
-        this.experienceMode = checked ? "3d" : "2d";
         break;
       default:
         break;

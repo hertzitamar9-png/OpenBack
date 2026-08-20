@@ -11,6 +11,9 @@ export interface MapData {
   map16xBin: () => Promise<Uint8Array>;
   manifest: () => Promise<MapManifest>;
   webpPath: string;
+  webp2xPath?: string;
+  webp3dPath?: string;
+  webp3d2xPath?: string;
   /** Load a map layer PNG by layer id. Returns an ImageBitmap. */
   layerPng?: (layerId: string) => Promise<ImageBitmap>;
 }

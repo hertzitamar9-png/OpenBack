@@ -124,6 +124,6 @@ describe("public game stats route", () => {
     backButton.click();
 
     expect(modal.isOpen()).toBe(false);
-    expect(window.location.pathname).toBe("/");
+    expect(window.location.pathname).toBe("/play/2d");
   });
 });

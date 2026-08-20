@@ -23,6 +23,7 @@ export type AppPageId =
 
 export interface AppRouteTarget {
   pageId: AppPageId;
+  experienceMode?: "2d" | "3d";
   tab?: string;
   subtab?: string;
   publicID?: string;
@@ -37,7 +38,7 @@ export type RouteResolution =
   | { kind: "reserved" }
   | { kind: "invalid"; fallback: AppRouteTarget };
 
-const PLAY: AppRouteTarget = { pageId: "page-play" };
+const PLAY: AppRouteTarget = { pageId: "page-play", experienceMode: "2d" };
 
 const STORE_TABS = new Set([
   "packs",
@@ -67,7 +68,6 @@ const CLAN_DETAIL_TABS = new Set(["overview", "members", "game-history"]);
 const SETTINGS_TABS = new Set(["basic", "keybinds"]);
 
 const SIMPLE_PATHS = new Map<string, AppRouteTarget>([
-  ["/", PLAY],
   ["/news", { pageId: "page-news" }],
   ["/help", { pageId: "page-help" }],
   ["/help/troubleshooting", { pageId: "page-troubleshooting" }],
@@ -76,10 +76,10 @@ const SIMPLE_PATHS = new Map<string, AppRouteTarget>([
   ["/terms", { pageId: "page-terms" }],
   ["/privacy", { pageId: "page-privacy" }],
   ["/language", { pageId: "page-language" }],
-  ["/solo", { pageId: "page-single-player" }],
-  ["/ranked", { pageId: "page-ranked" }],
-  ["/multiplayer/host", { pageId: "page-host-lobby" }],
-  ["/multiplayer/join", { pageId: "page-join-lobby" }],
+  ["/solo", { pageId: "page-single-player", experienceMode: "2d" }],
+  ["/ranked", { pageId: "page-ranked", experienceMode: "2d" }],
+  ["/multiplayer/host", { pageId: "page-host-lobby", experienceMode: "2d" }],
+  ["/multiplayer/join", { pageId: "page-join-lobby", experienceMode: "2d" }],
 ]);
 
 function decodeSegment(segment: string | undefined): string | null {
@@ -127,11 +127,56 @@ function invalid(): RouteResolution {
 export function parseAppUrl(url: URL): RouteResolution {
   if (isReserved(url)) return { kind: "reserved" };
 
+  if (url.pathname === "/") return app(PLAY, `/play/2d${url.search}`);
+
   const simple = SIMPLE_PATHS.get(url.pathname);
   if (simple) return app(withQuery({ ...simple }, url.search));
 
   const segments = url.pathname.split("/").filter(Boolean);
   const [section, second, third] = segments;
+  const experience = second === "3d" ? "3d" : second === "2d" ? "2d" : null;
+
+  if (section === "play" && segments.length === 2 && experience) {
+    return app(
+      withQuery(
+        { pageId: "page-play", experienceMode: experience },
+        url.search,
+      ),
+    );
+  }
+  if (
+    (section === "solo" || section === "ranked") &&
+    segments.length === 2 &&
+    experience
+  ) {
+    return app(
+      withQuery(
+        {
+          pageId: section === "solo" ? "page-single-player" : "page-ranked",
+          experienceMode: experience,
+        },
+        url.search,
+      ),
+    );
+  }
+  const multiplayerExperience =
+    third === "3d" ? "3d" : third === "2d" ? "2d" : null;
+  if (
+    section === "multiplayer" &&
+    (second === "host" || second === "join") &&
+    segments.length === 3 &&
+    multiplayerExperience
+  ) {
+    return app(
+      withQuery(
+        {
+          pageId: second === "host" ? "page-host-lobby" : "page-join-lobby",
+          experienceMode: multiplayerExperience,
+        },
+        url.search,
+      ),
+    );
+  }
 
   if (section === "tutorials" && segments.length === 2) {
     const article = decodeSegment(second);
@@ -280,7 +325,7 @@ export function pathForTarget(target: AppRouteTarget): string {
   const suffix = querySuffix(target);
   switch (target.pageId) {
     case "page-play":
-      return `/${suffix}`;
+      return `/play/${target.experienceMode ?? "2d"}${suffix}`;
     case "page-news":
       return `/news${suffix}`;
     case "page-help":
@@ -302,13 +347,13 @@ export function pathForTarget(target: AppRouteTarget): string {
     case "page-language":
       return `/language${suffix}`;
     case "page-single-player":
-      return `/solo${suffix}`;
+      return `/solo/${target.experienceMode ?? "2d"}${suffix}`;
     case "page-ranked":
-      return `/ranked${suffix}`;
+      return `/ranked/${target.experienceMode ?? "2d"}${suffix}`;
     case "page-host-lobby":
-      return `/multiplayer/host${suffix}`;
+      return `/multiplayer/host/${target.experienceMode ?? "2d"}${suffix}`;
     case "page-join-lobby":
-      return `/multiplayer/join${suffix}`;
+      return `/multiplayer/join/${target.experienceMode ?? "2d"}${suffix}`;
     case "page-item-store": {
       const tab = target.tab ?? "packs";
       if (!STORE_TABS.has(tab)) throw new Error(`Unknown Store tab: ${tab}`);

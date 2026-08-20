@@ -5,6 +5,7 @@ import {
   parseAppUrl,
   pathForTarget,
 } from "./AppRoutes";
+import { experienceContext, experienceFromRoute } from "./ExperienceContext";
 
 export interface AppRouteRegistration {
   tag?: string;
@@ -18,6 +19,7 @@ export type AppNavigationGuard = (
 ) => boolean | Promise<boolean>;
 
 const ROUTE_ARG_KEYS = [
+  "experienceMode",
   "tab",
   "subtab",
   "publicID",
@@ -169,7 +171,7 @@ export class AppRouter {
       if (!(key in args)) continue;
       const value = args[key];
       if (typeof value === "string" && value.length > 0) {
-        next[key] = value;
+        next[key] = value as never;
       } else {
         delete next[key];
       }
@@ -218,6 +220,10 @@ export class AppRouter {
   }
 
   private async apply(target: AppRouteTarget): Promise<void> {
+    experienceContext.select(
+      experienceFromRoute(target, experienceContext.get()),
+      "route",
+    );
     const entry = this.registrationsByPage.get(target.pageId);
     if (entry?.tag) await customElements.whenDefined(entry.tag);
 
@@ -256,7 +262,9 @@ export class AppRouter {
     if (!args) return target;
     for (const key of ROUTE_ARG_KEYS) {
       const value = args[key];
-      if (typeof value === "string" && value.length > 0) target[key] = value;
+      if (typeof value === "string" && value.length > 0) {
+        target[key] = value as never;
+      }
     }
     return target;
   }

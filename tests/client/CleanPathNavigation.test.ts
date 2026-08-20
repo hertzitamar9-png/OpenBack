@@ -3,7 +3,7 @@ import { appRouter } from "../../src/client/AppRouter";
 import { initNavigation } from "../../src/client/Navigation";
 
 const CASES = [
-  ["page-play", "/"],
+  ["page-play", "/play/2d"],
   ["page-item-store", "/store/packs"],
   ["page-inventory", "/inventory/skins"],
   ["page-leaderboard", "/leaderboard/1v1"],

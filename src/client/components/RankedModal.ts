@@ -1,6 +1,7 @@
 import { html } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { UserMeResponse } from "../../core/ApiSchemas";
+import type { ExperienceMode } from "../../core/Schemas";
 import { getUserMe, hasLinkedAccount } from "../Api";
 import { appRouter } from "../AppRouter";
 import { userAuth } from "../Auth";
@@ -23,6 +24,7 @@ export class RankedModal extends BaseModal {
   // Discord/Google/email account, so track that separately for ranked.
   @state() private crazyGamesSignedIn = false;
   @state() private party: GlobalPartyState | null = socialClient.getParty();
+  private experienceMode: ExperienceMode = "2d";
   private readonly partyListener = (event: Event) => {
     this.party = (event as CustomEvent<GlobalPartyState | null>).detail;
   };
@@ -72,13 +74,20 @@ export class RankedModal extends BaseModal {
     if (this.isRankedEligible()) {
       this.elo =
         this.userMeResponse &&
-        this.userMeResponse.player.leaderboard?.oneVone?.elo
-          ? this.userMeResponse.player.leaderboard.oneVone.elo
+        this.userMeResponse.player.leaderboard?.experiences?.[
+          this.experienceMode
+        ]?.["1v1"]?.elo
+          ? this.userMeResponse.player.leaderboard.experiences[
+              this.experienceMode
+            ]!["1v1"]!.elo
           : translateText("matchmaking_modal.no_elo");
     }
   }
 
-  protected override async onOpen(): Promise<void> {
+  protected override async onOpen(
+    args?: Record<string, unknown>,
+  ): Promise<void> {
+    this.experienceMode = args?.experienceMode === "3d" ? "3d" : "2d";
     this.elo = "...";
     this.errorMessage = null;
 
@@ -261,6 +270,7 @@ export class RankedModal extends BaseModal {
       new CustomEvent("open-matchmaking", {
         detail: {
           teamSize,
+          experienceMode: this.experienceMode,
           withFriends,
           partyMembers: withFriends
             ? socialClient.getParty()?.members.map((member) => member.publicId)

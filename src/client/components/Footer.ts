@@ -52,10 +52,10 @@ export class Footer extends LitElement {
               />
             </svg>
           </a>
-          <lang-selector
-            class="relative lg:absolute lg:right-4 lg:top-[calc(50%+0.25rem)] lg:-translate-y-1/2"
-          ></lang-selector>
         </div>
+        <lang-selector
+          class="relative lg:absolute lg:right-4 lg:top-1/2 lg:-translate-y-1/2"
+        ></lang-selector>
         <div
           class="w-full text-[10px] leading-4 lg:text-xs lg:mt-2 flex flex-wrap items-center justify-center gap-x-3 lg:gap-x-4 gap-y-1 lg:gap-y-2 px-3 lg:px-4"
         >

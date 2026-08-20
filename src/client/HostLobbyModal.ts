@@ -499,10 +499,6 @@ export class HostLobbyModal extends BaseModal {
                     checked: this.livingWorld,
                   },
                   {
-                    labelKey: "host_modal.three_d_mode",
-                    checked: this.experienceMode === "3d",
-                  },
-                  {
                     labelKey: "host_modal.host_cheats",
                     checked: this.hostCheatsEnabled,
                   },
@@ -879,10 +875,6 @@ export class HostLobbyModal extends BaseModal {
         break;
       case "host_modal.living_world":
         this.livingWorld = checked;
-        this.putGameConfig();
-        break;
-      case "host_modal.three_d_mode":
-        this.experienceMode = checked ? "3d" : "2d";
         this.putGameConfig();
         break;
       case "host_modal.host_cheats":
