@@ -6,14 +6,12 @@ import { PathFinder } from "./types";
 
 export function isAircraftLandingTooHigh(
   game: {
-    config(): { worldMechanics(): { threeDMode: boolean } };
+    config(): { experienceMode(): "2d" | "3d" };
     magnitude(tile: TileRef): number;
   },
   tile: TileRef,
 ): boolean {
-  return (
-    game.config().worldMechanics().threeDMode && game.magnitude(tile) >= 18
-  );
+  return game.config().experienceMode() === "3d" && game.magnitude(tile) >= 18;
 }
 
 export class AirPathFinder implements PathFinder<TileRef> {
@@ -46,7 +44,7 @@ export class AirPathFinder implements PathFinder<TileRef> {
     }
 
     if (
-      !this.game.config().worldMechanics().threeDMode ||
+      this.game.config().experienceMode() !== "3d" ||
       path.every((tile) => tile === to || this.game.magnitude(tile) < 18)
     ) {
       return path;

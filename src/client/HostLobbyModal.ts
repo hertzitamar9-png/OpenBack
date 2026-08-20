@@ -20,6 +20,7 @@ import {
 import { UserSettings } from "../core/game/UserSettings";
 import {
   ClientInfo,
+  ExperienceMode,
   GameConfig,
   GameInfo,
   LobbyInfoEvent,
@@ -95,7 +96,7 @@ export class HostLobbyModal extends BaseModal {
   @state() private naturalDisasters = false;
   @state() private fogOfWar = false;
   @state() private livingWorld = false;
-  @state() private threeDMode = false;
+  @state() private experienceMode: ExperienceMode = "2d";
   @state() private sharedControl = false;
   @state() private sharedControlSize = 2;
   @state() private anonymizeNames: boolean = false;
@@ -499,7 +500,7 @@ export class HostLobbyModal extends BaseModal {
                   },
                   {
                     labelKey: "host_modal.three_d_mode",
-                    checked: this.threeDMode,
+                    checked: this.experienceMode === "3d",
                   },
                   {
                     labelKey: "host_modal.host_cheats",
@@ -627,6 +628,7 @@ export class HostLobbyModal extends BaseModal {
             detail: {
               gameID: this.lobbyId,
               source: "host",
+              expectedExperienceMode: this.experienceMode,
             } as JoinLobbyEvent,
             bubbles: true,
             composed: true,
@@ -754,7 +756,7 @@ export class HostLobbyModal extends BaseModal {
     this.naturalDisasters = false;
     this.fogOfWar = false;
     this.livingWorld = false;
-    this.threeDMode = false;
+    this.experienceMode = "2d";
     this.sharedControl = false;
     this.sharedControlSize = 2;
     this.anonymizeNames = false;
@@ -880,7 +882,7 @@ export class HostLobbyModal extends BaseModal {
         this.putGameConfig();
         break;
       case "host_modal.three_d_mode":
-        this.threeDMode = checked;
+        this.experienceMode = checked ? "3d" : "2d";
         this.putGameConfig();
         break;
       case "host_modal.host_cheats":
@@ -1281,6 +1283,7 @@ export class HostLobbyModal extends BaseModal {
       new CustomEvent("update-game-config", {
         detail: {
           config: {
+            experienceMode: this.experienceMode,
             gameMap: this.selectedMap,
             gameMapSize: this.compactMap
               ? GameMapSize.Compact
@@ -1330,7 +1333,6 @@ export class HostLobbyModal extends BaseModal {
               naturalDisasters: this.naturalDisasters,
               fogOfWar: this.fogOfWar,
               livingWorld: this.livingWorld,
-              threeDMode: this.threeDMode,
               sharedControlSize: this.sharedControl
                 ? this.sharedControlSize
                 : 1,
@@ -1362,6 +1364,10 @@ export class HostLobbyModal extends BaseModal {
         composed: true,
       }),
     );
+  }
+
+  public setExperienceMode(mode: ExperienceMode): void {
+    this.experienceMode = mode;
   }
 
   private toggleNameReveal(clientID: string) {

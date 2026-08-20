@@ -13,7 +13,12 @@ import { setPlayerConnected } from "./SocialPresence";
 
 type InvitePayload =
   | { kind: "lobby"; lobbyId: string }
-  | { kind: "ranked_party"; partyCode: string; teamSize: 2 | 3 | 4 }
+  | {
+      kind: "ranked_party";
+      partyCode: string;
+      teamSize: 2 | 3 | 4;
+      experienceMode: "2d" | "3d";
+    }
   | { kind: "party" };
 
 interface SocialClient {
@@ -364,6 +369,7 @@ export class SocialService {
         kind: "ranked_party",
         partyCode: message.partyCode.toUpperCase(),
         teamSize: message.teamSize,
+        experienceMode: message.experienceMode === "3d" ? "3d" : "2d",
       };
     }
     return null;

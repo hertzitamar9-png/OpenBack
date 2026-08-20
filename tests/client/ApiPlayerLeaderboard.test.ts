@@ -61,6 +61,18 @@ describe("fetchPlayerLeaderboard", () => {
     expect(String(fetchMock.mock.calls[0][0])).toContain("page=3");
   });
 
+  it("requests an isolated experience and ranked ladder", async () => {
+    const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
+    fetchMock.mockResolvedValueOnce(
+      res({ "1v1": [], "2v2": [], "3v3": [], "4v4": [] }),
+    );
+
+    await fetchPlayerLeaderboard(1, "3d", "4v4");
+    const url = new URL(String(fetchMock.mock.calls[0][0]));
+    expect(url.searchParams.get("experience")).toBe("3d");
+    expect(url.searchParams.get("rankedType")).toBe("4v4");
+  });
+
   it("reports a page past the end as reached_limit", async () => {
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
       res(

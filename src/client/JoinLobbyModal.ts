@@ -1128,6 +1128,9 @@ export class JoinLobbyModal extends BaseModal {
           detail: {
             gameID: lobbyId,
             source: "private",
+            expectedExperienceMode:
+              this.gameConfig?.experienceMode ??
+              (this.gameConfig?.worldMechanics?.threeDMode ? "3d" : "2d"),
           } as JoinLobbyEvent,
           bubbles: true,
           composed: true,

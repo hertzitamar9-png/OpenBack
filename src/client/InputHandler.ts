@@ -1190,7 +1190,7 @@ export class InputHandler {
   private isThreeDMode(): boolean {
     // Some lightweight embeds and test harnesses intentionally expose only
     // interaction state. Treat a missing configuration as classic 2D.
-    return this.gameView.config?.().worldMechanics?.().threeDMode === true;
+    return this.gameView.config?.().experienceMode?.() === "3d";
   }
 
   private setGhostStructure(ghostStructure: PlayerBuildableUnitType | null) {

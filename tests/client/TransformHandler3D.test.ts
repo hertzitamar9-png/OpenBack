@@ -22,7 +22,7 @@ function createHandler(): TransformHandler {
   const width = 2048;
   const height = 1024;
   const game = {
-    config: () => ({ worldMechanics: () => ({ threeDMode: true }) }),
+    config: () => ({ experienceMode: () => "3d" }),
     width: () => width,
     height: () => height,
     isValidCoord: (x: number, y: number) =>
@@ -76,7 +76,7 @@ describe("TransformHandler 3D camera", () => {
       "utf8",
     );
     expect(source).toContain(
-      "!this.gameView.config().worldMechanics().threeDMode",
+      'this.gameView.config().experienceMode() !== "3d"',
     );
   });
   it("clamps vertical orbit without flipping yaw across the top pole", () => {

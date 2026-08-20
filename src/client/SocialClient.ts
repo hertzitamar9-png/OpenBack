@@ -3,7 +3,12 @@ import { ClientEnv } from "./ClientEnv";
 
 export type SocialInvite =
   | { kind: "lobby"; lobbyId: string }
-  | { kind: "ranked_party"; partyCode: string; teamSize: 2 | 3 | 4 }
+  | {
+      kind: "ranked_party";
+      partyCode: string;
+      teamSize: 2 | 3 | 4;
+      experienceMode: "2d" | "3d";
+    }
   | { kind: "party" };
 
 export interface GlobalPartyState {
@@ -85,6 +90,7 @@ class OpenBackSocialClient {
           detail: {
             teamSize: invite.payload.teamSize,
             partyCode: invite.payload.partyCode,
+            experienceMode: invite.payload.experienceMode,
           },
         }),
       );

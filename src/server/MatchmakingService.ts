@@ -3,7 +3,8 @@ import crypto from "node:crypto";
 import type http from "node:http";
 import type { Logger } from "winston";
 import { WebSocket, WebSocketServer } from "ws";
-import type { GameConfig } from "../core/Schemas";
+import { RankedType } from "../core/game/Game";
+import type { ExperienceMode, GameConfig } from "../core/Schemas";
 import {
   areFriends,
   recordRankedResult,
@@ -13,6 +14,15 @@ import {
 import { ServerEnv } from "./ServerEnv";
 
 type RankedTeamSize = 1 | 2 | 3 | 4;
+export type RankedQueueKey =
+  `${ExperienceMode}:${RankedTeamSize}v${RankedTeamSize}`;
+
+export function rankedQueueKey(
+  experienceMode: ExperienceMode,
+  teamSize: RankedTeamSize,
+): RankedQueueKey {
+  return `${experienceMode}:${teamSize}v${teamSize}`;
+}
 type RankedNations = number | "default" | "disabled";
 
 interface RankedPreferences {
@@ -25,6 +35,7 @@ interface RankedPlayer {
   elo: number;
   displayName: string;
   ws: WebSocket;
+  experienceMode: ExperienceMode;
 }
 
 interface QueueGroup {
@@ -33,6 +44,7 @@ interface QueueGroup {
   joinedAt: number;
   preferences: RankedPreferences;
   partyCode?: string;
+  experienceMode: ExperienceMode;
 }
 
 interface MatchSelection {
@@ -49,6 +61,7 @@ interface Party {
   queued: boolean;
   preferences: RankedPreferences;
   requiredMembers: number;
+  experienceMode: ExperienceMode;
 }
 
 type RankedConfigFactory = (
@@ -114,7 +127,22 @@ export class MatchmakingService {
       this.send(ws, { type: "error", error: "unauthorized" });
       return;
     }
-    const account = await resolveRankedPlayer(msg.jwt);
+    const requestedExperienceMode: ExperienceMode =
+      msg.experienceMode === "3d" ? "3d" : "2d";
+    const requestedTeamSize = this.parseTeamSize(msg.teamSize ?? 1) ?? 1;
+    const requestedRankedType =
+      requestedTeamSize === 1
+        ? RankedType.OneVOne
+        : requestedTeamSize === 2
+          ? RankedType.TwoVTwo
+          : requestedTeamSize === 3
+            ? RankedType.ThreeVThree
+            : RankedType.FourVFour;
+    const account = await resolveRankedPlayer(
+      msg.jwt,
+      requestedExperienceMode,
+      requestedRankedType,
+    );
     if (!account) {
       this.send(ws, { type: "error", error: "unauthorized" });
       ws.close();
@@ -125,6 +153,7 @@ export class MatchmakingService {
       elo: account.elo,
       displayName: account.displayName,
       ws,
+      experienceMode: requestedExperienceMode,
     };
 
     switch (type) {
@@ -176,6 +205,7 @@ export class MatchmakingService {
       teamSize,
       joinedAt: Date.now(),
       preferences,
+      experienceMode: player.experienceMode ?? "2d",
     });
     this.send(player.ws, { type: "queue_state", queued: true });
     this.log.info(
@@ -201,6 +231,7 @@ export class MatchmakingService {
       queued: false,
       preferences: {},
       requiredMembers,
+      experienceMode: player.experienceMode ?? "2d",
     };
     this.parties.set(code, party);
     this.partyByPublicId.set(player.publicId, code);
@@ -212,6 +243,10 @@ export class MatchmakingService {
     const party = this.parties.get(code);
     if (!party) {
       this.send(player.ws, { type: "error", error: "party_not_found" });
+      return;
+    }
+    if (party.experienceMode !== (player.experienceMode ?? "2d")) {
+      this.send(player.ws, { type: "error", error: "experience_mismatch" });
       return;
     }
     if (party.queued) {
@@ -264,6 +299,7 @@ export class MatchmakingService {
       joinedAt: Date.now(),
       preferences,
       partyCode: party.code,
+      experienceMode: party.experienceMode,
     });
     this.broadcastParty(party);
   }
@@ -302,18 +338,28 @@ export class MatchmakingService {
     );
   }
 
-  private findMatch(): MatchSelection | null {
+  private findMatch(
+    experienceMode: ExperienceMode = "2d",
+    requestedTeamSize?: RankedTeamSize,
+  ): MatchSelection | null {
     for (let i = this.queue.length - 1; i >= 0; i--) {
       const group = this.queue[i];
+      group.experienceMode ??= "2d";
       if (
         group.players.some((player) => player.ws.readyState !== WebSocket.OPEN)
       ) {
         this.queue.splice(i, 1);
       }
     }
-    if (this.queue.length < 2) return null;
+    const candidates = this.queue.filter(
+      (group) =>
+        group.experienceMode === experienceMode &&
+        (requestedTeamSize === undefined ||
+          group.teamSize === requestedTeamSize),
+    );
+    if (candidates.length < 2) return null;
     let oldest: QueueGroup | null = null;
-    for (const group of this.queue) {
+    for (const group of candidates) {
       if (oldest === null || group.joinedAt < oldest.joinedAt) oldest = group;
     }
     if (!oldest) return null;
@@ -329,6 +375,7 @@ export class MatchmakingService {
     for (const group of this.queue) {
       if (
         group === oldest ||
+        group.experienceMode !== oldest.experienceMode ||
         group.teamSize !== oldest.teamSize ||
         (group.players.length === group.teamSize) !== isCompleteTeam ||
         !this.samePreferences(group.preferences, oldest.preferences)
@@ -353,6 +400,7 @@ export class MatchmakingService {
         .filter(
           (group) =>
             group !== oldest &&
+            group.experienceMode === oldest!.experienceMode &&
             group.players.length === 1 &&
             group.teamSize === oldest!.teamSize &&
             this.samePreferences(group.preferences, oldest!.preferences),
@@ -376,6 +424,7 @@ export class MatchmakingService {
       .filter(
         (group) =>
           group.players.length === 1 &&
+          group.experienceMode === oldest!.experienceMode &&
           group.teamSize === oldest!.teamSize &&
           this.samePreferences(group.preferences, oldest!.preferences),
       )
@@ -393,6 +442,7 @@ export class MatchmakingService {
         .filter(
           (group) =>
             group.players.length === group.teamSize &&
+            group.experienceMode === oldest!.experienceMode &&
             group.teamSize === oldest!.teamSize &&
             this.samePreferences(group.preferences, oldest!.preferences),
         )
@@ -442,6 +492,7 @@ export class MatchmakingService {
     const compatible = this.queue.filter(
       (group) =>
         group !== oldest &&
+        group.experienceMode === oldest.experienceMode &&
         group.teamSize === oldest.teamSize &&
         this.samePreferences(group.preferences, oldest.preferences),
     );
@@ -493,6 +544,7 @@ export class MatchmakingService {
       teamSize: template.teamSize,
       joinedAt: Math.min(...groups.map((group) => group.joinedAt)),
       preferences: template.preferences,
+      experienceMode: template.experienceMode,
     };
   }
 
@@ -508,12 +560,23 @@ export class MatchmakingService {
       res.status(401).json({ error: "unauthorized" });
       return;
     }
-    const gameId = (req.body as { gameId?: unknown })?.gameId;
+    const body = req.body as {
+      gameId?: unknown;
+      experienceMode?: unknown;
+      mode?: unknown;
+    };
+    const gameId = body.gameId;
     if (typeof gameId !== "string" || gameId.length === 0) {
       res.status(400).json({ error: "missing_game_id" });
       return;
     }
-    const match = this.findMatch();
+    const experienceMode: ExperienceMode =
+      body.experienceMode === "3d" ? "3d" : "2d";
+    const requestedTeamSize =
+      typeof body.mode === "string" && /^(1|2|3|4)v\1$/.test(body.mode)
+        ? (Number(body.mode[0]) as RankedTeamSize)
+        : undefined;
+    const match = this.findMatch(experienceMode, requestedTeamSize);
     if (!match) {
       res.json({ assignment: false });
       return;
@@ -522,7 +585,11 @@ export class MatchmakingService {
     for (const group of consumed) this.removeQueueGroup(group);
     const allPlayers = [...a.players, ...b.players];
     for (const player of allPlayers) {
-      this.send(player.ws, { type: "match-assignment", gameId });
+      this.send(player.ws, {
+        type: "match-assignment",
+        gameId,
+        ...(a.experienceMode === "3d" ? { experienceMode: "3d" } : {}),
+      });
       player.ws.close();
     }
     const teams = [
@@ -556,18 +623,39 @@ export class MatchmakingService {
       loser?: unknown;
       winners?: unknown;
       losers?: unknown;
+      experienceMode?: unknown;
+      rankedType?: unknown;
     };
+    const resultExperience: ExperienceMode =
+      body.experienceMode === "3d" ? "3d" : "2d";
     const winnerIds = Array.isArray(body.winners)
       ? body.winners.filter((id): id is string => typeof id === "string")
       : [];
     const loserIds = Array.isArray(body.losers)
       ? body.losers.filter((id): id is string => typeof id === "string")
       : [];
+    const resultRankedType = Object.values(RankedType).includes(
+      body.rankedType as RankedType,
+    )
+      ? (body.rankedType as RankedType)
+      : winnerIds.length > 1
+        ? RankedType.TwoVTwo
+        : RankedType.OneVOne;
     const ok =
       winnerIds.length > 0 && loserIds.length > 0
-        ? recordRankedTeamResult(winnerIds, loserIds)
+        ? recordRankedTeamResult(
+            winnerIds,
+            loserIds,
+            resultExperience,
+            resultRankedType,
+          )
         : typeof body.winner === "string" && typeof body.loser === "string"
-          ? recordRankedResult(body.winner, body.loser)
+          ? recordRankedResult(
+              body.winner,
+              body.loser,
+              resultExperience,
+              resultRankedType,
+            )
           : false;
     if (!ok) {
       res.status(404).json({ error: "unknown_player" });
@@ -643,6 +731,7 @@ export class MatchmakingService {
       leaderPublicId: party.leaderPublicId,
       queued: party.queued,
       requiredMembers: party.requiredMembers,
+      experienceMode: party.experienceMode,
       members: party.members.map(({ publicId, displayName, elo }) => ({
         publicId,
         displayName,

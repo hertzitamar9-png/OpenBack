@@ -465,6 +465,7 @@ export class MapPlaylist {
               ? RankedType.ThreeVThree
               : RankedType.FourVFour,
       rankedTeams: rankedTeams.length === 2 ? rankedTeams : undefined,
+      experienceMode: "2d",
       allowedPublicIds:
         rankedTeams.length === 2 ? rankedTeams.flat() : undefined,
       infiniteGold: false,
@@ -488,7 +489,6 @@ export class MapPlaylist {
         naturalDisasters,
         fogOfWar,
         livingWorld,
-        threeDMode: false,
         // Ranked teammates are allies controlling separate nations. Shared
         // control remains an optional private-game mode, not ranked behavior.
         sharedControlSize: 1,

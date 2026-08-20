@@ -19,7 +19,13 @@ import {
 } from "../game/Game";
 import { TileRef } from "../game/GameMap";
 import { UserSettings } from "../game/UserSettings";
-import { ClientID, GameConfig, TeamCountConfig } from "../Schemas";
+import {
+  ClientID,
+  ExperienceMode,
+  GameConfig,
+  normalizeExperienceMode,
+  TeamCountConfig,
+} from "../Schemas";
 import { NukeType } from "../StatsSchemas";
 import { assertNever, sigmoid, toInt, within } from "../Util";
 
@@ -191,9 +197,14 @@ export class Config {
       naturalDisasters: c?.naturalDisasters ?? false,
       fogOfWar: c?.fogOfWar ?? false,
       livingWorld: c?.livingWorld ?? false,
-      threeDMode: c?.threeDMode ?? false,
+      // Compatibility view for consumers migrating to experienceMode(). New
+      // configs never need to write this inside worldMechanics.
+      threeDMode: this.experienceMode() === "3d",
       sharedControlSize: c?.sharedControlSize ?? 1,
     } as const;
+  }
+  experienceMode(): ExperienceMode {
+    return normalizeExperienceMode(this._gameConfig);
   }
   spawnImmunityDuration(): Tick {
     return (

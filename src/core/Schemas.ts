@@ -254,8 +254,12 @@ const ClientInfoSchema = z.object({
   teamIndex: z.number().int().nonnegative().optional(),
 });
 
+export const ExperienceModeSchema = z.enum(["2d", "3d"]);
+export type ExperienceMode = z.infer<typeof ExperienceModeSchema>;
+
 export const GameInfoSchema = z.object({
   gameID: z.string(),
+  experienceMode: ExperienceModeSchema.optional(),
   clients: z.array(ClientInfoSchema).optional(),
   lobbyCreatorClientID: z.string().optional(),
   startsAt: z.number().optional(),
@@ -283,6 +287,7 @@ export const GameInfoSchema = z.object({
 // carry them by construction.
 export const PublicGameInfoSchema = z.object({
   gameID: z.string(),
+  experienceMode: ExperienceModeSchema.optional(),
   numClients: z.number(),
   startsAt: z.number().optional(),
   gameConfig: z.lazy(() => GameConfigSchema).optional(),
@@ -395,6 +400,7 @@ export const GameConfigSchema = z.object({
   gameMode: z.enum(GameMode),
   rankedType: z.enum(RankedType).optional(), // Only set for ranked games.
   rankedTeams: z.array(z.array(z.string()).min(1).max(4)).max(2).optional(),
+  experienceMode: ExperienceModeSchema.optional(),
   gameMapSize: z.enum(GameMapSize),
   doomsdayClock: DoomsdayClockConfigSchema.optional(),
   worldMechanics: WorldMechanicsConfigSchema.optional(),
@@ -470,6 +476,16 @@ export const GameConfigSchema = z.object({
     })
     .optional(),
 });
+
+export function normalizeExperienceMode(config: {
+  experienceMode?: ExperienceMode;
+  worldMechanics?: { threeDMode?: boolean };
+}): ExperienceMode {
+  return (
+    config.experienceMode ??
+    (config.worldMechanics?.threeDMode === true ? "3d" : "2d")
+  );
+}
 
 export const TeamSchema = z.string();
 
@@ -1000,6 +1016,9 @@ export const ClientJoinMessageSchema = z.object({
   // Server replaces the refs with the actual cosmetic data.
   cosmetics: PlayerCosmeticRefsSchema.optional(),
   turnstileToken: z.string().nullable(),
+  // Optional during rolling deployment. New clients state the experience they
+  // opened so the server can refuse a stale/cross-world invite safely.
+  requestedExperienceMode: ExperienceModeSchema.optional(),
 });
 
 export const ClientRejoinMessageSchema = z.object({

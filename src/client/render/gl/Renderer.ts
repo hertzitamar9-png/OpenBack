@@ -445,7 +445,7 @@ export class GPURenderer {
     if (mechanics.naturalDisasters || mechanics.livingWorld) {
       this.worldEventPass = new WorldEventPass(gl, mapW, config.msPerTick());
     }
-    if (mechanics.threeDMode) {
+    if (config.experienceMode() === "3d") {
       this.threeDModeActive = true;
       document.documentElement.classList.add("openback-3d-mode");
       this.threeDPass = new ThreeDCompositePass(

@@ -104,6 +104,7 @@ export interface LobbyConfig {
   gameStartInfo?: GameStartInfo;
   // GameRecord exists when replaying an archived game.
   gameRecord?: GameRecord;
+  expectedExperienceMode?: "2d" | "3d";
 }
 
 export interface JoinLobbyResult {
@@ -1082,7 +1083,7 @@ export class ClientGameRunner {
           !hasGoneToPlayer &&
           this.gameView.myPlayer() &&
           this.userSettings.goToPlayer() &&
-          !this.gameView.config().worldMechanics().threeDMode
+          this.gameView.config().experienceMode() !== "3d"
         ) {
           hasGoneToPlayer = true;
           this.eventBus.emit(new GoToPlayerEvent(this.gameView.myPlayer()!, 8));

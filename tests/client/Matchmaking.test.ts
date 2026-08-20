@@ -153,6 +153,7 @@ describe("MatchmakingModal clan-aware joins", () => {
       type: "join",
       jwt: "play-token",
       clanTag: "ALLY",
+      experienceMode: "2d",
     });
   });
 
@@ -162,7 +163,11 @@ describe("MatchmakingModal clan-aware joins", () => {
 
     const { message } = await openAndJoin("2v2");
 
-    expect(message).toEqual({ type: "join", jwt: "play-token" });
+    expect(message).toEqual({
+      type: "join",
+      jwt: "play-token",
+      experienceMode: "2d",
+    });
     expect(message).not.toHaveProperty("clanTag");
   });
 
@@ -172,7 +177,11 @@ describe("MatchmakingModal clan-aware joins", () => {
 
     const { message } = await openAndJoin("1v1");
 
-    expect(message).toEqual({ type: "join", jwt: "play-token" });
+    expect(message).toEqual({
+      type: "join",
+      jwt: "play-token",
+      experienceMode: "2d",
+    });
     expect(message).not.toHaveProperty("clanTag");
   });
 

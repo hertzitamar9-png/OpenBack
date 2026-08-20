@@ -10,8 +10,8 @@ function source(path: string): string {
 
 describe("3D train parity", () => {
   it("keeps the 2D consist spacing and separates cars in 3D", () => {
-    expect(trainVisualSpacing(false)).toBe(2);
-    expect(trainVisualSpacing(true)).toBeGreaterThan(2);
+    expect(trainVisualSpacing("2d")).toBe(2);
+    expect(trainVisualSpacing("3d")).toBeGreaterThan(2);
   });
 
   it("keeps screen-facing train payout text visible below the 2D cull zoom", () => {

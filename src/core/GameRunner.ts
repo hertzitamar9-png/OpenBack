@@ -131,7 +131,7 @@ export class GameRunner {
       wm.strategicObjectives ||
       wm.naturalDisasters ||
       wm.livingWorld ||
-      wm.threeDMode
+      this.game.config().experienceMode() === "3d"
     ) {
       this.game.addExecution(
         new WorldMechanicsExecution(

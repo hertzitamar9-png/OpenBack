@@ -113,7 +113,7 @@ export function shipMovementSteps(
 export interface ShipCurrentMap {
   x(tile: number): number;
   y(tile: number): number;
-  config(): { worldMechanics(): { threeDMode?: boolean } };
+  config(): { experienceMode(): "2d" | "3d" };
 }
 
 export function shipStepsForRoute(
@@ -123,7 +123,7 @@ export function shipStepsForRoute(
   from: number,
   to: number,
 ): 0 | 1 | 2 {
-  if (!game.config().worldMechanics().threeDMode) return 1;
+  if (game.config().experienceMode() !== "3d") return 1;
   const cycle = threeDWorldCycle(tick);
   const multiplier = shipCurrentMultiplier(
     game.x(to) - game.x(from),

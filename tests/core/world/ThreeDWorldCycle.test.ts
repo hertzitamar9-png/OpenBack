@@ -97,7 +97,7 @@ describe("deterministic 3D world cycle", () => {
     const map = {
       x: (tile: number) => tile,
       y: () => 0,
-      config: () => ({ worldMechanics: () => ({ threeDMode: false }) }),
+      config: () => ({ experienceMode: () => "2d" as const }),
     };
     for (let tick = 0; tick < 20; tick++) {
       expect(shipStepsForRoute(map, tick, 9, 0, 10)).toBe(1);

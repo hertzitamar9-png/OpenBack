@@ -1,3 +1,13 @@
+## OpenBack v0.36.189 - Twin World Foundations
+
+- Separated Classic 2D and Immersive 3D multiplayer lobbies so invitations and party joins cannot place players into the wrong world.
+- Partitioned ranked matchmaking from 1v1 through 4v4 by experience, keeping Classic and Immersive opponents, parties, and assignments independent.
+- Added separate persistent Classic and Immersive rating ladders for every ranked team size while safely retaining existing ranked progress in Classic 1v1.
+- Added experience-aware competitive records, account ranking data, leaderboard requests, match records, and replay compatibility without breaking older games.
+- Moved all existing 3D simulation, input, aircraft, train, tide, and rendering behavior onto one normalized experience setting so future Twin World features share a stable foundation.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.188 - Centered Language Flag
 
 - Centered every language flag against the full desktop footer bar instead of the shorter icon row, keeping wide, square, and tall flags aligned consistently.

@@ -27,7 +27,11 @@ import {
   HumansVsNations,
   RankedType,
 } from "../../core/game/Game";
-import { GameRecord, GameRecordSchema } from "../../core/Schemas";
+import {
+  ExperienceMode,
+  GameRecord,
+  GameRecordSchema,
+} from "../../core/Schemas";
 import { generateID, replacer } from "../../core/Util";
 import { profanityMatcher } from "../Censor";
 import { getMapNationCount } from "../MapLandTiles";
@@ -35,6 +39,11 @@ import { ServerEnv } from "../ServerEnv";
 import { publishSocialEvent } from "../SocialEvents";
 import { isPlayerOnline } from "../SocialPresence";
 import { requireDurableAuthStorage } from "./AuthPersistence";
+import {
+  ExperienceRankings,
+  migrateExperienceRankings,
+  rankingFor,
+} from "./ExperienceRankings";
 import {
   createPrivateJwk,
   ensureKeys,
@@ -85,6 +94,7 @@ interface StoredUser {
   rankedLosses?: number;
   rankedObEarned?: number;
   obMilestones?: number[];
+  rankings?: ExperienceRankings;
   // Shop wallet + owned cosmetics (flare strings, e.g. "pattern:foo").
   currencySoft?: number;
   currencyHard?: number;
@@ -248,6 +258,7 @@ function hydrate(raw: PersistShape) {
   purchases = raw.purchases ?? [];
   tribeRegistry = new TribeRegistry(raw.tribeNames ?? []);
   for (const u of raw.users ?? []) {
+    u.rankings = migrateExperienceRankings(u);
     usersByEmail.set(u.email?.toLowerCase() ?? u.persistentId, u);
     usersByPid.set(u.persistentId, u);
   }
@@ -460,8 +471,13 @@ function userMeFor(user: StoredUser): UserMeResponse {
       infiniteGold: false,
       flares: user.flares ?? [],
       achievements: { singleplayerMap: [] },
-      leaderboard:
-        user.elo !== undefined ? { oneVone: { elo: user.elo } } : undefined,
+      leaderboard: {
+        oneVone: user.rankings?.["2d"]?.[RankedType.OneVOne],
+        twoVtwo: user.rankings?.["2d"]?.[RankedType.TwoVTwo],
+        threeVthree: user.rankings?.["2d"]?.[RankedType.ThreeVThree],
+        fourVfour: user.rankings?.["2d"]?.[RankedType.FourVFour],
+        experiences: user.rankings,
+      },
       currency: {
         soft:
           user.email?.toLowerCase() === OWNER_STORE_CURRENCY_EMAIL
@@ -682,7 +698,11 @@ export const OB_MILESTONES = [
 
 // Used by the matchmaking service (same master process) to resolve a queued
 // player's identity and current rating from their play token.
-export async function resolveRankedPlayer(token: string): Promise<{
+export async function resolveRankedPlayer(
+  token: string,
+  experienceMode: ExperienceMode = "2d",
+  rankedType: RankedType = RankedType.OneVOne,
+): Promise<{
   publicId: string;
   persistentId: string;
   displayName: string;
@@ -691,11 +711,12 @@ export async function resolveRankedPlayer(token: string): Promise<{
 } | null> {
   const user = await userFromToken(token);
   if (!user) return null;
+  user.rankings ??= migrateExperienceRankings(user);
   return {
     publicId: user.publicId,
     persistentId: user.persistentId,
     displayName: usernameFor(user),
-    elo: user.elo ?? DEFAULT_OB,
+    elo: rankingFor(user.rankings, experienceMode, rankedType).elo,
     lifetimeAccess: user.lifetimeAccess === true,
   };
 }
@@ -788,21 +809,35 @@ export function calculateObLoss(
 export function recordRankedResult(
   winnerPersistentId: string,
   loserPersistentId: string,
+  experienceMode: ExperienceMode = "2d",
+  rankedType: RankedType = RankedType.OneVOne,
 ): boolean {
   const winner = usersByPid.get(winnerPersistentId);
   const loser = usersByPid.get(loserPersistentId);
   if (!winner || !loser) return false;
-  const rw = winner.elo ?? DEFAULT_OB;
-  const rl = loser.elo ?? DEFAULT_OB;
+  winner.rankings ??= migrateExperienceRankings(winner);
+  loser.rankings ??= migrateExperienceRankings(loser);
+  const winnerRanking = rankingFor(winner.rankings, experienceMode, rankedType);
+  const loserRanking = rankingFor(loser.rankings, experienceMode, rankedType);
+  const rw = winnerRanking.elo;
+  const rl = loserRanking.elo;
   const gain = calculateObGain(rw, rl);
   const drop = calculateObLoss(rl, rw);
-  winner.elo = rw + gain;
-  loser.elo = Math.max(0, rl - drop);
-  awardObProgress(winner, rw, winner.elo);
-  winner.peakElo = Math.max(winner.peakElo ?? winner.elo, winner.elo);
-  loser.peakElo = Math.max(loser.peakElo ?? loser.elo, loser.elo);
-  winner.rankedWins = (winner.rankedWins ?? 0) + 1;
-  loser.rankedLosses = (loser.rankedLosses ?? 0) + 1;
+  winnerRanking.elo = rw + gain;
+  loserRanking.elo = Math.max(0, rl - drop);
+  winnerRanking.peakElo = Math.max(winnerRanking.peakElo, winnerRanking.elo);
+  loserRanking.peakElo = Math.max(loserRanking.peakElo, loserRanking.elo);
+  winnerRanking.wins++;
+  loserRanking.losses++;
+  if (experienceMode === "2d" && rankedType === RankedType.OneVOne) {
+    awardObProgress(winner, rw, winnerRanking.elo);
+    winner.elo = winnerRanking.elo;
+    loser.elo = loserRanking.elo;
+    winner.peakElo = winnerRanking.peakElo;
+    loser.peakElo = loserRanking.peakElo;
+    winner.rankedWins = winnerRanking.wins;
+    loser.rankedLosses = loserRanking.losses;
+  }
   persist();
   return true;
 }
@@ -811,6 +846,8 @@ export function recordRankedResult(
 export function recordRankedTeamResult(
   winnerPersistentIds: string[],
   loserPersistentIds: string[],
+  experienceMode: ExperienceMode = "2d",
+  rankedType: RankedType = RankedType.TwoVTwo,
 ): boolean {
   const winners = winnerPersistentIds.map((id) => usersByPid.get(id));
   const losers = loserPersistentIds.map((id) => usersByPid.get(id));
@@ -822,24 +859,34 @@ export function recordRankedTeamResult(
   }
   const winnerUsers = winners as StoredUser[];
   const loserUsers = losers as StoredUser[];
+  for (const user of [...winnerUsers, ...loserUsers]) {
+    user.rankings ??= migrateExperienceRankings(user);
+  }
   const winnerAverage =
-    winnerUsers.reduce((sum, user) => sum + (user.elo ?? DEFAULT_OB), 0) /
-    winnerUsers.length;
+    winnerUsers.reduce(
+      (sum, user) =>
+        sum + rankingFor(user.rankings!, experienceMode, rankedType).elo,
+      0,
+    ) / winnerUsers.length;
   const loserAverage =
-    loserUsers.reduce((sum, user) => sum + (user.elo ?? DEFAULT_OB), 0) /
-    loserUsers.length;
+    loserUsers.reduce(
+      (sum, user) =>
+        sum + rankingFor(user.rankings!, experienceMode, rankedType).elo,
+      0,
+    ) / loserUsers.length;
   for (const winner of winnerUsers) {
-    const rating = winner.elo ?? DEFAULT_OB;
-    winner.elo = rating + calculateObGain(rating, loserAverage);
-    awardObProgress(winner, rating, winner.elo);
-    winner.peakElo = Math.max(winner.peakElo ?? winner.elo, winner.elo);
-    winner.rankedWins = (winner.rankedWins ?? 0) + 1;
+    const ranking = rankingFor(winner.rankings!, experienceMode, rankedType);
+    const rating = ranking.elo;
+    ranking.elo = rating + calculateObGain(rating, loserAverage);
+    ranking.peakElo = Math.max(ranking.peakElo, ranking.elo);
+    ranking.wins++;
   }
   for (const loser of loserUsers) {
-    const rating = loser.elo ?? DEFAULT_OB;
-    loser.elo = Math.max(0, rating - calculateObLoss(rating, winnerAverage));
-    loser.peakElo = Math.max(loser.peakElo ?? loser.elo, loser.elo);
-    loser.rankedLosses = (loser.rankedLosses ?? 0) + 1;
+    const ranking = rankingFor(loser.rankings!, experienceMode, rankedType);
+    const rating = ranking.elo;
+    ranking.elo = Math.max(0, rating - calculateObLoss(rating, winnerAverage));
+    ranking.peakElo = Math.max(ranking.peakElo, ranking.elo);
+    ranking.losses++;
   }
   persist();
   return true;
@@ -2439,9 +2486,26 @@ export function authRouter(): express.Router {
       res.status(200).json({ message: "Page must be between 1 and 1" });
       return;
     }
+    const experienceMode: ExperienceMode =
+      req.query.experience === "3d" ? "3d" : "2d";
+    const rankedType = Object.values(RankedType).includes(
+      req.query.rankedType as RankedType,
+    )
+      ? (req.query.rankedType as RankedType)
+      : RankedType.OneVOne;
     const ranked = [...usersByPid.values()]
-      .filter((u) => u.elo !== undefined)
-      .sort((a, b) => (b.elo ?? 0) - (a.elo ?? 0));
+      .map((user) => ({
+        user,
+        ranking: user.rankings?.[experienceMode]?.[rankedType],
+      }))
+      .filter(
+        (
+          entry,
+        ): entry is typeof entry & {
+          ranking: NonNullable<typeof entry.ranking>;
+        } => entry.ranking !== undefined,
+      )
+      .sort((a, b) => b.ranking.elo - a.ranking.elo);
     const maxPage = Math.max(
       1,
       Math.ceil(ranked.length / LEADERBOARD_PAGE_SIZE),
@@ -2455,14 +2519,14 @@ export function authRouter(): express.Router {
     const start = (page - 1) * LEADERBOARD_PAGE_SIZE;
     const entries = ranked
       .slice(start, start + LEADERBOARD_PAGE_SIZE)
-      .map((u, i) => {
-        const wins = u.rankedWins ?? 0;
-        const losses = u.rankedLosses ?? 0;
+      .map(({ user: u, ranking }, i) => {
+        const wins = ranking.wins;
+        const losses = ranking.losses;
         const total = wins + losses;
         return {
           rank: start + i + 1,
-          elo: u.elo ?? 0,
-          peakElo: u.peakElo ?? null,
+          elo: ranking.elo,
+          peakElo: ranking.peakElo,
           wins,
           losses,
           total,
@@ -2472,9 +2536,7 @@ export function authRouter(): express.Router {
           profilePictureUrl: profilePictureUrlFor(u),
         };
       });
-    res.json(
-      RankedLeaderboardResponseSchema.parse({ [RankedType.OneVOne]: entries }),
-    );
+    res.json(RankedLeaderboardResponseSchema.parse({ [rankedType]: entries }));
   });
 
   // Complete local Tribe service. It shares the same durable state document as

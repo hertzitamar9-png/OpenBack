@@ -9,6 +9,7 @@ import { Pool } from "pg";
 import { WebSocket, WebSocketServer } from "ws";
 import { z } from "zod";
 import { GameEnv } from "../core/configuration/Config";
+import { isExperienceMismatch } from "../core/ExperienceMode";
 import { GameType } from "../core/game/Game";
 import {
   ClientMessageSchema,
@@ -463,6 +464,26 @@ export async function startWorker() {
         }
         const { persistentId, claims } = result;
 
+        if (clientMsg.type === "join") {
+          const game = gm.game(clientMsg.gameID);
+          if (
+            game !== null &&
+            isExperienceMismatch(
+              game.gameInfo().experienceMode ?? "2d",
+              clientMsg.requestedExperienceMode,
+            )
+          ) {
+            ws.send(
+              JSON.stringify({
+                type: "error",
+                error: "experience_mismatch",
+              } satisfies ServerErrorMessage),
+            );
+            ws.close(1008, "Experience mismatch");
+            return;
+          }
+        }
+
         if (claims?.role === "banned") {
           ws.close(1002, "Account Banned");
           return;
@@ -838,8 +859,10 @@ export async function startWorker() {
 async function startMatchmakingPolling(gm: GameManager) {
   // One checkin serves exactly one queue, so a host serving both modes
   // runs one long-poll loop per mode.
-  startMatchmakingLoop(gm, "1v1");
-  startMatchmakingLoop(gm, "2v2");
+  for (const experienceMode of ["2d", "3d"] as const) {
+    startMatchmakingLoop(gm, "1v1", experienceMode);
+    startMatchmakingLoop(gm, "2v2", experienceMode);
+  }
 }
 
 const MatchmakingAssignmentSchema = z.object({
@@ -850,7 +873,11 @@ const MatchmakingAssignmentSchema = z.object({
   teams: z.array(z.array(z.string())).optional(),
 });
 
-function startMatchmakingLoop(gm: GameManager, mode: "1v1" | "2v2") {
+function startMatchmakingLoop(
+  gm: GameManager,
+  mode: "1v1" | "2v2",
+  experienceMode: "2d" | "3d",
+) {
   startPolling(
     async () => {
       try {
@@ -875,6 +902,7 @@ function startMatchmakingLoop(gm: GameManager, mode: "1v1" | "2v2") {
             ccu: gm.activeClients(),
             instanceId: process.env.INSTANCE_ID,
             mode,
+            experienceMode,
           }),
           signal: controller.signal,
         });
@@ -907,7 +935,10 @@ function startMatchmakingLoop(gm: GameManager, mode: "1v1" | "2v2") {
             mode === "2v2"
               ? playlist.getRankedConfig(2)
               : playlist.get1v1Config();
-          const assignedConfig = data.gameConfig ?? baseConfig;
+          const assignedConfig = {
+            ...(data.gameConfig ?? baseConfig),
+            experienceMode,
+          };
           const game = gm.createGame(
             gameId,
             parsed.success

@@ -40,6 +40,7 @@ import {
   StampedIntent,
   Tribe,
   Turn,
+  normalizeExperienceMode,
 } from "../core/Schemas";
 import {
   createPartialGameRecord,
@@ -1760,6 +1761,7 @@ export class GameServer {
     const hideClanTags = this.gameConfig.disableClanTags ?? false;
     return {
       gameID: this.id,
+      experienceMode: normalizeExperienceMode(this.gameConfig),
       clients: this.activeClients.map((c) => {
         if (!this.seesReal(viewer, c.clientID)) {
           return {

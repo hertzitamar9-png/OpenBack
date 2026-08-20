@@ -220,6 +220,22 @@ export const UserMeResponseSchema = z.object({
             elo: z.number().optional(),
           })
           .optional(),
+        threeVthree: z.object({ elo: z.number().optional() }).optional(),
+        fourVfour: z.object({ elo: z.number().optional() }).optional(),
+        experiences: z
+          .record(
+            z.enum(["2d", "3d"]),
+            z.partialRecord(
+              z.enum(RankedType),
+              z.object({
+                elo: z.number(),
+                peakElo: z.number(),
+                wins: z.number().int().nonnegative(),
+                losses: z.number().int().nonnegative(),
+              }),
+            ),
+          )
+          .optional(),
       })
       .optional(),
     currency: CurrencyBalancesSchema.optional(),
@@ -651,6 +667,8 @@ export const RankedLeaderboardResponseSchema = z.object({
   // appear on both with a different elo and rank. Defaulted because an API
   // deployment that predates the 2v2 ladder omits the key entirely.
   [RankedType.TwoVTwo]: RankedLeaderboardEntrySchema.array().default([]),
+  [RankedType.ThreeVThree]: RankedLeaderboardEntrySchema.array().default([]),
+  [RankedType.FourVFour]: RankedLeaderboardEntrySchema.array().default([]),
 });
 export type RankedLeaderboardResponse = z.infer<
   typeof RankedLeaderboardResponseSchema

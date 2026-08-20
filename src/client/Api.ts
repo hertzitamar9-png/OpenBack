@@ -1125,10 +1125,14 @@ export function isPageBoundsMessage(body: unknown): boolean {
 
 export async function fetchPlayerLeaderboard(
   page: number,
+  experienceMode: "2d" | "3d" = "2d",
+  rankedType?: string,
 ): Promise<RankedLeaderboardResponse | "reached_limit" | false> {
   try {
     const url = new URL(`${getApiBase()}/leaderboard/ranked`);
     url.searchParams.set("page", String(page));
+    url.searchParams.set("experience", experienceMode);
+    if (rankedType) url.searchParams.set("rankedType", rankedType);
     const res = await fetch(url.toString(), {
       headers: { Accept: "application/json" },
     });

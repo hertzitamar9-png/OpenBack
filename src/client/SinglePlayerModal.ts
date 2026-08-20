@@ -13,7 +13,7 @@ import {
   maps,
   UnitType,
 } from "../core/game/Game";
-import { TeamCountConfig } from "../core/Schemas";
+import { ExperienceMode, TeamCountConfig } from "../core/Schemas";
 import { generateID } from "../core/Util";
 import { getLastUserMe, hasLinkedAccount } from "./Api";
 import { appRouter } from "./AppRouter";
@@ -72,7 +72,7 @@ const DEFAULT_OPTIONS = {
   naturalDisasters: false,
   fogOfWar: false,
   livingWorld: false,
-  threeDMode: false,
+  experienceMode: "2d" as ExperienceMode,
 } as const;
 
 // A map earns achievements only if it has nations to conquer — the same rule
@@ -166,7 +166,8 @@ export class SinglePlayerModal extends BaseModal {
   @state() private naturalDisasters: boolean = DEFAULT_OPTIONS.naturalDisasters;
   @state() private fogOfWar: boolean = DEFAULT_OPTIONS.fogOfWar;
   @state() private livingWorld: boolean = DEFAULT_OPTIONS.livingWorld;
-  @state() private threeDMode: boolean = DEFAULT_OPTIONS.threeDMode;
+  @state() private experienceMode: ExperienceMode =
+    DEFAULT_OPTIONS.experienceMode;
 
   private mapLoader = terrainMapFileLoader;
 
@@ -501,7 +502,7 @@ export class SinglePlayerModal extends BaseModal {
                   },
                   {
                     labelKey: "single_modal.three_d_mode",
-                    checked: this.threeDMode,
+                    checked: this.experienceMode === "3d",
                   },
                 ],
                 inputCards,
@@ -571,7 +572,7 @@ export class SinglePlayerModal extends BaseModal {
       this.naturalDisasters !== DEFAULT_OPTIONS.naturalDisasters ||
       this.fogOfWar !== DEFAULT_OPTIONS.fogOfWar ||
       this.livingWorld !== DEFAULT_OPTIONS.livingWorld ||
-      this.threeDMode !== DEFAULT_OPTIONS.threeDMode ||
+      this.experienceMode !== DEFAULT_OPTIONS.experienceMode ||
       this.disabledUnits.length > 0
     );
   }
@@ -607,7 +608,7 @@ export class SinglePlayerModal extends BaseModal {
     this.naturalDisasters = DEFAULT_OPTIONS.naturalDisasters;
     this.fogOfWar = DEFAULT_OPTIONS.fogOfWar;
     this.livingWorld = DEFAULT_OPTIONS.livingWorld;
-    this.threeDMode = DEFAULT_OPTIONS.threeDMode;
+    this.experienceMode = DEFAULT_OPTIONS.experienceMode;
   }
 
   protected onOpen(): void {
@@ -711,7 +712,7 @@ export class SinglePlayerModal extends BaseModal {
         this.livingWorld = checked;
         break;
       case "single_modal.three_d_mode":
-        this.threeDMode = checked;
+        this.experienceMode = checked ? "3d" : "2d";
         break;
       default:
         break;
@@ -919,6 +920,7 @@ export class SinglePlayerModal extends BaseModal {
             },
           ],
           config: {
+            experienceMode: this.experienceMode,
             gameMap: this.selectedMap,
             gameMapSize: this.compactMap
               ? GameMapSize.Compact
@@ -975,7 +977,6 @@ export class SinglePlayerModal extends BaseModal {
               naturalDisasters: this.naturalDisasters,
               fogOfWar: this.fogOfWar,
               livingWorld: this.livingWorld,
-              threeDMode: this.threeDMode,
               sharedControlSize: 1,
             },
           },
@@ -992,6 +993,10 @@ export class SinglePlayerModal extends BaseModal {
     // Solo panel visibly floating over the live map until prestart completed.
     this.close();
     this.dispatchEvent(joinEvent);
+  }
+
+  public setExperienceMode(mode: ExperienceMode): void {
+    this.experienceMode = mode;
   }
 
   private async loadNationCount() {

@@ -149,7 +149,13 @@ declare global {
     "kick-player": CustomEvent;
     toggle_game_start_timer: CustomEvent;
     "join-changed": CustomEvent;
-    "open-matchmaking": CustomEvent<{ mode?: "1v1" | "2v2" } | undefined>;
+    "open-matchmaking": CustomEvent<
+      | {
+          mode?: "1v1" | "2v2";
+          experienceMode?: "2d" | "3d";
+        }
+      | undefined
+    >;
     "matchmaking-requeue": CustomEvent<{ mode?: "1v1" | "2v2" } | undefined>;
     userMeResponse: CustomEvent<UserMeResponse | false>;
     "session-cleared": CustomEvent;
@@ -168,6 +174,7 @@ export interface JoinLobbyEvent {
   gameRecord?: GameRecord;
   source?: "public" | "private" | "host" | "matchmaking" | "singleplayer";
   publicLobbyInfo?: GameInfo | PublicGameInfo;
+  expectedExperienceMode?: "2d" | "3d";
 }
 
 class Client {
@@ -865,6 +872,11 @@ class Client {
           ? toWireGameStartInfo(lobby.gameRecord.info)
           : undefined),
       gameRecord: lobby.gameRecord,
+      expectedExperienceMode:
+        lobby.expectedExperienceMode ??
+        lobby.publicLobbyInfo?.experienceMode ??
+        lobby.gameStartInfo?.config.experienceMode ??
+        lobby.gameRecord?.info.config.experienceMode,
     });
 
     if (this.mostRecentJoinEvent !== event.timeStamp) {
@@ -1055,7 +1067,9 @@ class Client {
   // dispatch with no open modal (the player closed it mid-wait) stays a
   // no-op — don't force them back into a queue they left.
   private handleMatchmakingRequeue(
-    event: CustomEvent<{ mode?: "1v1" | "2v2" } | undefined>,
+    event: CustomEvent<
+      { mode?: "1v1" | "2v2"; experienceMode?: "2d" | "3d" } | undefined
+    >,
   ) {
     if (this.matchmakingModal?.requeue()) {
       return;
@@ -1067,12 +1081,16 @@ class Client {
   }
 
   private handleOpenMatchmaking(
-    event: CustomEvent<{ mode?: "1v1" | "2v2" } | undefined>,
+    event: CustomEvent<
+      { mode?: "1v1" | "2v2"; experienceMode?: "2d" | "3d" } | undefined
+    >,
   ) {
     if (!this.matchmakingModal) return;
     // Always set the mode: dispatchers without a detail (homepage button,
     // requeue URL) mean 1v1 and must reset a lingering 2v2 selection.
     this.matchmakingModal.mode = event.detail?.mode === "2v2" ? "2v2" : "1v1";
+    this.matchmakingModal.experienceMode =
+      event.detail?.experienceMode === "3d" ? "3d" : "2d";
     this.matchmakingModal.open();
   }
 

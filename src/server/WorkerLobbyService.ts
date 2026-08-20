@@ -141,6 +141,7 @@ export class WorkerLobbyService {
       .map(({ game, info }) => {
         return {
           gameID: info.gameID,
+          experienceMode: info.experienceMode,
           numClients: info.clients?.length ?? 0,
           startsAt: info.startsAt,
           gameConfig: info.gameConfig,
@@ -156,6 +157,7 @@ export class WorkerLobbyService {
       const gi = g.gameInfo();
       return {
         gameID: gi.gameID,
+        experienceMode: gi.experienceMode,
         numClients: gi.clients?.length ?? 0,
         startsAt: gi.startsAt,
         gameConfig: gi.gameConfig && publicLobbyGameConfig(gi.gameConfig),

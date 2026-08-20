@@ -428,6 +428,7 @@ export class Transport {
       clanTag: this.lobbyConfig.playerClanTag ?? null,
       cosmetics: this.lobbyConfig.cosmetics,
       turnstileToken: this.lobbyConfig.turnstileToken,
+      requestedExperienceMode: this.lobbyConfig.expectedExperienceMode,
       token: await getPlayToken(),
     } satisfies ClientJoinMessage);
   }

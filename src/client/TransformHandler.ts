@@ -228,7 +228,7 @@ export class TransformHandler {
   }
 
   private isThreeD(): boolean {
-    return this.game.config().worldMechanics().threeDMode;
+    return this.game.config().experienceMode() === "3d";
   }
 
   private threeDCamera(): ThreeDCameraState {

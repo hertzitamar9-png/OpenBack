@@ -17,6 +17,7 @@ type MatchmakingJoin = {
   type: "join";
   jwt: string;
   clanTag?: string;
+  experienceMode: "2d" | "3d";
 };
 
 @customElement("matchmaking-modal")
@@ -30,6 +31,7 @@ export class MatchmakingModal extends BaseModal {
   // Which queue to join; set by Main from the open-matchmaking event
   // before the modal opens.
   public mode: "1v1" | "2v2" = "1v1";
+  public experienceMode: "2d" | "3d" = "2d";
   @state() private connected = false;
   @state() private socket: WebSocket | null = null;
   @state() private gameID: string | null = null;
@@ -278,6 +280,7 @@ export class MatchmakingModal extends BaseModal {
           ...(this.selectedClanTag === null
             ? {}
             : { clanTag: this.selectedClanTag }),
+          experienceMode: this.experienceMode,
         };
         this.socket.send(JSON.stringify(message));
         this.connected = true;
@@ -462,6 +465,7 @@ export class MatchmakingModal extends BaseModal {
         detail: {
           gameID: this.gameID,
           source: "matchmaking",
+          expectedExperienceMode: this.experienceMode,
         } as JoinLobbyEvent,
         bubbles: true,
         composed: true,

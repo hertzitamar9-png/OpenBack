@@ -5,7 +5,7 @@ import {
   isAircraftLandingTooHigh,
 } from "../../../src/core/pathfinding/PathFinder.Air";
 
-function gridGame(threeDMode: boolean): Game {
+function gridGame(experienceMode: "2d" | "3d"): Game {
   const width = 9;
   const heights = new Uint8Array(width * width).fill(0x81);
   for (let y = 0; y < width - 1; y++) heights[y * width + 4] = 0x9f;
@@ -18,13 +18,13 @@ function gridGame(threeDMode: boolean): Game {
     ref: (x: number, y: number) => y * width + x,
     magnitude: (tile: number) => heights[tile] & 0x1f,
     isValidRef: (tile: number) => tile >= 0 && tile < heights.length,
-    config: () => ({ worldMechanics: () => ({ threeDMode }) }),
+    config: () => ({ experienceMode: () => experienceMode }),
   } as unknown as Game;
 }
 
 describe("terrain-aware aircraft routing", () => {
   it("deterministically routes a low 3D aircraft around mountain terrain", () => {
-    const game = gridGame(true);
+    const game = gridGame("3d");
     const start = game.ref(1, 3);
     const destination = game.ref(7, 3);
     const first = new AirPathFinder(game).findPath(start, destination)!;
@@ -35,7 +35,7 @@ describe("terrain-aware aircraft routing", () => {
   });
 
   it("keeps the established direct air route outside 3D mode", () => {
-    const game = gridGame(false);
+    const game = gridGame("2d");
     const path = new AirPathFinder(game).findPath(
       game.ref(1, 3),
       game.ref(7, 3),
@@ -44,7 +44,7 @@ describe("terrain-aware aircraft routing", () => {
   });
 
   it("rejects a mountain landing in 3D mode", () => {
-    const game = gridGame(true);
+    const game = gridGame("3d");
     const destination = game.ref(4, 3);
     expect(game.magnitude(destination)).toBeGreaterThanOrEqual(18);
     expect(isAircraftLandingTooHigh(game, destination)).toBe(true);
@@ -54,7 +54,7 @@ describe("terrain-aware aircraft routing", () => {
   });
 
   it("keeps mountain landing unrestricted in 2D mode", () => {
-    const game = gridGame(false);
+    const game = gridGame("2d");
     const destination = game.ref(4, 3);
     expect(isAircraftLandingTooHigh(game, destination)).toBe(false);
     expect(
