@@ -2,10 +2,11 @@ import { html, LitElement, render as litRender } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import type { ColumnId } from "../../StatsConstants";
 import { translateText } from "../../Utils";
+import { gearIcon } from "../../components/ui/InterfaceIcons";
 import type { ColumnDef } from "./lib/StatsColumns";
 
 /**
- * ⚙️ button + checkbox popover for choosing which stat columns a panel
+ * Settings button + checkbox popover for choosing which stat columns a panel
  * shows. Emits `columns-changed` (CustomEvent<ColumnId[]>) with the new
  * selection in registry order; the host persists and re-renders.
  */
@@ -133,13 +134,13 @@ export class ColumnPicker extends LitElement {
   render() {
     return html`
       <button
-        class="px-0.5 leading-none text-xs lg:text-sm border rounded-md border-slate-500 transition-colors text-white hover:bg-white/10 bg-gray-700/50"
+        class="flex items-center justify-center p-1 leading-none border rounded-md border-slate-500 transition-colors text-white/80 hover:text-malibu-blue hover:bg-white/10 bg-gray-700/50"
         title=${translateText("leaderboard.configure_columns")}
         aria-expanded=${this.open}
         aria-haspopup="menu"
         @click=${() => (this.open = !this.open)}
       >
-        ⚙️
+        ${gearIcon("w-3.5 h-3.5")}
       </button>
     `;
   }

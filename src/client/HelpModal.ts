@@ -5,6 +5,7 @@ import { assetUrl } from "../core/AssetUrls";
 import { UserSettings } from "../core/game/UserSettings";
 import { BaseModal } from "./components/BaseModal";
 import "./components/Difficulties";
+import { gearIcon } from "./components/ui/InterfaceIcons";
 import { modalHeader } from "./components/ui/ModalHeader";
 import { Platform } from "./Platform";
 import { TroubleshootingModal } from "./TroubleshootingModal";
@@ -124,7 +125,12 @@ export class HelpModal extends BaseModal {
 
           <!-- OpenBack Units Section -->
           <div class="flex items-center gap-3 mb-3">
-            <div class="text-emerald-400 text-2xl">⚙</div>
+            <div
+              data-help-section-icon="openback-units"
+              class="text-blue-400"
+            >
+              ${gearIcon("w-6 h-6")}
+            </div>
             <h3
               class="text-xl font-bold uppercase tracking-widest text-white/90"
             >

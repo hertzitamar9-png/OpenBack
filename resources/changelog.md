@@ -1,3 +1,10 @@
+## OpenBack v0.36.183 - Settings Where They Belong
+
+- Moved Game settings out of the account dropdown and into a dedicated white gear matching News and Help on desktop and mobile.
+- Replaced the mismatched emoji gears in Help and the leaderboard column picker with one clean OpenBack vector icon matching the surrounding interface.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.182 - Clean Map Preview And Release Checks
 
 - Refreshed the Grand Earth preview from the current map generator and repaired the formatting drift left by the latest upstream merge so OpenBack releases pass every automated check again.

@@ -1,6 +1,7 @@
 import { html, LitElement, TemplateResult } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { NavNotificationsController } from "./NavNotificationsController";
+import { gearIcon } from "./ui/InterfaceIcons";
 
 /**
  * The news bell and help "?" as icon buttons, with their notification dots.
@@ -36,12 +37,18 @@ export class NavUtilityIcons extends LitElement {
     this.requestUpdate();
   };
 
+  private openSettings = (event: MouseEvent): void => {
+    event.preventDefault();
+    event.stopPropagation();
+    window.showPage?.("page-settings");
+  };
+
   private buttonClass(): string {
     const box = this.size === "mobile" ? "w-9 h-9" : "w-10 h-10";
     return (
       `nav-menu-item flex items-center justify-center ${box} rounded-full ` +
       "text-white/70 hover:text-malibu-blue cursor-pointer transition-colors " +
-      "[&.active]:text-malibu-blue"
+      "[&.active]:text-white/90 focus-visible:outline-white"
     );
   }
 
@@ -86,6 +93,19 @@ export class NavUtilityIcons extends LitElement {
           ${this._notifications.showNewsDot()
             ? this.renderDot("bg-red-500")
             : ""}
+        </div>
+        <div class="relative">
+          <button
+            class="${this.buttonClass()} ${currentPage === "page-settings"
+              ? "active"
+              : ""}"
+            data-page="page-settings"
+            data-i18n-aria-label="nav_account_menu.game_settings"
+            data-i18n-title="nav_account_menu.game_settings"
+            @click=${this.openSettings}
+          >
+            ${gearIcon("w-6 h-6 pointer-events-none")}
+          </button>
         </div>
         <div class="relative">
           <button

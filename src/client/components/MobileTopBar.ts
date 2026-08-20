@@ -2,6 +2,7 @@ import { LitElement, html } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { assetUrl } from "../../core/AssetUrls";
 import { crazyGamesSDK } from "../CrazyGamesSDK";
+import "./NavUtilityIcons";
 
 /**
  * The mobile top bar (menu button, logo, account).
@@ -184,9 +185,10 @@ export class MobileTopBar extends LitElement {
               `
             : html`
                 <div
-                  aria-hidden="true"
-                  class="col-start-3 justify-self-end h-11 shrink-0 aspect-[4/3]"
-                ></div>
+                  class="col-start-3 justify-self-end flex items-center min-w-0"
+                >
+                  <nav-utility-icons size="mobile"></nav-utility-icons>
+                </div>
               `}
         </div>
       </div>

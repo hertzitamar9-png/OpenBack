@@ -85,13 +85,11 @@ describe("nav-account-menu", () => {
     await el.updateComplete;
   }
 
-  it("offers sign-in and settings while signed out", async () => {
-    // The menu is the only nav route to the settings page now, so it has to
-    // open for guests too.
+  it("keeps game settings out of the signed-out account menu", async () => {
     fireUserMe(false);
     await el.updateComplete;
     await click(trigger());
-    expect(itemKeys()).toEqual(["sign-in", "game-settings"]);
+    expect(itemKeys()).toEqual(["sign-in"]);
 
     const showPage = vi.fn();
     window.showPage = showPage;
@@ -107,7 +105,7 @@ describe("nav-account-menu", () => {
     } as unknown as UserMeResponse);
     await el.updateComplete;
     await click(trigger());
-    expect(itemKeys()).toEqual(["sign-in", "game-settings"]);
+    expect(itemKeys()).toEqual(["sign-in"]);
   });
 
   it("toggles the menu for a signed-in user", async () => {
@@ -128,7 +126,6 @@ describe("nav-account-menu", () => {
       "copy-profile-url",
       "view-account",
       "account-settings",
-      "game-settings",
       "change-username",
       "log-out",
     ]);

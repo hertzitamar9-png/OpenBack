@@ -6,6 +6,19 @@ import type { ColumnId } from "../src/client/StatsConstants";
 const hideable = columnsFor("player").filter((column) => column.isHideable);
 
 describe("ColumnPicker", () => {
+  it("uses the shared vector gear instead of an emoji glyph", async () => {
+    const picker = new ColumnPicker();
+    document.body.appendChild(picker);
+    await picker.updateComplete;
+
+    expect(picker.querySelector('[data-interface-icon="gear"]')).not.toBeNull();
+    expect(picker.querySelector("button")?.className).toContain(
+      "text-white/80",
+    );
+    expect(picker.textContent).not.toContain("⚙");
+    picker.remove();
+  });
+
   it("renders its popup outside the sidebar overflow container", async () => {
     const sidebar = document.createElement("div");
     const picker = new ColumnPicker();
