@@ -46,6 +46,7 @@ let updating = false;
 let windowStart = 0;
 let clock: number | null = null;
 let reloading = false;
+let reloadAfterMatch = false;
 
 /** True while an update window is open. */
 export function isUpdating(): boolean {
@@ -169,8 +170,18 @@ function paint(): void {
 function tick(): void {
   paint();
   if (elapsed() >= WINDOW_SECONDS && !reloading) {
-    reloading = true;
     updating = false;
+    if (inGame()) {
+      reloadAfterMatch = true;
+      if (clock !== null) {
+        window.clearInterval(clock);
+        clock = null;
+      }
+      overlay?.remove();
+      overlay = null;
+      return;
+    }
+    reloading = true;
     window.location.reload();
   }
 }
@@ -187,6 +198,15 @@ function startClock(startedAt: number): void {
 
 async function poll(): Promise<void> {
   let delay = POLL_MS;
+  if (reloadAfterMatch) {
+    if (!inGame() && !reloading) {
+      reloading = true;
+      window.location.reload();
+      return;
+    }
+    window.setTimeout(() => void poll(), ACTIVE_POLL_MS);
+    return;
+  }
   try {
     const response = await fetch("/api/deploy-status", { cache: "no-store" });
     if (response.ok) {

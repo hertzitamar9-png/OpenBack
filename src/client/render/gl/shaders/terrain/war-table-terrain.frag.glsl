@@ -29,6 +29,25 @@ float valueNoise(vec2 p) {
   return mix(mix(a, b, w.x), mix(c, d, w.x), w.y);
 }
 
+float shineLayer(
+  vec2 world,
+  vec2 direction,
+  float frequency,
+  float speed,
+  float phase,
+  float time
+) {
+  vec2 travel = normalize(direction);
+  vec2 across = vec2(-travel.y, travel.x);
+  float bend = sin(
+    dot(world, across) * frequency * 0.41 + time * speed * 0.19 + phase
+  ) * 0.72;
+  float wave = sin(
+    dot(world, travel) * frequency + time * speed + phase + bend
+  ) * 0.5 + 0.5;
+  return smoothstep(0.16, 0.94, wave);
+}
+
 uint terrainAt(ivec2 p) {
   p = clamp(p, ivec2(0), ivec2(uMapSize) - 1);
   return texelFetch(uTerrainBytes, p, 0).r;
@@ -69,6 +88,8 @@ void main() {
     float seaDetail = mix(0.6, 1.0, smoothstep(0.12, 1.0, uZoom))
       * clamp(uQuality, 0.45, 1.0);
 
+    vec3 oceanBase = color;
+    vec3 shorelineTint = mix(oceanBase, vec3(1.0), 0.30);
     float broad = sin(dot(world, vec2(0.031, 0.017)) + uTime * 0.55);
     float cross = sin(dot(world, vec2(-0.021, 0.039)) - uTime * 0.42);
     float swell = sin(dot(world, vec2(0.010, -0.018)) + uTime * 0.24);
@@ -79,22 +100,24 @@ void main() {
     vec3 highlight = color + vec3(0.025, 0.075, 0.095);
     color = mix(deep, highlight, shimmer * seaDetail);
 
-    // The shine. This is the same pale, shallow-water blue that makes a
-    // coastline glow; it used to appear only where water met land, which is
-    // why the open sea looked dead by comparison. Here it drifts across the
-    // whole ocean in broad, soft-edged patches.
-    //
-    // Three fields at different headings and speeds, summed rather than
-    // thresholded: a sharp cut is what turned earlier attempts into scratches
-    // and stripes. The wide smoothstep keeps every edge soft, so the light
-    // gathers and fades the way it does along a shore.
-    vec3 shineTint = vec3(0.392, 0.561, 1.0);
-    float s1 = sin(dot(world, vec2(0.023, 0.017)) + uTime * 0.35);
-    float s2 = sin(dot(world, vec2(-0.015, 0.026)) - uTime * 0.22);
-    float s3 = sin(dot(world, vec2(0.008, -0.021)) + uTime * 0.14);
-    float shine = (s1 * 0.45 + s2 * 0.33 + s3 * 0.22) * 0.5 + 0.5;
-    shine = smoothstep(0.35, 0.95, shine);
-    color = mix(color, shineTint, shine * 0.30 * seaDetail);
+    // Carry the exact colour relationship that makes shoreline water glow
+    // through the open sea. Independent, gently bent fields keep their own
+    // headings and speeds instead of collapsing into one directional sheet.
+    float shine = 1.0;
+    shine *= 1.0 - shineLayer(
+      world, vec2(1.00, 0.18), 0.018, 0.19, 0.3, uTime
+    ) * 0.34;
+    shine *= 1.0 - shineLayer(
+      world, vec2(-0.42, 1.00), 0.027, -0.31, 2.1, uTime
+    ) * 0.25;
+    shine *= 1.0 - shineLayer(
+      world, vec2(0.66, -1.00), 0.035, 0.43, 4.7, uTime
+    ) * 0.18;
+    shine *= 1.0 - shineLayer(
+      world, vec2(-1.00, -0.37), 0.013, -0.12, 7.4, uTime
+    ) * 0.13;
+    shine = 1.0 - shine;
+    color = mix(color, shorelineTint, shine * 0.82 * seaDetail);
 
     // White break still belongs only at the shoreline.
     float shoreBreak = sin(world.x * 0.18 + world.y * 0.13 - uTime * 1.8);

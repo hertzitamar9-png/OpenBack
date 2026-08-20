@@ -207,6 +207,41 @@ describe("the update window as the player experiences it", () => {
     expect(screen().note).toBe("Resuming your game…");
   });
 
+  it("keeps an active match running when the update window finishes", async () => {
+    document.body.classList.add("in-game");
+    vi.stubGlobal("fetch", statusFeed("updating"));
+    const { startUpdateWatcher, isUpdating } = await freshWatcher();
+
+    atSecond(0);
+    startUpdateWatcher();
+    await vi.advanceTimersByTimeAsync(0);
+
+    atSecond(60);
+    await vi.advanceTimersByTimeAsync(300);
+
+    expect(reload).not.toHaveBeenCalled();
+    expect(isUpdating()).toBe(false);
+    expect(document.querySelector("#openback-update-overlay")).toBeNull();
+  });
+
+  it("reloads the new version after the protected match ends", async () => {
+    document.body.classList.add("in-game");
+    vi.stubGlobal("fetch", statusFeed("updating"));
+    const { startUpdateWatcher } = await freshWatcher();
+
+    atSecond(0);
+    startUpdateWatcher();
+    await vi.advanceTimersByTimeAsync(0);
+
+    atSecond(60);
+    await vi.advanceTimersByTimeAsync(300);
+    expect(reload).not.toHaveBeenCalled();
+
+    document.body.classList.remove("in-game");
+    await vi.advanceTimersByTimeAsync(1100);
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
   it("talks about reloading when the player is only on the menu", async () => {
     vi.stubGlobal("fetch", statusFeed("updating"));
     const { startUpdateWatcher } = await freshWatcher();

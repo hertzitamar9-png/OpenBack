@@ -1,3 +1,10 @@
+## OpenBack v0.36.181 - Living Water Without Lost Matches
+
+- Replaced the sharp white ocean scratches with broad, soft shoreline-colour shine moving across all open water in several different directions and speeds, in both 2D and 3D.
+- Kept matches running through OpenBack updates instead of forcibly reloading the page and ejecting the player when the update timer finishes.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.180 - Shine On All The Water
 
 - Spread the soft shine that used to appear only where the sea meets the shore across the whole ocean, on both the flat map and in 3D, so open water catches the light instead of looking dead next to the coast.

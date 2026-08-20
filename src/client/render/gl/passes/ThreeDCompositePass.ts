@@ -328,6 +328,13 @@ float worldWave(vec2 p,float time){
   float cross=sin(dot(p,vec2(-0.021,0.039))-time*0.42);
   return broad*0.55+cross*0.45;
 }
+float shineLayer(vec2 world,vec2 direction,float frequency,float speed,float phase,float time){
+  vec2 travel=normalize(direction);
+  vec2 across=vec2(-travel.y,travel.x);
+  float bend=sin(dot(world,across)*frequency*0.41+time*speed*0.19+phase)*0.72;
+  float wave=sin(dot(world,travel)*frequency+time*speed+phase+bend)*0.5+0.5;
+  return smoothstep(0.16,0.94,wave);
+}
 void main(){
   ivec2 p=ivec2(clamp(floor(vWorld),vec2(0.0),uMapSize-1.0));
   uint terrainByte=texelFetch(uTerrain,p,0).r;
@@ -339,36 +346,36 @@ void main(){
   vec3 deep=vec3(0.025,0.20,0.34);
   vec3 highlight=vec3(0.075,0.48,0.68);
   float shoreBreak=sin(vWorld.x*0.18+vWorld.y*0.13-uTime*1.8)*0.5+0.5;
-  // Foam follows how steeply the surface is tilted, so it appears on the faces
-  // of real crests. Thresholding the wave value instead produced soft round
-  // patches, because a sum of sines peaks in blobs rather than in lines.
+  // The wave normal still drives directional lighting, but white foam belongs
+  // at the coast. Painting every steep open-water face produced the hard white
+  // scratches that hid the softer moving shine.
   vec3 waveNormal=normalize(vWaveNormal);
   vec2 waveSlope=vec2(-waveNormal.x,-waveNormal.z)/max(0.18,waveNormal.y);
-  float steepness=clamp(length(waveSlope),0.0,1.5);
-  float openCrest=smoothstep(0.22,0.42,steepness)*0.20;
   float coastalBreak=shoreline?smoothstep(0.58,0.90,shoreBreak)*0.72:0.0;
-  float foamCrest=max(openCrest,coastalBreak);
+  float foamCrest=coastalBreak;
   float crest=foamCrest;
   float shimmer=clamp(0.28+wave*0.10+fine*0.055+crest*0.24,0.12,0.68);
-  vec3 water=mix(deep,highlight,shimmer);
-  // The same pale shallow-water shine the flat map carries, and for the same
-  // reason: without it the only lit water in the scene is the strip against
-  // the coast, and the open sea reads as dead by comparison. Three fields at
-  // different headings and speeds, summed and softened rather than cut, so
-  // the light gathers in broad patches instead of hard bands.
-  vec3 shineTint=vec3(0.392,0.561,1.0);
-  float s1=sin(dot(vWorld,vec2(0.023,0.017))+uTime*0.35);
-  float s2=sin(dot(vWorld,vec2(-0.015,0.026))-uTime*0.22);
-  float s3=sin(dot(vWorld,vec2(0.008,-0.021))+uTime*0.14);
-  float shine=smoothstep(0.35,0.95,(s1*0.45+s2*0.33+s3*0.22)*0.5+0.5);
-  water=mix(water,shineTint,shine*0.26);
+  vec3 oceanBase=mix(deep,highlight,shimmer);
+  vec3 shorelineTint=mix(oceanBase,vec3(1.0),0.30);
+  vec3 water=oceanBase;
+  float shine=1.0;
+  shine*=1.0-shineLayer(vWorld,vec2(1.00,0.18),0.018,0.19,0.3,uTime)*0.34;
+  shine*=1.0-shineLayer(vWorld,vec2(-0.42,1.00),0.027,-0.31,2.1,uTime)*0.25;
+  shine*=1.0-shineLayer(vWorld,vec2(0.66,-1.00),0.035,0.43,4.7,uTime)*0.18;
+  shine*=1.0-shineLayer(vWorld,vec2(-1.00,-0.37),0.013,-0.12,7.4,uTime)*0.13;
+  shine=1.0-shine;
   water=mix(water,vec3(0.92,0.98,1.0),foamCrest*0.78);
   // Same directional lighting the terrain uses, so crests catch the light and
   // troughs fall into shade: this is what makes the height readable.
   float directional=clamp(0.5+dot(waveSlope,vec2(-0.68,-0.42))*0.9,0.0,1.0);
-  float lightLevel=clamp(0.62+directional*0.62,0.55,1.30);
+  float lightLevel=clamp(0.78+directional*0.32,0.72,1.12);
   water*=lightLevel;
-  water*=mix(0.42,1.0,uDaylight);
+  float daylightScale=mix(0.42,1.0,uDaylight);
+  water*=daylightScale;
+  // Add the broad sheen after directional slope lighting. Otherwise the
+  // strongest Gerstner heading darkens it back into one repeated diagonal and
+  // the independently moving fields disappear from a normal overhead view.
+  water=mix(water,shorelineTint*daylightScale,shine*0.86);
   outColor=vec4(water,1.0);
 }`;
 
