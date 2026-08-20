@@ -106,7 +106,7 @@ describe("SteamLinkModal", () => {
     expect(stashPendingLinkMock).toHaveBeenCalledWith("tok-abc");
     // "Trigger the login flow" = route to the account modal, which shows the
     // login options for a logged-out visitor (see AccountModal).
-    expect(window.location.hash).toBe("#modal=account");
+    expect(window.location.pathname).toBe("/account");
     expect(modal.isOpen()).toBe(false);
     expect(fetchSteamLinkTicketMock).not.toHaveBeenCalled();
     expect(getUserMeMock).not.toHaveBeenCalled();
@@ -314,7 +314,7 @@ describe("SteamLinkModal", () => {
       // resumePendingSteamLink suite for the resume side of this.
       expect(stashPendingCodeEntryMock).toHaveBeenCalledTimes(1);
       expect(stashPendingLinkMock).not.toHaveBeenCalled();
-      expect(window.location.hash).toBe("#modal=account");
+      expect(window.location.pathname).toBe("/account");
       expect(modal.isOpen()).toBe(false);
       expect(getUserMeMock).not.toHaveBeenCalled();
       expect(fetchSteamLinkTicketMock).not.toHaveBeenCalled();

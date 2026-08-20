@@ -11,10 +11,31 @@ const APP_SHELL_CACHE_CONTROL =
 
 const appShellContentCache = new Map<string, Promise<string>>();
 
-export async function renderHtmlContent(htmlPath: string): Promise<string> {
+export interface AppShellSeo {
+  path: string;
+  title: string;
+  description: string;
+  schemaJson?: string;
+  crawlableHtml?: string;
+}
+
+export async function renderHtmlContent(
+  htmlPath: string,
+  seo?: AppShellSeo,
+): Promise<string> {
   const htmlContent = await fs.readFile(htmlPath, "utf-8");
   const assetManifest = await getRuntimeAssetManifest();
   const cdnBase = ServerEnv.cdnBase();
+  const siteOrigin = ServerEnv.authOrigin().replace(/\/+$/, "");
+  const routeSeo: Required<AppShellSeo> = {
+    path: seo?.path ?? "/",
+    title: seo?.title ?? "OpenBack",
+    description:
+      seo?.description ??
+      "Play OpenBack, an online territorial war RTS. Expand nations, command armies, build an economy, form alliances, and conquer a world map.",
+    schemaJson: seo?.schemaJson ?? "{}",
+    crawlableHtml: seo?.crawlableHtml ?? "",
+  };
   return ejs.render(htmlContent, {
     gitCommit: JSON.stringify(ServerEnv.gitCommit()),
     assetManifest: JSON.stringify(assetManifest),
@@ -34,7 +55,12 @@ export async function renderHtmlContent(htmlPath: string): Promise<string> {
     ),
     instanceId: JSON.stringify(ServerEnv.instanceId()),
     shareOrigin: JSON.stringify(ServerEnv.shareOrigin()),
-    siteOrigin: ServerEnv.authOrigin().replace(/\/+$/, ""),
+    siteOrigin,
+    seoTitle: routeSeo.title,
+    seoDescription: routeSeo.description,
+    seoCanonical: `${siteOrigin}${routeSeo.path}`,
+    seoSchemaJson: routeSeo.schemaJson,
+    seoCrawlableHtml: routeSeo.crawlableHtml,
     manifestHref: buildAssetUrl("manifest.json", assetManifest, cdnBase),
     markPngHref: buildAssetUrl(
       "images/OpenBackMark512.png",
@@ -64,14 +90,18 @@ export async function renderHtmlContent(htmlPath: string): Promise<string> {
   });
 }
 
-export async function getAppShellContent(htmlPath: string): Promise<string> {
-  let cachedContent = appShellContentCache.get(htmlPath);
+export async function getAppShellContent(
+  htmlPath: string,
+  seo?: AppShellSeo,
+): Promise<string> {
+  const cacheKey = `${htmlPath}\0${seo?.path ?? "/"}`;
+  let cachedContent = appShellContentCache.get(cacheKey);
   if (!cachedContent) {
-    cachedContent = renderHtmlContent(htmlPath).catch((error: unknown) => {
-      appShellContentCache.delete(htmlPath);
+    cachedContent = renderHtmlContent(htmlPath, seo).catch((error: unknown) => {
+      appShellContentCache.delete(cacheKey);
       throw error;
     });
-    appShellContentCache.set(htmlPath, cachedContent);
+    appShellContentCache.set(cacheKey, cachedContent);
   }
   return cachedContent;
 }
@@ -94,8 +124,9 @@ export function setHtmlNoCacheHeaders(res: Response): void {
 export async function renderAppShell(
   res: Response,
   htmlPath: string,
+  seo?: AppShellSeo,
 ): Promise<void> {
-  const rendered = await getAppShellContent(htmlPath);
+  const rendered = await getAppShellContent(htmlPath, seo);
   setAppShellCacheHeaders(res);
   res.send(rendered);
 }

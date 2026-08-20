@@ -1,5 +1,6 @@
 import { LitElement, html } from "lit";
 import { customElement, state } from "lit/decorators.js";
+import { appRouter } from "../AppRouter";
 import { crazyGamesSDK } from "../CrazyGamesSDK";
 import "./NavUtilityIcons";
 import { openBackHomeWordmark } from "./ui/OpenBackWordmark";
@@ -64,7 +65,7 @@ export class MobileTopBar extends LitElement {
       // navigation state back on Play so the tabs agree with what is shown.
       requestAnimationFrame(() => {
         if (!page || page.classList.contains("hidden")) {
-          window.showPage?.("page-play");
+          void appRouter.navigatePage("page-play");
         }
       });
       return;
@@ -77,7 +78,7 @@ export class MobileTopBar extends LitElement {
         cancelable: true,
       }),
     );
-    if (!handled) window.showPage?.("page-play");
+    if (!handled) void appRouter.navigatePage("page-play");
   }
 
   render() {

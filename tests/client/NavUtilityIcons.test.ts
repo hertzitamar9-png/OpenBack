@@ -16,17 +16,21 @@ vi.mock("../../src/client/components/NavNotificationsController", () => ({
   },
 }));
 
+import { appRouter } from "../../src/client/AppRouter";
 import { NavUtilityIcons } from "../../src/client/components/NavUtilityIcons";
 
 describe("nav utility icons", () => {
   afterEach(() => {
     document.body.innerHTML = "";
+    appRouter.reset();
+    history.replaceState(null, "", "/");
     window.showPage = undefined;
   });
 
   it("places a white settings gear between matching News and Help icons", async () => {
     const showPage = vi.fn();
     window.showPage = showPage;
+    history.replaceState(null, "", "/news");
     const icons = new NavUtilityIcons();
     document.body.appendChild(icons);
     await icons.updateComplete;
@@ -56,6 +60,7 @@ describe("nav utility icons", () => {
     expect(settings.className).not.toContain("drop-shadow");
 
     settings.click();
-    expect(showPage).toHaveBeenCalledWith("page-settings");
+    expect(location.pathname).toBe("/settings/basic");
+    expect(showPage).toHaveBeenCalledWith("page-settings", { tab: "basic" });
   });
 });

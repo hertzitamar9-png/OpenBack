@@ -49,7 +49,7 @@ vi.mock(
 );
 
 import { fetchPublicPlayerProfile } from "../../src/client/Api";
-import { modalRouter } from "../../src/client/ModalRouter";
+import { appRouter } from "../../src/client/AppRouter";
 import { initNavigation } from "../../src/client/Navigation";
 import { PlayerProfileModal } from "../../src/client/PlayerProfileModal";
 
@@ -89,7 +89,7 @@ describe("Player profile Clans tab", () => {
     document.body.appendChild(playPage);
     initNavigation();
 
-    modalRouter.register("profile", {
+    appRouter.register("profile", {
       tag: "player-profile-modal",
       pageId: "page-profile",
     });
@@ -128,6 +128,7 @@ describe("Player profile Clans tab", () => {
 
   afterEach(() => {
     window.showPage?.("page-play");
+    appRouter.reset();
     modal.remove();
     clanModal.remove();
     leaderboardModal.remove();
@@ -278,7 +279,7 @@ describe("Player profile Clans tab", () => {
       expect(modal.querySelectorAll("clan-card")).toHaveLength(1);
     });
     expect(modal.isOpen()).toBe(true);
-    expect(window.location.hash).toContain("tab=clans");
+    expect(window.location.pathname).toBe("/profile/nmTH13FD/clans");
     expect(fetchPublicPlayerProfile).toHaveBeenCalledTimes(2);
     const card = modal.querySelector("clan-card") as HTMLElement & {
       clan: { name: string; memberCount: number };

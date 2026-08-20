@@ -124,8 +124,8 @@ vi.stubGlobal("IntersectionObserver", FakeIntersectionObserver);
 
 import { AccountModal } from "../../src/client/AccountModal";
 import { fetchPublicPlayerGames } from "../../src/client/Api";
+import { appRouter } from "../../src/client/AppRouter";
 import { GameStatsModal } from "../../src/client/GameStatsModal";
-import { modalRouter } from "../../src/client/ModalRouter";
 import { initNavigation } from "../../src/client/Navigation";
 
 type ModalShell = HTMLElement & {
@@ -181,11 +181,11 @@ describe("Account Games stats navigation", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     history.replaceState(null, "", "/");
-    modalRouter.register("account", {
+    appRouter.register("account", {
       tag: "account-modal",
       pageId: "page-account",
     });
-    modalRouter.register("stats", {
+    appRouter.register("stats", {
       tag: "game-stats-modal",
       pageId: "page-stats",
     });
@@ -224,6 +224,7 @@ describe("Account Games stats navigation", () => {
 
   afterEach(() => {
     window.showPage?.("page-play");
+    appRouter.reset();
     modal.remove();
     statsModal.remove();
     history.replaceState(null, "", "/");
@@ -251,7 +252,7 @@ describe("Account Games stats navigation", () => {
     expect(statsView.gameId).toBe("game-1");
     const statsShell = statsModal.querySelector("o-modal") as ModalShell;
     expect(statsShell.shadowRoot?.querySelector('[role="tablist"]')).toBeNull();
-    expect(window.location.hash).toBe("#modal=stats&gameID=game-1");
+    expect(window.location.pathname).toBe("/stats/game-1");
 
     const backButton = statsModal.querySelector(
       '[slot="header"] button',
@@ -261,7 +262,7 @@ describe("Account Games stats navigation", () => {
       expect(modal.querySelector("player-game-history-view")).not.toBeNull();
       expect(shell.getScrollTop()).toBe(420);
     });
-    expect(window.location.hash).toBe("#modal=account&tab=games");
+    expect(window.location.pathname).toBe("/account/games");
 
     expect(fetchPublicPlayerGames).toHaveBeenCalledOnce();
   });

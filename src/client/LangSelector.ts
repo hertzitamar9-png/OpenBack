@@ -1,6 +1,7 @@
 import { LitElement, html } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { assetUrl } from "../core/AssetUrls";
+import { appRouter } from "./AppRouter";
 import "./LanguageModal";
 import { LanguageModal } from "./LanguageModal";
 import { applyOpenBackBrand, formatDebugTranslation } from "./Utils";
@@ -332,7 +333,7 @@ export class LangSelector extends LitElement {
       languageModal.languageList = [...this.languageList];
       languageModal.currentLang = this.currentLang;
       // Use the navigation system
-      window.showPage?.("page-language");
+      void appRouter.navigate({ pageId: "page-language" });
     }
   }
 

@@ -13,6 +13,7 @@ import {
   validateUsername,
 } from "../core/validations/username";
 import { getUserMe, invalidateUserMe } from "./Api";
+import { appRouter } from "./AppRouter";
 import { checkClanTagOwnership } from "./ClanApi";
 import { verifiedBadge } from "./components/ui/VerifiedBadge";
 import { crazyGamesSDK } from "./CrazyGamesSDK";
@@ -210,7 +211,7 @@ export class UsernameInput extends LitElement {
   // modal on its default my-clans tab, which is not what the label promises.
   private openClanBrowser = () => {
     this.clanMenuOpen = false;
-    window.showPage?.("page-clan");
+    void appRouter.navigate({ pageId: "page-clan", tab: "my-clans" });
     void customElements.whenDefined("clan-modal").then(() => {
       document
         .querySelector<
@@ -262,7 +263,9 @@ export class UsernameInput extends LitElement {
     if (status === "premium" || status === "indefinite") {
       // Subscribed but no usable name yet (never set, or TEMPORARY####):
       // send them straight to the username form.
-      window.location.hash = "modal=change-username";
+      document
+        .querySelector<HTMLElement & { open(): void }>("change-username-modal")
+        ?.open();
       return;
     }
     const goStore = await showInGameConfirm(
@@ -274,7 +277,10 @@ export class UsernameInput extends LitElement {
       },
     );
     if (goStore) {
-      window.location.hash = "modal=store&tab=subscriptions";
+      void appRouter.navigate({
+        pageId: "page-item-store",
+        tab: "subscriptions",
+      });
     }
   }
 
@@ -826,7 +832,7 @@ export class UsernameInput extends LitElement {
   }
 
   private openClanJoinModal(tag: string) {
-    window.showPage?.("page-clan");
+    void appRouter.navigate({ pageId: "page-clan", tab: "my-clans" });
     void customElements.whenDefined("clan-modal").then(() => {
       document
         .querySelector<

@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { appRouter } from "../../src/client/AppRouter";
 import {
   fetchCosmetics,
   purchaseCosmetic,
@@ -324,9 +325,37 @@ describe("StoreModal cosmetic browser", () => {
   });
 
   afterEach(() => {
+    appRouter.reset();
     store?.remove();
     store = undefined;
     localStorage.clear();
+  });
+
+  it("restores and synchronizes cosmetic sub-tabs through clean paths", async () => {
+    history.replaceState(null, "", "/store/cosmetics/flags");
+    appRouter.register("store", {
+      tag: "store-modal",
+      pageId: "page-item-store",
+    });
+    store = document.createElement("store-modal") as StoreModal;
+    store.id = "page-item-store";
+    store.inline = true;
+    document.body.appendChild(store);
+    await store.updateComplete;
+
+    expect(await appRouter.start()).toBe(true);
+    await vi.waitFor(() => {
+      const flags = [
+        ...store!.querySelectorAll<HTMLButtonElement>("button"),
+      ].find((button) => button.textContent?.trim() === "store.flags");
+      expect(flags?.classList.contains("border-malibu-blue")).toBe(true);
+    });
+
+    const crowns = [
+      ...store.querySelectorAll<HTMLButtonElement>("button"),
+    ].find((button) => button.textContent?.trim() === "store.crowns")!;
+    crowns.click();
+    expect(location.pathname).toBe("/store/cosmetics/crowns");
   });
 
   it("selects the first visible item and purchases the selected variant", async () => {

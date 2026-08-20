@@ -1,6 +1,6 @@
 import { html, LitElement, TemplateResult } from "lit";
 import { property, query, state } from "lit/decorators.js";
-import { modalRouter } from "../ModalRouter";
+import { appRouter } from "../AppRouter";
 import "./baseComponents/Modal";
 import type { OModal, OModalTab } from "./baseComponents/Modal";
 import "./ConfirmDialog";
@@ -64,8 +64,8 @@ export abstract class BaseModal extends LitElement {
 
   /**
    * Optional router name. When set, BaseModal syncs URL state on open/close/
-   * tab change as `#modal=<routerName>&tab=<key>&...`. Modals that own their
-   * own URL state (e.g. lobby modals) should leave this undefined.
+   * tab change through AppRouter. Addressable full pages set this; transient
+   * overlays and components with their own URL state leave it undefined.
    */
   protected routerName?: string;
 
@@ -222,7 +222,7 @@ export abstract class BaseModal extends LitElement {
       }
 
       if (this.routerName) {
-        modalRouter.syncOpened(this.routerName, args);
+        appRouter.syncOpened(this.routerName, args);
       }
     } finally {
       this.opening = false;
@@ -246,7 +246,7 @@ export abstract class BaseModal extends LitElement {
     }
 
     if (this.routerName) {
-      modalRouter.syncClosed(this.routerName);
+      appRouter.syncClosed(this.routerName);
     }
   }
 
@@ -260,7 +260,7 @@ export abstract class BaseModal extends LitElement {
     this.activeTab = key;
     this.onTabEnter(key);
     if (this.routerName) {
-      modalRouter.syncTab(this.routerName, key);
+      appRouter.syncTab(this.routerName, key);
     }
   }
 

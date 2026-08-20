@@ -6,8 +6,8 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
-    <title>OpenBack</title>
-    <link rel="canonical" href="<%- siteOrigin %>/" />
+    <title><%= seoTitle %></title>
+    <link rel="canonical" href="<%- seoCanonical %>" />
     <link rel="manifest" href="<%- manifestHref %>" />
     <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="512x512" href="/favicon.png" />
@@ -59,10 +59,7 @@
     </style>
 
     <!-- SEO -->
-    <meta
-      name="description"
-      content="Play OpenBack, an online territorial war RTS. Expand nations, command armies, build an economy, form alliances, and conquer a world map."
-    />
+    <meta name="description" content="<%= seoDescription %>" />
     <meta name="application-name" content="OpenBack" />
     <meta name="apple-mobile-web-app-title" content="OpenBack" />
     <meta
@@ -72,11 +69,8 @@
     <meta name="robots" content="index, follow" />
 
     <!-- Open Graph -->
-    <meta property="og:title" content="OpenBack - Territorial RTS" />
-    <meta
-      property="og:description"
-      content="Expand your nation, build an economy, form alliances, and dominate the map in OpenBack."
-    />
+    <meta property="og:title" content="<%= seoTitle %>" />
+    <meta property="og:description" content="<%= seoDescription %>" />
     <meta property="og:image" content="<%- socialPreviewUrl %>" />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
@@ -86,14 +80,11 @@
       content="OpenBack territorial strategy game map"
     />
     <meta property="og:type" content="game" />
-    <meta property="og:url" content="<%- siteOrigin %>/" />
+    <meta property="og:url" content="<%- seoCanonical %>" />
     <meta property="og:site_name" content="OpenBack" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="OpenBack - Territorial RTS" />
-    <meta
-      name="twitter:description"
-      content="Expand your nation, build an economy, form alliances, and dominate the map in OpenBack."
-    />
+    <meta name="twitter:title" content="<%= seoTitle %>" />
+    <meta name="twitter:description" content="<%= seoDescription %>" />
     <meta name="twitter:image" content="<%- socialPreviewUrl %>" />
     <meta
       name="twitter:image:alt"
@@ -143,6 +134,9 @@
           }
         ]
       }
+    </script>
+    <script type="application/ld+json">
+      <%- seoSchemaJson %>
     </script>
 
     <!-- Injected from Server env -->
@@ -210,11 +204,14 @@
       </ul>
       <p>
         <a href="<%- siteOrigin %>/">Play OpenBack online</a>.
-        <a href="<%- siteOrigin %>/guides">OpenBack tutorials</a>.
+        <a href="<%- siteOrigin %>/tutorials">OpenBack tutorials</a>.
         <a href="<%- siteOrigin %>/blog">OpenBack development blog</a>.
-        <a href="<%- siteOrigin %>/privacy-policy.html">Privacy policy</a>.
-        <a href="<%- siteOrigin %>/terms-of-service.html">Terms of service</a>.
+        <a href="<%- siteOrigin %>/privacy">Privacy policy</a>.
+        <a href="<%- siteOrigin %>/terms">Terms of service</a>.
       </p>
+    </section>
+    <section class="sr-only" aria-label="OpenBack page content">
+      <!--OPENBACK_SEO_CONTENT-->
     </section>
 
     <div id="hex-grid" class="fixed inset-0 -z-50 pointer-events-none">

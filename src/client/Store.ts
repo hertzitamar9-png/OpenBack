@@ -3,6 +3,7 @@ import { html } from "lit";
 import { customElement } from "lit/decorators.js";
 import { UserMeResponse } from "../core/ApiSchemas";
 import { Cosmetics, Product } from "../core/CosmeticSchemas";
+import { appRouter } from "./AppRouter";
 import { BaseModal } from "./components/BaseModal";
 import "./components/CosmeticCard";
 import { cosmeticSelectionLabel } from "./components/CosmeticPresentation";
@@ -230,6 +231,7 @@ export class StoreModal extends BaseModal {
   private setCosmeticsSubTab(tab: CosmeticsSubTab): void {
     this.cosmeticsSubTab = tab;
     this.selectVisible(this.cosmeticsGroups(tab));
+    appRouter.syncArgs("store", { subtab: tab });
     this.requestUpdate();
   }
 
@@ -504,6 +506,12 @@ export class StoreModal extends BaseModal {
     const affiliate =
       typeof args?.affiliateCode === "string" ? args.affiliateCode : null;
     this.affiliateCode = affiliate;
+    if (
+      typeof args?.subtab === "string" &&
+      COSMETICS_SUB_TABS.includes(args.subtab as CosmeticsSubTab)
+    ) {
+      this.cosmeticsSubTab = args.subtab as CosmeticsSubTab;
+    }
     this.cosmetics ??= await fetchCosmetics();
     this.selectVisible(this.groupsForTab(this.activeTab));
     await this.refresh();

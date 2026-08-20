@@ -55,10 +55,10 @@ class FakeIntersectionObserver {
 }
 vi.stubGlobal("IntersectionObserver", FakeIntersectionObserver);
 
+import { appRouter } from "../../src/client/AppRouter";
 import { fetchClanGames } from "../../src/client/ClanApi";
 import { ClanModal } from "../../src/client/ClanModal";
 import { GameStatsModal } from "../../src/client/GameStatsModal";
-import { modalRouter } from "../../src/client/ModalRouter";
 import { initNavigation } from "../../src/client/Navigation";
 
 type ModalShell = HTMLElement & {
@@ -133,11 +133,11 @@ describe("Clan Games stats navigation", () => {
       nextCursor: null,
     });
     history.replaceState(null, "", "/");
-    modalRouter.register("clan", {
+    appRouter.register("clan", {
       tag: "clan-modal",
       pageId: "page-clan",
     });
-    modalRouter.register("stats", {
+    appRouter.register("stats", {
       tag: "game-stats-modal",
       pageId: "page-stats",
     });
@@ -179,6 +179,7 @@ describe("Clan Games stats navigation", () => {
 
   afterEach(() => {
     window.showPage?.("page-play");
+    appRouter.reset();
     modal.remove();
     statsModal.remove();
     history.replaceState(null, "", "/");
@@ -204,7 +205,7 @@ describe("Clan Games stats navigation", () => {
       "game-info-view",
     ) as HTMLElement & { gameId: string };
     expect(statsView.gameId).toBe("clan-game-1");
-    expect(window.location.hash).toBe("#modal=stats&gameID=clan-game-1");
+    expect(window.location.pathname).toBe("/stats/clan-game-1");
 
     const backButton = statsModal.querySelector(
       '[slot="header"] button',
@@ -215,7 +216,7 @@ describe("Clan Games stats navigation", () => {
       expect(modal.querySelector("clan-game-history-view")).not.toBeNull();
       expect(shell.getScrollTop()).toBe(420);
     });
-    expect(window.location.hash).toBe("#modal=clan&clan=TST&tab=game-history");
+    expect(window.location.pathname).toBe("/clans/TST/game-history");
 
     expect(fetchClanGames).toHaveBeenCalledOnce();
   });

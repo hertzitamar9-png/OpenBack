@@ -1,6 +1,7 @@
 import { html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { assetUrl } from "../core/AssetUrls";
+import { appRouter } from "./AppRouter";
 import { translateText } from "./Utils";
 import { BaseModal } from "./components/BaseModal";
 import { modalHeader } from "./components/ui/ModalHeader";
@@ -223,7 +224,7 @@ export class TroubleshootingModal extends BaseModal {
     this.onClose();
     if (this.inline) {
       this.style.pointerEvents = "none";
-      window.showPage?.("page-help");
+      void appRouter.navigate({ pageId: "page-help" });
     } else {
       this.modalEl?.close();
     }

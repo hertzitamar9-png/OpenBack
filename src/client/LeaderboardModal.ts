@@ -21,7 +21,7 @@ const TAB_KEYS = [
 ] as const;
 
 // Tab key -> ladder. "players" predates the 2v2 ladder and stays the 1v1 tab
-// so existing `#modal=leaderboard&tab=players` links keep working. All ranked
+// so existing legacy leaderboard links keep working. All ranked
 // tabs share one <leaderboard-player-list>: a page fetch returns every ladder.
 const PLAYER_TABS: Record<string, RankedType> = {
   players: RankedType.OneVOne,

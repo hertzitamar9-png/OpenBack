@@ -1,5 +1,6 @@
 import { html, TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
+import { appRouter } from "./AppRouter";
 import { BaseModal } from "./components/BaseModal";
 import { modalHeader } from "./components/ui/ModalHeader";
 
@@ -26,9 +27,15 @@ export class OpenBackContentModal extends BaseModal {
   @state() private selectedPath: string | null = null;
   @state() private loading = false;
   @state() private loadFailed = false;
+  protected routerName = "tutorials";
 
   protected modalConfig() {
     return { alwaysMaximized: true, maxWidth: "72rem" };
+  }
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    this.routerName = this.contentKind === "guides" ? "tutorials" : "blog";
   }
 
   protected renderHeaderSlot() {
@@ -39,7 +46,10 @@ export class OpenBackContentModal extends BaseModal {
         (this.contentKind === "guides" ? "Tutorials" : "Blog"),
       onBack: () => {
         if (this.selectedPath) {
-          this.selectedPath = null;
+          void appRouter.navigate({
+            pageId:
+              this.contentKind === "guides" ? "page-tutorials" : "page-blog",
+          });
         } else {
           this.close();
         }
@@ -48,8 +58,12 @@ export class OpenBackContentModal extends BaseModal {
     });
   }
 
-  protected onOpen(): void {
-    if (!this.loading && this.pages.length === 0) void this.loadContent();
+  protected async onOpen(args?: Record<string, unknown>): Promise<void> {
+    if (!this.loading && this.pages.length === 0) await this.loadContent();
+    const article = typeof args?.article === "string" ? args.article : null;
+    this.selectedPath = article
+      ? `${this.contentKind === "guides" ? "/tutorials" : "/blog"}/${article}`
+      : null;
   }
 
   protected onClose(): void {
@@ -58,6 +72,10 @@ export class OpenBackContentModal extends BaseModal {
 
   private get selectedPage(): ContentPage | undefined {
     return this.pages.find((page) => page.path === this.selectedPath);
+  }
+
+  public selectedArticlePath(): string | null {
+    return this.selectedPath;
   }
 
   private async loadContent(): Promise<void> {
@@ -78,8 +96,13 @@ export class OpenBackContentModal extends BaseModal {
   }
 
   private openPage(path: string): void {
-    this.selectedPath = path;
-    this.scrollTo({ top: 0, behavior: "smooth" });
+    const segments = path.split("/").filter(Boolean);
+    const article = segments[segments.length - 1];
+    if (!article) return;
+    void appRouter.navigate({
+      pageId: this.contentKind === "guides" ? "page-tutorials" : "page-blog",
+      article,
+    });
   }
 
   private renderCard(page: ContentPage): TemplateResult {

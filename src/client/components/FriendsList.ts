@@ -16,10 +16,9 @@ import { playerNameLink } from "./ui/PlayerNameLink";
 const PAGE_LIMIT = 20;
 
 /**
- * Accept a pasted profile share link (`…#modal=profile&publicID=abc12345`) and
- * keep only the id, mirroring the private-lobby join box. Only strings that are
- * actually URLs are touched: usernames render as `wonder #5005`, so a bare `#`
- * must be left alone.
+ * Accept a pasted clean or legacy profile share link and keep only the id,
+ * mirroring the private-lobby join box. Only real URLs are touched: usernames
+ * render as `wonder #5005`, so a bare `#` must be left alone.
  */
 export function extractPublicIdFromUrl(input: string): string {
   // Schemes are case-insensitive, so `HTTPS://…` is a real link too.
@@ -32,9 +31,16 @@ export function extractPublicIdFromUrl(input: string): string {
     // so don't log; just hand the raw text back for the server to reject.
     return input;
   }
-  // Modals are hash-routed (`…/#modal=profile&publicID=abc12345`), so the id is
-  // in the fragment, not the query string — `url.searchParams` is always empty
-  // here. Parse the fragment's own `key=value&…` pairs instead.
+  const segments = url.pathname.split("/").filter(Boolean);
+  if (segments[0] === "profile" && segments[1]) {
+    try {
+      return decodeURIComponent(segments[1]);
+    } catch {
+      return input;
+    }
+  }
+
+  // Preserve compatibility with profile links copied before clean routes.
   const params = new URLSearchParams(url.hash.replace(/^#/, ""));
   const publicId = params.get("publicID");
   if (publicId === null || publicId === "") return input;

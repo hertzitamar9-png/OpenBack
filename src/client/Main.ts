@@ -16,6 +16,8 @@ import { UserSettings } from "../core/game/UserSettings";
 import "./AccountModal";
 import "./AccountSettingsModal";
 import { getUserMe, invalidateUserMe, setLastUserMe } from "./Api";
+import { appRouter } from "./AppRouter";
+import { legacyHashTarget, parseAppUrl } from "./AppRoutes";
 import { reauthAfterCrazyGamesChange, userAuth } from "./Auth";
 import "./ChangeUsernameModal";
 import "./ClanModal";
@@ -40,7 +42,6 @@ import { initLayout } from "./Layout";
 import "./LeaderboardModal";
 import "./Matchmaking";
 import { MatchmakingModal } from "./Matchmaking";
-import { modalRouter } from "./ModalRouter";
 import { updateAccountNavButton } from "./NavAccountButton";
 import { initNavigation } from "./Navigation";
 import "./NewsModal";
@@ -138,7 +139,7 @@ declare global {
       SHOW_HIDDEN_CONTAINER: string;
     };
     currentPageId?: string;
-    showPage?: (pageId: string) => void;
+    showPage?: (pageId: string, args?: Record<string, unknown>) => void;
   }
 
   // Extend the global interfaces to include your custom events
@@ -199,60 +200,60 @@ class Client {
     socialClient.start();
     crazyGamesSDK.maybeInit();
 
-    // Register modals with the URL router. Lobby modals (join/host) and
-    // matchmaking are intentionally omitted — they own their own URL state
-    // (path-based) or none at all.
-    modalRouter.register("store", {
+    // Register addressable full pages. Lobby IDs and matchmaking sessions keep
+    // their dedicated URL/session handling below; transient overlays are not
+    // registered and therefore never write to browser history.
+    appRouter.register("store", {
       tag: "store-modal",
       pageId: "page-item-store",
     });
-    modalRouter.register("settings", {
+    appRouter.register("settings", {
       tag: "user-setting",
       pageId: "page-settings",
     });
-    modalRouter.register("leaderboard", {
+    appRouter.register("leaderboard", {
       tag: "leaderboard-modal",
       pageId: "page-leaderboard",
     });
-    modalRouter.register("clan", { tag: "clan-modal", pageId: "page-clan" });
-    modalRouter.register("account", {
+    appRouter.register("clan", { tag: "clan-modal", pageId: "page-clan" });
+    appRouter.register("account", {
       tag: "account-modal",
       pageId: "page-account",
     });
-    // Profile-menu modals: popup style, so no pageId.
-    modalRouter.register("account-settings", { tag: "account-settings-modal" });
-    modalRouter.register("change-username", { tag: "change-username-modal" });
-    modalRouter.register("subscription", { tag: "subscription-modal" });
-    modalRouter.register("stats", {
+    appRouter.register("stats", {
       tag: "game-stats-modal",
       pageId: "page-stats",
     });
-    modalRouter.register("profile", {
+    appRouter.register("profile", {
       tag: "player-profile-modal",
       pageId: "page-profile",
     });
-    modalRouter.register("help", { tag: "help-modal", pageId: "page-help" });
-    modalRouter.register("news", { tag: "news-modal", pageId: "page-news" });
-    modalRouter.register("language", {
+    appRouter.register("help", { tag: "help-modal", pageId: "page-help" });
+    appRouter.register("news", { tag: "news-modal", pageId: "page-news" });
+    appRouter.register("tutorials", {
+      tag: "openback-content-modal",
+      pageId: "page-tutorials",
+    });
+    appRouter.register("blog", {
+      tag: "openback-content-modal",
+      pageId: "page-blog",
+    });
+    appRouter.register("language", {
       tag: "language-modal",
       pageId: "page-language",
     });
-    modalRouter.register("single-player", {
+    appRouter.register("single-player", {
       tag: "single-player-modal",
       pageId: "page-single-player",
     });
-    modalRouter.register("ranked", {
+    appRouter.register("ranked", {
       tag: "ranked-modal",
       pageId: "page-ranked",
     });
-    modalRouter.register("troubleshooting", {
+    appRouter.register("troubleshooting", {
       tag: "troubleshooting-modal",
       pageId: "page-troubleshooting",
     });
-    modalRouter.register("territory-patterns", {
-      tag: "territory-patterns-modal",
-    });
-    modalRouter.register("flag-input", { tag: "flag-input-modal" });
 
     // Prefetch turnstile token so it is available when
     // the user joins a lobby.
@@ -349,7 +350,7 @@ class Client {
     // Its event bubbles, so one listener keeps it functional across responsive
     // rerenders and takes the player directly to the complete cosmetics store.
     document.addEventListener("cosmetics-input-click", () => {
-      window.showPage?.("page-item-store");
+      void appRouter.navigate({ pageId: "page-item-store", tab: "packs" });
     });
 
     if (isInIframe()) {
@@ -498,6 +499,24 @@ class Client {
       this.joinModal.eventBus = this.eventBus;
     }
 
+    appRouter.setNavigationGuard(async () => {
+      if (this.currentUrl === null || this.lobbyHandle === null) return true;
+
+      if (!this.lobbyHandle.stop()) {
+        const confirmed = await showInGameConfirm(
+          translateText("help_modal.exit_confirmation"),
+        );
+        if (!confirmed) return false;
+      }
+
+      await this.handleLeaveLobby();
+      return true;
+    });
+
+    // Install clean-path Back/Forward handling even when a lobby, replay, or
+    // callback route below owns the initial screen.
+    await appRouter.start();
+
     // Attempt to join lobby
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", () => this.handleUrl());
@@ -506,10 +525,11 @@ class Client {
     }
 
     const onHashUpdate = () => {
-      // Router-managed hash changes (#modal=...) are handled by the router
-      // syncing in/out; we don't need to tear down the lobby state for them.
-      if (modalRouter.isHashRouted()) {
-        modalRouter.routeFromHash();
+      // Legacy page hashes migrate to clean paths without tearing down lobby
+      // state. Authentication and callback hashes continue below.
+      const legacyTarget = legacyHashTarget(new URL(window.location.href));
+      if (legacyTarget) {
+        void appRouter.navigate(legacyTarget, { replace: true });
         return;
       }
 
@@ -517,41 +537,6 @@ class Client {
       this.joinModal?.close();
 
       onJoinChanged();
-    };
-
-    const leaveGame = () => {
-      crazyGamesSDK.gameplayStop().then(() => {
-        // redirect to the home page
-        window.location.href = "/";
-      });
-    };
-
-    const onPopState = () => {
-      if (this.currentUrl !== null && this.lobbyHandle !== null) {
-        console.info("Game is active");
-
-        if (!this.lobbyHandle.stop()) {
-          console.info("Player is active, ask before leaving game");
-
-          // We can't block navigation on an async confirmation, so restore the
-          // history entry immediately and only leave once the player confirms.
-          history.pushState(null, "", this.currentUrl);
-          showInGameConfirm(translateText("help_modal.exit_confirmation")).then(
-            (isConfirmed) => {
-              if (isConfirmed) leaveGame();
-            },
-          );
-          return;
-        }
-
-        console.info("Player is not active, leave the game immediately");
-
-        leaveGame();
-      } else {
-        console.info("Game not active, handle hash update");
-
-        onHashUpdate();
-      }
     };
 
     const onJoinChanged = () => {
@@ -564,7 +549,6 @@ class Client {
     };
 
     // Handle browser navigation & manual hash edits
-    window.addEventListener("popstate", onPopState);
     window.addEventListener("hashchange", onHashUpdate);
     window.addEventListener("join-changed", onJoinChanged);
 
@@ -772,7 +756,7 @@ class Client {
       console.log(`joining lobby ${lobbyId}`);
       return;
     }
-    if (modalRouter.routeFromHash()) {
+    if (parseAppUrl(new URL(window.location.href)).kind !== "reserved") {
       return;
     }
     if (decodedHash.startsWith("#affiliate=")) {
@@ -1000,6 +984,7 @@ class Client {
 
       // Store current URL for popstate confirmation
       this.currentUrl = window.location.href;
+      appRouter.acceptCurrentLocation();
     });
   }
 
@@ -1022,6 +1007,7 @@ class Client {
     if (currentUrl !== targetUrl) {
       history.replaceState(null, "", targetUrl);
     }
+    appRouter.acceptCurrentLocation();
   }
 
   private async handleLeaveLobby(event?: CustomEvent) {
@@ -1035,6 +1021,7 @@ class Client {
 
     try {
       history.replaceState(null, "", "/");
+      appRouter.acceptCurrentLocation();
     } catch (e) {
       console.warn("Failed to restore URL on leave:", e);
     }

@@ -2,9 +2,9 @@ import fs from "fs";
 import type { LitElement } from "lit";
 import path from "path";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { appRouter } from "../../src/client/AppRouter";
 import "../../src/client/InventoryModal";
 import type { InventoryModal } from "../../src/client/InventoryModal";
-import { modalRouter } from "../../src/client/ModalRouter";
 import { initNavigation } from "../../src/client/Navigation";
 import { DesktopNavBar } from "../../src/client/components/DesktopNavBar";
 import { MobileNavBar } from "../../src/client/components/MobileNavBar";
@@ -29,7 +29,10 @@ async function mount<T extends LitElement>(element: T): Promise<T> {
   return element;
 }
 
-afterEach(() => document.body.replaceChildren());
+afterEach(() => {
+  appRouter.reset();
+  document.body.replaceChildren();
+});
 
 describe("Inventory navigation", () => {
   it("renders Inventory in desktop and mobile navigation", async () => {
@@ -99,7 +102,7 @@ describe("Inventory navigation", () => {
     });
     document.body.appendChild(inventory);
     const desktop = await mount(new DesktopNavBar());
-    modalRouter.register("inventory", {
+    appRouter.register("inventory", {
       tag: "inventory-modal",
       pageId: "page-inventory",
     });
@@ -108,7 +111,7 @@ describe("Inventory navigation", () => {
     desktop.querySelector<HTMLElement>('[data-page="page-inventory"]')!.click();
 
     await vi.waitFor(() => {
-      expect(window.location.hash).toBe("#modal=inventory&tab=skins");
+      expect(window.location.pathname).toBe("/inventory/skins");
     });
     expect(
       desktop
@@ -117,16 +120,16 @@ describe("Inventory navigation", () => {
     ).toBe(true);
 
     inventory.setActiveTab("effects");
-    expect(window.location.hash).toBe("#modal=inventory&tab=effects");
+    expect(window.location.pathname).toBe("/inventory/effects");
 
     inventory.close();
-    history.replaceState(null, "", "/#modal=inventory&tab=crowns");
-    expect(modalRouter.routeFromHash()).toBe(true);
+    history.replaceState(null, "", "/inventory/crowns");
+    expect(await appRouter.start()).toBe(true);
     await vi.waitFor(() => {
       expect((inventory as unknown as { activeTab: string }).activeTab).toBe(
         "crowns",
       );
     });
-    expect(window.location.hash).toBe("#modal=inventory&tab=crowns");
+    expect(window.location.pathname).toBe("/inventory/crowns");
   });
 });

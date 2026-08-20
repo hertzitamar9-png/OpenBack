@@ -49,6 +49,37 @@ describe("RenderHtml", () => {
     expect(second).not.toContain('"second"');
   });
 
+  test("renders and separately caches route-aware SEO values", async () => {
+    process.env.GIT_COMMIT = "seo-test";
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "render-html-seo-"));
+    const htmlPath = path.join(tempDir, "index.html");
+    await fs.writeFile(
+      htmlPath,
+      '<title><%= seoTitle %></title><link href="<%- seoCanonical %>"><main><%- seoCrawlableHtml %></main>',
+      "utf8",
+    );
+    const tutorial = await getAppShellContent(htmlPath, {
+      path: "/tutorials/start",
+      title: "Start | OpenBack",
+      description: "Start playing OpenBack.",
+      schemaJson: "{}",
+      crawlableHtml: "<article>Start</article>",
+    });
+    const blog = await getAppShellContent(htmlPath, {
+      path: "/blog/design",
+      title: "Design | OpenBack",
+      description: "OpenBack design.",
+      schemaJson: "{}",
+      crawlableHtml: "<article>Design</article>",
+    });
+
+    expect(tutorial).toContain("Start | OpenBack");
+    expect(tutorial).toContain("/tutorials/start");
+    expect(tutorial).toContain("<article>Start</article>");
+    expect(blog).toContain("Design | OpenBack");
+    expect(blog).not.toBe(tutorial);
+  });
+
   test("sets shared-cache headers for the app shell", () => {
     const headers = new Map<string, string>();
     const response = {

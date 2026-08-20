@@ -3,6 +3,7 @@ import { customElement, state } from "lit/decorators.js";
 import { ClientEnv } from "src/client/ClientEnv";
 import { UserMeResponse } from "../core/ApiSchemas";
 import { getUserMe, hasLinkedAccount, invalidateUserMe } from "./Api";
+import { appRouter } from "./AppRouter";
 import { getPlayToken } from "./Auth";
 import { BaseModal } from "./components/BaseModal";
 import "./components/Difficulties";
@@ -144,10 +145,11 @@ export class MatchmakingModal extends BaseModal {
   }
 
   private openSubscriptions = () => {
-    // The matchmaking modal isn't registered with the modal router, so it
-    // won't be closed by the store opening from the hash change.
     this.close();
-    window.location.hash = "modal=store&tab=subscriptions";
+    void appRouter.navigate({
+      pageId: "page-item-store",
+      tab: "subscriptions",
+    });
   };
 
   // The lobby writes to every queued socket every ~3s (queue-size), so
@@ -388,7 +390,7 @@ export class MatchmakingModal extends BaseModal {
         }),
       );
       this.close();
-      window.showPage?.("page-account");
+      void appRouter.navigate({ pageId: "page-account" });
       return;
     }
 

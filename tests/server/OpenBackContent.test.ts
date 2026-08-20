@@ -1,7 +1,11 @@
 import type { Request, Response } from "express";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
-  handleOpenBackContent,
+  getOpenBackContentSeo,
+  handleLegacyOpenBackContent,
+  LEGACY_GUIDE_PATHS,
   OPENBACK_CONTENT_PATHS,
 } from "../../src/server/OpenBackContent";
 
@@ -10,10 +14,11 @@ function renderPath(
   options: { protocol?: string; forwardedProto?: string } = {},
 ): {
   body: string;
+  location: string;
   status: number;
   type: string;
 } {
-  const result = { body: "", status: 200, type: "" };
+  const result = { body: "", location: "", status: 200, type: "" };
   const request = {
     path,
     protocol: options.protocol ?? "https",
@@ -36,57 +41,62 @@ function renderPath(
       result.body = value;
       return this;
     },
-  } as Response;
+    redirect(status: number, location: string) {
+      result.status = status;
+      result.location = location;
+      return this;
+    },
+  } as unknown as Response;
 
-  handleOpenBackContent(request, response);
+  handleLegacyOpenBackContent(request, response);
   return result;
 }
 
 describe("OpenBack learning content", () => {
+  it("publishes tutorials as the canonical discovery hub", () => {
+    const index = readFileSync(resolve(process.cwd(), "index.html"), "utf8");
+    const master = readFileSync(
+      resolve(process.cwd(), "src/server/Master.ts"),
+      "utf8",
+    );
+    expect(index).toContain('<a href="<%- siteOrigin %>/tutorials">');
+    expect(index).not.toContain('<a href="<%- siteOrigin %>/guides">');
+    expect(master).toContain('contentPath === "/tutorials"');
+    expect(master).not.toContain('contentPath === "/guides"');
+  });
+
   it("publishes unique tutorial and blog URLs", () => {
     expect(OPENBACK_CONTENT_PATHS).toHaveLength(24);
     expect(new Set(OPENBACK_CONTENT_PATHS).size).toBe(
       OPENBACK_CONTENT_PATHS.length,
     );
-    expect(OPENBACK_CONTENT_PATHS).toContain("/guides");
+    expect(OPENBACK_CONTENT_PATHS).toContain("/tutorials");
     expect(OPENBACK_CONTENT_PATHS).toContain("/blog");
+    expect(OPENBACK_CONTENT_PATHS).not.toContain("/guides");
   });
 
-  it.each(OPENBACK_CONTENT_PATHS)("renders indexable HTML for %s", (path) => {
-    const result = renderPath(path);
-
-    expect(result.status).toBe(200);
-    expect(result.type).toBe("html");
-    expect(result.body).toContain("<title>");
-    expect(result.body).toContain('name="description"');
-    expect(result.body).toContain('name="robots" content="index, follow"');
-    expect(result.body).toContain(
-      `rel="canonical" href="https://openback.example${path}"`,
-    );
-    expect(result.body).toContain('href="/guides"');
-    expect(result.body).toContain('href="/blog"');
-    expect(result.body).toContain("OpenBack");
+  it.each(OPENBACK_CONTENT_PATHS)("builds app-shell SEO for %s", (path) => {
+    const seo = getOpenBackContentSeo(path, "https://openback.example");
+    expect(seo).not.toBeNull();
+    expect(seo?.path).toBe(path);
+    expect(seo?.title).toContain("OpenBack");
+    expect(seo?.description.length).toBeGreaterThan(30);
+    expect(seo?.crawlableHtml).toContain("OpenBack");
   });
 
   it("publishes 120 defined territorial strategy terms", () => {
-    const result = renderPath("/guides/territorial-strategy-glossary");
+    const seo = getOpenBackContentSeo(
+      "/tutorials/territorial-strategy-glossary",
+      "https://openback.example",
+    );
 
-    expect(result.body).toContain("120 RTS Terms");
-    expect(result.body.match(/<li>/g)).toHaveLength(120);
+    expect(seo?.crawlableHtml).toContain("120 RTS Terms");
+    expect(seo?.crawlableHtml.match(/<li>/g)).toHaveLength(120);
   });
 
-  it("uses the public HTTPS protocol supplied by a reverse proxy", () => {
-    const result = renderPath("/guides", {
-      protocol: "http",
-      forwardedProto: "https",
-    });
-
-    expect(result.body).toContain(
-      'rel="canonical" href="https://openback.example/guides"',
-    );
-    expect(result.body).toContain(
-      'property="og:url" content="https://openback.example/guides"',
-    );
-    expect(result.body).not.toContain("http://openback.example");
+  it.each(LEGACY_GUIDE_PATHS)("redirects legacy path %s", (path) => {
+    const result = renderPath(path);
+    expect(result.status).toBe(301);
+    expect(result.location).toBe(path.replace(/^\/guides/, "/tutorials"));
   });
 });

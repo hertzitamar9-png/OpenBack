@@ -120,9 +120,8 @@ export class UsernamePanel extends LitElement {
     const result = await updateUsername(name);
 
     if (result.ok) {
-      // Reload so every consumer starts from a fresh /users/@me; this modal
-      // reopens via #modal=change-username showing the new name. Keep the
-      // form locked (busy) while the reload happens.
+      // Reload so every consumer starts from a fresh /users/@me. Keep the form
+      // locked (busy) while the reload happens.
       window.location.reload();
       return;
     }

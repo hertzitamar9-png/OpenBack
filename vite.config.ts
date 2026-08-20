@@ -188,6 +188,12 @@ export default defineConfig(({ mode }) => {
     instanceId: JSON.stringify(env.INSTANCE_ID ?? "DEV_ID"),
     shareOrigin: JSON.stringify(env.VITE_SHARE_ORIGIN ?? ""),
     siteOrigin,
+    seoTitle: "OpenBack",
+    seoDescription:
+      "Play OpenBack, an online territorial war RTS. Expand nations, command armies, build an economy, form alliances, and conquer a world map.",
+    seoCanonical: `${siteOrigin}/`,
+    seoSchemaJson: "{}",
+    seoCrawlableHtml: "",
     manifestHref: buildAssetUrl("manifest.json", assetManifest, cdnBase),
     markPngHref: buildAssetUrl(
       "images/OpenBackMark512.png",
@@ -225,7 +231,12 @@ export default defineConfig(({ mode }) => {
     name: "inject-cdn-base-template",
     apply: "build" as const,
     enforce: "post",
-    transformIndexHtml: rewriteAssetsForCdn,
+    transformIndexHtml(html) {
+      return rewriteAssetsForCdn(html).replace(
+        "<!--OPENBACK_SEO_CONTENT-->",
+        "<%- seoCrawlableHtml %>",
+      );
+    },
   });
 
   let viteBundleFiles: string[] = [];

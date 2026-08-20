@@ -94,7 +94,7 @@ describe("nav-account-menu", () => {
     const showPage = vi.fn();
     window.showPage = showPage;
     await click(document.querySelector('[data-menu-item="sign-in"]')!);
-    expect(showPage).toHaveBeenCalledWith("page-account");
+    expect(showPage).toHaveBeenCalledWith("page-account", {});
   });
 
   it("treats an anonymous session as signed out", async () => {
@@ -146,7 +146,7 @@ describe("nav-account-menu", () => {
 
     expect(copyToClipboard).toHaveBeenCalledTimes(1);
     expect(vi.mocked(copyToClipboard).mock.calls[0][0]).toContain(
-      "modal=profile&publicID=p",
+      "/profile/p/stats",
     );
     expect(showToast).toHaveBeenCalledWith("common.copied", "green");
 

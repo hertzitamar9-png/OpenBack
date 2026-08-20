@@ -28,9 +28,9 @@ vi.mock("../../src/client/components/baseComponents/stats/GameInfoView", () => {
   return { GameInfoView: FakeGameInfoView };
 });
 
+import { appRouter } from "../../src/client/AppRouter";
 import type { CopyButton } from "../../src/client/components/CopyButton";
 import { GameStatsModal } from "../../src/client/GameStatsModal";
-import { modalRouter } from "../../src/client/ModalRouter";
 import { initNavigation } from "../../src/client/Navigation";
 
 type ModalShell = HTMLElement & { updateComplete: Promise<boolean> };
@@ -54,7 +54,7 @@ describe("public game stats route", () => {
     copyToClipboardMock.mockClear();
     vi.stubGlobal("localStorage", { getItem: vi.fn(() => null) });
     history.replaceState(null, "", "/");
-    modalRouter.register("stats", {
+    appRouter.register("stats", {
       tag: "game-stats-modal",
       pageId: "page-stats",
     });
@@ -72,15 +72,16 @@ describe("public game stats route", () => {
 
   afterEach(() => {
     window.showPage?.("page-play");
+    appRouter.reset();
     modal.remove();
     history.replaceState(null, "", "/");
     vi.unstubAllGlobals();
   });
 
   it("opens a shared gameID without mounting the authenticated account", async () => {
-    history.replaceState(null, "", "/#modal=stats&gameID=public-game");
+    history.replaceState(null, "", "/stats/public-game");
 
-    expect(modalRouter.routeFromHash()).toBe(true);
+    expect(await appRouter.start()).toBe(true);
 
     await vi.waitFor(async () => {
       await modal.updateComplete;
@@ -115,7 +116,7 @@ describe("public game stats route", () => {
     expect(showToastMock).toHaveBeenCalledWith("common.copied", "green");
 
     expect(document.querySelector("account-modal")).toBeNull();
-    expect(window.location.hash).toBe("#modal=stats&gameID=public-game");
+    expect(window.location.pathname).toBe("/stats/public-game");
 
     const backButton = modal.querySelector(
       '[slot="header"] button',
@@ -123,6 +124,6 @@ describe("public game stats route", () => {
     backButton.click();
 
     expect(modal.isOpen()).toBe(false);
-    expect(window.location.hash).toBe("");
+    expect(window.location.pathname).toBe("/");
   });
 });

@@ -7,13 +7,11 @@ import { consumeGoogleLinkResult } from "./GoogleLinkResult";
 import { ProfileMenuModal } from "./ProfileMenuModal";
 
 /**
- * Standalone account settings, opened from the nav profile menu
- * (`#modal=account-settings`). Hosts <account-settings-panel> — marketing
- * consent, the bind-an-email flow and account deletion.
+ * Standalone account settings opened from the nav profile menu. It is a
+ * transient overlay, so the parent page stays in the address bar.
  */
 @customElement("account-settings-modal")
 export class AccountSettingsModal extends ProfileMenuModal {
-  protected routerName = "account-settings";
   protected titleKey = "account_settings_modal.title";
 
   protected renderSignedIn(userMe: UserMeResponse): TemplateResult {

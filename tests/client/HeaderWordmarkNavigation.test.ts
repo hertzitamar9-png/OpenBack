@@ -26,6 +26,7 @@ vi.mock("../../src/client/SocialAttention", () => ({
   socialAttention: { getStage: () => "none" },
 }));
 
+import { appRouter } from "../../src/client/AppRouter";
 import { DesktopNavBar } from "../../src/client/components/DesktopNavBar";
 import { MobileNavBar } from "../../src/client/components/MobileNavBar";
 import { MobileTopBar } from "../../src/client/components/MobileTopBar";
@@ -33,6 +34,8 @@ import { MobileTopBar } from "../../src/client/components/MobileTopBar";
 describe("OpenBack header wordmark navigation", () => {
   afterEach(() => {
     document.body.innerHTML = "";
+    appRouter.reset();
+    history.replaceState(null, "", "/");
     window.showPage = undefined;
     window.currentPageId = undefined;
   });
@@ -46,6 +49,7 @@ describe("OpenBack header wordmark navigation", () => {
       const showPage = vi.fn();
       window.showPage = showPage;
       window.currentPageId = "page-help";
+      history.replaceState(null, "", "/help");
       const navigation = create();
       document.body.appendChild(navigation);
       await navigation.updateComplete;
@@ -58,7 +62,8 @@ describe("OpenBack header wordmark navigation", () => {
       expect(navigation.querySelector("img")?.closest("button")).toBeNull();
 
       control?.click();
-      expect(showPage).toHaveBeenCalledWith("page-play");
+      expect(location.pathname).toBe("/");
+      expect(showPage).toHaveBeenCalledWith("page-play", {});
     });
   }
 });

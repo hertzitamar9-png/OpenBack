@@ -1,5 +1,6 @@
 import { html, type TemplateResult } from "lit";
 import { assetUrl } from "../../../core/AssetUrls";
+import { appRouter } from "../../AppRouter";
 import { closeMobileSidebar } from "../../Navigation";
 
 type WordmarkOptions = {
@@ -22,7 +23,7 @@ export function openBackHomeWordmark({
     event.preventDefault();
     event.stopPropagation();
     closeMobileSidebar();
-    window.showPage?.("page-play");
+    void appRouter.navigatePage("page-play");
   };
 
   return html`<span class="relative inline-block ${wrapperClass}">

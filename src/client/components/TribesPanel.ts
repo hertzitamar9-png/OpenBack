@@ -14,6 +14,7 @@ import {
   invalidateUserMe,
   purchaseTribeName,
 } from "../Api";
+import { appRouter } from "../AppRouter";
 import { fetchCosmetics, InsufficientCurrency } from "../Cosmetics";
 import { showInGameConfirm } from "../InGameModal";
 import { translateText } from "../Utils";
@@ -275,7 +276,7 @@ export class TribesPanel extends LitElement {
       </p>
       <button
         class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-wider text-sm transition-colors cursor-pointer"
-        @click=${() => window.showPage?.("page-account")}
+        @click=${() => void appRouter.navigate({ pageId: "page-account" })}
       >
         ${translateText("main.sign_in")}
       </button>

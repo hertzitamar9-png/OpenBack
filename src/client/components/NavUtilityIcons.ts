@@ -1,5 +1,6 @@
 import { html, LitElement, TemplateResult } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import { appRouter } from "../AppRouter";
 import { NavNotificationsController } from "./NavNotificationsController";
 import { gearIcon } from "./ui/InterfaceIcons";
 
@@ -40,7 +41,7 @@ export class NavUtilityIcons extends LitElement {
   private openSettings = (event: MouseEvent): void => {
     event.preventDefault();
     event.stopPropagation();
-    window.showPage?.("page-settings");
+    void appRouter.navigate({ pageId: "page-settings", tab: "basic" });
   };
 
   private buttonClass(): string {

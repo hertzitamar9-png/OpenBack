@@ -12,8 +12,10 @@ import { MasterLobbyService } from "./MasterLobbyService";
 import { MatchmakingService } from "./MatchmakingService";
 import { setNoStoreHeaders } from "./NoStoreHeaders";
 import {
-  handleOpenBackContent,
+  getOpenBackContentSeo,
+  handleLegacyOpenBackContent,
   handleOpenBackContentApi,
+  LEGACY_GUIDE_PATHS,
   OPENBACK_CONTENT_PATHS,
 } from "./OpenBackContent";
 import { renderAppShell } from "./RenderHtml";
@@ -85,7 +87,7 @@ app.get("/sitemap.xml", (_req, res) => {
         `    <loc>${origin}${contentPath}</loc>\n` +
         `    <lastmod>${lastmod}</lastmod>\n` +
         `    <changefreq>${index === 0 ? "daily" : "weekly"}</changefreq>\n` +
-        `    <priority>${index === 0 ? "1.0" : contentPath === "/guides" || contentPath === "/blog" ? "0.9" : "0.8"}</priority>\n` +
+        `    <priority>${index === 0 ? "1.0" : contentPath === "/tutorials" || contentPath === "/blog" ? "0.9" : "0.8"}</priority>\n` +
         `  </url>`,
     )
     .join("\n");
@@ -99,9 +101,28 @@ app.get("/sitemap.xml", (_req, res) => {
     );
 });
 
-// Server-rendered learning content gives players useful documentation and
-// gives search engines normal, linked HTML pages instead of an app-only shell.
-app.get(OPENBACK_CONTENT_PATHS, handleOpenBackContent);
+app.get(LEGACY_GUIDE_PATHS, handleLegacyOpenBackContent);
+
+// Tutorials and Blog use the same interactive shell as every other OpenBack
+// page while retaining route-specific crawlable content and metadata.
+app.get(OPENBACK_CONTENT_PATHS, async (req, res) => {
+  try {
+    const origin = ServerEnv.authOrigin().replace(/\/+$/, "");
+    const seo = getOpenBackContentSeo(req.path, origin);
+    if (!seo) {
+      res.status(404).type("text").send("Page not found");
+      return;
+    }
+    await renderAppShell(
+      res,
+      path.join(__dirname, "../../static/index.html"),
+      seo,
+    );
+  } catch (error) {
+    log.error("Error rendering OpenBack content route:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
 
 // Serve the shared app shell for the root document.
 app.use(async (req, res, next) => {

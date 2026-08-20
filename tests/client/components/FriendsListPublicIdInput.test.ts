@@ -2,6 +2,18 @@ import { describe, expect, it, vi } from "vitest";
 import { extractPublicIdFromUrl } from "../../../src/client/components/FriendsList";
 
 describe("extractPublicIdFromUrl", () => {
+  it("extracts an id from a clean profile path", () => {
+    expect(
+      extractPublicIdFromUrl("https://openback.test/profile/95UoOPh3/games"),
+    ).toBe("95UoOPh3");
+  });
+
+  it("decodes an id from a clean profile path", () => {
+    expect(
+      extractPublicIdFromUrl("https://openback.test/profile/a%2Bb/stats"),
+    ).toBe("a+b");
+  });
+
   it("keeps only the id from a pasted profile share link", () => {
     expect(
       extractPublicIdFromUrl(

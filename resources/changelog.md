@@ -1,3 +1,11 @@
+## OpenBack v0.36.186 - Clean Links Everywhere
+
+- Gave every OpenBack page and selectable tab a readable link that can be copied, refreshed, and opened directly.
+- Made browser Back and Forward restore the correct page or tab while preserving lobby links and active-match leave protection.
+- Kept existing shared hash links working by moving them automatically to their new clean addresses.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.185 - The Wordmark Goes Home
 
 - Made only the OPENBACK text in each combined header logo return to the Home screen from any page, without making the circular OB mark clickable or reloading the website.

@@ -72,8 +72,8 @@ class FakeIntersectionObserver {
 vi.stubGlobal("IntersectionObserver", FakeIntersectionObserver);
 
 import { fetchPublicPlayerGames } from "../../src/client/Api";
+import { appRouter } from "../../src/client/AppRouter";
 import { GameStatsModal } from "../../src/client/GameStatsModal";
-import { modalRouter } from "../../src/client/ModalRouter";
 import { initNavigation } from "../../src/client/Navigation";
 import { PlayerProfileModal } from "../../src/client/PlayerProfileModal";
 import {
@@ -170,11 +170,11 @@ describe("Profile Games stats navigation", () => {
     });
     vi.stubGlobal("localStorage", { getItem: vi.fn(() => null) });
     history.replaceState(null, "", "/");
-    modalRouter.register("profile", {
+    appRouter.register("profile", {
       tag: "player-profile-modal",
       pageId: "page-profile",
     });
-    modalRouter.register("stats", {
+    appRouter.register("stats", {
       tag: "game-stats-modal",
       pageId: "page-stats",
     });
@@ -202,8 +202,8 @@ describe("Profile Games stats navigation", () => {
     await modal.updateComplete;
     await statsModal.updateComplete;
 
-    history.replaceState(null, "", "/#modal=profile&publicID=player-1");
-    expect(modalRouter.routeFromHash()).toBe(true);
+    history.replaceState(null, "", "/profile/player-1/stats");
+    expect(await appRouter.start()).toBe(true);
     await waitForProfile(modal, () => {
       expect(modal.isOpen()).toBe(true);
     });
@@ -216,6 +216,7 @@ describe("Profile Games stats navigation", () => {
 
   afterEach(() => {
     window.showPage?.("page-play");
+    appRouter.reset();
     modal.remove();
     statsModal.remove();
     history.replaceState(null, "", "/");
@@ -241,7 +242,7 @@ describe("Profile Games stats navigation", () => {
       "game-info-view",
     ) as HTMLElement & { gameId: string };
     expect(statsView.gameId).toBe("game-1");
-    expect(window.location.hash).toBe("#modal=stats&gameID=game-1");
+    expect(window.location.pathname).toBe("/stats/game-1");
 
     const backButton = statsModal.querySelector(
       '[slot="header"] button',
@@ -251,9 +252,7 @@ describe("Profile Games stats navigation", () => {
       expect(modal.querySelector("player-game-history-view")).not.toBeNull();
       expect(shell.getScrollTop()).toBe(420);
     });
-    expect(window.location.hash).toBe(
-      "#modal=profile&publicID=player-1&tab=games",
-    );
+    expect(window.location.pathname).toBe("/profile/player-1/games");
 
     // History wasn't refetched on return — the cached list was reused.
     expect(fetchPublicPlayerGames).toHaveBeenCalledOnce();
@@ -269,12 +268,8 @@ describe("Profile Games stats navigation", () => {
     // Editing the hash to a different player re-routes the already-open modal.
     // Lit reuses the mounted history view, so it must load the new player's
     // games rather than keep showing player-1's.
-    history.replaceState(
-      null,
-      "",
-      "/#modal=profile&publicID=player-2&tab=games",
-    );
-    expect(modalRouter.routeFromHash()).toBe(true);
+    history.replaceState(null, "", "/profile/player-2/games");
+    expect(await appRouter.start()).toBe(true);
 
     await waitForProfile(modal, () => {
       expect(fetchPublicPlayerGames).toHaveBeenCalledWith(
@@ -303,12 +298,8 @@ describe("Profile Games stats navigation", () => {
 
     // Routing to a different player must fall back to the default (All) view
     // rather than inheriting player-1's Private filter.
-    history.replaceState(
-      null,
-      "",
-      "/#modal=profile&publicID=player-2&tab=games",
-    );
-    expect(modalRouter.routeFromHash()).toBe(true);
+    history.replaceState(null, "", "/profile/player-2/games");
+    expect(await appRouter.start()).toBe(true);
 
     await waitForProfile(modal, () => {
       const player2Calls = vi

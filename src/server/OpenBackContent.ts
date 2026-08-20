@@ -708,13 +708,29 @@ const blogs: OpenBackContentPage[] = [
   },
 ];
 
-const pages = [...tutorials, ...blogs];
+const canonicalTutorials = tutorials.map((page) => ({
+  ...page,
+  path: page.path.replace(/^\/guides/, "/tutorials"),
+}));
+const pages = [...canonicalTutorials, ...blogs];
 
 export const OPENBACK_CONTENT_PATHS = [
-  "/guides",
+  "/tutorials",
   "/blog",
   ...pages.map((page) => page.path),
 ];
+export const LEGACY_GUIDE_PATHS = [
+  "/guides",
+  ...tutorials.map((page) => page.path),
+];
+
+export interface OpenBackContentSeo {
+  path: string;
+  title: string;
+  description: string;
+  schemaJson: string;
+  crawlableHtml: string;
+}
 
 function esc(value: string): string {
   return value
@@ -733,87 +749,88 @@ function cards(items: OpenBackContentPage[]): string {
     .join("");
 }
 
-function layout(
-  origin: string,
-  path: string,
-  title: string,
-  description: string,
-  body: string,
-  schemaType: string,
-): string {
-  const canonical = `${origin}${path}`;
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)} | OpenBack</title><meta name="description" content="${esc(description)}"><meta name="robots" content="index, follow"><link rel="canonical" href="${canonical}"><link rel="icon" type="image/png" sizes="192x192" href="/favicon.png"><meta property="og:site_name" content="OpenBack"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${canonical}"><script type="application/ld+json">${JSON.stringify({ "@context": "https://schema.org", "@type": schemaType, name: title, headline: title, description, url: canonical, author: { "@type": "Organization", name: "OpenBack" }, isPartOf: { "@type": "WebSite", name: "OpenBack", url: `${origin}/` } }).replace(/</g, "\\u003c")}</script><style>
-  :root{color-scheme:dark;--text:#f4f8ff;--muted:#b3c0d3;--line:#29405f;--panel:#10213a;--blue:#6dccff;--green:#18c964}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:var(--text);background:radial-gradient(circle at 15% 0,#183b61 0,#081523 46%,#050b13 100%);line-height:1.65}a{color:var(--blue)}header{position:sticky;top:0;background:#07111deb;border-bottom:1px solid var(--line);z-index:3}nav{max-width:1100px;margin:auto;padding:14px 20px;display:flex;align-items:center;gap:22px}.brand{margin-right:auto;color:white;font-size:1.35rem;font-weight:900;text-decoration:none}nav a:not(.brand){color:var(--muted);font-weight:700;text-decoration:none}.play{background:var(--green);color:#03150a!important;padding:8px 14px;border-radius:8px}main{width:min(1100px,calc(100% - 32px));margin:auto;padding:58px 0 80px}.hero{max-width:820px;margin-bottom:38px}small{color:#72d2ff;font-weight:900;letter-spacing:.13em;text-transform:uppercase}h1{font-size:clamp(2.3rem,6vw,4.5rem);line-height:1.05;letter-spacing:-.04em;margin:.2em 0}.lead{font-size:1.15rem;color:#ced9e9}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px}.card{padding:24px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(145deg,#132a47,#0b192b)}.card h2{font-size:1.3rem;line-height:1.22}.card h2 a{color:white;text-decoration:none}.card p,article p,article li{color:var(--muted)}.more,.back{font-weight:800;text-decoration:none}article.content{max-width:800px}article.content section{padding:24px 0;border-top:1px solid var(--line)}article.content h2{font-size:1.7rem;line-height:1.2}.related{margin-top:55px;padding-top:25px;border-top:1px solid var(--line)}footer{text-align:center;border-top:1px solid var(--line);padding:28px;color:var(--muted)}footer a{margin:0 8px}@media(max-width:600px){nav{gap:12px}nav a:not(.brand):not(.play){display:none}main{padding-top:38px}}
-  </style></head><body><header><nav><a class="brand" href="/">OpenBack</a><a href="/guides">Tutorials</a><a href="/blog">Blog</a><a class="play" href="/">Play now</a></nav></header><main>${body}</main><footer><strong>OpenBack</strong> &middot; Online browser territorial strategy game<br><a href="/">Play</a><a href="/guides">Tutorials</a><a href="/blog">Blog</a><a href="/privacy-policy.html">Privacy</a></footer></body></html>`;
-}
-
-function hub(origin: string, type: "guides" | "blog"): string {
-  const isGuide = type === "guides";
-  const items = isGuide ? tutorials : blogs;
-  const path = isGuide ? "/guides" : "/blog";
+function hub(
+  path: "/tutorials" | "/blog",
+): Omit<OpenBackContentSeo, "schemaJson"> {
+  const isGuide = path === "/tutorials";
+  const items = isGuide ? canonicalTutorials : blogs;
   const title = isGuide
     ? "OpenBack Tutorials and Strategy Guides"
     : "OpenBack Development Blog";
   const description = isGuide
     ? "Learn OpenBack with practical tutorials for beginners, multiplayer, ranked, economy, aircraft, tanks, diplomacy, and nuclear defense."
     : "Read OpenBack articles about multiplayer, matchmaking, aircraft, tanks, military railways, and browser game design.";
-  return layout(
-    origin,
+  return {
     path,
-    title,
+    title: `${title} | OpenBack`,
     description,
-    `<div class="hero"><small>${isGuide ? "Learn the game" : "Behind the game"}</small><h1>${title}</h1><p class="lead">${description}</p></div><div class="grid">${cards(items)}</div>`,
-    "CollectionPage",
-  );
+    crawlableHtml: `<div class="hero"><small>${isGuide ? "Learn the game" : "Behind the game"}</small><h1>${title}</h1><p class="lead">${description}</p></div><div class="grid">${cards(items)}</div>`,
+  };
 }
 
-function article(origin: string, page: OpenBackContentPage): string {
-  const hubPath = page.type === "Tutorial" ? "/guides" : "/blog";
+function article(
+  page: OpenBackContentPage,
+): Omit<OpenBackContentSeo, "schemaJson"> {
+  const hubPath = page.type === "Tutorial" ? "/tutorials" : "/blog";
   const sections = page.sections
     .map(
       (section) =>
         `<section><h2>${esc(section.title)}</h2><p>${esc(section.text)}</p>${section.tips ? `<ul>${section.tips.map((tip) => `<li>${esc(tip)}</li>`).join("")}</ul>` : ""}</section>`,
     )
     .join("");
-  const related = (page.type === "Tutorial" ? tutorials : blogs)
+  const related = (page.type === "Tutorial" ? canonicalTutorials : blogs)
     .filter((item) => item.path !== page.path)
     .slice(0, 3);
-  const body = `<a class="back" href="${hubPath}">&larr; All ${page.type === "Tutorial" ? "tutorials" : "posts"}</a><article class="content"><div class="hero"><small>${page.type}</small><h1>${esc(page.title)}</h1><p class="lead">${esc(page.description)}</p></div>${sections}</article><aside class="related"><h2>Keep reading</h2><div class="grid">${cards(related)}</div></aside>`;
-  return layout(
-    origin,
-    page.path,
-    page.title,
-    page.description,
-    body,
-    page.type === "Tutorial" ? "TechArticle" : "BlogPosting",
-  );
+  return {
+    path: page.path,
+    title: `${page.title} | OpenBack`,
+    description: page.description,
+    crawlableHtml: `<a class="back" href="${hubPath}">&larr; All ${page.type === "Tutorial" ? "tutorials" : "posts"}</a><article class="content"><div class="hero"><small>${page.type}</small><h1>${esc(page.title)}</h1><p class="lead">${esc(page.description)}</p></div>${sections}</article><aside class="related"><h2>Keep reading</h2><div class="grid">${cards(related)}</div></aside>`,
+  };
 }
 
-export function handleOpenBackContent(req: Request, res: Response): void {
-  // Render terminates TLS before forwarding the request to Express, so
-  // req.protocol can be "http" even when the public page is HTTPS. Prefer the
-  // proxy's original protocol to keep canonical and Open Graph URLs aligned
-  // with the public URLs in sitemap.xml.
-  const forwardedProto = req.headers["x-forwarded-proto"];
-  const protocol = (
-    Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto
-  )
-    ?.split(",")[0]
-    ?.trim();
-  const origin =
-    `${protocol ?? req.protocol ?? "https"}://${req.get("host")}`.replace(
-      /\/+$/,
-      "",
-    );
-  if (req.path === "/guides")
-    return void res.type("html").send(hub(origin, "guides"));
-  if (req.path === "/blog")
-    return void res.type("html").send(hub(origin, "blog"));
-  const page = pages.find((candidate) => candidate.path === req.path);
-  if (!page) return void res.status(404).type("text").send("Page not found");
-  res.type("html").send(article(origin, page));
+export function getOpenBackContentSeo(
+  path: string,
+  origin: string,
+): OpenBackContentSeo | null {
+  const base =
+    path === "/tutorials" || path === "/blog"
+      ? hub(path)
+      : (() => {
+          const page = pages.find((candidate) => candidate.path === path);
+          return page ? article(page) : null;
+        })();
+  if (!base) return null;
+  const schemaType =
+    path === "/tutorials" || path === "/blog"
+      ? "CollectionPage"
+      : path.startsWith("/tutorials/")
+        ? "TechArticle"
+        : "BlogPosting";
+  const canonical = `${origin.replace(/\/+$/, "")}${path}`;
+  return {
+    ...base,
+    schemaJson: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": schemaType,
+      name: base.title.replace(/ \| OpenBack$/, ""),
+      headline: base.title.replace(/ \| OpenBack$/, ""),
+      description: base.description,
+      url: canonical,
+      author: { "@type": "Organization", name: "OpenBack" },
+      isPartOf: { "@type": "WebSite", name: "OpenBack", url: `${origin}/` },
+    }).replace(/</g, "\\u003c"),
+  };
+}
+
+export function handleLegacyOpenBackContent(req: Request, res: Response): void {
+  if (!LEGACY_GUIDE_PATHS.includes(req.path)) {
+    res.status(404).type("text").send("Page not found");
+    return;
+  }
+  res.redirect(301, req.path.replace(/^\/guides/, "/tutorials"));
 }
 
 export function handleOpenBackContentApi(_req: Request, res: Response): void {
-  res.json({ tutorials, blogs });
+  res.json({ tutorials: canonicalTutorials, blogs });
 }

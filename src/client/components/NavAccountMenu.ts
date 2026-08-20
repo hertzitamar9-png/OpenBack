@@ -3,6 +3,7 @@ import { customElement, property, state } from "lit/decorators.js";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { UserMeResponse } from "../../core/ApiSchemas";
 import { hasLinkedIdentity } from "../AccountIdentity";
+import { appRouter } from "../AppRouter";
 import { logOut } from "../Auth";
 import { crazyGamesSDK, type CrazyGamesUser } from "../CrazyGamesSDK";
 import { showInGameConfirm } from "../InGameModal";
@@ -217,7 +218,7 @@ export class NavAccountMenu extends LitElement {
         labelKey: "nav_account_menu.view_account",
         icon: iconUser,
         onSelect: () => {
-          window.showPage?.("page-account");
+          void appRouter.navigate({ pageId: "page-account" });
         },
       },
       {
@@ -265,7 +266,7 @@ export class NavAccountMenu extends LitElement {
       void crazyGamesSDK.showAuthPrompt();
       return;
     }
-    window.showPage?.("page-account");
+    void appRouter.navigate({ pageId: "page-account" });
   }
 
   // Same copy + toast the account modal's share button gives.
@@ -278,10 +279,11 @@ export class NavAccountMenu extends LitElement {
     }
   }
 
-  // The profile-menu modals are popup (non-inline) modals registered with the
-  // router, so the hash is what opens them.
+  // Profile-menu panels are transient overlays, so opening one must not replace
+  // the clean path of the page underneath it.
   private openModal(name: string): void {
-    window.location.hash = `modal=${name}`;
+    const tag = `${name}-modal`;
+    document.querySelector<HTMLElement & { open(): void }>(tag)?.open();
   }
 
   private async handleLogOut(): Promise<void> {

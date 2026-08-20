@@ -1,5 +1,6 @@
 import { html, LitElement, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import { appRouter } from "../AppRouter";
 import type { InsufficientCurrency } from "../Cosmetics";
 import { translateText } from "../Utils";
 import "./ConfirmDialog";
@@ -45,8 +46,7 @@ export class InsufficientCurrencyDialog extends LitElement {
       @cancel=${() => this.close()}
       @confirm=${() => {
         this.close();
-        // Home path (not just hash) so it also works from in-game (win modal).
-        window.location.href = "/#modal=store&tab=packs";
+        void appRouter.navigate({ pageId: "page-item-store", tab: "packs" });
       }}
     ></confirm-dialog>`;
   }

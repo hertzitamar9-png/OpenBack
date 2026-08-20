@@ -1,6 +1,7 @@
 import { html } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { getUserMe, invalidateUserMe } from "./Api";
+import { appRouter } from "./AppRouter";
 import { createClan, type ClanInfo, type ClanMember } from "./ClanApi";
 import { BaseModal } from "./components/BaseModal";
 import "./components/clan/ClanBansView";
@@ -19,7 +20,6 @@ import "./components/ConfirmDialog";
 import "./components/CopyButton";
 import "./components/CurrencyDisplay";
 import { modalHeader } from "./components/ui/ModalHeader";
-import { modalRouter } from "./ModalRouter";
 import type { ProfileOrigin } from "./PlayerProfileModal";
 import { translateText } from "./Utils";
 
@@ -256,7 +256,7 @@ export class ClanModal extends BaseModal {
         this.selectedClanTag = "";
         this.myRole = null;
         this.detailCache = null;
-        modalRouter.syncArgs("clan", { clan: null, tag: null });
+        appRouter.syncArgs("clan", { clan: null, tag: null });
         this.gameHistoryCache = null;
         this.setActiveTab(this.previousListTab);
       },
@@ -325,7 +325,7 @@ export class ClanModal extends BaseModal {
           }),
         );
         this.close();
-        window.showPage?.("page-account");
+        void appRouter.navigate({ pageId: "page-account" });
         return;
       }
       this.myPublicId = me.player.publicId;
@@ -602,7 +602,7 @@ export class ClanModal extends BaseModal {
     }
     this.selectedClanTag = tag;
     this.view = "detail";
-    modalRouter.syncArgs("clan", { clan: tag, tag: null });
+    appRouter.syncArgs("clan", { clan: tag, tag: null });
     // modalConfig() returns detail tabs; setActiveTab anchors activeTab to
     // "overview" and syncs the URL router (routerName = "clan").
     this.setActiveTab("overview");

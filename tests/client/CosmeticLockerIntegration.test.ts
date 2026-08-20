@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getUserMe } from "../../src/client/Api";
+import { appRouter } from "../../src/client/AppRouter";
 import { userAuth } from "../../src/client/Auth";
 import { fetchCosmetics } from "../../src/client/Cosmetics";
 import "../../src/client/InventoryModal";
 import type { InventoryModal } from "../../src/client/InventoryModal";
-import { modalRouter } from "../../src/client/ModalRouter";
 import "../../src/client/Store";
 import type { StoreModal } from "../../src/client/Store";
 import type { CosmeticCard } from "../../src/client/components/CosmeticCard";
@@ -177,7 +177,7 @@ describe("Cosmetic locker integration", () => {
     await store.updateComplete;
     await store.onUserMe(userFixture);
 
-    modalRouter.register("inventory", {
+    appRouter.register("inventory", {
       tag: "inventory-modal",
       pageId: "page-inventory",
     });
@@ -192,6 +192,7 @@ describe("Cosmetic locker integration", () => {
       settingsChangeListener = undefined;
     }
     inventory.remove();
+    appRouter.reset();
     store.remove();
     languageFixture.remove();
     localStorage.clear();
@@ -299,20 +300,20 @@ describe("Cosmetic locker integration", () => {
   it("preserves the Inventory route tab and clears empty Store products", async () => {
     inventory.open({ tab: "skins" });
     await inventory.updateComplete;
-    expect(window.location.hash).toBe("#modal=inventory&tab=skins");
+    expect(window.location.pathname).toBe("/inventory/skins");
 
     inventory.setActiveTab("effects");
     await inventory.updateComplete;
-    expect(window.location.hash).toBe("#modal=inventory&tab=effects");
+    expect(window.location.pathname).toBe("/inventory/effects");
 
-    history.replaceState(null, "", "/#modal=inventory&tab=crowns");
-    expect(modalRouter.routeFromHash()).toBe(true);
+    history.replaceState(null, "", "/inventory/crowns");
+    expect(await appRouter.start()).toBe(true);
     await vi.waitFor(() =>
       expect((inventory as unknown as { activeTab: string }).activeTab).toBe(
         "crowns",
       ),
     );
-    expect(window.location.hash).toBe("#modal=inventory&tab=crowns");
+    expect(window.location.pathname).toBe("/inventory/crowns");
 
     store.open({ tab: "cosmetics" });
     await vi.waitFor(() =>

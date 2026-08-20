@@ -5,5 +5,10 @@
  * copy action, say — don't pull in the whole profile modal.
  */
 export function playerProfileUrl(publicId: string): string {
-  return `${window.location.origin}${window.location.pathname}#modal=profile&publicID=${encodeURIComponent(publicId)}`;
+  return `${window.location.origin}${pathForTarget({
+    pageId: "page-profile",
+    publicID: publicId,
+    tab: "stats",
+  })}`;
 }
+import { pathForTarget } from "../AppRoutes";

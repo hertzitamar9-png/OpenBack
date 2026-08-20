@@ -35,8 +35,8 @@ vi.mock(
   },
 );
 
+import { appRouter } from "../../src/client/AppRouter";
 import type { CopyButton } from "../../src/client/components/CopyButton";
-import { modalRouter } from "../../src/client/ModalRouter";
 import { initNavigation } from "../../src/client/Navigation";
 import {
   PlayerProfileModal,
@@ -67,7 +67,7 @@ describe("public player profile route", () => {
     fetchPublicPlayerProfileMock.mockReset();
     vi.stubGlobal("localStorage", { getItem: vi.fn(() => null) });
     history.replaceState(null, "", "/");
-    modalRouter.register("profile", {
+    appRouter.register("profile", {
       tag: "player-profile-modal",
       pageId: "page-profile",
     });
@@ -87,6 +87,7 @@ describe("public player profile route", () => {
 
   afterEach(() => {
     window.showPage?.("page-play");
+    appRouter.reset();
     modal.remove();
     history.replaceState(null, "", "/");
     vi.unstubAllGlobals();
@@ -97,9 +98,9 @@ describe("public player profile route", () => {
       createdAt: "2026-01-01T00:00:00.000Z",
       stats: statsTree,
     });
-    history.replaceState(null, "", "/#modal=profile&publicID=shared-player");
+    history.replaceState(null, "", "/profile/shared-player/stats");
 
-    expect(modalRouter.routeFromHash()).toBe(true);
+    expect(await appRouter.start()).toBe(true);
 
     await vi.waitFor(async () => {
       await modal.updateComplete;
@@ -120,7 +121,7 @@ describe("public player profile route", () => {
     expect(copyButton.displayText).toBe("shared-player");
     expect(copyButton.compact).toBe(true);
 
-    expect(window.location.hash).toBe("#modal=profile&publicID=shared-player");
+    expect(window.location.pathname).toBe("/profile/shared-player/stats");
 
     const backButton = modal.querySelector(
       '[slot="header"] button',
@@ -128,14 +129,14 @@ describe("public player profile route", () => {
     backButton.click();
 
     expect(modal.isOpen()).toBe(false);
-    expect(window.location.hash).toBe("");
+    expect(window.location.pathname).toBe("/");
   });
 
   it("shows not-found when the profile fetch fails", async () => {
     fetchPublicPlayerProfileMock.mockResolvedValue(false);
-    history.replaceState(null, "", "/#modal=profile&publicID=missing");
+    history.replaceState(null, "", "/profile/missing/stats");
 
-    expect(modalRouter.routeFromHash()).toBe(true);
+    expect(await appRouter.start()).toBe(true);
 
     await vi.waitFor(async () => {
       await modal.updateComplete;
@@ -147,9 +148,7 @@ describe("public player profile route", () => {
   });
 
   it("shows not-found without fetching when publicID is missing", async () => {
-    history.replaceState(null, "", "/#modal=profile");
-
-    expect(modalRouter.routeFromHash()).toBe(true);
+    modal.open();
 
     await vi.waitFor(async () => {
       await modal.updateComplete;

@@ -2,20 +2,18 @@ import { html, TemplateResult } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { UserMeResponse } from "../core/ApiSchemas";
 import { Cosmetics } from "../core/CosmeticSchemas";
+import { appRouter } from "./AppRouter";
 import "./components/SubscriptionPanel";
 import { fetchCosmetics } from "./Cosmetics";
 import { ProfileMenuModal } from "./ProfileMenuModal";
 import { translateText } from "./Utils";
 
 /**
- * Standalone subscription management, opened from the nav profile menu
- * (`#modal=subscription`). The menu only offers it to subscribers, but the
- * modal is reachable by URL, so it also handles the no-subscription case by
- * pointing at the store's subscriptions tab.
+ * Standalone subscription management opened from the nav profile menu. This
+ * transient overlay keeps the parent page URL unchanged.
  */
 @customElement("subscription-modal")
 export class SubscriptionModal extends ProfileMenuModal {
-  protected routerName = "subscription";
   protected titleKey = "subscription_modal.title";
 
   @state() private cosmetics: Cosmetics | null = null;
@@ -37,7 +35,10 @@ export class SubscriptionModal extends ProfileMenuModal {
               translationKey="subscription_modal.browse"
               @click=${() => {
                 this.close();
-                window.location.hash = "modal=store&tab=subscriptions";
+                void appRouter.navigate({
+                  pageId: "page-item-store",
+                  tab: "subscriptions",
+                });
               }}
             ></o-button>
           </div>

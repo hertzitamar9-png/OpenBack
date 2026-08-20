@@ -1,6 +1,7 @@
 import { html, LitElement } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { invalidateUserMe } from "../../Api";
+import { appRouter } from "../../AppRouter";
 import {
   type ClanDiscord,
   type ClanInfo,
@@ -295,7 +296,7 @@ export class ClanDetailView extends LitElement {
       const result = await joinClan(this.selectedClan.tag);
       if ("error" in result) {
         if (result.error === "clan_modal.sign_in_for_clans") {
-          window.showPage?.("page-account");
+          void appRouter.navigate({ pageId: "page-account" });
         }
         showToast(
           result.reason

@@ -16,6 +16,7 @@ import {
 import { TeamCountConfig } from "../core/Schemas";
 import { generateID } from "../core/Util";
 import { getLastUserMe, hasLinkedAccount } from "./Api";
+import { appRouter } from "./AppRouter";
 import "./components/baseComponents/Button";
 import "./components/baseComponents/Modal";
 import { BaseModal } from "./components/BaseModal";
@@ -237,7 +238,7 @@ export class SinglePlayerModal extends BaseModal {
       class="px-3 py-2 text-xs font-bold uppercase tracking-wider transition-colors duration-200 rounded-lg bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 whitespace-nowrap shrink-0 cursor-pointer hover:bg-yellow-500/30"
       @click=${() => {
         this.close();
-        window.showPage?.("page-account");
+        void appRouter.navigate({ pageId: "page-account" });
       }}
     >
       ${translateText("single_modal.sign_in_for_achievements")}

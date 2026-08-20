@@ -2,6 +2,7 @@ import { html } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { UserMeResponse } from "../../core/ApiSchemas";
 import { getUserMe, hasLinkedAccount } from "../Api";
+import { appRouter } from "../AppRouter";
 import { userAuth } from "../Auth";
 import { crazyGamesSDK } from "../CrazyGamesSDK";
 import { requireLifetimeAccess } from "../LifetimeAccess";
@@ -216,7 +217,7 @@ export class RankedModal extends BaseModal {
     if (!(await requireLifetimeAccess("ranked"))) return;
     if ((await userAuth()) === false) {
       this.close();
-      window.showPage?.("page-account");
+      void appRouter.navigate({ pageId: "page-account" });
       return;
     }
 

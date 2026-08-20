@@ -1,6 +1,7 @@
 import { html, TemplateResult } from "lit";
 import { customElement } from "lit/decorators.js";
 import { getUserMe, invalidateUserMe } from "./Api";
+import { appRouter } from "./AppRouter";
 import { isLoggedIn } from "./Auth";
 import { BaseModal } from "./components/BaseModal";
 import { modalHeader } from "./components/ui/ModalHeader";
@@ -139,7 +140,7 @@ export class SteamLinkModal extends BaseModal {
   public async openWithToken(token: string): Promise<void> {
     if (!(await isLoggedIn())) {
       stashPendingLink(token);
-      window.location.hash = "modal=account";
+      void appRouter.navigate({ pageId: "page-account" });
       return;
     }
     this.mode = "token";
@@ -159,7 +160,7 @@ export class SteamLinkModal extends BaseModal {
   public async openForCodeEntry(): Promise<void> {
     if (!(await isLoggedIn())) {
       stashPendingCodeEntry();
-      window.location.hash = "modal=account";
+      void appRouter.navigate({ pageId: "page-account" });
       return;
     }
     this.mode = "code";

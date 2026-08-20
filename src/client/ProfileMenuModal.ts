@@ -2,6 +2,7 @@ import { TemplateResult } from "lit";
 import { state } from "lit/decorators.js";
 import { UserMeResponse } from "../core/ApiSchemas";
 import { getUserMe } from "./Api";
+import { appRouter } from "./AppRouter";
 import { BaseModal } from "./components/BaseModal";
 import { modalHeader } from "./components/ui/ModalHeader";
 import { signedOutNotice } from "./components/ui/SignedOutNotice";
@@ -48,7 +49,7 @@ export abstract class ProfileMenuModal extends BaseModal {
     if (this.userMeResponse === false) {
       return signedOutNotice(() => {
         this.close();
-        window.showPage?.("page-account");
+        void appRouter.navigate({ pageId: "page-account" });
       });
     }
     return this.renderSignedIn(this.userMeResponse) as TemplateResult;

@@ -37,7 +37,7 @@ function restoreEmbeddedPage(target: HTMLElement): void {
   if (needsRestore) target.setAttribute("src", configuredSource);
 }
 
-export function showPage(pageId: string) {
+export function showPage(pageId: string, args?: Record<string, unknown>) {
   window.currentPageId = pageId;
   document.body.classList.toggle(
     "openback-subpage-open",
@@ -87,7 +87,7 @@ export function showPage(pageId: string) {
         target.hasAttribute("inline") &&
         typeof (target as any).open === "function"
       ) {
-        (target as any).open();
+        (target as any).open(args);
       }
     }
   }
@@ -115,10 +115,12 @@ export function initNavigation() {
     );
     if (target) {
       const pageId = (target as HTMLElement).dataset.page;
-      if (pageId) showPage(pageId);
+      if (pageId) void appRouter.navigatePage(pageId as AppPageId);
     }
   });
 
   // Ensure Play is the default visible/active page on load.
   showPage("page-play");
 }
+import { appRouter } from "./AppRouter";
+import { AppPageId } from "./AppRoutes";

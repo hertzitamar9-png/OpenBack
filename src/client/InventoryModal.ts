@@ -21,6 +21,7 @@ import {
 } from "../core/game/UserSettings";
 import { PlayerPattern } from "../core/Schemas";
 import { getUserMe } from "./Api";
+import { appRouter } from "./AppRouter";
 import { userAuth } from "./Auth";
 import "./components/baseComponents/Button";
 import { BaseModal } from "./components/BaseModal";
@@ -539,9 +540,12 @@ export class InventoryModal extends BaseModal {
             @click=${() => {
               if (isLoggedIn) {
                 this.close();
-                window.showPage?.("page-item-store");
+                void appRouter.navigate({
+                  pageId: "page-item-store",
+                  tab: "packs",
+                });
               } else {
-                window.showPage?.("page-account");
+                void appRouter.navigate({ pageId: "page-account" });
               }
             }}
           ></o-button>`,

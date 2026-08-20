@@ -39,6 +39,7 @@ function subscriberWithoutName(): UserMeResponse {
 
 describe("username-input verified toggle", () => {
   let el: UsernameInput;
+  let openUsername: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
     if (!customElements.get("username-input")) {
@@ -46,17 +47,22 @@ describe("username-input verified toggle", () => {
     }
     el = document.createElement("username-input") as UsernameInput;
     document.body.appendChild(el);
+    openUsername = vi.fn();
+    const usernameModal = document.createElement("change-username-modal");
+    Object.assign(usernameModal, { open: openUsername });
+    document.body.appendChild(usernameModal);
     await el.updateComplete;
     document.dispatchEvent(
       new CustomEvent("userMeResponse", { detail: subscriberWithoutName() }),
     );
     await el.updateComplete;
-    window.location.hash = "";
+    history.replaceState(null, "", "/account/profile");
   });
 
   afterEach(() => {
     el.remove();
-    window.location.hash = "";
+    document.querySelector("change-username-modal")?.remove();
+    history.replaceState(null, "", "/");
     vi.clearAllMocks();
   });
 
@@ -70,7 +76,8 @@ describe("username-input verified toggle", () => {
     toggle!.click();
     await new Promise((r) => setTimeout(r, 0));
 
-    expect(window.location.hash).toBe("#modal=change-username");
+    expect(window.location.pathname).toBe("/account/profile");
+    expect(openUsername).toHaveBeenCalledOnce();
     // No sub upsell — they're already entitled.
     expect(showInGameConfirm).not.toHaveBeenCalled();
   });

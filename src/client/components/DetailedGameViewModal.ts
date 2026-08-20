@@ -89,8 +89,6 @@ const BUTTON_CLASS =
  */
 @customElement("detailed-view-modal")
 export class DetailedGameViewModal extends BaseModal {
-  protected routerName = "detailed-view";
-
   @state() private lobbies: PublicGames | null = null;
   @state() private filters: LobbyFilters = { ...DEFAULT_FILTERS };
   @state() private showFilters = false;

@@ -6,13 +6,11 @@ import { ProfileMenuModal } from "./ProfileMenuModal";
 import { translateText } from "./Utils";
 
 /**
- * Standalone account-username management, opened from the nav profile menu
- * (`#modal=change-username`). Renders the same <username-panel> the account
- * modal used to, so the cooldown/claim rules live in one place.
+ * Standalone account-username management opened from the nav profile menu.
+ * This transient overlay keeps the parent page URL unchanged.
  */
 @customElement("change-username-modal")
 export class ChangeUsernameModal extends ProfileMenuModal {
-  protected routerName = "change-username";
   protected titleKey = "change_username_modal.title";
 
   protected renderSignedIn(userMe: UserMeResponse): TemplateResult {

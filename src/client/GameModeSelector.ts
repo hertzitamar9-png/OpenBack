@@ -10,6 +10,7 @@ import {
   Trios,
 } from "../core/game/Game";
 import { PublicGameInfo, PublicGames } from "../core/Schemas";
+import { appRouter } from "./AppRouter";
 import "./components/IOSAddToHomeScreenBanner";
 import { HostLobbyModal } from "./HostLobbyModal";
 import { JoinLobbyModal } from "./JoinLobbyModal";
@@ -261,7 +262,7 @@ export class GameModeSelector extends LitElement {
   private openRankedMenu = async () => {
     if (!this.validateUsername()) return;
     if (!(await requireLifetimeAccess("ranked"))) return;
-    window.showPage?.("page-ranked");
+    void appRouter.navigate({ pageId: "page-ranked" });
   };
 
   private openSinglePlayerModal = () => {

@@ -7,6 +7,7 @@ import {
   invalidateUserMe,
   openSubscriptionPortal,
 } from "../Api";
+import { appRouter } from "../AppRouter";
 import { translateCosmetic } from "../Cosmetics";
 import { showInGameAlert, showInGameConfirm } from "../InGameModal";
 import { translateText } from "../Utils";
@@ -43,7 +44,10 @@ export class SubscriptionPanel extends LitElement {
     this.dispatchEvent(
       new CustomEvent("request-close", { bubbles: true, composed: true }),
     );
-    window.location.hash = "modal=store&tab=subscriptions";
+    void appRouter.navigate({
+      pageId: "page-item-store",
+      tab: "subscriptions",
+    });
   };
 
   private handleCancel = async (): Promise<void> => {

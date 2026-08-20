@@ -2,6 +2,7 @@ import { LitElement, html } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { UserMeResponse } from "../../core/ApiSchemas";
 import { getLastUserMe, hasLinkedAccount } from "../Api";
+import { appRouter } from "../AppRouter";
 
 @customElement("not-logged-in-warning")
 export class NotLoggedInWarning extends LitElement {
@@ -40,7 +41,7 @@ export class NotLoggedInWarning extends LitElement {
         class="px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors duration-200 rounded-lg bg-red-500/20 text-red-400 border border-red-500/30 cursor-pointer hover:bg-red-500/30"
         data-i18n="common.not_logged_in"
         @click=${() => {
-          window.showPage?.("page-account");
+          void appRouter.navigate({ pageId: "page-account" });
         }}
       >
         Not logged in
