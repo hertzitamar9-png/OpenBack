@@ -8,8 +8,8 @@
  * so each terrain cell stays pixel-crisp at every zoom level.
  */
 
-import terrainVertSrc from "../shaders/terrain/terrain.vert.glsl?raw";
 import type { TerrainRect } from "../../types";
+import terrainVertSrc from "../shaders/terrain/terrain.vert.glsl?raw";
 import terrainFragSrc from "../shaders/terrain/war-table-terrain.frag.glsl?raw";
 import {
   buildTerrainRGBA,

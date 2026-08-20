@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { PurchaseButton } from "../../src/client/components/PurchaseButton";
+import { alignPurchaseRows } from "../../src/client/components/PurchaseButton";
 
 // OpenBack renders its own dialogs; the component reports failures through
 // the in-game alert rather than the browser's.
@@ -6,8 +8,6 @@ const showInGameAlertMock = vi.fn();
 vi.mock("../../src/client/InGameModal", () => ({
   showInGameAlert: (message: string) => showInGameAlertMock(message),
 }));
-import type { PurchaseButton } from "../../src/client/components/PurchaseButton";
-import { alignPurchaseRows } from "../../src/client/components/PurchaseButton";
 
 describe("PurchaseButton", () => {
   let button: PurchaseButton | undefined;

@@ -145,11 +145,11 @@ export class MobileNavBar extends LitElement {
           data-page="page-leaderboard"
           data-i18n="main.leaderboard"
         ></button>
-          <button
+        <button
           class="no-crazygames ${MOBILE_ITEM}"
           data-page="page-clan"
           data-i18n="main.clans"
-          ></button>
+        ></button>
         <div
           class="flex flex-col w-full mt-auto [.in-game_&]:hidden items-end justify-end pt-4 border-t border-white/10"
         ></div>

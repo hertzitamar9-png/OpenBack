@@ -9,8 +9,8 @@
  */
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { describe, expect, it } from "vitest";
 import { globSync } from "tinyglobby";
+import { describe, expect, it } from "vitest";
 
 const SHADER_ROOT = "src/client/render/gl/shaders";
 

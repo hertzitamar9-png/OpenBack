@@ -192,13 +192,13 @@ describe("assignTeams", () => {
     const result = assignTeams(
       players,
       [
-      ColoredTeams.Red,
-      ColoredTeams.Blue,
-      ColoredTeams.Yellow,
-      ColoredTeams.Green,
-      ColoredTeams.Purple,
-      ColoredTeams.Orange,
-      ColoredTeams.Teal,
+        ColoredTeams.Red,
+        ColoredTeams.Blue,
+        ColoredTeams.Yellow,
+        ColoredTeams.Green,
+        ColoredTeams.Purple,
+        ColoredTeams.Orange,
+        ColoredTeams.Teal,
       ],
       false,
     );

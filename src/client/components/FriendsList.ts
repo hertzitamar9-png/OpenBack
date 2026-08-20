@@ -1,4 +1,3 @@
-import { showInGameConfirm } from "../InGameModal";
 import { html, LitElement, TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import type { FriendEntry } from "../../core/ApiSchemas";
@@ -10,6 +9,7 @@ import {
   removeFriend,
   sendFriendRequest,
 } from "../FriendsApi";
+import { showInGameConfirm } from "../InGameModal";
 import { showToast, translateText } from "../Utils";
 import { playerNameLink } from "./ui/PlayerNameLink";
 

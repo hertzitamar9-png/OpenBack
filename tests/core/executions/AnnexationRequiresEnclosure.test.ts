@@ -29,11 +29,7 @@ function clusterRemoverFor(game: Game, player: Player) {
 // sealed for fifteen seconds before it changes hands, draining troops in the
 // meantime, so the defender has a chance to reopen a corridor. Annexation
 // therefore takes two passes with the clock advanced between them.
-function annexAfterSiege(
-  game: Game,
-  player: Player,
-  cluster: TileRef[],
-): void {
+function annexAfterSiege(game: Game, player: Player, cluster: TileRef[]): void {
   const remove = clusterRemoverFor(game, player);
   remove(cluster);
   for (let i = 0; i < 151; i++) game.executeNextTick();

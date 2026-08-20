@@ -1,5 +1,5 @@
-import { NUKE_MAGNITUDES, UT_PLANE, UT_TANK } from "../../types";
 import type { NukeTelegraphData, UnitState } from "../../types";
+import { NUKE_MAGNITUDES, UT_PLANE, UT_TANK } from "../../types";
 
 // Must match RelationMatrix.ts
 const RELATION_FRIENDLY = 1;

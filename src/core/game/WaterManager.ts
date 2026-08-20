@@ -187,11 +187,11 @@ export class WaterManager {
         // Reuse map-sized scratch buffers; only swap the graph
         this._miniWaterHPA.setGraph(this._miniWaterGraph);
       } else {
-      this._miniWaterHPA = new AStarWaterHierarchical(
-        this.miniMap,
-        this._miniWaterGraph,
-        { cachePaths: true },
-      );
+        this._miniWaterHPA = new AStarWaterHierarchical(
+          this.miniMap,
+          this._miniWaterGraph,
+          { cachePaths: true },
+        );
       }
       DebugSpan.end("hpa");
       DebugSpan.end("WaterManager:rebuildWaterGraph");

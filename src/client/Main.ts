@@ -1,7 +1,3 @@
-import {
-  isSteamLinkHash,
-  parseSteamLinkToken,
-} from "./SteamLink";
 import { ClientEnv } from "src/client/ClientEnv";
 import { UserMeResponse } from "../core/ApiSchemas";
 import { assetUrl } from "../core/AssetUrls";
@@ -24,9 +20,7 @@ import { reauthAfterCrazyGamesChange, userAuth } from "./Auth";
 import "./ChangeUsernameModal";
 import "./ClanModal";
 import { joinLobby, type JoinLobbyResult } from "./ClientGameRunner";
-import {
-  getPlayerCosmeticsRefs,
-} from "./Cosmetics";
+import { getPlayerCosmeticsRefs } from "./Cosmetics";
 import { updateCrazyGamesNavButton } from "./CrazyGamesAccountButton";
 import { crazyGamesSDK } from "./CrazyGamesSDK";
 import "./FeaturedStream";
@@ -53,8 +47,7 @@ import "./NewsModal";
 import "./PlayerProfileModal";
 import { RewardsModal } from "./RewardsModal";
 import "./SinglePlayerModal";
-import {
-} from "./SteamLink";
+import { isSteamLinkHash, parseSteamLinkToken } from "./SteamLink";
 import "./SteamLinkModal";
 import { SteamLinkModal } from "./SteamLinkModal";
 import { StoreModal } from "./Store";
@@ -77,6 +70,9 @@ import {
   installSafariPinchZoomBlocker,
 } from "./utilities/DisableSafariPinchZoom";
 
+import { requireLifetimeAccess } from "./LifetimeAccess";
+import "./OpenBackContentModal";
+import { socialClient } from "./SocialClient";
 import "./components/DesktopNavBar";
 import "./components/DetailedGameViewModal";
 import "./components/Footer";
@@ -84,19 +80,16 @@ import "./components/MainLayout";
 import "./components/MobileNavBar";
 import "./components/PlayPage";
 import "./components/RankedModal";
+import "./components/SocialInvitePopup";
 import "./components/baseComponents/Button";
 import "./components/baseComponents/Modal";
+import { isUpdating, startUpdateWatcher } from "./openback/UpdateWatcher";
 import "./styles.css";
 import "./styles/core/typography.css";
 import "./styles/core/variables.css";
 import "./styles/layout/container.css";
 import "./styles/layout/header.css";
 import "./styles/modal/chat.css";
-import { socialClient } from "./SocialClient";
-import "./components/SocialInvitePopup";
-import { requireLifetimeAccess } from "./LifetimeAccess";
-import "./OpenBackContentModal";
-import { isUpdating, startUpdateWatcher } from "./openback/UpdateWatcher";
 // Imported after upstream's sheet so OpenBack rules win on the cascade
 // without upstream's file needing a single OpenBack line in it.
 import "./styles/openback.css";

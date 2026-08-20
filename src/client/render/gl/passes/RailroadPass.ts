@@ -16,8 +16,7 @@
  *   RGBA32F paletteTex        → player color lookup
  */
 
-import type { TerrainRect } from "../../types";
-import type { GhostPreviewData } from "../../types";
+import type { GhostPreviewData, TerrainRect } from "../../types";
 import type { RenderSettings } from "../RenderSettings";
 import overlayVertSrc from "../shaders/map-overlay/overlay.vert.glsl?raw";
 import railroadFragSrc from "../shaders/railroad/railroad.frag.glsl?raw";

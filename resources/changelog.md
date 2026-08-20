@@ -1,3 +1,9 @@
+## OpenBack v0.36.182 - Clean Map Preview And Release Checks
+
+- Refreshed the Grand Earth preview from the current map generator and repaired the formatting drift left by the latest upstream merge so OpenBack releases pass every automated check again.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.181 - Living Water Without Lost Matches
 
 - Replaced the sharp white ocean scratches with broad, soft shoreline-colour shine moving across all open water in several different directions and speeds, in both 2D and 3D.

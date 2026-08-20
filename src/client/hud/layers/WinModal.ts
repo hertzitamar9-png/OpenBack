@@ -7,15 +7,15 @@ import { RankedType } from "../../../core/game/Game";
 import { GameUpdateType } from "../../../core/game/GameUpdates";
 import { getUserMe, markDeathTutorialSeen } from "../../Api";
 import "../../components/CosmeticCard";
+import { cosmeticSelectionLabel } from "../../components/CosmeticPresentation";
+import "../../components/PurchaseButton";
+import "../../components/SteamWishlist";
+import { Controller } from "../../Controller";
 import {
   fetchCosmetics,
   purchaseCosmetic,
   resolveCosmetics,
 } from "../../Cosmetics";
-import { cosmeticSelectionLabel } from "../../components/CosmeticPresentation";
-import "../../components/PurchaseButton";
-import "../../components/SteamWishlist";
-import { Controller } from "../../Controller";
 import { crazyGamesSDK } from "../../CrazyGamesSDK";
 import { DeathMedia, selectDeathMedia } from "../../DeathMedia";
 import "../../openback/PlasterSunBanner";

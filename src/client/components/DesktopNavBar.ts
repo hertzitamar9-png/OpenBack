@@ -2,10 +2,10 @@ import { LitElement, html } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { assetUrl } from "../../core/AssetUrls";
 import { socialAttention, type SocialAttentionStage } from "../SocialAttention";
-import { NavNotificationsController } from "./NavNotificationsController";
-import "./PartyStatus";
 import "./NavAccountMenu";
+import { NavNotificationsController } from "./NavNotificationsController";
 import "./NavUtilityIcons";
+import "./PartyStatus";
 
 @customElement("desktop-nav-bar")
 export class DesktopNavBar extends LitElement {

@@ -635,7 +635,7 @@ export class InputHandler {
         let closedUI = false;
 
         if (this.uiState.ghostStructure !== null) {
-        this.setGhostStructure(null);
+          this.setGhostStructure(null);
           closedUI = true;
         }
 

@@ -364,10 +364,7 @@ export class UsernameInput extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     void this.loadOpenBackProfile();
-    window.addEventListener(
-      "openback-profile-updated",
-      this.onProfileUpdated,
-    );
+    window.addEventListener("openback-profile-updated", this.onProfileUpdated);
     document.addEventListener("pointerdown", this.handleDocumentPointerDown, {
       capture: true,
     });

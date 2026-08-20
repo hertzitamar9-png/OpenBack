@@ -1,4 +1,3 @@
-import { ColoredTeams } from "../core/game/Game";
 import { createHash } from "crypto";
 import ipAnonymize from "ip-anonymize";
 import { Logger } from "winston";
@@ -7,7 +6,12 @@ import { z } from "zod";
 import { anonWordName } from "../core/AnonNames";
 import { isAdminRole } from "../core/ApiSchemas";
 import { GameEnv } from "../core/configuration/Config";
-import { GameMode, GameType, RankedType } from "../core/game/Game";
+import {
+  ColoredTeams,
+  GameMode,
+  GameType,
+  RankedType,
+} from "../core/game/Game";
 import {
   ClientID,
   ClientMessageSchema,
