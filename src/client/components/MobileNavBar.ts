@@ -1,8 +1,8 @@
 import { html, LitElement, TemplateResult } from "lit";
 import { customElement, state } from "lit/decorators.js";
-import { assetUrl } from "../../core/AssetUrls";
 import { socialAttention, type SocialAttentionStage } from "../SocialAttention";
 import { NavNotificationsController } from "./NavNotificationsController";
+import { openBackHomeWordmark } from "./ui/OpenBackWordmark";
 
 const MOBILE_ITEM =
   "nav-menu-item block w-full text-left font-bold uppercase tracking-[0.05em] " +
@@ -101,11 +101,10 @@ export class MobileNavBar extends LitElement {
           class="flex flex-col text-malibu-blue mb-4 ml-[clamp(0.2rem,0.4vw,0.4vh)]"
         >
           <div class="flex items-center">
-            <img
-              src=${assetUrl("images/OpenBackLogo.svg")}
-              alt="OpenBack"
-              class="w-auto h-auto max-w-[220px] max-h-[4.5rem]"
-            />
+            ${openBackHomeWordmark({
+              wrapperClass: "block",
+              imageClass: "block w-auto h-auto max-w-[220px] max-h-[4.5rem]",
+            })}
           </div>
         </div>
         <!-- Mobile Navigation Menu Items (same order as the desktop bar) -->

@@ -1,8 +1,8 @@
 import { LitElement, html } from "lit";
 import { customElement, state } from "lit/decorators.js";
-import { assetUrl } from "../../core/AssetUrls";
 import { crazyGamesSDK } from "../CrazyGamesSDK";
 import "./NavUtilityIcons";
+import { openBackHomeWordmark } from "./ui/OpenBackWordmark";
 
 /**
  * The mobile top bar (menu button, logo, account).
@@ -144,11 +144,10 @@ export class MobileTopBar extends LitElement {
           <div
             class="col-start-2 flex items-center justify-center text-malibu-blue min-w-0"
           >
-            <img
-              src=${assetUrl("images/OpenBackLogo.svg")}
-              alt="OpenBack"
-              class="block h-7 max-w-[9rem] w-auto object-contain"
-            />
+            ${openBackHomeWordmark({
+              wrapperClass: "block h-7 max-w-[9rem]",
+              imageClass: "block h-full max-w-full w-auto object-contain",
+            })}
           </div>
 
           ${crazyGamesSDK.isOnCrazyGames()

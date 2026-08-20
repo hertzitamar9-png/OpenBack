@@ -1,11 +1,11 @@
 import { LitElement, html } from "lit";
 import { customElement, state } from "lit/decorators.js";
-import { assetUrl } from "../../core/AssetUrls";
 import { socialAttention, type SocialAttentionStage } from "../SocialAttention";
 import "./NavAccountMenu";
 import { NavNotificationsController } from "./NavNotificationsController";
 import "./NavUtilityIcons";
 import "./PartyStatus";
+import { openBackHomeWordmark } from "./ui/OpenBackWordmark";
 
 @customElement("desktop-nav-bar")
 export class DesktopNavBar extends LitElement {
@@ -73,11 +73,10 @@ export class DesktopNavBar extends LitElement {
       >
         <div class="flex items-center justify-center">
           <div class="h-8">
-            <img
-              class="block h-full w-auto"
-              src=${assetUrl("images/OpenBackLogo.svg")}
-              alt="OpenBack"
-            />
+            ${openBackHomeWordmark({
+              wrapperClass: "block h-full",
+              imageClass: "block h-full w-auto",
+            })}
           </div>
         </div>
         <button

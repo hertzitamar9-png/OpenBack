@@ -1,3 +1,9 @@
+## OpenBack v0.36.185 - The Wordmark Goes Home
+
+- Made only the OPENBACK text in each combined header logo return to the Home screen from any page, without making the circular OB mark clickable or reloading the website.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.184 - One Matching Header Set
 
 - Matched the Settings gear's resting colour, hover colour, stroke weight, and focus treatment to the neighboring News and Help icons so none appears darker or glows more strongly.
