@@ -1,3 +1,13 @@
+## OpenBack v0.36.203 - Panel, Previews and a Longer Day
+
+- Fixed the player panel stacking its unit counters into one tall column on desktop, which is also why a stack of five cities showed a 5 with a 0 directly beneath it; the counters sit in a proper grid again.
+- Sharpened the main menu map previews, which were showing a half-resolution image stretched to fit on high-density screens.
+- Day and night now run five minutes each instead of cycling every ninety seconds.
+- Widened the Immersive 3D camera so it can drop to a near-ground view and tilt closer to straight down, pulling back as it lowers.
+- Removed the unused soundtrack file so it is no longer shipped at all.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.202 - Sound You Can Point At
 
 - Stopped the added background soundtrack playing; the game now runs on the original OpenFront sound effects alone, which are used unchanged.

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  CYCLE_TICKS,
   THREE_D_WAVE_HEIGHT_SCALE,
   TIDAL_REACH_TILES,
   isFloodableLand,
@@ -11,8 +12,30 @@ import {
 } from "../../../src/core/world/ThreeDWorldCycle";
 
 describe("deterministic 3D world cycle", () => {
+  // The simulation runs at 10 ticks per second.
+  const TICKS_PER_SECOND = 10;
+
+  it("runs five minutes of day and five minutes of night", () => {
+    expect(CYCLE_TICKS / TICKS_PER_SECOND).toBe(600);
+
+    let nightTicks = 0;
+    for (let tick = 0; tick < CYCLE_TICKS; tick++) {
+      if (threeDWorldCycle(tick).isNight) nightTicks++;
+    }
+    expect(nightTicks / TICKS_PER_SECOND).toBe(300);
+    expect((CYCLE_TICKS - nightTicks) / TICKS_PER_SECOND).toBe(300);
+  });
+
   it("derives repeatable bounded daylight, tide, waves, and current", () => {
-    for (const tick of [0, 225, 450, 675, 900, 12_345]) {
+    const quarter = CYCLE_TICKS / 4;
+    for (const tick of [
+      0,
+      quarter,
+      quarter * 2,
+      quarter * 3,
+      CYCLE_TICKS,
+      12_345,
+    ]) {
       const a = threeDWorldCycle(tick);
       const b = threeDWorldCycle(tick);
       expect(a).toEqual(b);
@@ -24,7 +47,7 @@ describe("deterministic 3D world cycle", () => {
   });
 
   it("raises the night tide and changes ship speed with current direction", () => {
-    const night = threeDWorldCycle(450);
+    const night = threeDWorldCycle(CYCLE_TICKS / 2);
     expect(night.isNight).toBe(true);
     expect(night.tideHeight).toBeGreaterThan(0);
     const aligned = shipCurrentMultiplier(
@@ -45,7 +68,7 @@ describe("deterministic 3D world cycle", () => {
 
   it("keeps 3D wave crests visibly raised above the ocean plane", () => {
     const day = threeDWorldCycle(0);
-    const night = threeDWorldCycle(450);
+    const night = threeDWorldCycle(CYCLE_TICKS / 2);
     // Crests must stand tall enough to read against the terrain beside them:
     // a magnitude-10 hill is about 5.4 world units, so sub-unit waves vanish.
     expect(THREE_D_WAVE_HEIGHT_SCALE).toBeGreaterThanOrEqual(1.5);

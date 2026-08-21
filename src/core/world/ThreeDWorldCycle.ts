@@ -8,7 +8,14 @@ export interface ThreeDWorldCycleState {
   currentY: number;
 }
 
-const CYCLE_TICKS = 900;
+/**
+ * Length of one full day/night cycle, in ticks.
+ *
+ * The simulation runs at 10 ticks per second, so 6000 ticks is ten minutes:
+ * five of day and five of night, split exactly in half by the sun being above
+ * or below the horizon.
+ */
+export const CYCLE_TICKS = 6000;
 
 /**
  * Visible crest height in 3D world units at full wave strength.
@@ -68,7 +75,10 @@ export function threeDWorldCycle(tick: number): ThreeDWorldCycleState {
     (((tick % CYCLE_TICKS) + CYCLE_TICKS) % CYCLE_TICKS) / CYCLE_TICKS;
   const solar = Math.cos(phase * Math.PI * 2);
   const daylight = Math.max(0.12, Math.min(1, 0.56 + solar * 0.44));
-  const isNight = daylight < 0.38;
+  // Exactly half the cycle. Thresholding the daylight curve instead would
+  // make night the narrower part of a cosine -- about 37% of the cycle -- so
+  // the sun's own position is what divides them.
+  const isNight = solar < 0;
   const lunarTide = 0.18 + (1 - daylight) * 0.54;
   const waveStrength = 0.72 + (1 - daylight) * 0.48;
   const currentAngle =

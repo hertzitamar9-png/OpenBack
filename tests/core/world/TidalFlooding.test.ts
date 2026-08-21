@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { WorldMechanicsExecution } from "../../../src/core/execution/WorldMechanicsExecution";
-import { threeDWorldCycle } from "../../../src/core/world/ThreeDWorldCycle";
+import {
+  CYCLE_TICKS,
+  threeDWorldCycle,
+} from "../../../src/core/world/ThreeDWorldCycle";
 
 /**
  * The night tide should visibly take ground.
@@ -100,7 +103,7 @@ function floodedColumns(game: ReturnType<typeof buildGame>): number[] {
 
 describe("night tide reaches inland", () => {
   it("floods past the shoreline over low ground during the night", () => {
-    const nightTick = 450;
+    const nightTick = CYCLE_TICKS / 2;
     expect(threeDWorldCycle(nightTick).isNight).toBe(true);
 
     const game = buildGame();
@@ -114,7 +117,7 @@ describe("night tide reaches inland", () => {
 
   it("never covers high ground", () => {
     const game = buildGame();
-    runUntil(game, 450);
+    runUntil(game, CYCLE_TICKS / 2);
     // Column 9 is magnitude 24: far above the tide.
     expect(game.terrain[WIDTH - 1] & 0x80).not.toBe(0);
   });
@@ -124,12 +127,14 @@ describe("night tide reaches inland", () => {
     const exec = new WorldMechanicsExecution(1);
 
     exec.init(game as any);
-    for (let tick = 0; tick <= 450; tick++) exec.tick(tick);
+    for (let tick = 0; tick <= CYCLE_TICKS / 2; tick++) exec.tick(tick);
     expect(floodedColumns(game).length).toBeGreaterThan(0);
 
     // Advance to full daylight and let the restore drain.
-    for (let tick = 451; tick <= 900; tick++) exec.tick(tick);
-    expect(threeDWorldCycle(900).isNight).toBe(false);
+    for (let tick = CYCLE_TICKS / 2 + 1; tick <= CYCLE_TICKS; tick++) {
+      exec.tick(tick);
+    }
+    expect(threeDWorldCycle(CYCLE_TICKS).isNight).toBe(false);
     expect(floodedColumns(game)).toEqual([]);
   });
 });

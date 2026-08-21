@@ -3,8 +3,21 @@
 // focus point, looking down at a horizontal battlefield. This is steep enough
 // to play comfortably while still exposing coast cliffs and mountain relief.
 export const THREE_D_TILT = 1.14;
-export const THREE_D_MIN_TILT = 0.68;
-export const THREE_D_MAX_TILT = Math.PI / 2 - 0.045;
+// How far the orbit may travel either side of the default tabletop angle.
+//
+// The low end is a near-ground vista rather than a mild lean: at about 10
+// degrees the horizon sits high in frame and terrain reads as landscape you
+// are standing in front of, which is what sells the world as 3D. The camera
+// pulls back as it drops, because threeDCameraDistance keeps the eye clear of
+// the tallest peak whatever the angle -- tilting down and swinging out are the
+// same gesture.
+//
+// The high end stops just short of straight down. At exactly 90 degrees the
+// view direction is parallel to world up, cross(forward, up) collapses to a
+// zero vector, and the camera basis (and everything derived from it) becomes
+// NaN, so a margin has to remain.
+export const THREE_D_MIN_TILT = 0.18;
+export const THREE_D_MAX_TILT = Math.PI / 2 - 0.02;
 export const THREE_D_FOV_DEGREES = 42;
 export const THREE_D_RELIEF_SCALE = 1.5;
 export const THREE_D_MAX_TERRAIN_HEIGHT = 38 * THREE_D_RELIEF_SCALE;

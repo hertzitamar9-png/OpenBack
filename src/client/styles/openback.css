@@ -101,6 +101,33 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
+/* The player panel's unit counters.
+ *
+ * This grid only ever had rules inside two narrow media queries -- phones and
+ * short landscape windows -- so on an ordinary desktop window neither applied,
+ * the element never became a grid at all, and its twelve counters stacked into
+ * a single tall column down the side of the panel. That is also why a stack of
+ * five cities read as "5" with a "0" directly underneath: the 0 was the next
+ * unit type on its own line, not a second count.
+ *
+ * The column count is supplied per render as --player-unit-columns. It carries
+ * a fallback because an unset variable inside repeat() invalidates the whole
+ * declaration, which is what a single column looks like. */
+.player-info-unit-grid {
+  display: grid;
+  grid-template-columns: repeat(
+    var(--player-unit-columns, 6),
+    minmax(0, 2.25rem)
+  );
+  justify-content: start;
+}
+
+.player-info-unit-spacer {
+  width: 2.25rem;
+  height: 1.5rem;
+  visibility: hidden;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

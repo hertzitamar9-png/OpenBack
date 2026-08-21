@@ -16,6 +16,11 @@ export class MapDisplay extends LitElement {
   @property({ attribute: false }) wins: Set<Difficulty> = new Set();
   @property({ attribute: false }) onToggleFavorite?: () => void;
   @state() private mapWebpPath: string | null = null;
+  // The double-resolution thumbnail. Every map ships one, but the card only
+  // ever requested the 500x250 image, so on any high-density display -- every
+  // phone, most laptops -- the browser upscaled it and the previews looked
+  // soft. Offering both lets the device pick the one that matches its pixels.
+  @state() private mapWebp2xPath: string | null = null;
   @state() private mapName: string | null = null;
   @state() private isLoading = true;
   @state() private hasNations = true;
@@ -69,6 +74,7 @@ export class MapDisplay extends LitElement {
       const mapValue = GameMapType[this.mapKey as keyof typeof GameMapType];
       const data = terrainMapFileLoader.getMapData(mapValue);
       this.mapWebpPath = data.webpPath;
+      this.mapWebp2xPath = data.webp2xPath ?? null;
       const manifest = await data.manifest();
       this.mapName = manifest.name;
       this.hasNations =
@@ -146,6 +152,10 @@ export class MapDisplay extends LitElement {
               >
                 <img
                   src="${this.mapWebpPath}"
+                  srcset="
+                    ${this.mapWebpPath} 1x,
+                    ${this.mapWebp2xPath ?? this.mapWebpPath} 2x
+                  "
                   alt="${this.translation || this.mapName}"
                   draggable="false"
                   @dragstart=${this.preventImageDrag}
