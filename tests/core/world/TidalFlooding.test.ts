@@ -38,6 +38,10 @@ function buildGame() {
     terrain,
     owners,
     inSpawnPhase: () => false,
+    // These tests are about the tide, not shipping; the night-foundering pass
+    // walks the unit list every dark tick, so the stub has to answer it.
+    units: () => [],
+    displayMessage: () => {},
     config: () => ({ worldMechanics: () => ({ threeDMode: true }) }),
     width: () => WIDTH,
     height: () => HEIGHT,

@@ -391,13 +391,19 @@ export class ClanGameHistoryView extends LitElement {
     // getMapData() throws for unknown map values — guard so an unmapped
     // server response doesn't tank the whole history view.
     let mapWebpPath: string | null = null;
+    // Offer the double-resolution thumbnail too, or high-density
+    // displays get the 500x250 one stretched.
+    let mapWebp2xPath: string | null = null;
     if (game.map) {
       try {
-        mapWebpPath = terrainMapFileLoader.getMapData(
+        const mapData = terrainMapFileLoader.getMapData(
           game.map as GameMapType,
-        ).webpPath;
+        );
+        mapWebpPath = mapData.webpPath;
+        mapWebp2xPath = mapData.webp2xPath ?? mapData.webpPath;
       } catch {
         mapWebpPath = null;
+        mapWebp2xPath = null;
       }
     }
     const mapDisplayName = game.map ? (getMapName(game.map) ?? game.map) : null;
@@ -419,6 +425,7 @@ export class ClanGameHistoryView extends LitElement {
             >
               <img
                 src=${mapWebpPath}
+                srcset="${mapWebpPath} 1x, ${mapWebp2xPath ?? mapWebpPath} 2x"
                 alt=${mapDisplayName ?? ""}
                 draggable="false"
                 loading="lazy"

@@ -1,11 +1,21 @@
 import { experienceModeFromConfigView } from "../ExperienceMode";
-import { Execution, Game, MessageType, Player, Structures } from "../game/Game";
+import {
+  Execution,
+  Game,
+  MessageType,
+  Player,
+  Structures,
+  UnitType,
+} from "../game/Game";
 import { TileRef } from "../game/GameMap";
 import { GameUpdateType, WorldEventKind } from "../game/GameUpdates";
 import { PseudoRandom } from "../PseudoRandom";
 import {
   isFloodableLand,
   isTidalCoast,
+  nightDepth,
+  shipFoundersAtNight,
+  threeDWorldCycle,
   TIDAL_REACH_TILES,
   tidalFloodRings,
 } from "../world/ThreeDWorldCycle";
@@ -135,6 +145,7 @@ export class WorldMechanicsExecution implements Execution {
     this.restoreTerrain(ticks);
     if (experienceModeFromConfigView(this.game.config()) === "3d") {
       this.processThreeDTide(ticks);
+      this.processNightFoundering(ticks);
     } else if (this.tidalTerrain.size > 0) {
       this.restoreThreeDTide();
     }
@@ -272,6 +283,37 @@ export class WorldMechanicsExecution implements Execution {
         }
       }
       frontier = next;
+    }
+  }
+
+  /**
+   * The sea claims a vessel now and then, but only at night.
+   *
+   * Which hull goes under is decided by hashing the tick with the unit's own
+   * id, not by drawing from this execution's PRNG: every client runs the
+   * simulation independently, so the decision has to be one each of them
+   * reaches alone and all of them agree on. Anything aboard goes down with
+   * it -- that is the risk of sailing in the dark.
+   */
+  private processNightFoundering(ticks: number): void {
+    const waveStrength = threeDWorldCycle(ticks).waveStrength;
+    if (nightDepth(ticks) <= 0) return;
+    for (const ship of this.game.units(
+      UnitType.TransportShip,
+      UnitType.TradeShip,
+      UnitType.Warship,
+    )) {
+      if (!ship.isActive()) continue;
+      if (!shipFoundersAtNight(ticks, ship.id(), waveStrength)) continue;
+      const owner = ship.owner();
+      // The ship's own execution checks isActive() each tick and winds itself
+      // down, so removing the unit from out here is safe.
+      ship.delete(false);
+      this.game.displayMessage(
+        "events_display.ship_lost_at_night",
+        MessageType.UNIT_DESTROYED,
+        owner.id(),
+      );
     }
   }
 

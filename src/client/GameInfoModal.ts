@@ -22,6 +22,9 @@ export class GameInfoModal extends LitElement {
   };
 
   @state() private mapImage: string | null = null;
+  // The double-resolution thumbnail every map ships, so high-density
+  // displays are not shown an upscaled 500x250 image.
+  @state() private mapImage2x: string | null = null;
   @state() private gameInfo: GameEndInfo | null = null;
   @state() private rankedPlayers: Array<PlayerInfo> = [];
   @property({ type: String }) gameId: string | null = null;
@@ -113,6 +116,10 @@ export class GameInfoModal extends LitElement {
         ${this.mapImage
           ? html`<img
               src="${this.mapImage}"
+              srcset="
+                ${this.mapImage} 1x,
+                ${this.mapImage2x ?? this.mapImage} 2x
+              "
               class="absolute place-self-start col-span-full row-span-full h-full rounded-xl mask-[linear-gradient(to_left,transparent,#fff)] object-cover object-center"
             />`
           : html`<div
@@ -177,6 +184,7 @@ export class GameInfoModal extends LitElement {
       const mapType = gameMap as GameMapType;
       const data = terrainMapFileLoader.getMapData(mapType);
       this.mapImage = data.webpPath;
+      this.mapImage2x = data.webp2xPath ?? data.webpPath;
     } catch (error) {
       console.error("Failed to load map image:", error);
     }

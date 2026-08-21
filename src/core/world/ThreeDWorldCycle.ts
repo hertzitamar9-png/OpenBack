@@ -95,6 +95,62 @@ export function threeDWorldCycle(tick: number): ThreeDWorldCycleState {
 }
 
 /**
+ * How far into the night a tick falls: 0 through the whole day and at the
+ * moments of dusk and dawn, rising to 1 at midnight.
+ */
+export function nightDepth(tick: number): number {
+  const phase =
+    (((tick % CYCLE_TICKS) + CYCLE_TICKS) % CYCLE_TICKS) / CYCLE_TICKS;
+  const solar = Math.cos(phase * Math.PI * 2);
+  return solar >= 0 ? 0 : Math.min(1, -solar);
+}
+
+/**
+ * Chance per tick that a vessel founders, at the worst of a heavy night.
+ *
+ * A crossing spent entirely at that peak loses roughly one ship in nine. Real
+ * crossings straddle calmer water, so in practice night sailing is a risk
+ * worth weighing rather than a toll that makes boats unusable.
+ */
+export const NIGHT_FOUNDER_PEAK_CHANCE = 0.0004;
+
+/**
+ * Integer hash of a tick and a unit id, spread over 0..1.
+ *
+ * Every client runs this simulation independently, so which ship goes under
+ * cannot come from a random draw that only one of them makes. Mixing the tick
+ * with the unit's id gives a decision each client reaches alone and all of
+ * them agree on, and Math.imul keeps the arithmetic in int32 so no engine
+ * rounds it differently.
+ */
+function unitTickHash(tick: number, unitId: number): number {
+  let h = Math.imul(tick | 0, 0x27d4eb2d) ^ Math.imul(unitId | 0, 0x165667b1);
+  h = Math.imul(h ^ (h >>> 15), 0x2545f491);
+  h ^= h >>> 13;
+  return (h >>> 0) / 4294967296;
+}
+
+/**
+ * Whether a vessel is lost to the sea this tick.
+ *
+ * Night is when the tide runs highest and the waves are heaviest, so it is
+ * also when a hull can be lost. The risk follows both how deep into the night
+ * it is and how rough that night's water runs, and is nil in daylight.
+ */
+export function shipFoundersAtNight(
+  tick: number,
+  unitId: number,
+  waveStrength: number,
+): boolean {
+  const depth = nightDepth(tick);
+  if (depth <= 0) return false;
+  // waveStrength runs about 0.72 in daylight to 1.2 at the darkest.
+  const roughness = Math.max(0, Math.min(1.2, waveStrength)) / 1.2;
+  const chance = NIGHT_FOUNDER_PEAK_CHANCE * depth * roughness;
+  return unitTickHash(tick, unitId) < chance;
+}
+
+/**
  * How many rings of coast the sea currently holds, 0 through TIDAL_REACH_TILES.
  *
  * The tide used to be a switch: night fell and the whole reach flooded, dawn
@@ -107,17 +163,13 @@ export function threeDWorldCycle(tick: number): ThreeDWorldCycleState {
  * floods exactly the same tiles at exactly the same moment.
  */
 export function tidalFloodRings(tick: number): number {
-  const phase =
-    (((tick % CYCLE_TICKS) + CYCLE_TICKS) % CYCLE_TICKS) / CYCLE_TICKS;
-  const solar = Math.cos(phase * Math.PI * 2);
-  if (solar >= 0) return 0; // daylight: the coast is dry
-  // 0 at dusk and dawn, 1 at midnight.
-  const nightDepth = Math.min(1, -solar);
+  const depth = nightDepth(tick);
+  if (depth <= 0) return 0; // daylight: the coast is dry
   // The shoreline itself goes under as soon as the sun is down; the inland
   // rings follow as the tide keeps rising.
   return Math.min(
     TIDAL_REACH_TILES + 1,
-    1 + Math.floor(nightDepth * TIDAL_REACH_TILES),
+    1 + Math.floor(depth * TIDAL_REACH_TILES),
   );
 }
 

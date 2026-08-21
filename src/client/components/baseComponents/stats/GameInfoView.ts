@@ -34,6 +34,10 @@ export class GameInfoView extends LitElement {
 
   @state() private rankType = RankType.Lifetime;
   @state() private mapImage: string | null = null;
+  // Every map ships a double-resolution thumbnail beside the 500x250 one;
+  // without offering it the browser upscales the small one on any
+  // high-density display.
+  @state() private mapImage2x: string | null = null;
   @state() private gameInfo: GameEndInfo | null = null;
   @state() private rankedPlayers: PlayerInfo[] = [];
   @state() private isLoadingGame = true;
@@ -59,6 +63,8 @@ export class GameInfoView extends LitElement {
         this.isLoadingGame = false;
         this.loadFailed = false;
         this.mapImage = null;
+        this.mapImage2x = null;
+        this.mapImage2x = null;
         this.gameInfo = null;
         this.ranking = null;
         this.rankedPlayers = [];
@@ -187,6 +193,10 @@ export class GameInfoView extends LitElement {
               ? html`<img
                   data-map-image
                   src=${this.mapImage}
+                  srcset="
+                    ${this.mapImage} 1x,
+                    ${this.mapImage2x ?? this.mapImage} 2x
+                  "
                   alt=${mapName}
                   draggable="false"
                   decoding="async"
@@ -298,6 +308,7 @@ export class GameInfoView extends LitElement {
 
   private handleMapImageError(): void {
     this.mapImage = null;
+    this.mapImage2x = null;
   }
 
   private gameTypeLabel(gameType: GameType): string {
@@ -415,6 +426,7 @@ export class GameInfoView extends LitElement {
     this.isLoadingGame = true;
     this.loadFailed = false;
     this.mapImage = null;
+    this.mapImage2x = null;
     this.gameInfo = null;
     this.ranking = null;
     this.rankedPlayers = [];
@@ -433,7 +445,9 @@ export class GameInfoView extends LitElement {
       this.updateRanking();
       try {
         const mapType = session.info.config.gameMap as GameMapType;
-        this.mapImage = terrainMapFileLoader.getMapData(mapType).webpPath;
+        const mapData = terrainMapFileLoader.getMapData(mapType);
+        this.mapImage = mapData.webpPath;
+        this.mapImage2x = mapData.webp2xPath ?? mapData.webpPath;
       } catch (error) {
         console.error("Failed to load map image:", error);
       }

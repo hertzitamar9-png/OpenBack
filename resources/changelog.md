@@ -1,3 +1,10 @@
+## OpenBack v0.36.211 - Night Sailing Has a Price
+
+- Vessels caught at sea after dark can now be lost to the water, with anything aboard going down with them; the danger rises as the night deepens and is nil in daylight.
+- Sharpened the remaining map pictures across the game info, match history and clan history views, which were still showing a half-resolution image on high-density screens.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.210 - The Sea Takes the Coast
 
 - The night tide now takes coastal ground a row at a time as the night deepens, holds it at its height, and gives it back as dawn approaches, instead of the whole coastline flooding at dusk and draining at sunrise.
