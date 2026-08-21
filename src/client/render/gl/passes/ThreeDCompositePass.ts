@@ -323,6 +323,18 @@ uniform float uTime;
 uniform float uDaylight;
 uniform float uTideHeight;
 out vec4 outColor;
+float waterHash(vec2 p){
+  p=fract(p*vec2(123.34,345.45));
+  p+=dot(p,p+34.345);
+  return fract(p.x*p.y);
+}
+float waterNoise(vec2 p){
+  vec2 cell=floor(p),f=fract(p);
+  vec2 w=f*f*(3.0-2.0*f);
+  float a=waterHash(cell),b=waterHash(cell+vec2(1.0,0.0));
+  float c=waterHash(cell+vec2(0.0,1.0)),d=waterHash(cell+vec2(1.0,1.0));
+  return mix(mix(a,b,w.x),mix(c,d,w.x),w.y);
+}
 float worldWave(vec2 p,float time){
   float broad=sin(dot(p,vec2(0.031,0.017))+time*0.55);
   float cross=sin(dot(p,vec2(-0.021,0.039))-time*0.42);
@@ -333,7 +345,10 @@ float shineLayer(vec2 world,vec2 direction,float frequency,float speed,float pha
   vec2 across=vec2(-travel.y,travel.x);
   float bend=sin(dot(world,across)*frequency*0.41+time*speed*0.19+phase)*0.72;
   float wave=sin(dot(world,travel)*frequency+time*speed+phase+bend)*0.5+0.5;
-  return smoothstep(0.16,0.94,wave);
+  // Same drifting gate as the 2D sea, so crests appear in moving patches
+  // instead of fixed parallel bands.
+  float gate=waterNoise(world*0.005+travel*time*speed*0.6+vec2(phase*3.7,phase*1.9));
+  return smoothstep(0.16,0.94,wave)*smoothstep(0.26,0.74,gate);
 }
 void main(){
   ivec2 p=ivec2(clamp(floor(vWorld),vec2(0.0),uMapSize-1.0));
@@ -375,7 +390,7 @@ void main(){
   // Add the broad sheen after directional slope lighting. Otherwise the
   // strongest Gerstner heading darkens it back into one repeated diagonal and
   // the independently moving fields disappear from a normal overhead view.
-  water=mix(water,shorelineTint*daylightScale,shine*0.86);
+  water=mix(water,shorelineTint*daylightScale,shine*1.0);
   outColor=vec4(water,1.0);
 }`;
 

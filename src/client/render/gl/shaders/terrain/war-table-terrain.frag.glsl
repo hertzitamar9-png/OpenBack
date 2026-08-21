@@ -45,7 +45,14 @@ float shineLayer(
   float wave = sin(
     dot(world, travel) * frequency + time * speed + phase + bend
   ) * 0.5 + 0.5;
-  return smoothstep(0.16, 0.94, wave);
+  // A sine alone runs as endless parallel bands: the same crests in the same
+  // places forever. Gate each layer behind a slow noise field drifting along
+  // its own heading, so its shine turns up in different parts of the sea as
+  // time passes and fades again, rather than sitting where it always was.
+  float gate = valueNoise(
+    world * 0.005 + travel * time * speed * 0.6 + vec2(phase * 3.7, phase * 1.9)
+  );
+  return smoothstep(0.16, 0.94, wave) * smoothstep(0.26, 0.74, gate);
 }
 
 uint terrainAt(ivec2 p) {
@@ -117,7 +124,7 @@ void main() {
       world, vec2(-1.00, -0.37), 0.013, -0.12, 7.4, uTime
     ) * 0.13;
     shine = 1.0 - shine;
-    color = mix(color, shorelineTint, shine * 0.82 * seaDetail);
+    color = mix(color, shorelineTint, shine * 0.95 * seaDetail);
 
     // White break still belongs only at the shoreline.
     float shoreBreak = sin(world.x * 0.18 + world.y * 0.13 - uTime * 1.8);

@@ -88,4 +88,34 @@ describe("3D water cycle shader", () => {
     expect(threeD).not.toContain("float openCrest=");
     expect(threeD).toContain("float foamCrest=coastalBreak;");
   });
+
+  // A sine on its own runs as endless parallel bands: the same crests in the
+  // same places, forever. Each layer is gated behind a slow noise field that
+  // drifts along that layer's own heading and speed, so shine turns up in
+  // different parts of the sea over time instead of where it always was.
+  // Rendered check (256x256 of pure open water, no shore anywhere): the
+  // brightest 5% of the surface shares 0.9% of its positions with the same
+  // sea 20s later.
+  it("spawns its shine in drifting patches rather than fixed bands", () => {
+    const terrain = readFileSync(
+      "src/client/render/gl/shaders/terrain/war-table-terrain.frag.glsl",
+      "utf8",
+    );
+    const threeD = readFileSync(
+      "src/client/render/gl/passes/ThreeDCompositePass.ts",
+      "utf8",
+    );
+
+    expect(terrain).toContain("smoothstep(0.26, 0.74, gate)");
+    expect(threeD).toContain("smoothstep(0.26,0.74,gate)");
+    // The gate travels with its layer, so a layer running the other way takes
+    // its patches the other way too.
+    expect(terrain).toContain("world * 0.005 + travel * time * speed * 0.6");
+    expect(threeD).toContain("world*0.005+travel*time*speed*0.6");
+
+    // "patch" is a reserved word in GLSL ES 3.0 -- naming the variable that
+    // fails to compile at runtime, taking the match down with it.
+    expect(terrain).not.toContain("float patch");
+    expect(threeD).not.toContain("float patch");
+  });
 });

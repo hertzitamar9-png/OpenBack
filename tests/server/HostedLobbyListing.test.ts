@@ -709,6 +709,10 @@ describe("WorkerLobbyService hosted lobbies", () => {
       publicLobbies: vi.fn().mockReturnValue([]),
       listedLobbies: vi.fn().mockReturnValue([]),
       game: vi.fn().mockReturnValue(null),
+      // Reported alongside the lobbies so the deploy drain can see whether
+      // anyone is mid-match.
+      runningGames: vi.fn().mockReturnValue(0),
+      activeClients: vi.fn().mockReturnValue(0),
     };
     const server = new EventEmitter();
     service = new WorkerLobbyService(

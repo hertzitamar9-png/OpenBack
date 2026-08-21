@@ -1,3 +1,10 @@
+## OpenBack v0.36.201 - Wandering Sea Light
+
+- Ocean shine now appears in drifting patches instead of fixed repeating bands, so light turns up across different parts of the sea over time rather than always the same places, in both Classic 2D and Immersive 3D.
+- Added a deployment drain so an update waits for matches in progress to finish before restarting, instead of ending a game that is being played.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.200 - Ranked, Profiles and Lobby Repairs
 
 - Fixed Ranked in Immersive 3D refusing every match with a connection error: the queue matched players in 3D but always built the game in 2D, so joining was rejected as an experience mismatch.

@@ -174,6 +174,8 @@ export class WorkerLobbyService {
     this.sendToMaster({
       type: "lobbyList",
       lobbies: [...publicLobbies, ...hostedLobbies],
+      runningGames: this.gm.runningGames(),
+      activeClients: this.gm.activeClients(),
     } satisfies WorkerLobbyList);
   }
 

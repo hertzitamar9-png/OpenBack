@@ -253,6 +253,13 @@ export async function stopMaster(): Promise<void> {
   await closeAuthPersistence();
 }
 
+// Matches in progress right now. The deploy script polls this and waits for
+// zero before restarting: game state lives in worker memory, so a restart ends
+// every match that is running, however gracefully the client handles it.
+app.get("/api/live-matches", (_req, res) => {
+  res.json(lobbyService?.liveCounts() ?? { matches: 0, players: 0 });
+});
+
 app.get("/api/health", (_req, res) => {
   const ready = lobbyService?.isHealthy() ?? false;
   if (ready) {

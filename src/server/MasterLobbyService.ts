@@ -35,6 +35,11 @@ export class MasterLobbyService {
   private readonly workers = new Map<number, Worker>();
   // Worker id => the lobbies it owns.
   private readonly workerLobbies = new Map<number, InternalGameInfo[]>();
+  // Last counts each worker reported alongside its lobbies.
+  private readonly workerCounts = new Map<
+    number,
+    { runningGames: number; activeClients: number }
+  >();
   private readonly readyWorkers = new Set<number>();
   // gameID => consecutive broadcast cycles a hosted lobby has lost the
   // per-creator dedup or overflowed the cluster-wide cap. Losing once can be
@@ -66,6 +71,10 @@ export class MasterLobbyService {
           break;
         case "lobbyList":
           this.workerLobbies.set(workerId, this.validLobbies(msg.lobbies));
+          this.workerCounts.set(workerId, {
+            runningGames: msg.runningGames ?? 0,
+            activeClients: msg.activeClients ?? 0,
+          });
           break;
       }
     });
@@ -92,7 +101,23 @@ export class MasterLobbyService {
   removeWorker(workerId: number) {
     this.workers.delete(workerId);
     this.workerLobbies.delete(workerId);
+    this.workerCounts.delete(workerId);
     this.readyWorkers.delete(workerId);
+  }
+
+  /**
+   * Matches in progress across the cluster, for the deploy drain. A worker
+   * that has not reported yet counts as zero rather than blocking, which is
+   * the same answer a freshly-started worker would give anyway.
+   */
+  liveCounts(): { matches: number; players: number } {
+    let matches = 0;
+    let players = 0;
+    for (const counts of this.workerCounts.values()) {
+      matches += counts.runningGames;
+      players += counts.activeClients;
+    }
+    return { matches, players };
   }
 
   isHealthy(): boolean {

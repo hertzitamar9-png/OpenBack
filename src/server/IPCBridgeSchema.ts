@@ -46,6 +46,11 @@ export const InternalPublicGamesSchema = z.object({
 const WorkerLobbyListSchema = z.object({
   type: z.literal("lobbyList"),
   lobbies: z.array(z.unknown()),
+  // Piggy-backed on the periodic lobby report so /api/live-matches can answer
+  // "is anyone mid-match?" without a second timer. Optional so a worker from
+  // an older build still parses.
+  runningGames: z.number().optional(),
+  activeClients: z.number().optional(),
 });
 
 const WorkerReadySchema = z.object({

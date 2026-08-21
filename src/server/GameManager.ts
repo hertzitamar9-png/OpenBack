@@ -118,6 +118,20 @@ export class GameManager {
     return this.games.size;
   }
 
+  /**
+   * Games actually being played, i.e. past the lobby. A deploy drains on this:
+   * restarting the process discards in-memory game state, so anyone mid-match
+   * loses it. Lobbies are deliberately excluded -- nobody has invested a match
+   * in one yet, and an idle lobby would otherwise hold a deploy open forever.
+   */
+  runningGames(): number {
+    let running = 0;
+    this.games.forEach((game: GameServer) => {
+      if (game.phase() !== GamePhase.Lobby) running++;
+    });
+    return running;
+  }
+
   activeClients(): number {
     let totalClients = 0;
     this.games.forEach((game: GameServer) => {
