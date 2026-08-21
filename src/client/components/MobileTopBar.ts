@@ -88,8 +88,15 @@ export class MobileTopBar extends LitElement {
       <div
         class="lg:hidden fixed left-0 right-0 top-0 z-[60] pt-[env(safe-area-inset-top)] bg-surface border-b border-white/10"
       >
+        <!-- The wordmark takes the room the two control groups leave, rather
+             than a fixed centre track. Centring a full-width wordmark on the
+             bar only works while both sides are the same width: signing in
+             adds the avatar and chevron to the right group, which then grew
+             leftwards over the logo (the bell landed on top of it). Sizing the
+             side columns to their content and letting the middle flex means
+             the groups can never collide, whatever the right group holds. -->
         <div
-          class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center h-14 px-2 gap-2"
+          class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center h-14 px-2 gap-1"
         >
           <div class="col-start-1 justify-self-start flex items-center gap-1">
             <button
@@ -150,11 +157,13 @@ export class MobileTopBar extends LitElement {
           </div>
 
           <div
-            class="col-start-2 flex items-center justify-center text-malibu-blue min-w-0"
+            class="col-start-2 flex items-center justify-center text-malibu-blue min-w-0 overflow-hidden"
           >
+            <!-- Full size when the bar has room; object-contain scales it down
+                 on narrow phones instead of pushing into the controls. -->
             ${openBackHomeWordmark({
-              wrapperClass: "block h-7 max-w-[9rem]",
-              imageClass: "block h-full max-w-full w-auto object-contain",
+              wrapperClass: "block h-7 w-full min-w-0 max-w-[9rem]",
+              imageClass: "block h-full w-full object-contain",
             })}
           </div>
 

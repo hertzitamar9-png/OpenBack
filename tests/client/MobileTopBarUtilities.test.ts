@@ -77,3 +77,38 @@ describe("mobile top bar utilities", () => {
     expect(document.documentElement.classList).toContain("overflow-hidden");
   });
 });
+
+// Signing in widens the trailing group (avatar + chevron join the three
+// utility icons). With a fixed centre track and equal flexible side tracks,
+// that group is wider than its track and overflows leftwards over the
+// wordmark — measured at 67px of overlap on a 375px-wide phone, which is what
+// put the notification bell on top of the logo. Content-sized side columns
+// with a flexible middle cannot collide however wide the groups grow.
+describe("mobile top bar layout", () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  it("sizes the side columns to their content and flexes the wordmark", async () => {
+    const topBar = new MobileTopBar();
+    document.body.appendChild(topBar);
+    await topBar.updateComplete;
+
+    const grid = topBar.querySelector<HTMLElement>(".grid");
+    expect(grid).not.toBeNull();
+    expect(grid!.className).toContain("grid-cols-[auto_minmax(0,1fr)_auto]");
+    // A fixed centre track is what let the groups overlap.
+    expect(grid!.className).not.toContain(
+      "grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]",
+    );
+
+    const middle = grid!.querySelector<HTMLElement>(".col-start-2");
+    expect(middle).not.toBeNull();
+    // The wordmark scales down inside its cell rather than pushing outwards.
+    expect(middle!.className).toContain("min-w-0");
+    expect(middle!.className).toContain("overflow-hidden");
+    const logo = middle!.querySelector("img");
+    expect(logo).not.toBeNull();
+    expect(logo!.className).toContain("object-contain");
+  });
+});

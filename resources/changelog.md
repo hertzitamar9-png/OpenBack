@@ -1,3 +1,9 @@
+## OpenBack v0.36.199 - Untangled Phone Header
+
+- Fixed the phone header controls piling on top of the OpenBack wordmark once you sign in, so the notification bell no longer sits over the logo however wide the account button grows.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.198 - Instant Mobile Sign In
 
 - Fixed the phone top-bar account button spinning forever instead of settling into the Sign In icon or your profile picture, so it is ready as soon as the rest of the Home menu is.
