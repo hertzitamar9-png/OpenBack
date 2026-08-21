@@ -115,6 +115,12 @@ textarea:focus-visible {
 /* Phone and tablet ergonomics are centralized here so every current and future
    menu page inherits the same safe sizing, touch behavior and keyboard rules. */
 @media (max-width: 1023px) {
+  .game-safe-area {
+    box-sizing: border-box;
+    padding-left: max(0.25rem, env(safe-area-inset-left));
+    padding-right: max(0.25rem, env(safe-area-inset-right));
+  }
+
   page-footer .footer-language-selector #lang-selector {
     width: 2rem;
     height: 2rem;
@@ -187,8 +193,23 @@ textarea:focus-visible {
   }
 
   .player-info-surface {
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
+    padding-left: max(0.25rem, env(safe-area-inset-left));
+    padding-right: max(0.25rem, env(safe-area-inset-right));
+  }
+
+  .player-info-unit-grid {
+    display: grid;
+    grid-template-columns: repeat(
+      var(--player-unit-columns),
+      minmax(0, 2.25rem)
+    );
+    justify-content: start;
+  }
+
+  .player-info-unit-spacer {
+    width: 2.25rem;
+    height: 1.5rem;
+    visibility: hidden;
   }
 
   #game-bottom-hud,
@@ -382,9 +403,14 @@ textarea:focus-visible {
   }
 
   .player-info-unit-grid {
-    flex-wrap: nowrap;
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
     gap: 1px !important;
     overflow: hidden;
+  }
+
+  .player-info-unit-spacer {
+    display: none;
   }
 
   .player-info-unit-count {

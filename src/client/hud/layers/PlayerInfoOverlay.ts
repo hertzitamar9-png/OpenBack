@@ -55,6 +55,33 @@ const militaryBaseIcon = assetUrl("images/MilitaryBaseIconWhite.svg");
 const tankIcon = assetUrl("images/TankIconWhite.svg");
 const tankMineIcon = assetUrl("images/TankMineIconWhite.svg");
 
+const PLAYER_UNIT_COUNTERS: ReadonlyArray<{
+  type: UnitType;
+  icon: string;
+}> = [
+  { type: UnitType.City, icon: cityIcon },
+  { type: UnitType.Factory, icon: factoryIcon },
+  { type: UnitType.Port, icon: portIcon },
+  { type: UnitType.MissileSilo, icon: missileSiloIcon },
+  { type: UnitType.SAMLauncher, icon: samLauncherIcon },
+  { type: UnitType.Warship, icon: warshipIcon },
+  { type: UnitType.Plane, icon: planeIcon },
+  { type: UnitType.Runway, icon: runwayIcon },
+  { type: UnitType.MANPAD, icon: manpadIcon },
+  { type: UnitType.MilitaryBase, icon: militaryBaseIcon },
+  { type: UnitType.Tank, icon: tankIcon },
+  { type: UnitType.TankMine, icon: tankMineIcon },
+];
+
+export function balanceUnitCounterTypes(types: readonly UnitType[]): {
+  columns: number;
+  items: Array<UnitType | null>;
+} {
+  const items: Array<UnitType | null> = [...types];
+  if (items.length % 2 !== 0) items.push(null);
+  return { columns: Math.max(1, items.length / 2), items };
+}
+
 function euclideanDistWorld(
   coord: { x: number; y: number },
   tileRef: TileRef,
@@ -329,6 +356,12 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
         break;
     }
     const playerTeam = getTranslatedPlayerTeamLabel(player.team());
+    const enabledUnitCounters = PLAYER_UNIT_COUNTERS.filter(
+      ({ type }) => !this.game.config().isUnitDisabled(type),
+    );
+    const balancedUnitCounters = balanceUnitCounterTypes(
+      enabledUnitCounters.map(({ type }) => type),
+    );
 
     return html`
       <div
@@ -418,32 +451,21 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
             ${allianceHtml ?? ""}
           </div>
           <div
-            class="player-info-unit-grid flex flex-wrap gap-0.5 lg:gap-1 items-center mt-0.5"
+            class="player-info-unit-grid gap-0.5 lg:gap-1 items-center mt-0.5"
+            style="--player-unit-columns:${balancedUnitCounters.columns}"
           >
-            ${this.displayUnitCount(player, UnitType.City, cityIcon)}
-            ${this.displayUnitCount(player, UnitType.Factory, factoryIcon)}
-            ${this.displayUnitCount(player, UnitType.Port, portIcon)}
-            ${this.displayUnitCount(
-              player,
-              UnitType.MissileSilo,
-              missileSiloIcon,
-            )}
-            ${this.displayUnitCount(
-              player,
-              UnitType.SAMLauncher,
-              samLauncherIcon,
-            )}
-            ${this.displayUnitCount(player, UnitType.Warship, warshipIcon)}
-            ${this.displayUnitCount(player, UnitType.Plane, planeIcon)}
-            ${this.displayUnitCount(player, UnitType.Runway, runwayIcon)}
-            ${this.displayUnitCount(player, UnitType.MANPAD, manpadIcon)}
-            ${this.displayUnitCount(
-              player,
-              UnitType.MilitaryBase,
-              militaryBaseIcon,
-            )}
-            ${this.displayUnitCount(player, UnitType.Tank, tankIcon)}
-            ${this.displayUnitCount(player, UnitType.TankMine, tankMineIcon)}
+            ${balancedUnitCounters.items.map((type) => {
+              if (type === null) {
+                return html`<div
+                  class="player-info-unit-spacer"
+                  aria-hidden="true"
+                ></div>`;
+              }
+              const counter = enabledUnitCounters.find(
+                (candidate) => candidate.type === type,
+              )!;
+              return this.displayUnitCount(player, type, counter.icon);
+            })}
           </div>
         </div>
       </div>

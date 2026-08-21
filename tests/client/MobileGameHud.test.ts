@@ -29,10 +29,19 @@ describe("mobile game HUD", () => {
 
   it("provides stable responsive HUD hooks", () => {
     expect(index).toContain('id="game-bottom-hud"');
+    expect(index).toContain("game-safe-area");
     expect(index).toContain("game-hud-primary");
     expect(controlPanel).toContain("game-control-panel");
     expect(unitDisplay).toContain("game-unit-grid");
     expect(unitDisplay).toContain("game-unit-item");
+  });
+
+  it("keeps curved-screen safe areas inside the mobile HUD", () => {
+    expect(styles).toContain("max(0.25rem, env(safe-area-inset-left))");
+    expect(styles).toContain("max(0.25rem, env(safe-area-inset-right))");
+    expect(styles).toMatch(
+      /\.player-info-unit-grid\s*{[^}]*grid-template-columns:\s*repeat\(\s*var\(--player-unit-columns\)/s,
+    );
   });
 
   it("keeps complete unit information inside the mobile viewport", () => {
