@@ -52,8 +52,16 @@ float waterSurfaceHeight(vec2 p,float phase,float tide){
 /**
  * How deep a hull sits into the surface it rides, in world units.
  *
- * Sitting exactly on the surface makes a vessel look stuck to the water like a
- * decal; a little draft reads as displacement without letting crests close
- * over the deck.
+ * Sized against the hulls themselves, not by eye. A transport's hull is the
+ * primitive at y=0.25 with a height of 0.45, so it spans roughly y 0.03..0.48
+ * -- the model's origin sits at the keel, not its middle. At the 0.35 this
+ * started as, 0.35 of that 0.45 hull was under water: about three quarters
+ * submerged, leaving a waterlogged sliver and the cabin, which is exactly what
+ * "it drowns" looked like.
+ *
+ * 0.12 puts the keel just under the surface and keeps roughly three quarters
+ * of the hull dry, so it reads as displacing water rather than sinking in it.
+ * Vessels also carry a "hover" animation worth +/-0.11, so the draft has to
+ * leave room for the trough of that bob too.
  */
-export const THREE_D_HULL_DRAFT = 0.35;
+export const THREE_D_HULL_DRAFT = 0.12;

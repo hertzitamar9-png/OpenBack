@@ -1,5 +1,6 @@
 import { UnitType } from "../../../../core/game/Game";
 import type { GhostPreviewData, UnitState } from "../../types";
+import { HeadingTracker } from "../UnitHeadingTracker";
 import { createProgram } from "../utils/GlUtils";
 import { loadThreeDAsset } from "./ThreeDAssetLoader";
 import { THREE_D_ASSET_MANIFEST, threeDAsset } from "./ThreeDAssetManifest";
@@ -209,6 +210,9 @@ export class ThreeDUnitPass {
   private meshes = new Map<string, Mesh>();
   private batches = new Map<string, number[]>();
   private uniforms: Record<string, WebGLUniformLocation | null>;
+  // 3D models derive their own heading, so they need their own memory of it.
+  private readonly headingTracker = new HeadingTracker();
+  private lastGameTick = -1;
   // Sea state for the current frame, set from the authoritative world cycle.
   private tideHeight = 0;
   private waveStrength = 1;
@@ -280,7 +284,13 @@ export class ThreeDUnitPass {
       height: number;
     },
     structures: ReadonlyMap<number, UnitState> = new Map(),
+    gameTick = -1,
   ): void {
+    // Turning is per simulation tick, so re-rendering one tick cannot spin
+    // units faster than the game runs.
+    const tickAdvanced = gameTick !== this.lastGameTick;
+    this.lastGameTick = gameTick;
+    this.headingTracker.beginFrame();
     for (const batch of this.batches.values()) batch.length = 0;
     const halfHeight = view
       ? view.height / Math.max(0.01, view.zoom * 2)
@@ -327,12 +337,20 @@ export class ThreeDUnitPass {
       ) {
         continue;
       }
-      let heading = unit.trajectoryAngle ?? 0;
+      // What this unit is doing right now, or null when it did not move and
+      // so says nothing about which way it faces. Answering zero here -- due
+      // north -- is what made ships snap upright between tile steps.
+      let headingTarget: number | null = unit.trajectoryAngle ?? null;
       if (unit.trajectoryAngle === undefined && unit.pos !== unit.lastPos) {
         const lx = unit.lastPos % this.mapWidth;
         const lz = (unit.lastPos - lx) / this.mapWidth;
-        heading = Math.atan2(z - lz, x - lx);
+        headingTarget = Math.atan2(z - lz, x - lx);
       }
+      const heading = this.headingTracker.track(
+        unit.id,
+        headingTarget,
+        tickAdvanced,
+      );
       const isGhost = unit === ghostUnit;
       const ghostValid = ghost?.valid ?? false;
       const alpha = isGhost ? 0.72 : unit.underConstruction ? 0.72 : 1;
@@ -420,6 +438,34 @@ export class ThreeDUnitPass {
           x,
           z,
         );
+      // Wake: a foam patch trailing a vessel that is under way. It rides the
+      // water surface like the hull does (surface*10), sits a hair above it so
+      // it is not buried in the swell, and is only drawn while the vessel is
+      // actually moving -- a moored ship leaves no wake.
+      if (surface === SURFACE.water && headingTarget !== null && !isGhost) {
+        const trail = model.footprint * 0.85;
+        this.batches
+          .get("cylinder")!
+          .push(
+            x - Math.cos(heading) * trail * 0.62,
+            0.03,
+            z - Math.sin(heading) * trail * 0.62,
+            trail,
+            0.02,
+            model.footprint * 0.22,
+            heading,
+            0,
+            0,
+            0,
+            unit.ownerID,
+            MATERIAL.glass,
+            0.42,
+            ANIMATION.none + surface * 10,
+            x,
+            z,
+          );
+      }
+
       const key = threeDModelBatchKey(unit.unitType as UnitType);
       const batch = this.batches.get(key);
       if (!batch) continue;
@@ -468,6 +514,7 @@ export class ThreeDUnitPass {
         gl.DYNAMIC_DRAW,
       );
     }
+    this.headingTracker.endFrame();
   }
 
   updateGhostPreview(data: GhostPreviewData | null): void {

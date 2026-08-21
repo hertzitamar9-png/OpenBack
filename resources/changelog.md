@@ -1,3 +1,11 @@
+## OpenBack v0.36.208 - Ships Ride, Steer and Leave a Wake
+
+- Immersive 3D vessels no longer sit three quarters under water; they float on the swell with the hull clearly above the surface.
+- Ships point where they are actually sailing in every direction and swing round to a new course, instead of snapping back to facing north between moves.
+- Vessels under way now trail a wake across the water behind them.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.207 - Counters Fill Every Panel
 
 - The player panel's unit counters now spread across the full panel on narrow and unmaximised windows too, not only on wide ones.

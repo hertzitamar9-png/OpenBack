@@ -1021,7 +1021,12 @@ export class GPURenderer {
     this.frameTick++;
     this.unitPass.setFrameTick(this.frameTick);
     this.unitPass.updateUnits(units, gameTick);
-    this.threeDUnitPass?.update(units, undefined, this.lastStructures);
+    this.threeDUnitPass?.update(
+      units,
+      undefined,
+      this.lastStructures,
+      gameTick,
+    );
     this.barPass.updateBars(units, this.lastStructures, gameTick);
     this.pointLightPass.updateLights(units);
     this.parkedVehicleGlowPass.update(units);
@@ -1067,7 +1072,12 @@ export class GPURenderer {
     this.structureLevelPass.updateStructures(units);
     this.samRadiusPass.updateStructures(units);
     this.unitPass.setStructures(units);
-    this.threeDUnitPass?.update(this.lastUnits, undefined, units);
+    this.threeDUnitPass?.update(
+      this.lastUnits,
+      undefined,
+      units,
+      this.simulationTick,
+    );
     const posts: { x: number; y: number; ownerID: number }[] = [];
     const w = this.mapW;
     for (const u of units.values()) {

@@ -59,6 +59,7 @@ import {
   ThreeDCameraState,
   threeDScreenFacingScale,
 } from "../three-d/ThreeDCamera";
+import { HeadingTracker } from "../UnitHeadingTracker";
 import { getPaletteSize } from "../utils/ColorUtils";
 import { createProgram, shaderSrc } from "../utils/GlUtils";
 import { loadBattlefieldAtlas } from "./BattlefieldAtlasLoader";
@@ -153,35 +154,10 @@ export function unitSpriteHeading(
   return Math.atan2(x - lastX, -(y - lastY));
 }
 
-/**
- * Most a unit may rotate in one tick, in radians.
- *
- * Path steps are whole tiles, so a raw heading only ever takes one of eight
- * values and a route change snapped the artwork through 45 or 90 degrees in a
- * single frame. Turning toward the new heading instead reads as a vessel
- * coming about. At ten ticks a second this swings 90 degrees in just under
- * half a second.
- */
-export const MAX_TURN_PER_TICK = 0.35;
-
-/**
- * Rotate `current` toward `target` by at most `maxStep`, the short way round.
- *
- * Angles wrap, so the naive difference sends a unit crossing north the long
- * way round -- a full spin in place to turn a few degrees.
- */
-export function turnToward(
-  current: number,
-  target: number,
-  maxStep: number,
-): number {
-  const twoPi = Math.PI * 2;
-  let delta = (target - current) % twoPi;
-  if (delta > Math.PI) delta -= twoPi;
-  if (delta < -Math.PI) delta += twoPi;
-  if (Math.abs(delta) <= maxStep) return target;
-  return current + Math.sign(delta) * maxStep;
-}
+// Heading memory and turning live in one module now: the 3D model renderer
+// needs exactly the same behaviour, and a second copy there is what left ships
+// still snapping to north. Re-exported so existing importers are unaffected.
+export { MAX_TURN_PER_TICK, turnToward } from "../UnitHeadingTracker";
 
 const TRAIN_ENGINE_COL = UNIT_ORDER.indexOf("TrainEngine");
 const TRAIN_CARRIAGE_COL = UNIT_ORDER.indexOf("TrainCarriage");
@@ -323,8 +299,7 @@ export class UnitPass {
   // Where each unit is currently pointing, and which units were alive this
   // tick. A ship only produces a new heading on the ticks it actually steps,
   // so the last one has to be remembered between steps.
-  private readonly headings = new Map<number, number>();
-  private readonly headingsSeen = new Set<number>();
+  private readonly headingTracker = new HeadingTracker();
   /** Wall-clock start, for uTime (seconds) — matches StructurePass so the
    *  warship effect animates at the same pace as the structures effect. */
   private startTime = performance.now();
@@ -551,7 +526,7 @@ export class UnitPass {
       this.lastGameTick = gameTick;
       this.lastUnitsUpdateMs = performance.now();
     }
-    this.headingsSeen.clear();
+    this.headingTracker.beginFrame();
     this.groundCount = 0;
     this.missileCount = 0;
     this.smoothSegs.length = 0;
@@ -689,7 +664,7 @@ export class UnitPass {
       }
     }
 
-    this.pruneHeadings();
+    this.headingTracker.endFrame();
 
     const gl = this.gl;
     if (this.groundCount > 0) {
@@ -714,42 +689,12 @@ export class UnitPass {
     }
   }
 
-  /**
-   * The angle to draw a unit at: its own heading, turned gradually toward
-   * wherever it is now travelling.
-   *
-   * Path steps are single tiles, so the raw heading only takes one of eight
-   * values and jumped between them; and on any tick without a step it used to
-   * come back as due north, which is what made ships face the wrong way most
-   * of the time instead of where they were going.
-   */
   private trackHeading(unit: UnitState, tickAdvanced: boolean): number {
-    this.headingsSeen.add(unit.id);
-    const target = unitSpriteHeading(unit, this.mapW);
-    const current = this.headings.get(unit.id);
-
-    // Nothing pointing it yet: start facing wherever it is headed, or north
-    // for something that has never moved at all.
-    if (current === undefined) {
-      const start = target ?? 0;
-      this.headings.set(unit.id, start);
-      return start;
-    }
-    // No new information, or the same tick re-rendered: hold the last heading.
-    if (target === null || !tickAdvanced) return current;
-
-    const next = turnToward(current, target, MAX_TURN_PER_TICK);
-    this.headings.set(unit.id, next);
-    return next;
-  }
-
-  // Units that died or left view must not keep their heading, or a recycled id
-  // would inherit it and the map would grow for the whole match.
-  private pruneHeadings(): void {
-    if (this.headings.size === this.headingsSeen.size) return;
-    for (const id of this.headings.keys()) {
-      if (!this.headingsSeen.has(id)) this.headings.delete(id);
-    }
+    return this.headingTracker.track(
+      unit.id,
+      unitSpriteHeading(unit, this.mapW),
+      tickAdvanced,
+    );
   }
 
   setAltView(active: boolean): void {

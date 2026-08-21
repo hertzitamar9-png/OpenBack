@@ -1,0 +1,116 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { describe, expect, it } from "vitest";
+import { THREE_D_HULL_DRAFT } from "../../../src/client/render/gl/three-d/ThreeDWaterSurface";
+import {
+  HeadingTracker,
+  MAX_TURN_PER_TICK,
+} from "../../../src/client/render/gl/UnitHeadingTracker";
+
+const read = (p: string) => readFileSync(resolve(process.cwd(), p), "utf8");
+const unitPass3D = read("src/client/render/gl/three-d/ThreeDUnitPass.ts");
+const unitPass2D = read("src/client/render/gl/passes/UnitPass.ts");
+
+// The transport's hull primitive, straight out of the model registry: centred
+// at y=0.25 with a height of 0.45, and the model's origin is its keel rather
+// than its middle.
+const HULL_CENTRE = 0.25;
+const HULL_HEIGHT = 0.45;
+
+describe("ships on the water", () => {
+  it("keeps most of the hull above the waterline", () => {
+    const bottom = HULL_CENTRE - HULL_HEIGHT / 2 - THREE_D_HULL_DRAFT;
+    const top = HULL_CENTRE + HULL_HEIGHT / 2 - THREE_D_HULL_DRAFT;
+    const submerged = Math.max(0, Math.min(HULL_HEIGHT, -bottom));
+
+    // The keel sits under the surface -- it displaces water rather than
+    // resting on it like a decal...
+    expect(bottom).toBeLessThan(0);
+    // ...but the hull is mostly dry. At the 0.35 this started as, 78% of the
+    // hull was under water, leaving a sliver and the cabin showing, which is
+    // what "the ship is drowning" looked like.
+    expect(submerged / HULL_HEIGHT).toBeLessThan(0.35);
+    expect(top).toBeGreaterThan(0.25);
+
+    // Vessels also bob +/-0.11 from their hover animation; the trough of that
+    // must not put the deck under.
+    expect(top - 0.11).toBeGreaterThan(0);
+  });
+
+  it("reads its height from the shared sea, not a fixed plane", () => {
+    expect(unitPass3D).toContain(
+      "waterSurfaceHeight(iWorld.xz,waterPhase(uTime)",
+    );
+    expect(unitPass3D).not.toContain("surface==1?-0.08");
+  });
+});
+
+describe("ship heading", () => {
+  // Both renderers derived a heading from the last step and both fell back to
+  // zero -- due north -- on a tick without one. Ships move a tile at a time,
+  // so they snapped upright between steps. Fixing only the 2D pass left 3D
+  // models, which is what ships actually are, still doing it.
+  it("is tracked by both renderers through the one shared tracker", () => {
+    expect(unitPass3D).toContain("HeadingTracker");
+    expect(unitPass3D).toContain("this.headingTracker.track(");
+    expect(unitPass2D).toContain("HeadingTracker");
+
+    // The 3D pass must not fall back to north when a unit has not moved.
+    expect(unitPass3D).not.toContain(
+      "let heading = unit.trajectoryAngle ?? 0;",
+    );
+    expect(unitPass3D).toContain(
+      "let headingTarget: number | null = unit.trajectoryAngle ?? null;",
+    );
+  });
+
+  it("holds the last heading when a unit does not move", () => {
+    const tracker = new HeadingTracker();
+    tracker.beginFrame();
+    // Turn far enough that it takes several ticks, so the held value is not
+    // just the target already reached.
+    tracker.track(1, Math.PI, true);
+    tracker.beginFrame();
+    const moving = tracker.track(1, Math.PI, true);
+    tracker.beginFrame();
+    const idle = tracker.track(1, null, true);
+
+    expect(idle).toBe(moving);
+    expect(idle).not.toBe(0);
+  });
+
+  it("turns gradually toward a new course", () => {
+    const tracker = new HeadingTracker();
+    tracker.beginFrame();
+    tracker.track(7, 0, true);
+    tracker.beginFrame();
+    const next = tracker.track(7, Math.PI / 2, true);
+
+    expect(next).toBeCloseTo(MAX_TURN_PER_TICK);
+    expect(next).toBeLessThan(Math.PI / 2);
+  });
+
+  it("forgets units that are gone", () => {
+    const tracker = new HeadingTracker();
+    tracker.beginFrame();
+    tracker.track(3, Math.PI, true);
+    tracker.endFrame();
+
+    // Next frame the unit is absent, so its heading must not survive for a
+    // recycled id to inherit.
+    tracker.beginFrame();
+    tracker.endFrame();
+    tracker.beginFrame();
+    expect(tracker.track(3, null, true)).toBe(0);
+  });
+});
+
+describe("ship wake", () => {
+  it("trails a vessel that is under way, and only then", () => {
+    expect(unitPass3D).toContain(
+      "surface === SURFACE.water && headingTarget !== null",
+    );
+    // It rides the sea like the hull does rather than the terrain.
+    expect(unitPass3D).toContain("ANIMATION.none + surface * 10");
+  });
+});
