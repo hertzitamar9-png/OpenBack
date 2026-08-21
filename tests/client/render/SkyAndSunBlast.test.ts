@@ -98,3 +98,35 @@ describe("keep playing after the sun exploded", () => {
     expect(banner).toContain("win_modal.sun_already_exploded");
   });
 });
+
+// The sun and moon used to share one shallow arc that never left the visible
+// sky, so both were up at once and the changeover was a cross-fade in place --
+// the moon already overhead as the sun faded out. They now ride opposite sides
+// of one circle and are shown according to their own altitude, so whichever is
+// up has the sky to itself and dusk is one setting while the other climbs.
+// Checked numerically over the cycle: each body is fully up for its own half
+// and both are only faintly visible (0.22) at the two twilight crossings.
+describe("day and night handover", () => {
+  const source = readFileSync(
+    "src/client/render/gl/passes/ThreeDCompositePass.ts",
+    "utf8",
+  );
+
+  it("sends each body below the horizon for half the cycle", () => {
+    // A full turn of the circle, not a half-sine that stays in frame.
+    expect(source).toContain("float a=phase*6.28318530718");
+    expect(source).toContain("SKY_HORIZON+cos(a)*SKY_ARC_HEIGHT");
+    // The arc has to reach below the horizon or nothing ever sets.
+    expect(source).toContain("const float SKY_HORIZON=0.40");
+    expect(source).toContain("const float SKY_ARC_HEIGHT=0.50");
+    expect(source).not.toContain("0.88-sin(t*3.14159265)*0.16");
+  });
+
+  it("fades each body by its own height rather than the daylight level", () => {
+    expect(source).toContain("float sunVisible=max(aboveHorizonFade(sunPos.y)");
+    expect(source).toContain("float moonVisible=aboveHorizonFade(moonPos.y)");
+    // Threshold-on-daylight is what made the swap feel instant.
+    expect(source).not.toContain("float sunVisible=max(day,uSunBlast)");
+    expect(source).not.toContain("float moonVisible=night*uShowSky");
+  });
+});

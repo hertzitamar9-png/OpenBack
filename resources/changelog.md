@@ -1,3 +1,9 @@
+## OpenBack v0.36.204 - Real Sunrise and Sunset
+
+- The sun and moon now rise and set on opposite sides of the sky instead of both hanging overhead and swapping in place, so dusk and dawn are gradual and only briefly show both, low and faint.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.203 - Panel, Previews and a Longer Day
 
 - Fixed the player panel stacking its unit counters into one tall column on desktop, which is also why a stack of five cities showed a 5 with a 0 directly beneath it; the counters sit in a proper grid again.

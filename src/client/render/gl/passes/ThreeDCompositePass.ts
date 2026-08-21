@@ -55,16 +55,30 @@ float noise2(vec2 p){
   return mix(mix(a,b,f.x),mix(c,d,f.x),f.y);
 }
 
-// Celestial bodies travel a shallow arc inside the visible sky band.
+// Celestial bodies ride a real arc: up over the sky through their half of the
+// cycle, and down below the horizon for the other half.
 //
-// Sweeping x across the full 0..1 put the sun hard against the screen edge for
-// much of the cycle, and dipping to y=0.44 dropped it into the horizon wash
-// where belowHorizon fades everything into the ocean floor colour. Both axes
-// are inset so the sun and moon stay on screen and above the horizon.
+// They used to share one shallow band that never left the visible sky, so the
+// sun and moon were both up at once and the changeover was a cross-fade in
+// place -- the moon was already sitting overhead when the sun faded out, which
+// read as a switch being flicked rather than a day ending. Riding opposite
+// sides of one circle means whichever body is up has the sky to itself, and
+// dusk is the sun sinking on one side while the moon climbs the other.
+//
+// Phase 0 is noon, so cos puts the sun overhead there and under the map at
+// midnight.
+const float SKY_HORIZON=0.40;
+const float SKY_ARC_HEIGHT=0.50;
 vec2 arcPosition(float phase){
-  float t=fract(phase);
-  float x=0.14+t*0.72;
-  return vec2(x,0.88-sin(t*3.14159265)*0.16);
+  float a=phase*6.28318530718;
+  return vec2(0.5+sin(a)*0.38, SKY_HORIZON+cos(a)*SKY_ARC_HEIGHT);
+}
+
+// How much of a body is showing: full when well up, gone once it has set.
+// Tying visibility to its own height is what makes rising and setting gradual
+// no matter how fast the cycle runs.
+float aboveHorizonFade(float y){
+  return smoothstep(SKY_HORIZON-0.06,SKY_HORIZON+0.14,y);
 }
 
 void main(){
@@ -105,7 +119,7 @@ void main(){
   float rays=pow(max(0.0,0.5+0.5*sin(angle*8.0+uTime*0.25)),3.0);
   float rayFall=smoothstep(0.42*sunSwell,0.04,sunDist);
 
-  float sunVisible=max(day,uSunBlast)*uShowSky;
+  float sunVisible=max(aboveHorizonFade(sunPos.y),uSunBlast)*uShowSky;
   sky+=vec3(1.0,0.86,0.55)*sunGlow*0.30*sunVisible;
   sky+=vec3(1.0,0.90,0.62)*rays*rayFall*0.16*sunVisible;
   sky=mix(sky,vec3(1.0,0.97,0.86),sunDisc*sunVisible);
@@ -115,7 +129,7 @@ void main(){
   float moonDist=length((vUV-moonPos)*aspect);
   float moonDisc=smoothstep(0.036,0.022,moonDist);
   float moonGlow=smoothstep(0.20,0.0,moonDist);
-  float moonVisible=night*uShowSky;
+  float moonVisible=aboveHorizonFade(moonPos.y)*uShowSky;
   sky+=vec3(0.62,0.70,0.86)*moonGlow*0.16*moonVisible;
   sky=mix(sky,vec3(0.92,0.94,1.0),moonDisc*moonVisible);
 
