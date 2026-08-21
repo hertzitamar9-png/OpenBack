@@ -1,3 +1,10 @@
+## OpenBack v0.36.202 - Sound You Can Point At
+
+- Stopped the added background soundtrack playing; the game now runs on the original OpenFront sound effects alone, which are used unchanged.
+- Sound effects in Immersive 3D now play from where they happen, so a strike to your left is heard on your left and one behind the camera is heard behind you, following the view as it turns and zooms.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.201 - Wandering Sea Light
 
 - Ocean shine now appears in drifting patches instead of fixed repeating bands, so light turns up across different parts of the sea over time rather than always the same places, in both Classic 2D and Immersive 3D.

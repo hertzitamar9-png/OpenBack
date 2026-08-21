@@ -13,6 +13,7 @@ import type { Config } from "../../../core/configuration/Config";
 import type { MapLayer } from "../../../core/game/TerrainMapLoader";
 import { UserSettings } from "../../../core/game/UserSettings";
 import { sunBlastAmount } from "../../openback/SunBlast";
+import { setAudioListener } from "../../sound/SpatialAudio";
 import { translateText } from "../../Utils";
 import type { SpiralRibbon } from "../frame/SpiralTrails";
 import type {
@@ -1454,6 +1455,10 @@ export class GPURenderer {
     const ch = this.canvas.height;
     const compositingActive = this.isLightCompositingActive();
     const frameNow = performance.now();
+    if (!this.threeDPass) {
+      // The flat war table has no camera to hear from; sounds play unpositioned.
+      setAudioListener(null);
+    }
     if (!this.threeDPass && this.lastWarTableFrameAt > 0) {
       this.warTableQuality.sample(
         frameNow - this.lastWarTableFrameAt,
@@ -1491,6 +1496,15 @@ export class GPURenderer {
           zoom,
           yaw: this.threeDYaw,
           pitch: this.threeDPitch,
+        });
+        // Sounds that happen on the map are played from where they happened,
+        // relative to the camera actually drawn this frame.
+        setAudioListener({
+          position: threeDCamera.position,
+          forward: threeDCamera.forward,
+          right: threeDCamera.right,
+          up: threeDCamera.up,
+          distance: threeDCamera.distance,
         });
         const billboardCamera = threeDGroundHomography(threeDCamera, 0.15);
         const screenFacingScale = threeDScreenFacingScale(threeDCamera);

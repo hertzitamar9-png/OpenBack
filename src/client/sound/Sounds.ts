@@ -1,5 +1,6 @@
 import { assetUrl } from "../../core/AssetUrls";
 import { GameEvent } from "../../core/EventBus";
+import type { SoundOrigin } from "./SpatialAudio";
 
 export type SoundEffect =
   | "ka-ching"
@@ -19,9 +20,14 @@ export type SoundEffect =
   | "message"
   | "click";
 
-export const backgroundMusicUrls: readonly string[] = [
-  assetUrl("sounds/music/openback-command.ogg"),
-];
+/**
+ * OpenBack ships no background music. Upstream's tracks live in its
+ * `proprietary/` asset set, whose licence forbids using them in another
+ * project or redistributing them apart from OpenFront, so they cannot be
+ * carried here. The sound effects under `resources/sounds/effects` are the
+ * open ones and are used unchanged.
+ */
+export const backgroundMusicUrls: readonly string[] = [];
 
 export const soundEffectUrls: ReadonlyMap<SoundEffect, string> = new Map([
   ["ka-ching", assetUrl("sounds/effects/ka-ching.mp3")],
@@ -43,7 +49,15 @@ export const soundEffectUrls: ReadonlyMap<SoundEffect, string> = new Map([
 ]);
 
 export class PlaySoundEffectEvent implements GameEvent {
-  constructor(public readonly effect: SoundEffect) {}
+  constructor(
+    public readonly effect: SoundEffect,
+    /**
+     * Where on the map it happened, for positional playback in Immersive 3D.
+     * Interface sounds (a click, a chat message) have no place in the world
+     * and leave this undefined, so they play flat.
+     */
+    public readonly origin?: SoundOrigin,
+  ) {}
 }
 
 export class SetSoundEffectsVolumeEvent implements GameEvent {

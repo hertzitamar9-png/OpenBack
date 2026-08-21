@@ -10,6 +10,12 @@ import {
   SoundEffect,
   soundEffectUrls,
 } from "./Sounds";
+import {
+  audioListener,
+  planSpatialSound,
+  SPATIAL_PANNER_ATTR,
+  type SoundOrigin,
+} from "./SpatialAudio";
 
 export const MAX_CONCURRENT_SOUNDS = 8;
 
@@ -46,7 +52,7 @@ export class SoundManager {
           volume: this.backgroundMusicVolume,
         }),
     );
-    this.onPlaySoundEffect = (e) => this.playSoundEffect(e.effect);
+    this.onPlaySoundEffect = (e) => this.playSoundEffect(e.effect, e.origin);
     this.onSetBackgroundMusicVolume = (e) =>
       this.setBackgroundMusicVolume(e.volume);
     this.onSetSoundEffectsVolume = (e) => this.setSoundEffectsVolume(e.volume);
@@ -160,7 +166,7 @@ export class SoundManager {
     this.activeSounds = this.activeSounds.filter((s) => s.id !== id);
   }
 
-  public playSoundEffect(name: SoundEffect): void {
+  public playSoundEffect(name: SoundEffect, origin?: SoundOrigin): void {
     this.safely(`play sound ${name}`, () => {
       if (this.suspendedForUpdate || this.soundEffectsVolume <= 0) return;
       const howl = this.getOrLoadSoundEffect(name);
@@ -172,7 +178,20 @@ export class SoundManager {
         this.removeActiveSoundById(oldest.id);
       }
 
+      // In Immersive 3D a sound that happened somewhere is played from there.
+      // Without a listener (the 2D war table) or a place (interface sounds) it
+      // plays flat, exactly as before.
+      const placement = origin
+        ? planSpatialSound(audioListener(), origin)
+        : null;
+
       const id = howl.play();
+      if (placement !== null) {
+        this.safely(`position sound ${name}`, () => {
+          howl.pannerAttr({ ...SPATIAL_PANNER_ATTR }, id);
+          howl.pos(placement.x, placement.y, placement.z, id);
+        });
+      }
       this.activeSounds.push({ howl, id });
       howl.once("end", () => this.removeActiveSoundById(id), id);
       howl.once("stop", () => this.removeActiveSoundById(id), id);
