@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { GameEnv } from "../../src/core/configuration/Config";
-import { resolveServerGameEnv, ServerEnv } from "../../src/server/ServerEnv";
+import {
+  productionHostnames,
+  resolveServerGameEnv,
+  ServerEnv,
+} from "../../src/server/ServerEnv";
 
 describe("ServerEnv.gitCommit", () => {
   afterEach(() => {
@@ -158,6 +162,40 @@ describe("resolveServerGameEnv", () => {
         "https://openback.servegame.com",
       ),
     ).toBe(GameEnv.Prod);
+  });
+
+  // The list carried only servegame.com long after play had moved to
+  // dedyn.io, so the live box could resolve itself as dev.
+  test("treats the current live host as production", () => {
+    expect(
+      resolveServerGameEnv(
+        "dev",
+        "openback.dedyn.io",
+        "https://openback.dedyn.io",
+      ),
+    ).toBe(GameEnv.Prod);
+  });
+
+  test("recognises a production host given only by public origin", () => {
+    expect(
+      resolveServerGameEnv("dev", undefined, "https://openback.dedyn.io"),
+    ).toBe(GameEnv.Prod);
+  });
+
+  test("takes extra production hosts from the environment", () => {
+    // The next move should be a deploy variable, not a code change.
+    expect(
+      resolveServerGameEnv("dev", "openback.io", "https://openback.io", [
+        ...productionHostnames(),
+        "openback.io",
+      ]),
+    ).toBe(GameEnv.Prod);
+  });
+
+  test("does not promote an unknown host", () => {
+    expect(
+      resolveServerGameEnv("dev", "example.invalid", "https://example.invalid"),
+    ).toBe(GameEnv.Dev);
   });
 
   test("keeps localhost development mode", () => {

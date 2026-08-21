@@ -1,3 +1,9 @@
+## OpenBack v0.36.212 - Correct Production Hostname
+
+- The server now recognises the address the game is actually served from as its live deployment, instead of only an address it moved away from.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.211 - Night Sailing Has a Price
 
 - Vessels caught at sea after dark can now be lost to the water, with anything aboard going down with them; the danger rises as the night deepens and is nil in daylight.

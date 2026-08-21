@@ -16,7 +16,21 @@ const JwksSchema = z.object({
     .min(1),
 });
 
-const OPENBACK_PRODUCTION_HOSTNAME = "openback.servegame.com";
+/**
+ * Hostnames that mean "this is the real deployment".
+ *
+ * A single hardcoded name goes stale every time the game moves: this listed
+ * only servegame.com long after play had moved to dedyn.io, so a box serving
+ * real players could still resolve itself as dev. It is a list, and
+ * OPENBACK_PRODUCTION_HOSTS extends it from the environment, so the next move
+ * is a deploy variable rather than a code change and a release.
+ */
+const OPENBACK_PRODUCTION_HOSTNAMES = [
+  "openback.dedyn.io",
+  // Kept so an older DNS name still pointed at the game resolves as
+  // production rather than silently dropping to dev behaviour.
+  "openback.servegame.com",
+];
 
 function hostnameFromOrigin(value: string | undefined): string {
   if (!value) return "";
@@ -29,17 +43,29 @@ function hostnameFromOrigin(value: string | undefined): string {
   }
 }
 
+/** Production hostnames, including any the environment adds. */
+export function productionHostnames(): string[] {
+  const extra = (process.env.OPENBACK_PRODUCTION_HOSTS ?? "")
+    .split(",")
+    .map((entry) => hostnameFromOrigin(entry.trim()))
+    .filter((entry) => entry !== "");
+  return [...OPENBACK_PRODUCTION_HOSTNAMES, ...extra];
+}
+
 export function resolveServerGameEnv(
   value: string | undefined,
   domain: string | undefined,
   publicOrigin: string | undefined,
+  knownProductionHosts: readonly string[] = productionHostnames(),
 ): GameEnv {
   const configured = parseGameEnv(value);
+  const serving = [
+    hostnameFromOrigin(domain),
+    hostnameFromOrigin(publicOrigin),
+  ];
   if (
     configured === GameEnv.Dev &&
-    [hostnameFromOrigin(domain), hostnameFromOrigin(publicOrigin)].includes(
-      OPENBACK_PRODUCTION_HOSTNAME,
-    )
+    serving.some((host) => host !== "" && knownProductionHosts.includes(host))
   ) {
     return GameEnv.Prod;
   }
@@ -47,7 +73,6 @@ export function resolveServerGameEnv(
 }
 
 export class ServerEnv {
-  private static readonly brandedOrigin = "https://openback.servegame.com";
   private static readonly gameEnv: GameEnv = resolveServerGameEnv(
     process.env.GAME_ENV,
     process.env.DOMAIN,
