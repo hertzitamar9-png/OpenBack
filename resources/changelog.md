@@ -1,3 +1,10 @@
+## OpenBack v0.36.205 - Ships That Float and Steer
+
+- Immersive 3D vessels now ride the moving sea instead of sitting at a fixed height the tide and waves rose straight over, so they float on the swell rather than disappearing under it.
+- Ships now point where they are actually travelling, in any direction, and swing round to a new course instead of snapping back to facing north between steps.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.204 - Real Sunrise and Sunset
 
 - The sun and moon now rise and set on opposite sides of the sky instead of both hanging overhead and swapping in place, so dusk and dawn are gradual and only briefly show both, low and faint.

@@ -12,6 +12,7 @@
 import type { Config } from "../../../core/configuration/Config";
 import type { MapLayer } from "../../../core/game/TerrainMapLoader";
 import { UserSettings } from "../../../core/game/UserSettings";
+import { threeDWorldCycle } from "../../../core/world/ThreeDWorldCycle";
 import { sunBlastAmount } from "../../openback/SunBlast";
 import { setAudioListener } from "../../sound/SpatialAudio";
 import { translateText } from "../../Utils";
@@ -1542,6 +1543,13 @@ export class GPURenderer {
           true,
           true,
           screenFacingScale,
+        );
+        // Vessels ride the same sea the water mesh draws, so hand the unit
+        // pass the authoritative tide and wave strength for this tick.
+        const seaState = threeDWorldCycle(this.simulationTick);
+        this.threeDUnitPass?.setWorldCycle(
+          seaState.tideHeight,
+          seaState.waveStrength,
         );
         this.threeDUnitPass?.draw(
           this.camera.offsetX,

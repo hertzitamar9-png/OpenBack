@@ -18,6 +18,7 @@ import {
   buildSouthernLandClosure,
   buildTerrainGrid,
 } from "../three-d/ThreeDTerrainMesh";
+import { THREE_D_WATER_SURFACE_GLSL } from "../three-d/ThreeDWaterSurface";
 import { createFullscreenQuad, createProgram } from "../utils/GlUtils";
 
 const skyVert = `#version 300 es
@@ -273,27 +274,7 @@ out float vWave;
 // own: finite differences of height around the vertex. Without this the water
 // is lit uniformly and reads as a flat sheet however far the geometry moves.
 out vec3 vWaveNormal;
-// Slow, large-scale variation so the sea is not one uniform swell: some
-// stretches run high and some stay comparatively calm, and the pattern drifts.
-float swellRegion(vec2 p,float phase){
-  float a=sin(dot(p,vec2(0.0032,0.0021))+phase*0.011);
-  float b=sin(dot(p,vec2(-0.0018,0.0027))-phase*0.007);
-  // 0.30 calm .. 1.70 heavy: a wide spread so some stretches are near glassy
-  // while others run genuinely rough.
-  return 1.0+0.70*(a*0.6+b*0.4);
-}
-float gerstnerWave(vec2 p,float phase){
-  // Wavelengths around 35 world units. At the previous ~70 a two-unit crest
-  // spanned a 1:35 slope, so the surface was geometrically almost flat and
-  // nothing lit it; the mesh still carries about 6.7 vertices per wave here.
-  float broad=sin(dot(p,vec2(0.180,0.068))+phase*0.075);
-  float cross=sin(dot(p,vec2(-0.104,0.224))-phase*0.052);
-  float swell=sin(dot(p,vec2(0.040,-0.072))+phase*0.031);
-  // A short chop rides on the long swell so crests are not all the same size.
-  float chop=sin(dot(p,vec2(0.420,0.340))+phase*0.140)*0.16;
-  float body=broad*0.46+cross*0.29+swell*0.25+chop;
-  return body*uWaveStrength*swellRegion(p,phase);
-}
+${THREE_D_WATER_SURFACE_GLSL}
 void main(){
   vWorld=aPos.xz;
   // Wall-clock phase, continuous and monotonic. Adding a sawtooth to the
@@ -302,7 +283,7 @@ void main(){
   // its own schedule, so the phase lurched forward and back and the crests
   // juddered in place instead of travelling. The water is presentation only,
   // so it can follow the clock without touching simulation state.
-  float phase=uTime*10.0;
+  float phase=waterPhase(uTime);
   vWave=gerstnerWave(vWorld,phase);
 
   // Sample the wave a short distance either side to get the slope. The
@@ -321,7 +302,7 @@ void main(){
   vec3 displaced=aPos;
   // Real vertical water: high crests rise, collapse at shore, and retreat with
   // the authoritative tide. Land remains a separate solid surface.
-  displaced.y+=uTideHeight+vWave*${THREE_D_WAVE_HEIGHT_SCALE.toFixed(1)};
+  displaced.y+=waterSurfaceHeight(vWorld,phase,uTideHeight);
   gl_Position=uViewProjection*vec4(displaced,1.0);
 }`;
 

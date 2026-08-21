@@ -5,6 +5,10 @@ import { loadThreeDAsset } from "./ThreeDAssetLoader";
 import { THREE_D_ASSET_MANIFEST, threeDAsset } from "./ThreeDAssetManifest";
 import { ThreeDCameraState } from "./ThreeDCamera";
 import { THREE_D_MODELS, type ThreeDAnimation } from "./ThreeDModelRegistry";
+import {
+  THREE_D_HULL_DRAFT,
+  THREE_D_WATER_SURFACE_GLSL,
+} from "./ThreeDWaterSurface";
 
 const STRIDE = 16;
 const MATERIAL = {
@@ -97,8 +101,13 @@ uniform usampler2D uTerrain;
 uniform vec2 uMapSize;
 uniform mat4 uViewProjection;
 uniform float uTime;
+// The sea state, so anything afloat rides the same surface the water mesh
+// draws rather than a fixed height the waves climb straight over.
+uniform float uTideHeight;
+uniform float uWaveStrength;
 out vec3 vNormal;
 out vec3 vMeta;
+${THREE_D_WATER_SURFACE_GLSL}
 
 float heightFor(uint b){bool land=(b&128u)!=0u;float m=float(b&31u);if(land&&m>30.5)return 57.0;if(land)return (0.15+pow(m/30.0,2.0)*31.0)*1.5;return -min(m,10.0)*0.02;}
 float sampledHeight(ivec2 p){
@@ -145,7 +154,11 @@ void main(){
   // Every primitive in a composite model samples the same unit-center ground
   // anchor. Sloped terrain can no longer lift chimneys, turrets, or wings away
   // from the body simply because their local centers land on adjacent tiles.
-  float ground=surface==1?-0.08:smoothHeight(iAnchor);
+  // Afloat: ride the live sea. A constant here (it was -0.08, just under
+  // still water) meant the tide and the crests simply rose over the hull.
+  float ground=surface==1
+    ? waterSurfaceHeight(iWorld.xz,waterPhase(uTime),uTideHeight)-${THREE_D_HULL_DRAFT.toFixed(2)}
+    : smoothHeight(iAnchor);
   float flightBob=step(1.5,iWorld.y)*sin(uTime*3.2+iWorld.x*.7+iWorld.z*.4)*.14;
   float hover=animation==5?sin(phase*2.1)*.11:0.0;
   vec3 world=vec3(iWorld.x,ground+iWorld.y+flightBob+hover,iWorld.z)+model;
@@ -196,6 +209,9 @@ export class ThreeDUnitPass {
   private meshes = new Map<string, Mesh>();
   private batches = new Map<string, number[]>();
   private uniforms: Record<string, WebGLUniformLocation | null>;
+  // Sea state for the current frame, set from the authoritative world cycle.
+  private tideHeight = 0;
+  private waveStrength = 1;
   private ghostPreview: GhostPreviewData | null = null;
   private disposed = false;
   private readonly loadedModelTypes = new Set<UnitType>();
@@ -209,9 +225,15 @@ export class ThreeDUnitPass {
   ) {
     this.program = createProgram(gl, vert, frag);
     this.uniforms = Object.fromEntries(
-      ["uTerrain", "uPalette", "uMapSize", "uViewProjection", "uTime"].map(
-        (name) => [name, gl.getUniformLocation(this.program, name)],
-      ),
+      [
+        "uTerrain",
+        "uPalette",
+        "uMapSize",
+        "uViewProjection",
+        "uTime",
+        "uTideHeight",
+        "uWaveStrength",
+      ].map((name) => [name, gl.getUniformLocation(this.program, name)]),
     );
     // The only generated geometry retained is the soft terrain shadow. Unit
     // bodies are loaded from the verified local GLB catalog below. The sphere
@@ -458,6 +480,12 @@ export class ThreeDUnitPass {
     // budgets are still adjusted by their owning passes.
   }
 
+  /** The sea vessels float on, from the authoritative day/night cycle. */
+  setWorldCycle(tideHeight: number, waveStrength: number): void {
+    this.tideHeight = tideHeight;
+    this.waveStrength = waveStrength;
+  }
+
   draw(
     centerX: number,
     centerY: number,
@@ -492,6 +520,8 @@ export class ThreeDUnitPass {
       new Float32Array(camera.viewProjection),
     );
     gl.uniform1f(this.uniforms.uTime, performance.now() / 1000);
+    gl.uniform1f(this.uniforms.uTideHeight, this.tideHeight);
+    gl.uniform1f(this.uniforms.uWaveStrength, this.waveStrength);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.terrain);
     gl.activeTexture(gl.TEXTURE1);

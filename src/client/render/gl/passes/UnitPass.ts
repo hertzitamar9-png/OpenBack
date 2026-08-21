@@ -129,20 +129,58 @@ const FLAG_TANK_FIREBALL = 9;
  * moving units follow their most recent path segment, so a curved route turns
  * the artwork a segment at a time instead of making it stare at the final
  * destination. Aircraft and tanks keep their authoritative trajectory angle.
+ *
+ * `null` means this unit produced no heading information this tick -- it did
+ * not move. Returning due north for that case is what made ships snap back to
+ * facing up between steps: they only advance a tile at a time, so any tick
+ * without a step reset them. Callers keep the last heading instead.
  */
-export function unitSpriteHeading(unit: UnitState, mapWidth: number): number {
+export function unitSpriteHeading(
+  unit: UnitState,
+  mapWidth: number,
+): number | null {
   if (
     (unit.unitType === UT_PLANE || unit.unitType === UT_TANK) &&
     unit.trajectoryAngle !== undefined
   ) {
     return unit.trajectoryAngle;
   }
-  if (unit.lastPos === unit.pos) return 0;
+  if (unit.lastPos === unit.pos) return null;
   const x = unit.pos % mapWidth;
   const y = (unit.pos - x) / mapWidth;
   const lastX = unit.lastPos % mapWidth;
   const lastY = (unit.lastPos - lastX) / mapWidth;
   return Math.atan2(x - lastX, -(y - lastY));
+}
+
+/**
+ * Most a unit may rotate in one tick, in radians.
+ *
+ * Path steps are whole tiles, so a raw heading only ever takes one of eight
+ * values and a route change snapped the artwork through 45 or 90 degrees in a
+ * single frame. Turning toward the new heading instead reads as a vessel
+ * coming about. At ten ticks a second this swings 90 degrees in just under
+ * half a second.
+ */
+export const MAX_TURN_PER_TICK = 0.35;
+
+/**
+ * Rotate `current` toward `target` by at most `maxStep`, the short way round.
+ *
+ * Angles wrap, so the naive difference sends a unit crossing north the long
+ * way round -- a full spin in place to turn a few degrees.
+ */
+export function turnToward(
+  current: number,
+  target: number,
+  maxStep: number,
+): number {
+  const twoPi = Math.PI * 2;
+  let delta = (target - current) % twoPi;
+  if (delta > Math.PI) delta -= twoPi;
+  if (delta < -Math.PI) delta += twoPi;
+  if (Math.abs(delta) <= maxStep) return target;
+  return current + Math.sign(delta) * maxStep;
 }
 
 const TRAIN_ENGINE_COL = UNIT_ORDER.indexOf("TrainEngine");
@@ -282,6 +320,11 @@ export class UnitPass {
   private frameTick = 0;
   /** Last game engine tick received for smoothing calculation resets */
   private lastGameTick = -1;
+  // Where each unit is currently pointing, and which units were alive this
+  // tick. A ship only produces a new heading on the ticks it actually steps,
+  // so the last one has to be remembered between steps.
+  private readonly headings = new Map<number, number>();
+  private readonly headingsSeen = new Set<number>();
   /** Wall-clock start, for uTime (seconds) — matches StructurePass so the
    *  warship effect animates at the same pace as the structures effect. */
   private startTime = performance.now();
@@ -501,10 +544,14 @@ export class UnitPass {
   }
 
   updateUnits(units: Map<number, UnitState>, gameTick: number): void {
-    if (gameTick !== this.lastGameTick) {
+    // Turning is per simulation tick, not per call, so a frame that re-renders
+    // the same tick does not spin units faster.
+    const tickAdvanced = gameTick !== this.lastGameTick;
+    if (tickAdvanced) {
       this.lastGameTick = gameTick;
       this.lastUnitsUpdateMs = performance.now();
     }
+    this.headingsSeen.clear();
     this.groundCount = 0;
     this.missileCount = 0;
     this.smoothSegs.length = 0;
@@ -590,7 +637,7 @@ export class UnitPass {
       // Sprite heading (screen space, 0 = up/north). For planes we use the
       // server-provided travel angle so the nose tracks the flight path; other
       // units derive it from their lastPos→pos trail (no-op for static ones).
-      const angle = unitSpriteHeading(unit, this.mapW);
+      const angle = this.trackHeading(unit, tickAdvanced);
       if (isMissile) {
         if (
           SMOOTHED_NUKE_TYPES.has(unit.unitType) &&
@@ -642,6 +689,8 @@ export class UnitPass {
       }
     }
 
+    this.pruneHeadings();
+
     const gl = this.gl;
     if (this.groundCount > 0) {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.groundBuf.buffer);
@@ -662,6 +711,44 @@ export class UnitPass {
         0,
         this.missileCount * FLOATS_PER_INSTANCE,
       );
+    }
+  }
+
+  /**
+   * The angle to draw a unit at: its own heading, turned gradually toward
+   * wherever it is now travelling.
+   *
+   * Path steps are single tiles, so the raw heading only takes one of eight
+   * values and jumped between them; and on any tick without a step it used to
+   * come back as due north, which is what made ships face the wrong way most
+   * of the time instead of where they were going.
+   */
+  private trackHeading(unit: UnitState, tickAdvanced: boolean): number {
+    this.headingsSeen.add(unit.id);
+    const target = unitSpriteHeading(unit, this.mapW);
+    const current = this.headings.get(unit.id);
+
+    // Nothing pointing it yet: start facing wherever it is headed, or north
+    // for something that has never moved at all.
+    if (current === undefined) {
+      const start = target ?? 0;
+      this.headings.set(unit.id, start);
+      return start;
+    }
+    // No new information, or the same tick re-rendered: hold the last heading.
+    if (target === null || !tickAdvanced) return current;
+
+    const next = turnToward(current, target, MAX_TURN_PER_TICK);
+    this.headings.set(unit.id, next);
+    return next;
+  }
+
+  // Units that died or left view must not keep their heading, or a recycled id
+  // would inherit it and the map would grow for the whole match.
+  private pruneHeadings(): void {
+    if (this.headings.size === this.headingsSeen.size) return;
+    for (const id of this.headings.keys()) {
+      if (!this.headingsSeen.has(id)) this.headings.delete(id);
     }
   }
 
