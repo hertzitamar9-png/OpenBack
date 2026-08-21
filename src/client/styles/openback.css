@@ -112,18 +112,23 @@ textarea:focus-visible {
  *
  * The column count is supplied per render as --player-unit-columns. It carries
  * a fallback because an unset variable inside repeat() invalidates the whole
- * declaration, which is what a single column looks like. */
+ * declaration, which is what a single column looks like.
+ *
+ * The columns share the panel's full width rather than being fixed at 2.25rem
+ * and pinned left, which left two short rows of counters against a wide empty
+ * half. Each counter stretches to its cell, overriding the fixed utility width
+ * it carries for the narrower layouts. */
 .player-info-unit-grid {
   display: grid;
-  grid-template-columns: repeat(
-    var(--player-unit-columns, 6),
-    minmax(0, 2.25rem)
-  );
-  justify-content: start;
+  grid-template-columns: repeat(var(--player-unit-columns, 6), minmax(0, 1fr));
+  width: 100%;
+}
+
+.player-info-unit-grid > * {
+  width: 100%;
 }
 
 .player-info-unit-spacer {
-  width: 2.25rem;
   height: 1.5rem;
   visibility: hidden;
 }

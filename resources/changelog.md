@@ -1,3 +1,9 @@
+## OpenBack v0.36.206 - Full-Width Unit Counters
+
+- The player panel's unit counters now spread across the whole panel instead of huddling in the left half, keeping two rows of six.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.205 - Ships That Float and Steer
 
 - Immersive 3D vessels now ride the moving sea instead of sitting at a fixed height the tide and waves rose straight over, so they float on the swell rather than disappearing under it.
