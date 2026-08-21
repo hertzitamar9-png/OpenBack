@@ -489,7 +489,11 @@ export class NavAccountMenu extends LitElement {
         <!-- The sign-in label is desktop-only; on the top bar the icon alone is
              the affordance, so keep the element (the shared updater toggles it)
              but never show text. -->
-        <span data-account-signin-text class="hidden"></span>
+        <span
+          data-account-signin-text
+          data-account-signin-text-silent
+          class="hidden"
+        ></span>
         ${signedIn ? this.renderChevron() : nothing}
       </button>
     `;

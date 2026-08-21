@@ -28,7 +28,7 @@ function mountNav() {
       <img data-account-avatar class="hidden" />
       <svg data-account-person-icon class="hidden"></svg>
       <span data-account-email-badge class="hidden"></span>
-      <span data-account-signin-text class="hidden"></span>
+      <span data-account-signin-text data-account-signin-text-silent class="hidden"></span>
     </button>`;
   const mobileTrigger = document.getElementById("mobile-trigger")!;
   return {
@@ -192,5 +192,53 @@ describe("finishAccountNavLoading", () => {
     // icon has no pill, so it must never gain one.
     expect(nav.button.classList.contains("border")).toBe(true);
     expect(nav.mobile.button.classList.contains("border")).toBe(false);
+  });
+});
+
+// The mobile top bar renders the same component with `variant="mobile"`, which
+// carries only the data-account-* hooks — no ids. Driving the update by id left
+// that trigger showing its loading spinner forever, so the account button never
+// appeared to finish loading on a phone while every other nav item was up.
+describe("the mobile trigger", () => {
+  let nav: ReturnType<typeof mountNav>;
+  beforeEach(() => {
+    nav = mountNav();
+  });
+
+  it("resolves to the person icon for a signed-out user", () => {
+    updateAccountNavButton(false);
+    expect(hidden(nav.mobile.spinner)).toBe(true);
+    expect(hidden(nav.mobile.personIcon)).toBe(false);
+    expect(hidden(nav.mobile.avatar)).toBe(true);
+    // The icon alone is the affordance there; the label stays hidden.
+    expect(hidden(nav.mobile.signInText)).toBe(true);
+  });
+
+  it("resolves to the avatar for a signed-in user", () => {
+    updateAccountNavButton(
+      userMe({
+        email: "player@example.com",
+        profilePictureUrl: "/profile-images/player?v=9",
+      }),
+    );
+    expect(hidden(nav.mobile.spinner)).toBe(true);
+    expect(hidden(nav.mobile.avatar)).toBe(false);
+    expect(nav.mobile.avatar.getAttribute("src")).toBe(
+      "/profile-images/player?v=9",
+    );
+    expect(hidden(nav.mobile.personIcon)).toBe(true);
+    expect(hidden(nav.mobile.signInText)).toBe(true);
+  });
+
+  it("labels the sidebar row from the same update call", () => {
+    const sidebar = document.createElement("button");
+    sidebar.id = "mobile-nav-account-button";
+    document.body.appendChild(sidebar);
+
+    updateAccountNavButton(false);
+    expect(sidebar.textContent).toBe("main.sign_in");
+
+    updateAccountNavButton(userMe({ email: "player@example.com" }));
+    expect(sidebar.textContent).toBe("main.profile");
   });
 });

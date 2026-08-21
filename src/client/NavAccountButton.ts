@@ -5,74 +5,160 @@ import { getDiscordAvatarUrl, translateText } from "./Utils";
 
 export function finishAccountNavLoading(): void {
   document
-    .getElementById("nav-account-loading-spinner")
-    ?.classList.add("hidden");
+    .querySelectorAll("[data-account-spinner]")
+    .forEach((el) => el.classList.add("hidden"));
 }
 
 // Renders the persistent top-nav account button from the resolved /users/@me
 // response: a linked identity shows its avatar/badge, everything else shows the
 // signed-out prompt. Extracted from Main.ts so the identity precedence — which
 // now includes Steam — is unit-testable in jsdom.
+//
+// <nav-account-menu> renders one trigger in the desktop nav and one in the
+// mobile top bar, so every element is looked up through the `data-account-*`
+// hooks *within each trigger* rather than by id. Driving the ids alone left the
+// mobile trigger spinning forever, because only the desktop pill carries them.
+//
 // The most recent /users/@me the nav button rendered. Consumers that need
 // account state outside the render path read it through
 // latestUserMeResponse() rather than refetching.
 let lastUserMeResponse: UserMeResponse | false | null = null;
 
-export function updateAccountNavButton(userMeResponse: UserMeResponse | false) {
-  lastUserMeResponse = userMeResponse;
-  const button = document.getElementById("nav-account-button");
-  const mobileButton = document.getElementById("mobile-nav-account-button");
-  if (!button && !mobileButton) return;
+// The signed-in look: which image to show and the name to label it with.
+// `null` means "show the signed-out prompt".
+type AvatarState = {
+  src: string;
+  alt: string;
+  displayName?: string;
+};
 
-  const avatarEl = document.getElementById("nav-account-avatar") as
-    | (HTMLImageElement & { _navToken?: symbol })
-    | null;
-  const personIconEl = document.getElementById(
-    "nav-account-person-icon",
-  ) as SVGElement | null;
-  const emailBadgeEl = document.getElementById(
-    "nav-account-email-badge",
-  ) as HTMLElement | null;
-  const signInTextEl = document.getElementById(
-    "nav-account-signin-text",
-  ) as HTMLSpanElement | null;
+const openBackAvatar = (displayName?: string): AvatarState => ({
+  src: assetUrl("images/OpenBackMark512.png"),
+  alt: "OpenBack profile",
+  displayName,
+});
 
-  // Auth state is resolved, so the button no longer shows the loading spinner.
-  finishAccountNavLoading();
+// Identity precedence, resolved once per update and then applied to every
+// trigger. Discord wins over Steam so a player who linked both keeps the
+// richer avatar.
+function resolveAvatar(
+  userMeResponse: UserMeResponse | false,
+): AvatarState | null {
+  if (userMeResponse === false) return null;
+  const user = userMeResponse.user;
+  const displayName = user.displayName?.trim();
 
-  // Unique token for this update call
+  if (user.profilePictureUrl) {
+    return {
+      src: user.profilePictureUrl,
+      alt: user.displayName ?? "OpenBack profile",
+      displayName,
+    };
+  }
+
+  if (user.discord) {
+    const url = getDiscordAvatarUrl(user.discord);
+    if (url) {
+      return {
+        src: url,
+        alt: translateText("main.user_avatar_alt", {
+          username: user.discord.username,
+        }),
+        displayName: displayName ?? user.discord.username,
+      };
+    }
+  }
+
+  // Steam is a first-class logged-in identity (parity with Discord). Without a
+  // cached avatar — the summaries fetch failed or has not populated yet — fall
+  // back to the logged-in mark, never the signed-out prompt (the bug that made
+  // Steam desktop players look like guests).
+  if (user.steam) {
+    if (user.steam.avatarUrl) {
+      return {
+        src: user.steam.avatarUrl,
+        alt: translateText("main.user_avatar_alt", {
+          username:
+            user.steam.personaName ??
+            translateText("steam_user_header.default_name"),
+        }),
+        displayName: displayName ?? user.steam.personaName ?? undefined,
+      };
+    }
+    return openBackAvatar(displayName);
+  }
+
+  // Magic-link and Google logins have no avatar of their own, and any other
+  // linked identity that produced nothing rich is still authenticated. Only a
+  // session with no linked identity at all gets the sign-in prompt.
+  if (user.email || user.google || hasLinkedIdentity(user)) {
+    return openBackAvatar(displayName);
+  }
+
+  return null;
+}
+
+function applyToTrigger(
+  trigger: HTMLElement,
+  avatar: AvatarState | null,
+): void {
+  const avatarEl = trigger.querySelector<
+    HTMLImageElement & { _navToken?: symbol }
+  >("[data-account-avatar]");
+  const personIconEl = trigger.querySelector("[data-account-person-icon]");
+  const emailBadgeEl = trigger.querySelector("[data-account-email-badge]");
+  const signInTextEl = trigger.querySelector<HTMLElement>(
+    "[data-account-signin-text]",
+  );
+  // The mobile trigger keeps the element (so this updater has one uniform
+  // shape) but there the icon alone is the affordance, so it never shows text.
+  const showsText =
+    signInTextEl !== null &&
+    !signInTextEl.hasAttribute("data-account-signin-text-silent");
+  const bordered = trigger.hasAttribute("data-account-border");
+
+  // Unique token for this update call, per trigger.
   const navToken = Symbol();
   if (avatarEl) avatarEl._navToken = navToken;
 
-  const showAvatar = (src: string, alt?: string, displayName?: string) => {
-    if (mobileButton) {
-      mobileButton.removeAttribute("data-i18n");
-      mobileButton.textContent = displayName
-        ? `${translateText("main.profile")} - ${displayName}`
-        : translateText("main.profile");
-    }
-    if (avatarEl) {
-      avatarEl.alt = alt ?? translateText("main.discord_avatar_alt");
-      // If the avatar fails to load (bad URL / CDN issue / offline), fall back
-      // to the provider-neutral logged-in state rather than leaving a broken
-      // image or a mismatched default (the button is used by Discord and Steam).
-      avatarEl.onerror = () => {
-        if (avatarEl._navToken !== navToken) return;
-        avatarEl.onerror = null;
-        avatarEl.src = assetUrl("images/OpenBackMark512.png");
-      };
-      avatarEl.onload = () => {
-        // Only handle if this is the latest update
-        if (avatarEl._navToken !== navToken) return;
-        // Clear error handler after a successful load.
-        avatarEl.onerror = null;
-      };
-      avatarEl.src = src;
-      avatarEl.classList.remove("hidden");
-    }
-    personIconEl?.classList.add("hidden");
+  if (avatar === null || avatarEl === null) {
+    avatarEl?.classList.add("hidden");
+    personIconEl?.classList.remove("hidden");
     emailBadgeEl?.classList.add("hidden");
-    if (signInTextEl && displayName) {
+    if (signInTextEl) {
+      if (showsText) {
+        signInTextEl.className = "text-xs font-bold tracking-widest";
+        signInTextEl.setAttribute("data-i18n", "main.sign_in");
+        signInTextEl.textContent = translateText("main.sign_in");
+      } else {
+        signInTextEl.classList.add("hidden");
+      }
+    }
+    // Restore the pill border when showing the signed-out state.
+    if (bordered) trigger.classList.add("border", "border-white/20");
+    return;
+  }
+
+  avatarEl.alt = avatar.alt;
+  // If the avatar fails to load (bad URL / CDN issue / offline), fall back to
+  // the provider-neutral logged-in mark rather than leaving a broken image or a
+  // mismatched default (the button is used by Discord and Steam).
+  avatarEl.onerror = () => {
+    if (avatarEl._navToken !== navToken) return;
+    avatarEl.onerror = null;
+    avatarEl.src = assetUrl("images/OpenBackMark512.png");
+  };
+  avatarEl.onload = () => {
+    if (avatarEl._navToken !== navToken) return;
+    avatarEl.onerror = null;
+  };
+  avatarEl.src = avatar.src;
+  avatarEl.classList.remove("hidden");
+  personIconEl?.classList.add("hidden");
+  emailBadgeEl?.classList.add("hidden");
+
+  if (signInTextEl) {
+    if (showsText && avatar.displayName) {
       signInTextEl.className =
         "flex flex-col items-start leading-none text-xs font-bold tracking-widest";
       signInTextEl.removeAttribute("data-i18n");
@@ -83,130 +169,43 @@ export function updateAccountNavButton(userMeResponse: UserMeResponse | false) {
       label.textContent = translateText("main.profile");
       const name = document.createElement("span");
       name.className = "max-w-[10rem] truncate text-xs font-bold tracking-wide";
-      name.textContent = displayName;
+      name.textContent = avatar.displayName;
       signInTextEl.append(label, name);
     } else {
-      signInTextEl?.classList.add("hidden");
-    }
-    button?.classList.remove("border", "border-white/20");
-  };
-
-  const showOpenBackAvatar = () =>
-    showAvatar(
-      assetUrl("images/OpenBackMark512.png"),
-      "OpenBack profile",
-      userMeResponse !== false
-        ? userMeResponse.user.displayName?.trim()
-        : undefined,
-    );
-
-  const showSignIn = () => {
-    if (mobileButton) {
-      mobileButton.setAttribute("data-i18n", "main.sign_in");
-      mobileButton.textContent = translateText("main.sign_in");
-    }
-    avatarEl?.classList.add("hidden");
-    personIconEl?.classList.remove("hidden");
-    emailBadgeEl?.classList.add("hidden");
-    if (signInTextEl) {
-      signInTextEl.className = "text-xs font-bold tracking-widest";
-      signInTextEl.setAttribute("data-i18n", "main.sign_in");
-      signInTextEl.textContent = translateText("main.sign_in");
-    }
-    // Restore border when showing signin state
-    button?.classList.add("border", "border-white/20");
-  };
-
-  const profilePictureUrl =
-    userMeResponse !== false
-      ? userMeResponse.user.profilePictureUrl
-      : undefined;
-  if (profilePictureUrl) {
-    showAvatar(
-      profilePictureUrl,
-      userMeResponse !== false
-        ? (userMeResponse.user.displayName ?? "OpenBack profile")
-        : "OpenBack profile",
-      userMeResponse !== false
-        ? userMeResponse.user.displayName?.trim()
-        : undefined,
-    );
-    return;
-  }
-
-  const discord =
-    userMeResponse !== false ? userMeResponse.user.discord : undefined;
-  if (discord && avatarEl) {
-    const avatarAlt = translateText("main.user_avatar_alt", {
-      username: discord.username,
-    });
-    const url = getDiscordAvatarUrl(discord);
-    if (url) {
-      showAvatar(
-        url,
-        avatarAlt,
-        userMeResponse !== false
-          ? (userMeResponse.user.displayName?.trim() ?? discord.username)
-          : discord.username,
-      );
-      return;
+      signInTextEl.classList.add("hidden");
     }
   }
+  if (bordered) trigger.classList.remove("border", "border-white/20");
+}
 
-  // Steam is a first-class logged-in identity (parity with Discord). A cached
-  // avatar renders like the Discord avatar; without one — the summaries fetch
-  // failed or hasn't populated yet — fall back to the logged-in person icon,
-  // never the signed-out prompt (the bug that made Steam desktop players look
-  // like guests). Placed after Discord so a future linked account still
-  // prefers the Discord avatar.
-  const steam =
-    userMeResponse !== false ? userMeResponse.user.steam : undefined;
-  if (steam) {
-    if (steam.avatarUrl && avatarEl) {
-      const avatarAlt = translateText("main.user_avatar_alt", {
-        username:
-          steam.personaName ?? translateText("steam_user_header.default_name"),
-      });
-      showAvatar(
-        steam.avatarUrl,
-        avatarAlt,
-        userMeResponse !== false
-          ? (userMeResponse.user.displayName?.trim() ??
-              steam.personaName ??
-              undefined)
-          : undefined,
-      );
+export function updateAccountNavButton(userMeResponse: UserMeResponse | false) {
+  lastUserMeResponse = userMeResponse;
+
+  const triggers = Array.from(
+    document.querySelectorAll<HTMLElement>("[data-account-trigger]"),
+  );
+  // The sidebar entry is a plain labelled row, not a trigger with icons.
+  const sidebarButton = document.getElementById("mobile-nav-account-button");
+  if (triggers.length === 0 && sidebarButton === null) return;
+
+  // Auth state is resolved, so no trigger shows the loading spinner any more.
+  finishAccountNavLoading();
+
+  const avatar = resolveAvatar(userMeResponse);
+
+  if (sidebarButton) {
+    if (avatar === null) {
+      sidebarButton.setAttribute("data-i18n", "main.sign_in");
+      sidebarButton.textContent = translateText("main.sign_in");
     } else {
-      showOpenBackAvatar();
+      sidebarButton.removeAttribute("data-i18n");
+      sidebarButton.textContent = avatar.displayName
+        ? `${translateText("main.profile")} - ${avatar.displayName}`
+        : translateText("main.profile");
     }
-    return;
   }
 
-  const email =
-    userMeResponse !== false ? userMeResponse.user.email : undefined;
-  if (email) {
-    showOpenBackAvatar();
-    return;
-  }
-
-  // Google logins have no avatar; show the same person/email badge as magic-link.
-  const google =
-    userMeResponse !== false ? userMeResponse.user.google : undefined;
-  if (google) {
-    showOpenBackAvatar();
-    return;
-  }
-
-  // A linked identity that reached here rendered nothing rich (e.g. a Discord
-  // account whose avatar URL didn't resolve, or a missing avatar element): the
-  // user is still authenticated, so show the logged-in person icon. Only a
-  // session with no linked identity at all gets the sign-in prompt.
-  if (userMeResponse !== false && hasLinkedIdentity(userMeResponse.user)) {
-    showOpenBackAvatar();
-    return;
-  }
-
-  showSignIn();
+  triggers.forEach((trigger) => applyToTrigger(trigger, avatar));
 }
 
 export function latestUserMeResponse(): UserMeResponse | false | null {

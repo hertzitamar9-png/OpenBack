@@ -1,3 +1,9 @@
+## OpenBack v0.36.198 - Instant Mobile Sign In
+
+- Fixed the phone top-bar account button spinning forever instead of settling into the Sign In icon or your profile picture, so it is ready as soon as the rest of the Home menu is.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.197 - Mobile Command
 
 - Rebuilt phone controls so building and weapon previews follow the finger, taps confirm once, invalid structure taps cancel before combat, nuclear holds cancel safely, and two-finger Immersive gestures rotate and zoom without phantom actions.
