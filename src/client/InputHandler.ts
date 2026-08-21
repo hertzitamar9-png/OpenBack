@@ -189,6 +189,8 @@ export class ReplaySpeedChangeEvent implements GameEvent {
 
 export class TogglePauseIntentEvent implements GameEvent {}
 
+type TouchGestureMode = "idle" | "pan" | "preview" | "multitouch" | "cancelled";
+
 export class GameSpeedUpIntentEvent implements GameEvent {}
 
 export class GameSpeedDownIntentEvent implements GameEvent {}
@@ -244,6 +246,8 @@ export class InputHandler {
   private pointers: Map<number, PointerEvent> = new Map();
 
   private lastPinchDistance: number = 0;
+  private lastPinchCenter: { x: number; y: number } | null = null;
+  private touchGestureMode: TouchGestureMode = "idle";
 
   // Scale of the in-progress Safari pinch, or null when no gesture is active.
   private lastGestureScale: number | null = null;
@@ -281,6 +285,7 @@ export class InputHandler {
   private readonly PAN_SPEED = 5;
   private readonly ZOOM_SPEED = 10;
   private readonly DRAG_THRESHOLD_PX = 10;
+  private readonly TOUCH_TAP_SLOP_PX = 18;
 
   private readonly userSettings: UserSettings = new UserSettings();
 
@@ -807,6 +812,8 @@ export class InputHandler {
 
       // Start long-press timer for touch devices
       if (event.pointerType === "touch") {
+        this.touchGestureMode =
+          this.uiState.ghostStructure === null ? "pan" : "preview";
         this.longPressActive = false;
         if (this.longPressTimer !== null) {
           clearTimeout(this.longPressTimer);
@@ -814,6 +821,16 @@ export class InputHandler {
         }
         this.longPressTimer = setTimeout(() => {
           this.longPressTimer = null;
+          if (this.isNuclearGhostSelected()) {
+            this.setGhostStructure(null);
+            this.touchGestureMode = "cancelled";
+            this.suppressNextTap = true;
+            this.canvas.style.cursor = "";
+            return;
+          }
+          if (this.uiState.ghostStructure !== null) {
+            return;
+          }
           this.longPressActive = true;
           this.canvas.style.cursor = "crosshair";
           this.eventBus.emit(
@@ -826,6 +843,7 @@ export class InputHandler {
       }
     } else if (this.pointers.size === 2) {
       this.multiTouchGesture = true;
+      this.touchGestureMode = "multitouch";
       // Second finger down — cancel any pending long-press to avoid
       // triggering selection mode mid-pinch
       if (this.longPressTimer !== null) {
@@ -837,6 +855,7 @@ export class InputHandler {
         this.canvas.style.cursor = "";
       }
       this.lastPinchDistance = this.getPinchDistance();
+      this.lastPinchCenter = this.getPinchCenter();
     }
   }
 
@@ -906,8 +925,17 @@ export class InputHandler {
     // final finger. That phantom tap was another source of accidental boat /
     // trade menus on phones.
     if (wasMultiTouch) {
+      this.touchGestureMode = "idle";
+      this.lastPinchCenter = null;
       this.longPressActive = false;
       this.selectionBoxActive = false;
+      this.suppressNextTap = false;
+      this.canvas.style.cursor = "";
+      event.preventDefault();
+      return;
+    }
+    if (this.touchGestureMode === "cancelled") {
+      this.touchGestureMode = "idle";
       this.suppressNextTap = false;
       this.canvas.style.cursor = "";
       event.preventDefault();
@@ -955,10 +983,17 @@ export class InputHandler {
       return;
     }
 
+    const deltaFromDownX = event.clientX - this.lastPointerDownX;
+    const deltaFromDownY = event.clientY - this.lastPointerDownY;
     const dist =
-      Math.abs(event.clientX - this.lastPointerDownX) +
-      Math.abs(event.clientY - this.lastPointerDownY);
-    if (dist < this.DRAG_THRESHOLD_PX) {
+      event.pointerType === "touch"
+        ? Math.hypot(deltaFromDownX, deltaFromDownY)
+        : Math.abs(deltaFromDownX) + Math.abs(deltaFromDownY);
+    const tapThreshold =
+      event.pointerType === "touch"
+        ? this.TOUCH_TAP_SLOP_PX
+        : this.DRAG_THRESHOLD_PX;
+    if (dist < tapThreshold) {
       // A selected build ghost owns the next primary tap on every input
       // device. Mobile normally emits TouchEvent so WarshipSelectionController
       // can choose between attack and radial-menu actions; routing that event
@@ -969,6 +1004,7 @@ export class InputHandler {
           new MouseUpEvent(event.clientX, event.clientY, true),
         );
         event.preventDefault();
+        this.touchGestureMode = "idle";
         return;
       }
       if (event.pointerType === "touch") {
@@ -979,6 +1015,7 @@ export class InputHandler {
         }
         this.eventBus.emit(new TouchEvent(event.clientX, event.clientY));
         event.preventDefault();
+        this.touchGestureMode = "idle";
         return;
       }
 
@@ -993,6 +1030,7 @@ export class InputHandler {
         this.eventBus.emit(new ContextMenuEvent(event.clientX, event.clientY));
       }
     }
+    if (event.pointerType === "touch") this.touchGestureMode = "idle";
   }
 
   private onPointerCancel(event: PointerEvent): void {
@@ -1001,6 +1039,8 @@ export class InputHandler {
     if (this.pointers.size > 0) return;
     this.pointerDown = false;
     this.multiTouchGesture = false;
+    this.touchGestureMode = "idle";
+    this.lastPinchCenter = null;
     this.selectionBoxActive = false;
     this.longPressActive = false;
     this.suppressNextTap = false;
@@ -1111,15 +1151,26 @@ export class InputHandler {
     }
 
     if (this.pointers.size === 1) {
+      if (this.multiTouchGesture || this.touchGestureMode === "multitouch") {
+        this.lastPointerX = event.clientX;
+        this.lastPointerY = event.clientY;
+        event.preventDefault();
+        return;
+      }
       const deltaX = event.clientX - this.lastPointerX;
       const deltaY = event.clientY - this.lastPointerY;
 
       // Cancel long-press if finger moved significantly before timer fires
       if (this.longPressTimer !== null) {
-        const moveDist =
-          Math.abs(event.clientX - this.lastPointerDownX) +
-          Math.abs(event.clientY - this.lastPointerDownY);
-        if (moveDist >= this.DRAG_THRESHOLD_PX) {
+        const moveDist = Math.hypot(
+          event.clientX - this.lastPointerDownX,
+          event.clientY - this.lastPointerDownY,
+        );
+        const holdCancelThreshold =
+          event.pointerType === "touch"
+            ? this.TOUCH_TAP_SLOP_PX
+            : this.DRAG_THRESHOLD_PX;
+        if (moveDist >= holdCancelThreshold) {
           clearTimeout(this.longPressTimer);
           this.longPressTimer = null;
         }
@@ -1141,6 +1192,13 @@ export class InputHandler {
             event.clientY,
           ),
         );
+      } else if (
+        event.pointerType === "touch" &&
+        this.uiState.ghostStructure !== null
+      ) {
+        this.touchGestureMode = "preview";
+        this.eventBus.emit(new MouseMoveEvent(event.clientX, event.clientY));
+        event.preventDefault();
       } else {
         this.eventBus.emit(
           new DragEvent(deltaX, deltaY, event.clientX, event.clientY),
@@ -1150,6 +1208,15 @@ export class InputHandler {
       this.lastPointerX = event.clientX;
       this.lastPointerY = event.clientY;
     } else if (this.pointers.size === 2) {
+      const currentPinchCenter = this.getPinchCenter();
+      if (this.isThreeDMode() && this.lastPinchCenter !== null) {
+        const centerDeltaX = currentPinchCenter.x - this.lastPinchCenter.x;
+        const centerDeltaY = currentPinchCenter.y - this.lastPinchCenter.y;
+        if (centerDeltaX !== 0 || centerDeltaY !== 0) {
+          this.eventBus.emit(new RotateCameraEvent(centerDeltaX, centerDeltaY));
+        }
+      }
+      this.lastPinchCenter = currentPinchCenter;
       const currentPinchDistance = this.getPinchDistance();
       const pinchDelta = currentPinchDistance - this.lastPinchDistance;
 
@@ -1160,7 +1227,16 @@ export class InputHandler {
         );
         this.lastPinchDistance = currentPinchDistance;
       }
+      event.preventDefault();
     }
+  }
+
+  private isNuclearGhostSelected(): boolean {
+    return (
+      this.uiState.ghostStructure === UnitType.AtomBomb ||
+      this.uiState.ghostStructure === UnitType.HydrogenBomb ||
+      this.uiState.ghostStructure === UnitType.MIRV
+    );
   }
 
   private onContextMenu(event: MouseEvent) {
