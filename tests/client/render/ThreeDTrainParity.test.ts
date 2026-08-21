@@ -19,13 +19,19 @@ describe("3D train parity", () => {
     expect(shouldCullWorldText(0.2, 0.3, true)).toBe(false);
   });
 
-  it("composites the authoritative railroad state onto raised 3D terrain", () => {
+  it("composites recognizable layered rails onto raised 3D terrain", () => {
     const composite = source(
       "src/client/render/gl/passes/ThreeDCompositePass.ts",
     );
     const renderer = source("src/client/render/gl/Renderer.ts");
     expect(composite).toContain("uRailroadState");
-    expect(composite).toContain("railSurfaceCoverage");
+    expect(composite).toContain("railSurfaceLayers");
+    expect(composite).toContain("float gauge=0.105");
+    expect(composite).toContain("abs(d-gauge)");
+    expect(composite).toContain("clamp(fwidth(d)*1.35,0.006,0.028)");
+    expect(composite).toContain("vec3 railBallast");
+    expect(composite).toContain("vec3 sleeperWood");
+    expect(composite).toContain("vec3 railSteel");
     expect(renderer).toContain("this.railroadPass.prepareTextures()");
     expect(renderer).toContain("this.railroadPass.railroadTexture()");
   });

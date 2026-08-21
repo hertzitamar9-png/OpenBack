@@ -411,8 +411,8 @@ float railSegmentDistance(vec2 p,vec2 a,vec2 b){
   float t=clamp(dot(p-a,ab)/max(dot(ab,ab),0.0001),0.0,1.0);
   return length(p-a-ab*t);
 }
-float railSurfaceCoverage(uint railType,vec2 p){
-  if(railType==0u||railType>6u)return 0.0;
+vec3 railSurfaceLayers(uint railType,vec2 p){
+  if(railType==0u||railType>6u)return vec3(0.0);
   vec2 c=vec2(0.5);
   float d;
   if(railType==1u){
@@ -424,11 +424,14 @@ float railSurfaceCoverage(uint railType,vec2 p){
     vec2 horizontal=vec2((railType==3u||railType==5u)?0.0:1.0,0.5);
     d=min(railSegmentDistance(p,c,vertical),railSegmentDistance(p,c,horizontal));
   }
-  float rail=1.0-smoothstep(0.095,0.145,d);
+  float aa=clamp(fwidth(d)*1.35,0.006,0.028);
+  float gauge=0.105;
+  float ballast=1.0-smoothstep(0.190-aa,0.225+aa,d);
+  float steel=1.0-smoothstep(0.018-aa,0.032+aa,abs(d-gauge));
   float along=(railType==1u)?p.y:(railType==2u)?p.x:length(p-c);
-  float ties=(1.0-smoothstep(0.035,0.075,abs(fract(along*4.0)-0.5)))
-    *(1.0-smoothstep(0.13,0.20,d));
-  return max(rail,ties*0.72);
+  float sleeper=(1.0-smoothstep(0.055,0.115,abs(fract(along*5.0)-0.5)))
+    *(1.0-smoothstep(0.165-aa,0.210+aa,d));
+  return vec3(ballast,sleeper,steel);
 }
 void main(){
   bool inside=all(greaterThanEqual(vMapUV,vec2(0.0)))&&all(lessThanEqual(vMapUV,vec2(1.0)));
@@ -493,12 +496,18 @@ void main(){
   // Exact rail orientation data, shaded directly into the raised surface.
   // This conforms to relief without reviving the old floating polygon webs.
   uint railType=inside?texelFetch(uRailroadState,p,0).r:0u;
-  float railCoverage=railSurfaceCoverage(railType,fract(vWorld));
-  if(railCoverage>0.0){
-    vec3 railColor=owner>0u
+  vec3 railLayers=railSurfaceLayers(railType,fract(vWorld));
+  if(railLayers.x>0.0){
+    vec3 ownerAccent=owner>0u
       ?texture(uPalette,vec2((float(owner)+0.5)/4096.0,0.75)).rgb
-      :vec3(0.16,0.17,0.18);
-    color=mix(color,railColor,railCoverage*0.96);
+      :vec3(0.48,0.52,0.56);
+    vec3 railBallast=vec3(0.105,0.115,0.120);
+    vec3 sleeperWood=vec3(0.255,0.145,0.070);
+    vec3 railSteel=mix(vec3(0.68,0.72,0.76),ownerAccent,0.16);
+    color=mix(color,railBallast,railLayers.x*0.78);
+    color=mix(color,sleeperWood,railLayers.y*0.96);
+    color=mix(color,railSteel,railLayers.z*0.98);
+    color+=vec3(0.055,0.065,0.075)*railLayers.z;
   }
   outColor=vec4(color,1.0);
 }`;

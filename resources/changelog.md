@@ -1,3 +1,9 @@
+## OpenBack v0.36.195 - Real 3D Railways
+
+- Rebuilt Immersive 3D railway rendering with a dark ballast bed, visible wooden sleepers, two parallel metallic rails, proper straight and corner orientation, and zoom-stable anti-aliasing while preserving terrain conformance and the established 2D renderer.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.194 - Natural Home Proportions
 
 - Narrowed the tall desktop Home stage again, moved it slightly upward, and made its map cards substantially taller to remove the remaining stretched horizontal appearance.
