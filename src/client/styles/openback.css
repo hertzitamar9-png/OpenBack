@@ -46,7 +46,7 @@ body.account-flow-open main-layout main {
   --ob-shadow-panel: 0 18px 48px rgb(0 0 0 / 46%);
   --ob-motion-fast: 120ms;
   --ob-motion-normal: 200ms;
-  --home-stage-max: 90rem;
+  --home-stage-max: 78rem;
 }
 
 @media (min-width: 1024px) {
@@ -60,8 +60,12 @@ body.account-flow-open main-layout main {
     justify-content: center;
   }
 
+  body:not(.openback-subpage-open) #page-play {
+    transform: translateY(clamp(-3.5rem, -4vh, -2rem));
+  }
+
   .home-lobby-grid {
-    height: min(24rem, 32vh) !important;
+    height: min(30rem, 38vh) !important;
   }
 }
 

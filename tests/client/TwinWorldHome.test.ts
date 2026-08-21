@@ -15,7 +15,7 @@ describe("Twin World home", () => {
   });
 
   it("uses the available desktop canvas instead of a narrow center column", () => {
-    expect(styles).toContain("--home-stage-max: 90rem");
+    expect(styles).toContain("--home-stage-max: 78rem");
     expect(styles).toMatch(
       /body:not\(\.openback-subpage-open\) \.main-layout-scroll\s*\{[^}]*max-width:\s*min\(var\(--home-stage-max\)/s,
     );
@@ -26,7 +26,10 @@ describe("Twin World home", () => {
       /@media \(min-width: 1024px\) and \(min-height: 900px\)[\s\S]*?body:not\(\.openback-subpage-open\) \.main-layout-scroll\s*\{[^}]*justify-content:\s*center/s,
     );
     expect(styles).toMatch(
-      /@media \(min-width: 1024px\) and \(min-height: 900px\)[\s\S]*?\.home-lobby-grid\s*\{[^}]*height:\s*min\(24rem,\s*32vh\)/s,
+      /@media \(min-width: 1024px\) and \(min-height: 900px\)[\s\S]*?\.home-lobby-grid\s*\{[^}]*height:\s*min\(30rem,\s*38vh\)/s,
+    );
+    expect(styles).toMatch(
+      /@media \(min-width: 1024px\) and \(min-height: 900px\)[\s\S]*?body:not\(\.openback-subpage-open\) #page-play\s*\{[^}]*transform:\s*translateY\(clamp\(-3\.5rem,\s*-4vh,\s*-2rem\)\)/s,
     );
   });
 

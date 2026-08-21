@@ -1,3 +1,9 @@
+## OpenBack v0.36.194 - Natural Home Proportions
+
+- Narrowed the tall desktop Home stage again, moved it slightly upward, and made its map cards substantially taller to remove the remaining stretched horizontal appearance.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.193 - Balanced Home Stage
 
 - Vertically centered the complete Home stage on tall desktop displays, narrowed the overly stretched wide-screen canvas, and made its map cards taller while leaving fitted 720p and mobile layouts unchanged.
