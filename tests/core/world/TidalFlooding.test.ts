@@ -3,6 +3,8 @@ import { WorldMechanicsExecution } from "../../../src/core/execution/WorldMechan
 import {
   CYCLE_TICKS,
   threeDWorldCycle,
+  TIDAL_REACH_TILES,
+  tidalFloodRings,
 } from "../../../src/core/world/ThreeDWorldCycle";
 
 /**
@@ -136,5 +138,49 @@ describe("night tide reaches inland", () => {
     }
     expect(threeDWorldCycle(CYCLE_TICKS).isNight).toBe(false);
     expect(floodedColumns(game)).toEqual([]);
+  });
+});
+
+// The tide used to be a switch: dusk flooded the whole reach and dawn drained
+// all of it. It now follows how deep into the night it is, so the sea takes
+// the coast a ring at a time and gives it back the same way.
+describe("the tide takes ground gradually", () => {
+  it("covers no coast by day and deepens through the night", () => {
+    const at = (fraction: number) =>
+      tidalFloodRings(Math.round(fraction * CYCLE_TICKS));
+
+    // Noon and the hours either side of it: dry.
+    expect(at(0)).toBe(0);
+    expect(at(0.2)).toBe(0);
+    // Dusk takes the shoreline itself, then it climbs inland.
+    expect(at(0.3)).toBe(1);
+    expect(at(0.4)).toBeGreaterThan(at(0.3));
+    // Deepest at midnight.
+    expect(at(0.5)).toBeGreaterThan(at(0.4));
+    // ...and falls back symmetrically rather than snapping dry.
+    expect(at(0.6)).toBe(at(0.4));
+    expect(at(0.7)).toBe(at(0.3));
+    expect(at(0.8)).toBe(0);
+  });
+
+  it("never reaches further than the coast it was given", () => {
+    for (let tick = 0; tick < CYCLE_TICKS; tick += 37) {
+      const rings = tidalFloodRings(tick);
+      expect(rings).toBeGreaterThanOrEqual(0);
+      expect(rings).toBeLessThanOrEqual(TIDAL_REACH_TILES + 1);
+    }
+  });
+
+  it("floods less at dusk than at the height of the night", () => {
+    const duskGame = buildGame();
+    runUntil(duskGame, Math.round(CYCLE_TICKS * 0.31));
+    const dusk = floodedColumns(duskGame).length;
+
+    const midnightGame = buildGame();
+    runUntil(midnightGame, Math.round(CYCLE_TICKS * 0.5));
+    const midnight = floodedColumns(midnightGame).length;
+
+    expect(dusk).toBeGreaterThan(0);
+    expect(midnight).toBeGreaterThan(dusk);
   });
 });

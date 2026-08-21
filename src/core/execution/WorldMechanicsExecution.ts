@@ -6,8 +6,8 @@ import { PseudoRandom } from "../PseudoRandom";
 import {
   isFloodableLand,
   isTidalCoast,
-  threeDWorldCycle,
   TIDAL_REACH_TILES,
+  tidalFloodRings,
 } from "../world/ThreeDWorldCycle";
 
 type ObjectiveReward = "gold" | "troops" | "radar" | "victory";
@@ -111,6 +111,10 @@ export class WorldMechanicsExecution implements Execution {
   private lastSaturationCount = 0;
   private pendingDamageScans: DisasterDamageScan[] = [];
   private tidalCoast: TileRef[] = [];
+  // How far inland each entry of tidalCoast sits: 0 is the ocean-facing
+  // shoreline, 1 the row behind it, and so on. The tide covers the shallow
+  // rings first and reaches the deeper ones only at its height.
+  private tidalRing: number[] = [];
   private tidalExpanded = false;
   private tideScanCursor = 0;
   private tideApplyCursor = 0;
@@ -191,6 +195,7 @@ export class WorldMechanicsExecution implements Execution {
           isTidalCoast(this.game.terrainByte(ref), this.game.isOceanShore(ref))
         ) {
           this.tidalCoast.push(ref);
+          this.tidalRing.push(0);
         }
       }
       this.tideScanCursor = end;
@@ -199,29 +204,35 @@ export class WorldMechanicsExecution implements Execution {
       this.tidalExpanded = true;
     }
 
-    if (threeDWorldCycle(ticks).isNight) {
-      const end = Math.min(this.tidalCoast.length, this.tideApplyCursor + 1800);
-      for (; this.tideApplyCursor < end; this.tideApplyCursor++) {
-        const tile = this.tidalCoast[this.tideApplyCursor];
-        // Inland tiles reached by the tide do not touch the ocean, so the
-        // shoreline predicate would reject them here.
-        if (!isFloodableLand(this.game.terrainByte(tile))) {
-          continue;
-        }
-        const originalByte = this.game.terrainByte(tile);
-        const appliedByte = 0x60; // ocean shoreline, magnitude zero
-        this.tidalTerrain.set(tile, {
-          originalByte,
-          originalOwnerID: this.game.ownerID(tile),
-          appliedByte,
-        });
-        this.game.setTerrainByte(tile, appliedByte);
-      }
+    // How much coast the sea is holding right now. This climbs ring by ring as
+    // the night deepens and falls back the same way, so the water takes ground
+    // gradually and gives it back gradually instead of the whole reach
+    // flipping at dusk and dawn.
+    const rings = tidalFloodRings(ticks);
+    const total = this.tidalCoast.length;
+    if (total === 0) return;
+    if (rings === 0 && this.tidalTerrain.size === 0) {
+      this.tideApplyCursor = 0;
       return;
     }
 
-    if (this.tidalTerrain.size > 0) this.restoreThreeDTide();
-    this.tideApplyCursor = 0;
+    // Bring a bounded slice of the coast into agreement with that depth each
+    // tick, cycling through the whole reach, so no single tick pays for the
+    // entire coastline.
+    const budget = Math.min(1800, total);
+    for (let n = 0; n < budget; n++) {
+      const index = (this.tideApplyCursor + n) % total;
+      const tile = this.tidalCoast[index];
+      const shouldBeUnderwater = this.tidalRing[index] < rings;
+      const isUnderwater = this.tidalTerrain.has(tile);
+      if (shouldBeUnderwater === isUnderwater) continue;
+      if (shouldBeUnderwater) {
+        this.floodTidalTile(tile);
+      } else {
+        this.drainTidalTile(tile);
+      }
+    }
+    this.tideApplyCursor = (this.tideApplyCursor + budget) % total;
   }
 
   /**
@@ -256,11 +267,42 @@ export class WorldMechanicsExecution implements Execution {
           if (!isFloodableLand(this.game.terrainByte(neighbor))) continue;
           seen.add(neighbor);
           this.tidalCoast.push(neighbor);
+          this.tidalRing.push(ring + 1);
           next.push(neighbor);
         }
       }
       frontier = next;
     }
+  }
+
+  private floodTidalTile(tile: TileRef): void {
+    // Inland tiles reached by the tide do not touch the ocean, so the
+    // shoreline predicate would reject them here.
+    if (!isFloodableLand(this.game.terrainByte(tile))) return;
+    const appliedByte = 0x60; // ocean shoreline, magnitude zero
+    this.tidalTerrain.set(tile, {
+      originalByte: this.game.terrainByte(tile),
+      originalOwnerID: this.game.ownerID(tile),
+      appliedByte,
+    });
+    this.game.setTerrainByte(tile, appliedByte);
+  }
+
+  private drainTidalTile(tile: TileRef): void {
+    const change = this.tidalTerrain.get(tile);
+    if (change === undefined) return;
+    if (this.game.terrainByte(tile) === change.appliedByte) {
+      this.game.setTerrainByte(tile, change.originalByte);
+      if (
+        change.originalOwnerID !== 0 &&
+        this.game.isLand(tile) &&
+        !this.game.hasOwner(tile)
+      ) {
+        const owner = this.game.playerBySmallID(change.originalOwnerID);
+        if (owner.isPlayer() && owner.isAlive()) owner.conquer(tile);
+      }
+    }
+    this.tidalTerrain.delete(tile);
   }
 
   private restoreThreeDTide(): void {

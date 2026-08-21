@@ -1,3 +1,9 @@
+## OpenBack v0.36.210 - The Sea Takes the Coast
+
+- The night tide now takes coastal ground a row at a time as the night deepens, holds it at its height, and gives it back as dawn approaches, instead of the whole coastline flooding at dusk and draining at sunrise.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.209 - Sharper Lobby Previews
 
 - Sharpened the map picture on lobby cards, which were showing a half-resolution image stretched to fit on high-density screens, and now use the Immersive 3D rendering of the map when that mode is selected.

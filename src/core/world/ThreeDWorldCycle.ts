@@ -94,6 +94,33 @@ export function threeDWorldCycle(tick: number): ThreeDWorldCycleState {
   };
 }
 
+/**
+ * How many rings of coast the sea currently holds, 0 through TIDAL_REACH_TILES.
+ *
+ * The tide used to be a switch: night fell and the whole reach flooded, dawn
+ * came and all of it drained. Tying the depth to how far into the night it is
+ * makes the water take ground a ring at a time as the tide climbs, hold it at
+ * its height, and give it back as the tide falls -- the sea eating the coast
+ * rather than a mask being toggled.
+ *
+ * Pure and derived from the tick alone, so every client and every replay
+ * floods exactly the same tiles at exactly the same moment.
+ */
+export function tidalFloodRings(tick: number): number {
+  const phase =
+    (((tick % CYCLE_TICKS) + CYCLE_TICKS) % CYCLE_TICKS) / CYCLE_TICKS;
+  const solar = Math.cos(phase * Math.PI * 2);
+  if (solar >= 0) return 0; // daylight: the coast is dry
+  // 0 at dusk and dawn, 1 at midnight.
+  const nightDepth = Math.min(1, -solar);
+  // The shoreline itself goes under as soon as the sun is down; the inland
+  // rings follow as the tide keeps rising.
+  return Math.min(
+    TIDAL_REACH_TILES + 1,
+    1 + Math.floor(nightDepth * TIDAL_REACH_TILES),
+  );
+}
+
 export function shipCurrentMultiplier(
   dx: number,
   dy: number,
