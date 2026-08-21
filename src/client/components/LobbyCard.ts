@@ -1,6 +1,7 @@
 import { html, TemplateResult } from "lit";
 import { GameMapType } from "../../core/game/Game";
 import { PublicGameInfo } from "../../core/Schemas";
+import { experienceContext } from "../ExperienceContext";
 import { terrainMapFileLoader } from "../TerrainMapFileLoader";
 import { getMapName, getModifierLabels } from "../Utils";
 
@@ -69,7 +70,18 @@ export function lobbyCard({
   heightClass = "h-44 sm:h-full",
 }: LobbyCardOptions): TemplateResult {
   const mapType = lobby.gameConfig!.gameMap as GameMapType;
-  const mapImageSrc = terrainMapFileLoader.getMapData(mapType).webpPath;
+  // Every map ships a double-resolution thumbnail beside the 500x250 one, and
+  // a 3D-rendered pair as well. Asking only for the small flat image left the
+  // browser upscaling it on any high-density screen, which is what made these
+  // cards look soft.
+  const mapData = terrainMapFileLoader.getMapData(mapType);
+  const threeD = experienceContext.get() === "3d";
+  const mapImageSrc = threeD
+    ? (mapData.webp3dPath ?? mapData.webpPath)
+    : mapData.webpPath;
+  const mapImage2xSrc = threeD
+    ? (mapData.webp3d2xPath ?? mapImageSrc)
+    : (mapData.webp2xPath ?? mapImageSrc);
   const aspectRatio = mapAspectRatios.get(mapType);
   // Use object-contain for extreme aspect ratios (e.g. Amazon River ~20:1) so
   // the full map is visible instead of being cropped by object-cover.
@@ -116,6 +128,7 @@ export function lobbyCard({
         ${mapImageSrc
           ? html`<img
               src="${mapImageSrc}"
+              srcset="${mapImageSrc} 1x, ${mapImage2xSrc} 2x"
               alt="${mapName ?? lobby.gameConfig?.gameMap ?? "map"}"
               draggable="false"
               class="absolute inset-0 w-full h-full ${useContain

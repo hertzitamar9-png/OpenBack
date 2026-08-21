@@ -1,3 +1,9 @@
+## OpenBack v0.36.209 - Sharper Lobby Previews
+
+- Sharpened the map picture on lobby cards, which were showing a half-resolution image stretched to fit on high-density screens, and now use the Immersive 3D rendering of the map when that mode is selected.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.208 - Ships Ride, Steer and Leave a Wake
 
 - Immersive 3D vessels no longer sit three quarters under water; they float on the swell with the hull clearly above the surface.
