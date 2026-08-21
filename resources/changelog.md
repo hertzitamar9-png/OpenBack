@@ -1,3 +1,13 @@
+## OpenBack v0.36.197 - Mobile Command
+
+- Rebuilt phone controls so building and weapon previews follow the finger, taps confirm once, invalid structure taps cancel before combat, nuclear holds cancel safely, and two-finger Immersive gestures rotate and zoom without phantom actions.
+- Restored dependable touch placement for Aircraft on Runways and Tanks at Military Bases, kept every affordable unit selected for repeated placement or stacking, and cleared unit descriptions immediately on deselection.
+- Completed the mobile Home and HUD with full lobby countdowns, persistent account/Menu/Back controls, curved-screen safe areas, and balanced unit counters in portrait and landscape.
+- Added touch-specific settings, audible sound defaults, mobile audio unlocking, and the original locally stored OpenBack Command soundtrack.
+- Active pause-authorized matches and game audio now stop during deployments on every device, then resume after an update-ready 5-to-1 countdown without reloading an unfinished match.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.196 - Clean Mobile Footer
 
 - Rebuilt the mobile Home footer into a compact layout without the empty desktop icon row, excessive lower-bar space, or overlapping legal and contributor credits.
