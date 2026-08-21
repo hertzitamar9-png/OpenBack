@@ -392,7 +392,11 @@
     "fps_auto": "Auto (recommended)",
     "fps_limit": "Frame rate limit",
     "fps_limit_desc": "Cap how many frames the map draws each second.",
-    "fps_limit_detected": "Your screen runs at about {hz} Hz. Higher limits will not go faster."
+    "fps_limit_detected": "Your screen runs at about {hz} Hz. Higher limits will not go faster.",
+    "mobile_controls_desc": "Drag one finger to move the map, or move a selected unit preview under your finger. Tap to confirm. Pinch to zoom. In 3D, drag two fingers to rotate the camera. Hold a selected nuclear weapon still to cancel it.",
+    "mobile_controls_title": "Mobile Controls",
+    "tap_menu_desc": "When ON, tapping your territory opens its action menu and the sword button attacks. When OFF, tapping attacks directly.",
+    "tap_menu_label": "Tap to Open Menu"
   },
   "win_modal": {
     "sun_already_exploded": "The game is already done dont be weird even the sun exploded before you left",

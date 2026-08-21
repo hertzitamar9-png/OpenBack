@@ -15,6 +15,7 @@ import "./components/baseComponents/setting/SettingToggle";
 import { BaseModal } from "./components/BaseModal";
 import "./components/GraphicsPresetSelector";
 import { modalHeader } from "./components/ui/ModalHeader";
+import { detectInputCapabilities } from "./InputCapabilities";
 import { Platform } from "./Platform";
 
 @customElement("user-setting")
@@ -22,6 +23,7 @@ export class UserSettingModal extends BaseModal {
   protected routerName = "settings";
   private userSettings: UserSettings = new UserSettings();
   private readonly defaultKeybinds = getDefaultKeybinds(Platform.isMac);
+  private readonly inputCapabilities = detectInputCapabilities();
 
   @state() private keySequence: string[] = [];
   @state() private showEasterEggSettings = false;
@@ -345,11 +347,17 @@ export class UserSettingModal extends BaseModal {
   }
 
   protected modalConfig() {
+    const tabs = [
+      { key: "basic", label: translateText("user_setting.tab_basic") },
+    ];
+    if (this.inputCapabilities.keyboardLikely) {
+      tabs.push({
+        key: "keybinds",
+        label: translateText("user_setting.tab_keybinds"),
+      });
+    }
     return {
-      tabs: [
-        { key: "basic", label: translateText("user_setting.tab_basic") },
-        { key: "keybinds", label: translateText("user_setting.tab_keybinds") },
-      ],
+      tabs,
     };
   }
 
@@ -817,6 +825,19 @@ export class UserSettingModal extends BaseModal {
 
   private renderBasicSettings() {
     return html`
+      ${this.inputCapabilities.touchPrimary
+        ? html`<section
+            data-mobile-controls
+            class="flex min-h-11 flex-col gap-1 rounded-xl border border-malibu-blue/25 bg-malibu-blue/10 p-4 text-white/75"
+          >
+            <div class="font-bold text-white">
+              ${translateText("user_setting.mobile_controls_title")}
+            </div>
+            <div class="text-sm leading-relaxed">
+              ${translateText("user_setting.mobile_controls_desc")}
+            </div>
+          </section>`
+        : null}
       <!-- 🎨 Graphics preset -->
       <div
         class="flex flex-col w-full p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all gap-3"
@@ -861,8 +882,16 @@ export class UserSettingModal extends BaseModal {
 
       <!-- 🖱️ Left Click Menu -->
       <setting-toggle
-        label="${translateText("user_setting.left_click_label")}"
-        description="${translateText("user_setting.left_click_desc")}"
+        label="${translateText(
+          this.inputCapabilities.touchPrimary
+            ? "user_setting.tap_menu_label"
+            : "user_setting.left_click_label",
+        )}"
+        description="${translateText(
+          this.inputCapabilities.touchPrimary
+            ? "user_setting.tap_menu_desc"
+            : "user_setting.left_click_desc",
+        )}"
         id="left-click-toggle"
         .checked=${this.userSettings.leftClickOpensMenu()}
         @change=${this.toggleLeftClickOpensMenu}
