@@ -1,9 +1,12 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock howler before importing SoundManager
 const howlCtor = vi.fn();
 const howlInstances: any[] = [];
 let nextPlayId = 1;
+const { resumeAudioContext } = vi.hoisted(() => ({
+  resumeAudioContext: vi.fn().mockResolvedValue(undefined),
+}));
 vi.mock("howler", () => {
   class MockHowl {
     play = vi.fn(() => nextPlayId++);
@@ -12,6 +15,7 @@ vi.mock("howler", () => {
         this._fireEvent("stop", id);
       }
     });
+    pause = vi.fn();
     volume = vi.fn();
     playing = vi.fn().mockReturnValue(false);
     unload = vi.fn();
@@ -36,7 +40,12 @@ vi.mock("howler", () => {
       howlInstances.push(this);
     }
   }
-  return { Howl: MockHowl };
+  return {
+    Howl: MockHowl,
+    Howler: {
+      ctx: { state: "suspended", resume: resumeAudioContext },
+    },
+  };
 });
 
 // Mock the Sounds module so tests don't depend on actual asset paths
@@ -45,6 +54,7 @@ vi.mock("../../../src/client/sound/Sounds", async (importOriginal) => {
     await importOriginal<typeof import("../../../src/client/sound/Sounds")>();
   return {
     ...actual,
+    backgroundMusicUrls: ["mock/openback-command.ogg"],
     soundEffectUrls: new Map([
       ["click", "mock/click.mp3"],
       ["atom-hit", "mock/atom-hit.mp3"],
@@ -78,6 +88,18 @@ function createUserSettings(musicVolume = 0, sfxVolume = 1): UserSettings {
   return settings;
 }
 
+let managers: SoundManager[] = [];
+function createManager(eventBus: EventBus, settings: UserSettings) {
+  const manager = new SoundManager(eventBus, settings);
+  managers.push(manager);
+  return manager;
+}
+
+afterEach(() => {
+  for (const manager of managers) manager.dispose();
+  managers = [];
+});
+
 describe("SoundManager", () => {
   let eventBus: EventBus;
   let userSettings: UserSettings;
@@ -87,15 +109,17 @@ describe("SoundManager", () => {
     howlCtor.mockClear();
     howlInstances.length = 0;
     nextPlayId = 1;
+    resumeAudioContext.mockClear();
     eventBus = new EventBus();
     userSettings = createUserSettings();
-    soundManager = new SoundManager(eventBus, userSettings);
+    soundManager = createManager(eventBus, userSettings);
   });
 
   it("lazy-loads a sound effect once and reuses it", () => {
+    const constructorsBeforeEffect = howlCtor.mock.calls.length;
     eventBus.emit(new PlaySoundEffectEvent("click"));
     eventBus.emit(new PlaySoundEffectEvent("click"));
-    expect(howlCtor).toHaveBeenCalledTimes(1);
+    expect(howlCtor.mock.calls.length - constructorsBeforeEffect).toBe(1);
   });
 
   it("plays a sound effect when PlaySoundEffectEvent is emitted", () => {
@@ -104,13 +128,59 @@ describe("SoundManager", () => {
     expect(effectHowl.play).toHaveBeenCalledTimes(1);
   });
 
-  it("does not load unavailable proprietary background music", () => {
+  it("loads one local original background track", () => {
+    soundManager.dispose();
     const settings = createUserSettings(0.5, 1);
     const bus = new EventBus();
     howlCtor.mockClear();
     howlInstances.length = 0;
-    new SoundManager(bus, settings);
-    expect(howlCtor).not.toHaveBeenCalled();
+    createManager(bus, settings);
+    expect(howlCtor).toHaveBeenCalledTimes(1);
+    expect(howlCtor).toHaveBeenCalledWith(
+      expect.objectContaining({
+        src: ["mock/openback-command.ogg"],
+        loop: true,
+      }),
+    );
+  });
+
+  it("unlocks audio and starts music on the first pointer interaction", async () => {
+    soundManager.dispose();
+    const settings = createUserSettings(0.5, 1);
+    howlCtor.mockClear();
+    howlInstances.length = 0;
+    const manager = createManager(new EventBus(), settings);
+    document.dispatchEvent(new Event("pointerdown"));
+    await Promise.resolve();
+
+    expect(resumeAudioContext).toHaveBeenCalledTimes(1);
+    expect(howlInstances[0].play).toHaveBeenCalledTimes(1);
+
+    document.dispatchEvent(new Event("pointerdown"));
+    await Promise.resolve();
+    expect(resumeAudioContext).toHaveBeenCalledTimes(1);
+    manager.dispose();
+  });
+
+  it("suspends effects and resumes only one music instance after an update", async () => {
+    soundManager.dispose();
+    const settings = createUserSettings(0.5, 1);
+    howlInstances.length = 0;
+    const manager = createManager(new EventBus(), settings);
+    document.dispatchEvent(new Event("pointerdown"));
+    await Promise.resolve();
+    manager.playSoundEffect("click");
+    const music = howlInstances[0];
+    const effect = howlInstances[1];
+
+    manager.suspendForUpdate();
+    expect(music.pause).toHaveBeenCalledTimes(1);
+    expect(effect.stop).toHaveBeenCalled();
+
+    manager.resumeAfterUpdate();
+    manager.resumeAfterUpdate();
+    expect(music.play).toHaveBeenCalledTimes(2);
+    manager.dispose();
   });
 
   it("applies current sfx volume to lazily-loaded sounds", () => {
@@ -118,7 +188,7 @@ describe("SoundManager", () => {
     const bus = new EventBus();
     howlCtor.mockClear();
     howlInstances.length = 0;
-    new SoundManager(bus, settings);
+    createManager(bus, settings);
     bus.emit(new PlaySoundEffectEvent("click"));
     // Slider position 0.3 is curved (squared) into perceptual gain: 0.3² = 0.09.
     expect(howlCtor).toHaveBeenLastCalledWith(
@@ -181,9 +251,11 @@ describe("SoundManager", () => {
     expect(clickHowl.unload).toHaveBeenCalled();
   });
 
-  it("dispose() is safe with no background music", () => {
+  it("dispose() stops and unloads background music", () => {
+    const music = howlInstances[0];
     soundManager.dispose();
-    expect(howlInstances).toHaveLength(0);
+    expect(music.stop).toHaveBeenCalled();
+    expect(music.unload).toHaveBeenCalled();
   });
 
   it("does not throw when playSoundEffect is called directly", () => {
@@ -236,7 +308,7 @@ describe("Sound channel management", () => {
     howlInstances.length = 0;
     nextPlayId = 1;
     eventBus = new EventBus();
-    new SoundManager(eventBus, createUserSettings());
+    createManager(eventBus, createUserSettings());
   });
 
   it("new sound always plays even when at channel cap", () => {

@@ -19,6 +19,10 @@ export type SoundEffect =
   | "message"
   | "click";
 
+export const backgroundMusicUrls: readonly string[] = [
+  assetUrl("sounds/music/openback-command.ogg"),
+];
+
 export const soundEffectUrls: ReadonlyMap<SoundEffect, string> = new Map([
   ["ka-ching", assetUrl("sounds/effects/ka-ching.mp3")],
   ["atom-hit", assetUrl("sounds/effects/atom-hit.mp3")],

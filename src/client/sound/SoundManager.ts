@@ -1,7 +1,8 @@
-import { Howl } from "howler";
+import { Howl, Howler } from "howler";
 import { EventBus } from "../../core/EventBus";
 import { UserSettings } from "../../core/game/UserSettings";
 import {
+  backgroundMusicUrls,
   PlaySoundEffectEvent,
   SetBackgroundMusicVolumeEvent,
   SetSoundEffectsVolumeEvent,
@@ -18,6 +19,9 @@ export class SoundManager {
   private soundEffectsVolume: number = 1;
   private backgroundMusicVolume: number = 0;
   private activeSounds: { howl: Howl; id: number }[] = [];
+  private audioUnlocked = false;
+  private suspendedForUpdate = false;
+  private disposed = false;
   private eventBus: EventBus;
   private onPlaySoundEffect: (e: PlaySoundEffectEvent) => void;
   private onSetBackgroundMusicVolume: (
@@ -32,6 +36,14 @@ export class SoundManager {
     // background tracks rather than requesting missing or unlicensed files.
     this.setBackgroundMusicVolume(userSettings.backgroundMusicVolume());
     this.setSoundEffectsVolume(userSettings.soundEffectsVolume());
+    this.backgroundMusic = backgroundMusicUrls.map(
+      (src) =>
+        new Howl({
+          src: [src],
+          loop: true,
+          volume: this.backgroundMusicVolume,
+        }),
+    );
     this.onPlaySoundEffect = (e) => this.playSoundEffect(e.effect);
     this.onSetBackgroundMusicVolume = (e) =>
       this.setBackgroundMusicVolume(e.volume);
@@ -39,9 +51,16 @@ export class SoundManager {
     eventBus.on(PlaySoundEffectEvent, this.onPlaySoundEffect);
     eventBus.on(SetBackgroundMusicVolumeEvent, this.onSetBackgroundMusicVolume);
     eventBus.on(SetSoundEffectsVolumeEvent, this.onSetSoundEffectsVolume);
+    document.addEventListener("pointerdown", this.unlockAudio, { once: true });
+    document.addEventListener("keydown", this.unlockAudio, { once: true });
+    document.addEventListener("visibilitychange", this.onVisibilityChange);
   }
 
   public dispose(): void {
+    this.disposed = true;
+    document.removeEventListener("pointerdown", this.unlockAudio);
+    document.removeEventListener("keydown", this.unlockAudio);
+    document.removeEventListener("visibilitychange", this.onVisibilityChange);
     this.eventBus.off(PlaySoundEffectEvent, this.onPlaySoundEffect);
     this.eventBus.off(
       SetBackgroundMusicVolumeEvent,
@@ -71,6 +90,10 @@ export class SoundManager {
   public playBackgroundMusic(): void {
     this.safely("play background music", () => {
       if (
+        this.audioUnlocked &&
+        !this.suspendedForUpdate &&
+        !document.hidden &&
+        this.backgroundMusicVolume > 0 &&
         this.backgroundMusic.length > 0 &&
         !this.backgroundMusic[this.currentTrack].playing()
       ) {
@@ -102,6 +125,8 @@ export class SoundManager {
         track.volume(this.backgroundMusicVolume);
       });
     });
+    if (this.backgroundMusicVolume > 0) this.playBackgroundMusic();
+    else this.stopBackgroundMusic();
   }
 
   private playNext(): void {
@@ -131,6 +156,7 @@ export class SoundManager {
 
   public playSoundEffect(name: SoundEffect): void {
     this.safely(`play sound ${name}`, () => {
+      if (this.suspendedForUpdate || this.soundEffectsVolume <= 0) return;
       const howl = this.getOrLoadSoundEffect(name);
       if (!howl) return;
 
@@ -165,4 +191,45 @@ export class SoundManager {
       }
     });
   }
+
+  public suspendForUpdate(): void {
+    if (this.suspendedForUpdate) return;
+    this.suspendedForUpdate = true;
+    this.backgroundMusic.forEach((track) =>
+      this.safely("pause background track", () => track.pause()),
+    );
+    for (const active of this.activeSounds) {
+      this.safely("stop active sound", () => active.howl.stop(active.id));
+    }
+    this.activeSounds = [];
+  }
+
+  public resumeAfterUpdate(): void {
+    if (!this.suspendedForUpdate) return;
+    this.suspendedForUpdate = false;
+    this.playBackgroundMusic();
+  }
+
+  private unlockAudio = async (): Promise<void> => {
+    if (this.audioUnlocked || this.disposed) return;
+    this.audioUnlocked = true;
+    document.removeEventListener("pointerdown", this.unlockAudio);
+    document.removeEventListener("keydown", this.unlockAudio);
+    try {
+      await Howler.ctx?.resume();
+    } catch (error) {
+      console.warn("SoundManager: failed to unlock audio", error);
+    }
+    if (!this.disposed) this.playBackgroundMusic();
+  };
+
+  private onVisibilityChange = (): void => {
+    if (document.hidden) {
+      this.backgroundMusic.forEach((track) =>
+        this.safely("pause hidden background track", () => track.pause()),
+      );
+    } else {
+      this.playBackgroundMusic();
+    }
+  };
 }
