@@ -1,3 +1,9 @@
+## OpenBack v0.36.193 - Balanced Home Stage
+
+- Vertically centered the complete Home stage on tall desktop displays, narrowed the overly stretched wide-screen canvas, and made its map cards taller while leaving fitted 720p and mobile layouts unchanged.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.192 - Twin Worlds
 
 - Added one clear Classic 2D / Immersive 3D switch to Home and carried the selected world through Solo, hosted and joined multiplayer, public lobbies, parties, and ranked 1v1 through 4v4.

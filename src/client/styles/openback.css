@@ -46,12 +46,22 @@ body.account-flow-open main-layout main {
   --ob-shadow-panel: 0 18px 48px rgb(0 0 0 / 46%);
   --ob-motion-fast: 120ms;
   --ob-motion-normal: 200ms;
-  --home-stage-max: 110rem;
+  --home-stage-max: 90rem;
 }
 
 @media (min-width: 1024px) {
   body:not(.openback-subpage-open) .main-layout-scroll {
     max-width: min(var(--home-stage-max), calc(100vw - 4rem)) !important;
+  }
+}
+
+@media (min-width: 1024px) and (min-height: 900px) {
+  body:not(.openback-subpage-open) .main-layout-scroll {
+    justify-content: center;
+  }
+
+  .home-lobby-grid {
+    height: min(24rem, 32vh) !important;
   }
 }
 
