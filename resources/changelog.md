@@ -1,3 +1,10 @@
+## OpenBack v0.36.196 - Clean Mobile Footer
+
+- Rebuilt the mobile Home footer into a compact layout without the empty desktop icon row, excessive lower-bar space, or overlapping legal and contributor credits.
+- Fixed mobile radial-menu actions firing twice after a single touch, so sending a transport ship now creates exactly one ship.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.195 - Real 3D Railways
 
 - Rebuilt Immersive 3D railway rendering with a dark ballast bed, visible wooden sleepers, two parallel metallic rails, proper straight and corner orientation, and zoom-stable anti-aliasing while preserving terrain conformance and the established 2D renderer.

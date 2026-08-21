@@ -11,10 +11,10 @@ export class Footer extends LitElement {
   render() {
     return html`
       <footer
-        class="[.in-game_&]:hidden bg-zinc-900/95 backdrop-blur-md flex flex-col items-center justify-center gap-1 py-2 lg:gap-1 lg:pt-1 lg:pb-3 text-white/50 w-full border-t border-white/10 shrink-0 relative z-30"
+        class="[.in-game_&]:hidden bg-zinc-900/95 backdrop-blur-md flex flex-col items-center justify-center gap-0 py-1 lg:gap-1 lg:pt-1 lg:pb-3 text-white/50 w-full border-t border-white/10 shrink-0 relative z-30"
       >
         <div
-          class="flex h-7 lg:h-auto items-center justify-center gap-6 lg:pt-2 w-full relative"
+          class="hidden lg:flex lg:h-auto items-center justify-center gap-6 lg:pt-2 w-full relative"
         >
           <a
             href="https://github.com/hertzitamar9-png/OpenBack"
@@ -54,10 +54,10 @@ export class Footer extends LitElement {
           </a>
         </div>
         <lang-selector
-          class="relative lg:absolute lg:right-4 lg:top-1/2 lg:-translate-y-1/2"
+          class="footer-language-selector relative h-8 lg:h-auto lg:absolute lg:right-4 lg:top-1/2 lg:-translate-y-1/2"
         ></lang-selector>
         <div
-          class="w-full text-[10px] leading-4 lg:text-xs lg:mt-2 flex flex-wrap items-center justify-center gap-x-3 lg:gap-x-4 gap-y-1 lg:gap-y-2 px-3 lg:px-4"
+          class="w-full text-[10px] leading-3 lg:leading-4 lg:text-xs lg:mt-2 flex flex-wrap items-center justify-center gap-x-3 lg:gap-x-4 gap-y-0.5 lg:gap-y-2 px-3 lg:px-4"
         >
           <button
             type="button"
@@ -102,7 +102,7 @@ export class Footer extends LitElement {
           ></a>
         </div>
         <span
-          class="block w-full px-3 text-left text-[9px] leading-tight text-white/40 sm:absolute sm:bottom-1 sm:left-3 sm:w-auto sm:px-0"
+          class="block w-full px-3 pt-0.5 text-center text-[9px] leading-tight text-white/40 lg:absolute lg:bottom-1 lg:left-3 lg:w-auto lg:px-0 lg:pt-0 lg:text-left"
           data-i18n="main.copyright"
         ></span>
       </footer>

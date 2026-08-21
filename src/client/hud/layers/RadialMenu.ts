@@ -198,11 +198,6 @@ export class RadialMenu implements Controller {
         event.stopPropagation();
         this.handleCenterButtonClick();
       })
-      .on("touchstart", (event: Event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        this.handleCenterButtonClick();
-      })
       .on("mouseover", () => this.onCenterButtonHover(true))
       .on("mouseout", () => this.onCenterButtonHover(false));
 
@@ -557,12 +552,6 @@ export class RadialMenu implements Controller {
       });
 
       path.on("click", function (event) {
-        onClick(d, event);
-      });
-
-      path.on("touchstart", function (event) {
-        event.preventDefault();
-        event.stopPropagation();
         onClick(d, event);
       });
     });
