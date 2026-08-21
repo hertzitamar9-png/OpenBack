@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-21
 
-**Status:** Approved scope; pending specification review
+**Status:** Approved scope; pending final specification review
 
 **Creator:** **frootz jhklphy**
 
@@ -152,6 +152,29 @@ On touch-only devices:
 
 Hybrid devices retain both touch guidance and keyboard remapping. Desktop wording and behavior remain unchanged.
 
+## Update Safety on Every Device
+
+The deployment update flow applies identically on desktop, tablet, and mobile. `UpdateWatcher` currently covers the screen without pausing the active simulation, allowing bots and sounds to continue behind it. The revised flow coordinates the overlay with the active game and audio session.
+
+When an update begins during a pausable active match:
+
+- request pause exactly once through the existing authoritative pause intent;
+- remember whether the match was already manually paused;
+- stop current effects and pause background music;
+- block gameplay input behind the update overlay;
+- keep polling the real deployment status rather than resuming from a fixed elapsed-time assumption;
+- remain paused if the status feed is temporarily unreachable.
+
+When the deployment reports that the new build is ready, the overlay changes to a completed state and displays:
+
+- heading: `Update complete`;
+- message: `Resuming in`;
+- a large countdown below it: `5`, `4`, `3`, `2`, `1`.
+
+At zero, remove the overlay, restore audio, and unpause only when the updater itself paused the match. A match that was already manually paused remains paused. An active match continues on its current loaded build and reloads the new build only after the match ends, preserving match state. A player on the Home screen receives the new build through the normal reload flow after the ready countdown.
+
+Single-player, replay, and pause-authorized private matches use the existing simulation pause path. Public or ranked matches remain server-authoritative: the client blocks input and audio but must not send an unauthorized global pause. Deployment infrastructure must not claim those matches are locally paused.
+
 ## Performance and Compatibility
 
 - Gesture processing allocates no per-move arrays beyond the existing two-pointer state.
@@ -191,6 +214,10 @@ Hybrid devices retain both touch guidance and keyboard remapping. Desktop wordin
 - Saved zero volume remains zero.
 - Audio unlock resumes once and visibility changes pause/resume one music instance.
 - Touch-only settings show touch language and hybrid/desktop settings retain keybind access.
+- Update detection pauses every pause-authorized active match once on desktop, tablet, and mobile.
+- An update-ready response displays an accessible 5-to-1 resume countdown and resumes only after zero.
+- A manually paused match is never resumed by the updater.
+- An unreachable deployment-status feed cannot silently resume simulation or audio.
 
 ### Browser playtests
 
@@ -203,6 +230,7 @@ Test at minimum:
 - normal buildings, stack upgrades, aircraft, tanks, ships, and all nuclear weapons;
 - Home, every persistent navigation target, settings, and account entry;
 - first-load audio, tab background/foreground, mute, and game restart.
+- update start, unreachable status, ready status, 5-second countdown, automatic resume, and preserved manual pause on desktop and mobile.
 
 Inspect visible layout, gesture results, browser logs, duplicate intents, horizontal overflow, clipped hit targets, and audio errors.
 
@@ -215,6 +243,7 @@ The release is complete only when:
 - all build controls fit supported phone screens and safe areas;
 - tanks and aircraft can be placed and deployed entirely by touch;
 - music and effects are audible after the first interaction at nonzero volume;
+- pause-authorized matches and their audio stop throughout an update and resume only after the complete 5-second countdown;
 - desktop mouse, keyboard, and camera behavior remains unchanged;
 - focused tests, full coverage, TypeScript, production build, lint, formatting, generated-map verification, and GitHub CI pass.
 
