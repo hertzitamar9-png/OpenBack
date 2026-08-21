@@ -43,7 +43,7 @@ import { isPointerOverVehicleSource } from "./VehicleSourceHover";
 
 /** Build-menu selections stay active after success so players can place or stack repeatedly. */
 export function shouldPreserveGhostAfterBuild(unitType: UnitType): boolean {
-  return BuildMenus.types.includes(unitType);
+  return (BuildMenus.types as readonly UnitType[]).includes(unitType);
 }
 
 const STACKABLE_OPENBACK_TYPES: ReadonlySet<UnitType> = new Set([

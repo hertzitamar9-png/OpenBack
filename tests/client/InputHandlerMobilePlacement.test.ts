@@ -80,7 +80,7 @@ describe("InputHandler mobile placement gestures", () => {
     pointer(ctx.canvas, "pointerdown", 1, 100, 100);
     pointer(window, "pointermove", 1, 140, 180);
 
-    expect(ctx.moves.at(-1)).toMatchObject({ x: 140, y: 180 });
+    expect(ctx.moves[ctx.moves.length - 1]).toMatchObject({ x: 140, y: 180 });
     expect(ctx.drags).toHaveLength(0);
     ctx.handler.destroy();
   });
@@ -115,7 +115,7 @@ describe("InputHandler mobile placement gestures", () => {
     await vi.advanceTimersByTimeAsync(900);
 
     expect(ctx.uiState.ghostStructure).toBe(UnitType.AtomBomb);
-    expect(ctx.moves.at(-1)).toMatchObject({ x: 130, y: 130 });
+    expect(ctx.moves[ctx.moves.length - 1]).toMatchObject({ x: 130, y: 130 });
     ctx.handler.destroy();
   });
 
