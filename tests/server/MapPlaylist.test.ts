@@ -70,6 +70,7 @@ describe("ranked 1v1 playlist", () => {
       4,
       teams,
       { bots: 200, nations: 100 },
+      "2d",
       () => 0,
     );
 
@@ -82,5 +83,33 @@ describe("ranked 1v1 playlist", () => {
     expect(config.allowedPublicIds).toEqual(teams.flat());
     expect(config.bots).toBe(200);
     expect(config.nations).toBe(100);
+  });
+});
+
+describe("ranked experience mode", () => {
+  it("creates the match in the experience its queue matched on", () => {
+    // The queue pairs players per experience and the assignment tells them to
+    // join in that experience. Building the game as 2d regardless meant every
+    // 3d ranked match was refused at the door with experience_mismatch.
+    const config = new MapPlaylist().getRankedConfig(
+      1,
+      [],
+      undefined,
+      "3d",
+      () => 0,
+    );
+    expect(config.experienceMode).toBe("3d");
+  });
+
+  it("still defaults to 2d", () => {
+    const config = new MapPlaylist().getRankedConfig(
+      1,
+      [],
+      undefined,
+      "2d",
+      () => 0,
+    );
+    expect(config.experienceMode).toBe("2d");
+    expect(new MapPlaylist().get1v1Config(() => 0).experienceMode).toBe("2d");
   });
 });

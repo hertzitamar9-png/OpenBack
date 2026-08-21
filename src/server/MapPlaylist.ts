@@ -15,7 +15,12 @@ import {
   UnitType,
 } from "../core/game/Game";
 import { PseudoRandom } from "../core/PseudoRandom";
-import { GameConfig, PublicGameType, TeamCountConfig } from "../core/Schemas";
+import {
+  ExperienceMode,
+  GameConfig,
+  PublicGameType,
+  TeamCountConfig,
+} from "../core/Schemas";
 import { logger } from "./Logger";
 import { getMapLandTiles } from "./MapLandTiles";
 
@@ -401,6 +406,7 @@ export class MapPlaylist {
     teamSize: 1 | 2 | 3 | 4,
     rankedTeams: string[][] = [],
     preferences?: { bots?: number; nations?: number | "default" | "disabled" },
+    experienceMode: ExperienceMode = "2d",
     random: () => number = Math.random,
   ): GameConfig {
     const maps = [
@@ -465,7 +471,11 @@ export class MapPlaylist {
               ? RankedType.ThreeVThree
               : RankedType.FourVFour,
       rankedTeams: rankedTeams.length === 2 ? rankedTeams : undefined,
-      experienceMode: "2d",
+      // The queue matches players by experience, so the match it produced has
+      // to be created in that experience. Hardcoding 2d here meant every 3d
+      // ranked match was created as a 2d game, and the client -- told by the
+      // assignment to join in 3d -- was rejected with experience_mismatch.
+      experienceMode,
       allowedPublicIds:
         rankedTeams.length === 2 ? rankedTeams.flat() : undefined,
       infiniteGold: false,
@@ -504,7 +514,7 @@ export class MapPlaylist {
   }
 
   public get1v1Config(random: () => number = Math.random): GameConfig {
-    return this.getRankedConfig(1, [], undefined, random);
+    return this.getRankedConfig(1, [], undefined, "2d", random);
   }
 
   private getNextMap(type: PublicGameType): GameMapType {

@@ -67,7 +67,8 @@ interface Party {
 type RankedConfigFactory = (
   teamSize: RankedTeamSize,
   teams: string[][],
-  preferences?: RankedPreferences,
+  preferences: RankedPreferences | undefined,
+  experienceMode: ExperienceMode,
 ) => GameConfig;
 
 export class MatchmakingService {
@@ -600,6 +601,7 @@ export class MatchmakingService {
       a.teamSize,
       teams,
       a.preferences,
+      a.experienceMode,
     );
     this.log.info(
       `matchmaking: ${a.teamSize}v${a.teamSize} ${teams

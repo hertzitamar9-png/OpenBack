@@ -44,8 +44,8 @@ const log = logger.child({ comp: "m" });
 // worker an independent random sequence.
 const matchmaking = new MatchmakingService(
   log,
-  (teamSize, teams, preferences) =>
-    playlist.getRankedConfig(teamSize, teams, preferences),
+  (teamSize, teams, preferences, experienceMode) =>
+    playlist.getRankedConfig(teamSize, teams, preferences, experienceMode),
 );
 const social = new SocialService(log);
 

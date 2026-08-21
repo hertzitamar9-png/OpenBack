@@ -1,3 +1,12 @@
+## OpenBack v0.36.200 - Ranked, Profiles and Lobby Repairs
+
+- Fixed Ranked in Immersive 3D refusing every match with a connection error: the queue matched players in 3D but always built the game in 2D, so joining was rejected as an experience mismatch.
+- Restored the account settings, change username, subscription, ban notice and Steam link windows, which had no place in the page and so did nothing when opened from the profile menu.
+- Restored the profile and match stats pages, so a shared account or game link now opens its content instead of a blank page under the header.
+- Fixed the private lobby heading collapsing into a single column of letters on phones by keeping room for the title and wrapping the lobby code and invite link onto their own row.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.199 - Untangled Phone Header
 
 - Fixed the phone header controls piling on top of the OpenBack wordmark once you sign in, so the notification bell no longer sits over the logo however wide the account button grows.

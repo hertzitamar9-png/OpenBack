@@ -17,7 +17,13 @@ const DEFAULT_WRAPPER_CLASS =
   "flex flex-wrap items-center gap-2 min-w-0 shrink-0";
 const DEFAULT_DIVIDER_CLASS = "border-b border-white/10";
 const DEFAULT_PADDING_CLASS = "p-3 sm:p-4 lg:p-6";
-const DEFAULT_LEFT_CLASS = "flex min-w-0 items-center gap-3 sm:gap-4 flex-1";
+// The wrapper wraps, so give the back button and title a floor to sit on:
+// without one they absorb every pixel the right-hand content demands. The
+// lobby header pairs two ~220px copy chips with the title, which on a phone
+// squeezed the title column to a single character and stacked the heading one
+// letter per line. With a minimum, the chips wrap to their own row instead.
+const DEFAULT_LEFT_CLASS =
+  "flex min-w-[10rem] items-center gap-3 sm:gap-4 flex-1";
 const DEFAULT_BUTTON_CLASS =
   "group flex items-center justify-center w-10 h-10 rounded-full shrink-0 " +
   "bg-white/5 hover:bg-white/10 transition-all border border-white/10";

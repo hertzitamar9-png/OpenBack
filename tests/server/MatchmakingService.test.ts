@@ -244,6 +244,7 @@ describe("MatchmakingService", () => {
         b.players.map((player) => player.publicId),
       ],
       { bots: 200, nations: 100 },
+      "2d",
     );
     expect(
       [...a.players, ...b.players].every(

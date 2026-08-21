@@ -259,6 +259,8 @@
         class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-99999"
       ></div>
 
+      <banned-modal></banned-modal>
+
       <!-- Main container with responsive padding -->
       <main-layout class="contents">
         <play-page class="contents"></play-page>
@@ -344,6 +346,16 @@
           inline
           class="hidden w-full h-full page-content relative z-50"
         ></account-modal>
+        <game-stats-modal
+          id="page-stats"
+          inline
+          class="hidden w-full h-full page-content relative z-50"
+        ></game-stats-modal>
+        <player-profile-modal
+          id="page-profile"
+          inline
+          class="hidden w-full h-full page-content relative z-50"
+        ></player-profile-modal>
         <help-modal
           id="page-help"
           inline
@@ -372,6 +384,11 @@
 
       <!-- Global Modals -->
       <social-invite-popup></social-invite-popup>
+      <steam-link-modal></steam-link-modal>
+      <!-- Opened from the nav profile menu (#modal=...) -->
+      <account-settings-modal></account-settings-modal>
+      <change-username-modal></change-username-modal>
+      <subscription-modal></subscription-modal>
     </div>
 
     <!-- Game components -->
@@ -418,6 +435,7 @@
     <emoji-table></emoji-table>
     <build-menu></build-menu>
     <win-modal></win-modal>
+    <new-lobby-prompt></new-lobby-prompt>
     <game-starting-modal></game-starting-modal>
     <div
       class="flex flex-col items-end fixed top-0 right-0 min-[1200px]:top-4 min-[1200px]:right-4 z-1000 gap-2"
@@ -435,6 +453,7 @@
     <chat-modal></chat-modal>
     <multi-tab-modal></multi-tab-modal>
     <game-left-sidebar></game-left-sidebar>
+    <performance-overlay></performance-overlay>
     <player-info-overlay></player-info-overlay>
     <leader-board></leader-board>
     <team-stats></team-stats>
