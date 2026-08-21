@@ -442,11 +442,11 @@ export class GameModeSelector extends LitElement {
         </div>
         <!-- Top row: modifiers + timer -->
         <div
-          class="absolute inset-x-2 top-2 flex items-start justify-between gap-1.5"
+          class="absolute inset-x-2 top-2 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-1.5"
         >
           ${modifierLabels.length > 0
             ? html`<div
-                class="flex max-w-[64%] flex-col items-start gap-1 mt-[2px]"
+                class="flex min-w-0 max-w-full flex-col items-start gap-1 mt-[2px]"
               >
                 ${modifierLabels.map(
                   (label) =>
@@ -458,9 +458,10 @@ export class GameModeSelector extends LitElement {
                 )}
               </div>`
             : html`<div></div>`}
-          <div class="min-w-0 max-w-[36%] shrink-0">
+          <div class="shrink-0">
             <span
-              class="block max-w-full truncate text-[10px] sm:text-xs font-bold tracking-wider sm:tracking-widest ${timeDisplayUppercase
+              data-lobby-timer
+              class="block whitespace-nowrap text-[10px] sm:text-xs font-bold tracking-wider sm:tracking-widest ${timeDisplayUppercase
                 ? "uppercase"
                 : "normal-case"} bg-malibu-blue text-white px-2 py-1 rounded"
               >${timeDisplay}</span

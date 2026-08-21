@@ -1,10 +1,10 @@
+import { closeMobileSidebar } from "./Navigation";
 import { Platform } from "./Platform";
 
 export function initLayout() {
   // The hamburger now lives in the persistent mobile top bar rather than in
   // play-page, so wait for that component instead.
   customElements.whenDefined("mobile-top-bar").then(() => {
-    const hb = document.getElementById("hamburger-btn");
     const sidebar = document.getElementById("sidebar-menu");
     const backdrop = document.getElementById("mobile-menu-backdrop");
 
@@ -12,14 +12,6 @@ export function initLayout() {
     if (sidebar && Platform.isMobileWidth) {
       sidebar.style.display = "flex";
     }
-
-    if (!hb) {
-      console.error("Hamburger button not found");
-      return;
-    }
-
-    // Disable fallback inline handler now that JS is loaded
-    hb.onclick = null;
 
     if (!sidebar) {
       console.error("Sidebar menu not found");
@@ -30,34 +22,7 @@ export function initLayout() {
       return;
     }
 
-    const setMenuState = (open: boolean) => {
-      sidebar.classList.toggle("open", open);
-      backdrop.classList.toggle("open", open);
-      document.documentElement.classList.toggle("overflow-hidden", open);
-      hb.setAttribute("aria-expanded", open ? "true" : "false");
-    };
-
-    const closeMenu = () => setMenuState(false);
-    const openMenu = () => setMenuState(true);
-
-    const toggle = (e: Event) => {
-      e.stopPropagation();
-      // Only prevent default if it's a touchstart to avoid ghost clicks
-      if ((e as any).type === "touchstart") {
-        (e as Event).preventDefault();
-      }
-
-      const opening = !sidebar.classList.contains("open");
-      if (opening) {
-        openMenu();
-      } else {
-        closeMenu();
-      }
-    };
-
-    hb.addEventListener("click", toggle);
-
-    backdrop.addEventListener("click", closeMenu);
+    backdrop.addEventListener("click", closeMobileSidebar);
 
     // Close menu when clicking a menu link or button (Mobile only)
     sidebar.addEventListener("click", (e) => {
@@ -72,7 +37,7 @@ export function initLayout() {
         : null;
 
       if (clickedElement) {
-        closeMenu();
+        closeMobileSidebar();
       }
     });
 
@@ -80,7 +45,7 @@ export function initLayout() {
     document.addEventListener("keydown", (e) => {
       if (!Platform.isMobileWidth) return;
       if (e.key === "Escape" && sidebar.classList.contains("open")) {
-        closeMenu();
+        closeMobileSidebar();
       }
     });
   });

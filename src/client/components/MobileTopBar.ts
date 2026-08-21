@@ -2,6 +2,8 @@ import { LitElement, html } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { appRouter } from "../AppRouter";
 import { crazyGamesSDK } from "../CrazyGamesSDK";
+import { toggleMobileSidebar } from "../Navigation";
+import "./NavAccountMenu";
 import "./NavUtilityIcons";
 import { openBackHomeWordmark } from "./ui/OpenBackWordmark";
 
@@ -84,7 +86,7 @@ export class MobileTopBar extends LitElement {
   render() {
     return html`
       <div
-        class="lg:hidden fixed left-0 right-0 top-0 z-40 pt-[env(safe-area-inset-top)] bg-surface border-b border-white/10"
+        class="lg:hidden fixed left-0 right-0 top-0 z-[60] pt-[env(safe-area-inset-top)] bg-surface border-b border-white/10"
       >
         <div
           class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center h-14 px-2 gap-2"
@@ -98,6 +100,11 @@ export class MobileTopBar extends LitElement {
               aria-controls="sidebar-menu"
               aria-haspopup="dialog"
               data-i18n-title="main.menu"
+              @click=${(event: MouseEvent) => {
+                event.preventDefault();
+                event.stopPropagation();
+                toggleMobileSidebar();
+              }}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -188,6 +195,7 @@ export class MobileTopBar extends LitElement {
                   class="col-start-3 justify-self-end flex items-center min-w-0"
                 >
                   <nav-utility-icons size="mobile"></nav-utility-icons>
+                  <nav-account-menu variant="mobile"></nav-account-menu>
                 </div>
               `}
         </div>

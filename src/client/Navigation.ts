@@ -1,15 +1,28 @@
-export function closeMobileSidebar() {
+export function setMobileSidebarOpen(open: boolean): void {
   const sidebar = document.getElementById("sidebar-menu");
   const backdrop = document.getElementById("mobile-menu-backdrop");
-  if (sidebar?.classList.contains("open")) {
-    sidebar.classList.remove("open");
-    backdrop?.classList.remove("open");
-    document.documentElement.classList.remove("overflow-hidden");
-    sidebar.setAttribute("aria-hidden", "true");
-    backdrop?.setAttribute("aria-hidden", "true");
-    const hb = document.getElementById("hamburger-btn");
-    if (hb) hb.setAttribute("aria-expanded", "false");
-  }
+  if (!sidebar || !backdrop) return;
+
+  sidebar.classList.toggle("open", open);
+  backdrop.classList.toggle("open", open);
+  document.documentElement.classList.toggle("overflow-hidden", open);
+  sidebar.setAttribute("aria-hidden", open ? "false" : "true");
+  backdrop.setAttribute("aria-hidden", open ? "false" : "true");
+  if (open) sidebar.setAttribute("aria-modal", "true");
+  else sidebar.removeAttribute("aria-modal");
+  document
+    .getElementById("hamburger-btn")
+    ?.setAttribute("aria-expanded", String(open));
+}
+
+export function toggleMobileSidebar(): void {
+  const sidebar = document.getElementById("sidebar-menu");
+  if (!sidebar) return;
+  setMobileSidebarOpen(!sidebar.classList.contains("open"));
+}
+
+export function closeMobileSidebar(): void {
+  setMobileSidebarOpen(false);
 }
 
 function restoreEmbeddedPage(target: HTMLElement): void {
