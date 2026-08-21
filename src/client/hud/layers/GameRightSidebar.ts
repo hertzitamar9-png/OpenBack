@@ -11,6 +11,7 @@ import { crazyGamesSDK } from "../../CrazyGamesSDK";
 import { showInGameAlert, showInGameConfirm } from "../../InGameModal";
 import { TogglePauseIntentEvent } from "../../InputHandler";
 import { shouldConfirmLeaving } from "../../openback/LeaveGuard";
+import { UpdateSuspensionEvent } from "../../openback/UpdateWatcher";
 import { PauseGameIntentEvent, SendWinnerEvent } from "../../Transport";
 import { showToast, translateText } from "../../Utils";
 import { GameView } from "../../view";
@@ -66,6 +67,7 @@ export class GameRightSidebar extends LitElement implements Controller {
   private newLobbyRequested = false;
   private spawnBarVisible = false;
   private immunityBarVisible = false;
+  private pausedByUpdate = false;
 
   createRenderRoot() {
     // Stack the timer bar + doomsday-clock readout, centers aligned (the narrower
@@ -110,6 +112,9 @@ export class GameRightSidebar extends LitElement implements Controller {
         this.onPauseButtonClick();
       }
     });
+    this.eventBus.on(UpdateSuspensionEvent, (event) =>
+      this.onUpdateSuspension(event.suspended),
+    );
 
     this.requestUpdate();
   }
@@ -226,13 +231,38 @@ export class GameRightSidebar extends LitElement implements Controller {
   }
 
   private onPauseButtonClick() {
-    this.isPaused = !this.isPaused;
+    this.setPaused(!this.isPaused);
+  }
+
+  private setPaused(paused: boolean): void {
+    if (this.isPaused === paused) return;
+    this.isPaused = paused;
     if (this.isPaused) {
       crazyGamesSDK.gameplayStop();
     } else {
       crazyGamesSDK.gameplayStart();
     }
     this.eventBus.emit(new PauseGameIntentEvent(this.isPaused));
+  }
+
+  private onUpdateSuspension(suspended: boolean): void {
+    if (suspended) {
+      if (this.isPaused) {
+        this.pausedByUpdate = false;
+        return;
+      }
+      const canPause =
+        this._isSinglePlayer ||
+        (this.isPrivateLobby &&
+          this.game.myPlayer()?.isLobbyCreator() === true &&
+          !this.game.config().listed);
+      this.pausedByUpdate = canPause;
+      if (canPause) this.setPaused(true);
+      return;
+    }
+    if (!this.pausedByUpdate) return;
+    this.pausedByUpdate = false;
+    this.setPaused(false);
   }
 
   private async onNewLobbyButtonClick() {

@@ -1,6 +1,7 @@
 import { Howl, Howler } from "howler";
 import { EventBus } from "../../core/EventBus";
 import { UserSettings } from "../../core/game/UserSettings";
+import { UpdateSuspensionEvent } from "../openback/UpdateWatcher";
 import {
   backgroundMusicUrls,
   PlaySoundEffectEvent,
@@ -28,6 +29,7 @@ export class SoundManager {
     e: SetBackgroundMusicVolumeEvent,
   ) => void;
   private onSetSoundEffectsVolume: (e: SetSoundEffectsVolumeEvent) => void;
+  private onUpdateSuspension: (e: UpdateSuspensionEvent) => void;
 
   constructor(eventBus: EventBus, userSettings: UserSettings) {
     this.eventBus = eventBus;
@@ -48,9 +50,12 @@ export class SoundManager {
     this.onSetBackgroundMusicVolume = (e) =>
       this.setBackgroundMusicVolume(e.volume);
     this.onSetSoundEffectsVolume = (e) => this.setSoundEffectsVolume(e.volume);
+    this.onUpdateSuspension = (e) =>
+      e.suspended ? this.suspendForUpdate() : this.resumeAfterUpdate();
     eventBus.on(PlaySoundEffectEvent, this.onPlaySoundEffect);
     eventBus.on(SetBackgroundMusicVolumeEvent, this.onSetBackgroundMusicVolume);
     eventBus.on(SetSoundEffectsVolumeEvent, this.onSetSoundEffectsVolume);
+    eventBus.on(UpdateSuspensionEvent, this.onUpdateSuspension);
     document.addEventListener("pointerdown", this.unlockAudio, { once: true });
     document.addEventListener("keydown", this.unlockAudio, { once: true });
     document.addEventListener("visibilitychange", this.onVisibilityChange);
@@ -67,6 +72,7 @@ export class SoundManager {
       this.onSetBackgroundMusicVolume,
     );
     this.eventBus.off(SetSoundEffectsVolumeEvent, this.onSetSoundEffectsVolume);
+    this.eventBus.off(UpdateSuspensionEvent, this.onUpdateSuspension);
     this.backgroundMusic.forEach((track) => {
       this.safely("stop background track", () => track.stop());
       this.safely("unload background track", () => track.unload());

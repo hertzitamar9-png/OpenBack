@@ -3,6 +3,7 @@
  * last few seconds spent saying it is done. These pin both ends of that.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { EventBus } from "../src/core/EventBus";
 
 const STARTED_AT = 1_700_000_000;
 
@@ -75,103 +76,6 @@ describe("the update window as the player experiences it", () => {
     expect(reload).not.toHaveBeenCalled();
   });
 
-  it("says it is done at 57 seconds, and holds that before reloading", async () => {
-    vi.stubGlobal("fetch", statusFeed("updating"));
-    const { startUpdateWatcher } = await freshWatcher();
-
-    atSecond(0);
-    startUpdateWatcher();
-    await vi.advanceTimersByTimeAsync(0);
-
-    atSecond(56);
-    await vi.advanceTimersByTimeAsync(300);
-    expect(screen().title).toBe("Updating the game…");
-    expect(
-      document.querySelector<HTMLElement>("#openback-update-check")?.style
-        .display,
-    ).toBe("none");
-
-    atSecond(57);
-    await vi.advanceTimersByTimeAsync(300);
-    expect(screen().title).toBe("Update is done");
-    // The finished state has to look finished: green bar and a tick, not a
-    // blue bar sitting at the end for three seconds.
-    const fill = document.querySelector<HTMLElement>("#openback-update-fill");
-    const check = document.querySelector<HTMLElement>("#openback-update-check");
-    // jsdom normalises the hex to rgb().
-    expect(fill?.style.background).toContain("rgb(22, 163, 74)");
-    expect(check?.style.display).toBe("flex");
-    expect(screen().note).toBe("Reloading the new version…");
-    expect(screen().width).toBe("100%");
-    // Still on screen — the message is meant to be read, not flashed.
-    expect(reload).not.toHaveBeenCalled();
-
-    atSecond(59);
-    await vi.advanceTimersByTimeAsync(300);
-    expect(reload).not.toHaveBeenCalled();
-  });
-
-  it("reloads at the minute and never later", async () => {
-    vi.stubGlobal("fetch", statusFeed("updating"));
-    const { startUpdateWatcher } = await freshWatcher();
-
-    atSecond(0);
-    startUpdateWatcher();
-    await vi.advanceTimersByTimeAsync(0);
-
-    atSecond(60);
-    await vi.advanceTimersByTimeAsync(300);
-    expect(reload).toHaveBeenCalledTimes(1);
-  });
-
-  it("still reloads at the minute when the deploy fails and the feed dies", async () => {
-    // First check succeeds, then the server stops answering entirely.
-    const dying = vi
-      .fn()
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ state: "updating", startedAt: STARTED_AT }),
-      })
-      .mockRejectedValue(new Error("connection refused"));
-    vi.stubGlobal("fetch", dying);
-    const { startUpdateWatcher } = await freshWatcher();
-
-    atSecond(0);
-    startUpdateWatcher();
-    await vi.advanceTimersByTimeAsync(0);
-
-    atSecond(60);
-    await vi.advanceTimersByTimeAsync(300);
-    expect(reload).toHaveBeenCalledTimes(1);
-  });
-
-  it("holds the full minute even when the deploy finishes early", async () => {
-    const quick = vi
-      .fn()
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ state: "updating", startedAt: STARTED_AT }),
-      })
-      .mockResolvedValue({
-        ok: true,
-        json: async () => ({ state: "ready", startedAt: STARTED_AT }),
-      });
-    vi.stubGlobal("fetch", quick);
-    const { startUpdateWatcher } = await freshWatcher();
-
-    atSecond(0);
-    startUpdateWatcher();
-    await vi.advanceTimersByTimeAsync(0);
-
-    atSecond(30);
-    await vi.advanceTimersByTimeAsync(1200);
-    expect(reload).not.toHaveBeenCalled();
-
-    atSecond(60);
-    await vi.advanceTimersByTimeAsync(300);
-    expect(reload).toHaveBeenCalledTimes(1);
-  });
-
   it("does nothing at all when no update is running", async () => {
     vi.stubGlobal("fetch", statusFeed("ready"));
     const { startUpdateWatcher, isUpdating } = await freshWatcher();
@@ -199,47 +103,8 @@ describe("the update window as the player experiences it", () => {
     atSecond(10);
     await vi.advanceTimersByTimeAsync(300);
     expect(screen().note).toBe(
-      "A new version is being installed. Your game will resume when it's done.",
+      "A new version is being installed. Your game is paused until it's ready.",
     );
-
-    atSecond(57);
-    await vi.advanceTimersByTimeAsync(300);
-    expect(screen().note).toBe("Resuming your game…");
-  });
-
-  it("keeps an active match running when the update window finishes", async () => {
-    document.body.classList.add("in-game");
-    vi.stubGlobal("fetch", statusFeed("updating"));
-    const { startUpdateWatcher, isUpdating } = await freshWatcher();
-
-    atSecond(0);
-    startUpdateWatcher();
-    await vi.advanceTimersByTimeAsync(0);
-
-    atSecond(60);
-    await vi.advanceTimersByTimeAsync(300);
-
-    expect(reload).not.toHaveBeenCalled();
-    expect(isUpdating()).toBe(false);
-    expect(document.querySelector("#openback-update-overlay")).toBeNull();
-  });
-
-  it("reloads the new version after the protected match ends", async () => {
-    document.body.classList.add("in-game");
-    vi.stubGlobal("fetch", statusFeed("updating"));
-    const { startUpdateWatcher } = await freshWatcher();
-
-    atSecond(0);
-    startUpdateWatcher();
-    await vi.advanceTimersByTimeAsync(0);
-
-    atSecond(60);
-    await vi.advanceTimersByTimeAsync(300);
-    expect(reload).not.toHaveBeenCalled();
-
-    document.body.classList.remove("in-game");
-    await vi.advanceTimersByTimeAsync(1100);
-    expect(reload).toHaveBeenCalledTimes(1);
   });
 
   it("talks about reloading when the player is only on the menu", async () => {
@@ -253,5 +118,98 @@ describe("the update window as the player experiences it", () => {
     atSecond(10);
     await vi.advanceTimersByTimeAsync(300);
     expect(screen().note).toContain("This page will reload");
+  });
+});
+
+describe("active match update suspension", () => {
+  it("pauses once and resumes after a ready-state five-second countdown", async () => {
+    document.body.classList.add("in-game");
+    const feed = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ state: "updating", startedAt: STARTED_AT }),
+      })
+      .mockResolvedValue({
+        ok: true,
+        json: async () => ({ state: "ready", startedAt: STARTED_AT }),
+      });
+    vi.stubGlobal("fetch", feed);
+    const { startUpdateWatcher, UpdateSuspensionEvent } = await freshWatcher();
+    const bus = new EventBus();
+    const suspensions: boolean[] = [];
+    bus.on(UpdateSuspensionEvent, (event) => suspensions.push(event.suspended));
+
+    atSecond(0);
+    startUpdateWatcher(bus);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(suspensions).toEqual([true]);
+
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(screen().note).toBe("Resuming in");
+    expect(screen().eta).toBe("5");
+
+    await vi.advanceTimersByTimeAsync(4_000);
+    expect(screen().eta).toBe("1");
+    expect(suspensions).toEqual([true]);
+
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(suspensions).toEqual([true, false]);
+    expect(document.querySelector("#openback-update-overlay")).toBeNull();
+    expect(reload).not.toHaveBeenCalled();
+  });
+
+  it("stays suspended while the deploy status is unreachable", async () => {
+    document.body.classList.add("in-game");
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ state: "updating", startedAt: STARTED_AT }),
+        })
+        .mockRejectedValue(new Error("server restarting")),
+    );
+    const { startUpdateWatcher, UpdateSuspensionEvent, isUpdating } =
+      await freshWatcher();
+    const bus = new EventBus();
+    const suspensions: boolean[] = [];
+    bus.on(UpdateSuspensionEvent, (event) => suspensions.push(event.suspended));
+
+    atSecond(0);
+    startUpdateWatcher(bus);
+    await vi.advanceTimersByTimeAsync(8_000);
+
+    expect(suspensions).toEqual([true]);
+    expect(isUpdating()).toBe(true);
+    expect(document.querySelector("#openback-update-overlay")).not.toBeNull();
+  });
+
+  it("reloads the ready build only after the protected match ends", async () => {
+    document.body.classList.add("in-game");
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ state: "updating", startedAt: STARTED_AT }),
+        })
+        .mockResolvedValue({
+          ok: true,
+          json: async () => ({ state: "ready", startedAt: STARTED_AT }),
+        }),
+    );
+    const { startUpdateWatcher } = await freshWatcher();
+
+    atSecond(0);
+    startUpdateWatcher();
+    await vi.advanceTimersByTimeAsync(6_100);
+    expect(reload).not.toHaveBeenCalled();
+
+    document.body.classList.remove("in-game");
+    await vi.advanceTimersByTimeAsync(1_100);
+    expect(reload).toHaveBeenCalledTimes(1);
   });
 });

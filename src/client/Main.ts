@@ -205,7 +205,7 @@ class Client {
   async initialize(): Promise<void> {
     // Already-open tabs cannot see the server-rendered updating page, so
     // they watch the same deploy feed and show it themselves.
-    startUpdateWatcher();
+    startUpdateWatcher(this.eventBus);
     socialClient.start();
     crazyGamesSDK.maybeInit();
 

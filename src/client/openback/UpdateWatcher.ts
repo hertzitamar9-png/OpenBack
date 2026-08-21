@@ -8,6 +8,8 @@
  * screen up, then reloads onto the new build once the window closes.
  */
 
+import { EventBus, GameEvent } from "../../core/EventBus";
+
 /**
  * How often to check. The status file is static and served by Caddy, so this
  * can be brisk: every client should raise the screen within a second or two of
@@ -17,16 +19,15 @@
 const POLL_MS = 2000;
 /** Tighter polling once an update is in progress, so the reload lands promptly. */
 const ACTIVE_POLL_MS = 1000;
-/** The window every player is promised, counted from the server's start time. */
+/** The legacy visual estimate; readiness, never elapsed time, ends an update. */
 const WINDOW_SECONDS = 60;
-/**
- * When the bar fills and the screen switches to its "done" message. The last
- * few seconds are spent showing that message rather than a stalled bar, which
- * is what makes the reload feel like a finish instead of an interruption.
- */
-const DONE_AT_SECONDS = 57;
 /** How often the screen redraws itself, independent of the network. */
 const TICK_MS = 250;
+const RESUME_SECONDS = 5;
+
+export class UpdateSuspensionEvent implements GameEvent {
+  constructor(public readonly suspended: boolean) {}
+}
 
 interface DeployStatus {
   state?: string;
@@ -47,6 +48,10 @@ let windowStart = 0;
 let clock: number | null = null;
 let reloading = false;
 let reloadAfterMatch = false;
+let eventBus: EventBus | null = null;
+let suspensionEmitted = false;
+let resumeClock: number | null = null;
+let resumeRemaining = RESUME_SECONDS;
 
 /** True while an update window is open. */
 export function isUpdating(): boolean {
@@ -117,11 +122,10 @@ function inGame(): boolean {
   return document.body.classList.contains("in-game");
 }
 
-function paint(): void {
+function paintUpdating(): void {
   const el = ensureOverlay();
   const seconds = elapsed();
   const left = Math.max(0, Math.ceil(WINDOW_SECONDS - seconds));
-  const done = seconds >= DONE_AT_SECONDS;
 
   const fill = el.querySelector<HTMLElement>("#openback-update-fill");
   const eta = el.querySelector<HTMLElement>("#openback-update-eta");
@@ -130,35 +134,42 @@ function paint(): void {
 
   const check = el.querySelector<HTMLElement>("#openback-update-check");
   if (fill) {
-    const progress = Math.min(seconds / DONE_AT_SECONDS, 1);
+    const progress = Math.min(seconds / WINDOW_SECONDS, 0.95);
     fill.style.width = `${progress * 100}%`;
-    // Green and full the moment it is done, so the last seconds read as
-    // "finished" rather than as a bar that stalled at the end.
-    fill.style.background = done
-      ? "linear-gradient(90deg,#16a34a,#4ade80)"
-      : "linear-gradient(90deg,#0ea5e9,#4fd1ff)";
-    fill.style.boxShadow = done
-      ? "0 0 16px rgba(34,197,94,.6)"
-      : "0 0 16px rgba(14,165,233,.55)";
+    fill.style.background = "linear-gradient(90deg,#0ea5e9,#4fd1ff)";
+    fill.style.boxShadow = "0 0 16px rgba(14,165,233,.55)";
   }
-  if (check) check.style.display = done ? "flex" : "none";
-  if (title) {
-    title.textContent = done ? "Update is done" : "Updating the game…";
-  }
+  if (check) check.style.display = "none";
+  if (title) title.textContent = "Updating the game…";
   if (note) {
-    const playing = inGame();
-    if (done) {
-      note.textContent = playing
-        ? "Resuming your game…"
-        : "Reloading the new version…";
-    } else {
-      note.textContent = playing
-        ? "A new version is being installed. Your game will resume when it's done."
-        : "A new version is being installed. This page will reload automatically when it's ready.";
-    }
+    note.textContent = inGame()
+      ? "A new version is being installed. Your game is paused until it's ready."
+      : "A new version is being installed. This page will reload automatically when it's ready.";
   }
   if (eta) {
-    eta.textContent = done ? "done — reloading" : `${left}s left`;
+    eta.textContent = left > 0 ? `${left}s left` : "finishing update";
+  }
+}
+
+function paintResume(): void {
+  const el = ensureOverlay();
+  const fill = el.querySelector<HTMLElement>("#openback-update-fill");
+  const eta = el.querySelector<HTMLElement>("#openback-update-eta");
+  const title = el.querySelector<HTMLElement>("#openback-update-title");
+  const note = el.querySelector<HTMLElement>("#openback-update-note");
+  const check = el.querySelector<HTMLElement>("#openback-update-check");
+  if (fill) {
+    fill.style.width = "100%";
+    fill.style.background = "linear-gradient(90deg,#16a34a,#4ade80)";
+    fill.style.boxShadow = "0 0 16px rgba(34,197,94,.6)";
+  }
+  if (check) check.style.display = "flex";
+  if (title) title.textContent = "Update complete";
+  if (note) note.textContent = inGame() ? "Resuming in" : "Reloading in";
+  if (eta) {
+    eta.textContent = String(resumeRemaining);
+    eta.style.fontSize = "2rem";
+    eta.style.color = "#e8eef8";
   }
 }
 
@@ -168,22 +179,7 @@ function paint(): void {
  * finished early, is still grinding, or fell over and took the feed with it.
  */
 function tick(): void {
-  paint();
-  if (elapsed() >= WINDOW_SECONDS && !reloading) {
-    updating = false;
-    if (inGame()) {
-      reloadAfterMatch = true;
-      if (clock !== null) {
-        window.clearInterval(clock);
-        clock = null;
-      }
-      overlay?.remove();
-      overlay = null;
-      return;
-    }
-    reloading = true;
-    window.location.reload();
-  }
+  paintUpdating();
 }
 
 function startClock(startedAt: number): void {
@@ -194,6 +190,47 @@ function startClock(startedAt: number): void {
   }
   clock ??= window.setInterval(tick, TICK_MS);
   tick();
+}
+
+function setSuspended(suspended: boolean): void {
+  if (suspensionEmitted === suspended) return;
+  suspensionEmitted = suspended;
+  eventBus?.emit(new UpdateSuspensionEvent(suspended));
+}
+
+function finishResume(): void {
+  if (resumeClock !== null) {
+    window.clearInterval(resumeClock);
+    resumeClock = null;
+  }
+  updating = false;
+  if (inGame()) {
+    setSuspended(false);
+    reloadAfterMatch = true;
+    overlay?.remove();
+    overlay = null;
+    return;
+  }
+  reloading = true;
+  window.location.reload();
+}
+
+function beginResumeCountdown(): void {
+  if (resumeClock !== null || reloading || reloadAfterMatch) return;
+  if (clock !== null) {
+    window.clearInterval(clock);
+    clock = null;
+  }
+  resumeRemaining = RESUME_SECONDS;
+  paintResume();
+  resumeClock = window.setInterval(() => {
+    resumeRemaining--;
+    if (resumeRemaining <= 0) {
+      finishResume();
+      return;
+    }
+    paintResume();
+  }, 1000);
 }
 
 async function poll(): Promise<void> {
@@ -215,10 +252,10 @@ async function poll(): Promise<void> {
         sawUpdating = true;
         updating = true;
         startClock(status.startedAt ?? 0);
+        if (inGame()) setSuspended(true);
         delay = ACTIVE_POLL_MS;
       } else if (sawUpdating) {
-        // The deploy finished early, but the window is still the promised
-        // minute for everyone. The clock reloads us when it is up.
+        beginResumeCountdown();
         delay = ACTIVE_POLL_MS;
       }
     }
@@ -233,8 +270,9 @@ async function poll(): Promise<void> {
 }
 
 /** Begin watching. Safe to call once at start-up. */
-export function startUpdateWatcher(): void {
+export function startUpdateWatcher(updateEventBus?: EventBus): void {
   if (typeof window === "undefined" || typeof fetch !== "function") return;
+  eventBus = updateEventBus ?? null;
   // Check straight away so a player loading during a window sees it at once.
   void poll();
 }
