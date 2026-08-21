@@ -229,17 +229,24 @@ textarea:focus-visible {
     padding-right: max(0.25rem, env(safe-area-inset-right));
   }
 
+  /* Same full-width behaviour as the base rule. This override used to pin the
+     columns to 2.25rem and shove them left, and because it wins under 1024px
+     it kept the counters huddled in the left half of every panel narrower than
+     that -- including desktop windows that simply are not maximised. */
   .player-info-unit-grid {
     display: grid;
     grid-template-columns: repeat(
-      var(--player-unit-columns),
-      minmax(0, 2.25rem)
+      var(--player-unit-columns, 6),
+      minmax(0, 1fr)
     );
-    justify-content: start;
+    width: 100%;
+  }
+
+  .player-info-unit-grid > * {
+    width: 100%;
   }
 
   .player-info-unit-spacer {
-    width: 2.25rem;
     height: 1.5rem;
     visibility: hidden;
   }

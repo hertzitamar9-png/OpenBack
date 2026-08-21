@@ -1,3 +1,9 @@
+## OpenBack v0.36.207 - Counters Fill Every Panel
+
+- The player panel's unit counters now spread across the full panel on narrow and unmaximised windows too, not only on wide ones.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.206 - Full-Width Unit Counters
 
 - The player panel's unit counters now spread across the whole panel instead of huddling in the left half, keeping two rows of six.

@@ -53,6 +53,31 @@ describe("player panel unit counters", () => {
     expect(baseRule(".player-info-unit-grid > *")).toContain("width: 100%");
   });
 
+  // The first attempt at this only fixed the base rule, and the base rule only
+  // applies above 1024px. The @media (max-width: 1023px) override still pinned
+  // 2.25rem columns to the left, so any window narrower than that -- including
+  // a desktop window that simply is not maximised -- looked untouched.
+  // Measured at an 800px viewport, 740px panel: counters went from 36px at 31%
+  // fill to 122px at 100%. At 1400px the base rule gives 120px, also 100%.
+  it("fills the panel at every width, not just the widest", () => {
+    // No rule anywhere may pin the columns narrow or shove them left.
+    const gridRules = [
+      ...css.matchAll(/\.player-info-unit-grid\s*\{([^}]*)\}/g),
+    ].map((m) => m[1]);
+    expect(gridRules.length).toBeGreaterThanOrEqual(2);
+
+    for (const rule of gridRules) {
+      expect(rule).not.toContain("minmax(0, 2.25rem)");
+      expect(rule).not.toContain("justify-content: start");
+    }
+
+    // Every stretching rule needs its children told to stretch as well.
+    const stretchRules = [
+      ...css.matchAll(/\.player-info-unit-grid > \*\s*\{([^}]*)\}/g),
+    ];
+    expect(stretchRules.length).toBeGreaterThanOrEqual(2);
+  });
+
   it("keeps a fallback in the column count", () => {
     // An unset custom property inside repeat() invalidates the whole
     // declaration, and the result looks exactly like a single column.

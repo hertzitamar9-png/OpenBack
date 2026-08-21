@@ -39,8 +39,12 @@ describe("mobile game HUD", () => {
   it("keeps curved-screen safe areas inside the mobile HUD", () => {
     expect(styles).toContain("max(0.25rem, env(safe-area-inset-left))");
     expect(styles).toContain("max(0.25rem, env(safe-area-inset-right))");
+    // The column count comes from the variable the panel sets per render, not
+    // a hardcoded number. It carries a fallback now -- an unset custom
+    // property with no fallback makes the whole declaration invalid, which
+    // renders as a single column -- so allow either form.
     expect(styles).toMatch(
-      /\.player-info-unit-grid\s*{[^}]*grid-template-columns:\s*repeat\(\s*var\(--player-unit-columns\)/s,
+      /\.player-info-unit-grid\s*{[^}]*grid-template-columns:\s*repeat\(\s*var\(--player-unit-columns[,)]/s,
     );
   });
 
