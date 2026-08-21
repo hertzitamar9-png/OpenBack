@@ -14,6 +14,7 @@ import {
 } from "../../core/execution/Util";
 import {
   BuildableUnit,
+  BuildMenus,
   bulkCost,
   PlayerBuildableUnitType,
   UnitType,
@@ -40,9 +41,9 @@ import { translateText } from "../Utils";
 import { GameView } from "../view";
 import { isPointerOverVehicleSource } from "./VehicleSourceHover";
 
-/** True for nuke types (AtomBomb, HydrogenBomb): ghost is preserved after placement so user can place multiple or keep selection (Enter/key confirm). */
+/** Build-menu selections stay active after success so players can place or stack repeatedly. */
 export function shouldPreserveGhostAfterBuild(unitType: UnitType): boolean {
-  return unitType === UnitType.AtomBomb || unitType === UnitType.HydrogenBomb;
+  return BuildMenus.types.includes(unitType);
 }
 
 const STACKABLE_OPENBACK_TYPES: ReadonlySet<UnitType> = new Set([
@@ -730,14 +731,17 @@ export class BuildPreviewController implements Controller {
       return;
     }
     if (this.ghostUnit.buildableUnit.canUpgrade !== false) {
+      const unitType = this.ghostUnit.buildableUnit.type;
       this.eventBus.emit(
         new SendUpgradeStructureIntentEvent(
           this.ghostUnit.buildableUnit.canUpgrade,
-          this.ghostUnit.buildableUnit.type,
+          unitType,
           this.uiState.upgradeMultiplier || 1,
         ),
       );
-      this.removeGhostStructure();
+      if (!shouldPreserveGhostAfterBuild(unitType)) {
+        this.removeGhostStructure();
+      }
     } else if (this.ghostUnit.buildableUnit.canBuild) {
       const unitType = this.ghostUnit.buildableUnit.type;
       const targetTile = this.game.ref(tile.x, tile.y);

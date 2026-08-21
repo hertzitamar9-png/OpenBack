@@ -366,6 +366,7 @@ export class UnitDisplay extends LitElement implements Controller {
           @click=${() => {
             if (selected) {
               this.uiState.ghostStructure = null;
+              this._hoveredUnit = null;
             } else if (this.canBuild(unitType)) {
               this.uiState.ghostStructure = unitType;
             }
