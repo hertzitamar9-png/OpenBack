@@ -53,6 +53,14 @@ export const SPRITE_IN_THREE_D: ReadonlySet<UnitType> = new Set([
   UnitType.TradeShip,
   UnitType.Warship,
   UnitType.Train,
+  // Warheads for the same reason, and it matters more here: their built model
+  // is a 0.28-wide cylinder with a cone on top, against a ship's 2.7 footprint
+  // -- a sliver at any normal zoom. Loading it hid the sprite and put almost
+  // nothing in its place, so an incoming strike had no readable marker at all.
+  UnitType.AtomBomb,
+  UnitType.HydrogenBomb,
+  UnitType.MIRV,
+  UnitType.MIRVWarhead,
 ]);
 
 const SURFACE = {

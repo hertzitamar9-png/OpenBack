@@ -122,8 +122,20 @@ describe("ship wake", () => {
 // The flat sprite is real artwork and is drawn screen-facing in 3D, so it
 // shows its face from every angle.
 describe("units that keep their flat artwork in 3D", () => {
-  it("lists the ships and trains", () => {
-    for (const type of ["TransportShip", "TradeShip", "Warship", "Train"]) {
+  it("lists the ships, trains and warheads", () => {
+    for (const type of [
+      "TransportShip",
+      "TradeShip",
+      "Warship",
+      "Train",
+      // A warhead's built model is a 0.28-wide cylinder against a ship's 2.7
+      // footprint. Loading it hid the sprite and put almost nothing in its
+      // place, so an incoming strike had no readable marker at all.
+      "AtomBomb",
+      "HydrogenBomb",
+      "MIRV",
+      "MIRVWarhead",
+    ]) {
       expect(unitPass3D).toContain(`UnitType.${type},`);
     }
     expect(unitPass3D).toContain("export const SPRITE_IN_THREE_D");

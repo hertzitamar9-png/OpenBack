@@ -1,3 +1,9 @@
+## OpenBack v0.36.219 - Visible Warheads
+
+- Nuclear weapons in Immersive 3D now show their real artwork, so an incoming strike is readable again instead of a sliver you could miss entirely.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.218 - Zoom Works at Every Angle
 
 - Fixed the Immersive 3D camera refusing to zoom when tilted down toward the ground, which left the view stuck far out with the zoom control doing nothing.
