@@ -17,6 +17,15 @@ uniform vec2 uThreeDMapSize;
 uniform vec2 uThreeDScreenScale;
 uniform int uThreeDModelMask;
 
+// Sea state, so anything afloat is anchored to the water rather than to the
+// seabed underneath it. Sprites used to sit at terrain height, which on ocean
+// is just below zero, while the night tide and its crests rose several units
+// over them -- the ship went under exactly when the water came up.
+uniform float uTideHeight;
+uniform float uWaveStrength;
+uniform float uWaterTime;
+//__WATER_SURFACE__
+
 uniform float uUnitSize;
 uniform float uHBombGlowScale; // quad enlargement for the hydrogen bomb glow halo
 
@@ -130,7 +139,19 @@ void main() {
   vec2 worldPos = center + rotated;
 
   if (uThreeD) {
-    float terrainHeight = smoothTerrainHeight(center);
+    // Vessels ride the same surface the water mesh draws; everything else
+    // stands on the ground.
+    float isShip = max(
+      step(abs(atlasCol - float(TRANSPORT_COL)), 0.5),
+      max(
+        step(abs(atlasCol - float(TRADE_SHIP_COL)), 0.5),
+        step(abs(atlasCol - float(WARSHIP_COL)), 0.5)
+      )
+    );
+    float groundHeight = smoothTerrainHeight(center);
+    float seaHeight =
+      waterSurfaceHeight(center, waterPhase(uWaterTime), uTideHeight);
+    float terrainHeight = mix(groundHeight, seaHeight, isShip);
     vec4 anchor=uThreeDViewProjection*vec4(center.x,terrainHeight+0.18,center.y,1.0);
     if(anchor.w<=0.0001){gl_Position=vec4(2.0,2.0,0.0,1.0);return;}
     vec2 ndc=anchor.xy/anchor.w+rotated*uThreeDScreenScale;

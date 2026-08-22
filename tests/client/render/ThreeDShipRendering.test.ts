@@ -149,3 +149,39 @@ describe("units that keep their flat artwork in 3D", () => {
     expect(skip).toBeLessThan(hull);
   });
 });
+
+// Sprites in 3D are anchored to terrain height. On ocean that is just below
+// zero, while the night tide and its crests rise several units over it -- so a
+// ship drawn as a sprite went under exactly when the water came up. Measured
+// against the real wave formula at a night sea state: the water reached 8.36
+// units above the sprite and covered it in 60% of samples.
+describe("sprite vessels ride the sea", () => {
+  const unitVert = read("src/client/render/gl/shaders/unit/unit.vert.glsl");
+  const unitPassSrc = read("src/client/render/gl/passes/UnitPass.ts");
+
+  it("anchors ships to the water surface, not the seabed", () => {
+    expect(unitVert).toContain(
+      "waterSurfaceHeight(center, waterPhase(uWaterTime), uTideHeight)",
+    );
+    expect(unitVert).toContain("mix(groundHeight, seaHeight, isShip)");
+    // Everything that is not a vessel still stands on the ground.
+    expect(unitVert).toContain(
+      "float groundHeight = smoothTerrainHeight(center);",
+    );
+  });
+
+  it("knows which sprites are vessels", () => {
+    for (const col of ["TRANSPORT_COL", "TRADE_SHIP_COL", "WARSHIP_COL"]) {
+      expect(unitVert).toContain(col);
+      expect(unitPassSrc).toContain(col);
+    }
+  });
+
+  it("builds its sea from the one shared definition", () => {
+    // Sharing the source is what keeps a hull from drifting out of the water
+    // the mesh actually draws.
+    expect(unitPassSrc).toContain("THREE_D_WATER_SURFACE_GLSL");
+    expect(unitVert).toContain("//__WATER_SURFACE__");
+    expect(unitPassSrc).toContain("setWorldCycle(");
+  });
+});

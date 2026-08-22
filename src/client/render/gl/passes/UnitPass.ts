@@ -59,6 +59,7 @@ import {
   ThreeDCameraState,
   threeDScreenFacingScale,
 } from "../three-d/ThreeDCamera";
+import { THREE_D_WATER_SURFACE_GLSL } from "../three-d/ThreeDWaterSurface";
 import { HeadingTracker } from "../UnitHeadingTracker";
 import { getPaletteSize } from "../utils/ColorUtils";
 import { createProgram, shaderSrc } from "../utils/GlUtils";
@@ -91,6 +92,11 @@ const UNIT_ORDER = [
 ] as const;
 
 const ATLAS_COLS = UNIT_ORDER.length;
+// Atlas columns for the vessels, so the shader can tell which sprites float.
+const TRANSPORT_COL = UNIT_ORDER.indexOf(UT_TRANSPORT);
+const TRADE_SHIP_COL = UNIT_ORDER.indexOf(UT_TRADE_SHIP);
+const WARSHIP_COL = UNIT_ORDER.indexOf(UT_WARSHIP);
+
 const PLANE_COL = ATLAS_COLS;
 const TANK_COL = ATLAS_COLS + 1;
 
@@ -263,6 +269,12 @@ export class UnitPass {
   private uThreeDMapSize: WebGLUniformLocation;
   private uThreeDScreenScale: WebGLUniformLocation;
   private uThreeDModelMask: WebGLUniformLocation;
+  private uTideHeight: WebGLUniformLocation | null;
+  private uWaveStrength: WebGLUniformLocation | null;
+  private uWaterTime: WebGLUniformLocation | null;
+  // Sea state for the current frame, from the authoritative world cycle.
+  private tideHeight = 0;
+  private waveStrength = 1;
   private threeDModelMask = 0;
   private threeDTerrain: WebGLTexture | null = null;
   private threeDCamera: ThreeDCameraState | null = null;
@@ -341,12 +353,18 @@ export class UnitPass {
     // Compile shaders
     this.program = createProgram(
       gl,
-      shaderSrc(unitVertSrc, {
-        ATLAS_COLS,
-        HYDROGEN_BOMB_COL,
-        PLANE_COL,
-        TANK_COL,
-      }),
+      shaderSrc(
+        unitVertSrc.replace("//__WATER_SURFACE__", THREE_D_WATER_SURFACE_GLSL),
+        {
+          ATLAS_COLS,
+          HYDROGEN_BOMB_COL,
+          PLANE_COL,
+          TANK_COL,
+          TRANSPORT_COL,
+          TRADE_SHIP_COL,
+          WARSHIP_COL,
+        },
+      ),
       shaderSrc(unitFragSrc, {
         PALETTE_SIZE: getPaletteSize(),
         ATLAS_COLS,
@@ -356,6 +374,9 @@ export class UnitPass {
     );
     this.uCamera = gl.getUniformLocation(this.program, "uCamera")!;
     this.uTick = gl.getUniformLocation(this.program, "uTick")!;
+    this.uTideHeight = gl.getUniformLocation(this.program, "uTideHeight");
+    this.uWaveStrength = gl.getUniformLocation(this.program, "uWaveStrength");
+    this.uWaterTime = gl.getUniformLocation(this.program, "uWaterTime");
     this.uUnitSize = gl.getUniformLocation(this.program, "uUnitSize")!;
     this.uFlickerSpeed = gl.getUniformLocation(this.program, "uFlickerSpeed")!;
     this.uAngryColor = gl.getUniformLocation(this.program, "uAngryColor")!;
@@ -721,6 +742,12 @@ export class UnitPass {
     this.threeDTerrain = terrain;
   }
 
+  /** The sea vessels float on, from the authoritative day/night cycle. */
+  setWorldCycle(tideHeight: number, waveStrength: number): void {
+    this.tideHeight = tideHeight;
+    this.waveStrength = waveStrength;
+  }
+
   setThreeDReadyModelTypes(types: ReadonlySet<string>): void {
     let mask = 0;
     for (const type of types) {
@@ -747,6 +774,9 @@ export class UnitPass {
     gl.uniform3f(this.uAngryColor, us.angryR, us.angryG, us.angryB);
     gl.uniform1i(this.uAltView, this.altView ? 1 : 0);
     gl.uniform1i(this.uThreeDModelMask, this.threeDModelMask);
+    gl.uniform1f(this.uTideHeight, this.tideHeight);
+    gl.uniform1f(this.uWaveStrength, this.waveStrength);
+    gl.uniform1f(this.uWaterTime, performance.now() / 1000);
     gl.uniform1f(this.uHBombGlowScale, us.hBombGlowScale);
     gl.uniform3f(
       this.uHBombGlowColor,

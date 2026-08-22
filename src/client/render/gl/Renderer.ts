@@ -1561,6 +1561,9 @@ export class GPURenderer {
           seaState.tideHeight,
           seaState.waveStrength,
         );
+        // Vessels drawn as sprites need the same sea, or they sit on the
+        // seabed while the tide rises over them.
+        this.unitPass.setWorldCycle(seaState.tideHeight, seaState.waveStrength);
         this.threeDUnitPass?.draw(
           this.camera.offsetX,
           this.camera.offsetY,

@@ -1,3 +1,9 @@
+## OpenBack v0.36.214 - Vessels Stay Above the Night Tide
+
+- Ships in Immersive 3D now sit on the water instead of the seabed, so the night tide and its crests no longer close over them; they rise and fall with the swell.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.213 - Ships and Trains Keep Their Artwork
 
 - Ships and trains in Immersive 3D now use their real artwork, shown facing you from every angle, instead of models built from boxes and cones -- so train carriages no longer sit as disconnected lumps. Vessels keep their wake and their shadow.
