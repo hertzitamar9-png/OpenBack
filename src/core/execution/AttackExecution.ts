@@ -9,6 +9,7 @@ import {
   PlayerID,
   PlayerType,
   TerraNullius,
+  TerrainType,
 } from "../game/Game";
 import { GameMap, TileRef } from "../game/GameMap";
 import { PseudoRandom } from "../PseudoRandom";
@@ -22,6 +23,20 @@ import { FlatBinaryHeap } from "./utils/FlatBinaryHeap"; // adjust path if neede
 const malusForRetreat = 25;
 const OWNER_MASK = 0xfff;
 const LAND_BIT = 0x80;
+
+/**
+ * Terrain an attack may advance into.
+ *
+ * Config.attackLogic switches on exactly these three and throws for anything
+ * else, so this is the one place that decides what may be handed to it.
+ */
+export function isAttackableTerrain(terrain: TerrainType): boolean {
+  return (
+    terrain === TerrainType.Plains ||
+    terrain === TerrainType.Highland ||
+    terrain === TerrainType.Mountain
+  );
+}
 export class AttackExecution implements Execution {
   private active: boolean = true;
   private toConquer = new FlatBinaryHeap();
@@ -327,9 +342,15 @@ export class AttackExecution implements Execution {
       ) {
         continue;
       }
+      // Admit only the terrain attackLogic actually handles. It switches on
+      // terrainType and throws on anything else, and a throw inside the tick
+      // takes the whole match down with it -- that is the "impassable terrain
+      // cannot be attacked" crash. Asking the same question the switch asks
+      // means the guard and the switch cannot disagree, whatever terrain
+      // exists now or later.
       if (
         (this.mapTerrain[tileToConquer] & LAND_BIT) === 0 ||
-        this.map.isImpassable(tileToConquer)
+        !isAttackableTerrain(this.mg.terrainType(tileToConquer))
       ) {
         continue;
       }

@@ -1,3 +1,9 @@
+## OpenBack v0.36.221 - No More Impassable Terrain Crash
+
+- Fixed a crash that ended the match for everyone in it when an attack reached terrain it could not cross.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.221 - Safe Front Lines and OpenFront v0.33.8
 
 - Fixed matches crashing when an active attack reached terrain that had become impassable; attacks now skip those tiles safely and continue around them.
