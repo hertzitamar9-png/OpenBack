@@ -108,6 +108,15 @@ void main(){
 
   // The sun leads the cycle; the moon trails it by half a turn.
   vec2 sunPos=arcPosition(uCyclePhase);
+  // A game can be won at any hour, and after dark the sun's own arc has it
+  // below the horizon -- where a detonation swells and blanches the sky from
+  // underneath the map, seen by nobody. Draw it back up into view as the blast
+  // takes hold, so the sun rises as it lets go whatever the time of day.
+  sunPos=mix(
+    sunPos,
+    vec2(0.5,SKY_HORIZON+SKY_ARC_HEIGHT*0.74),
+    clamp(uSunBlast*1.6,0.0,1.0)
+  );
   vec2 moonPos=arcPosition(uCyclePhase+0.5);
   vec2 aspect=vec2(1.0,0.62);
 

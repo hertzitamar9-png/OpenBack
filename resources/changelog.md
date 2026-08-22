@@ -1,3 +1,9 @@
+## OpenBack v0.36.215 - The Sun Rises to Detonate
+
+- The victory sun detonation is now visible whenever a game is won; winning after dark used to set it off below the horizon, underneath the map, where nothing could be seen of it.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.214 - Vessels Stay Above the Night Tide
 
 - Ships in Immersive 3D now sit on the water instead of the seabed, so the night tide and its crests no longer close over them; they rise and fall with the swell.

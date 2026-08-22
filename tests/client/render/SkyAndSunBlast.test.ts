@@ -130,3 +130,26 @@ describe("day and night handover", () => {
     expect(source).not.toContain("float moonVisible=night*uShowSky");
   });
 });
+
+// A game can be won at any hour. Once the sun and moon were given real arcs,
+// the sun spends half the cycle below the horizon -- so a win at night swelled
+// and detonated underneath the map, seen by nobody. It is drawn back into view
+// as the blast takes hold: at night it climbs from y=-0.10 to 0.77 (the
+// visible sky starts around 0.40), while at noon it barely moves.
+describe("the win detonation", () => {
+  const source = readFileSync(
+    "src/client/render/gl/passes/ThreeDCompositePass.ts",
+    "utf8",
+  );
+
+  it("lifts the sun into view for the blast", () => {
+    expect(source).toContain("clamp(uSunBlast*1.6,0.0,1.0)");
+    expect(source).toContain("SKY_HORIZON+SKY_ARC_HEIGHT*0.74");
+  });
+
+  it("still shows the sun regardless of its own altitude", () => {
+    expect(source).toContain(
+      "float sunVisible=max(aboveHorizonFade(sunPos.y),uSunBlast)",
+    );
+  });
+});
