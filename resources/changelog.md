@@ -1,3 +1,9 @@
+## OpenBack v0.36.220 - Hosting Works in Immersive 3D
+
+- Fixed hosting a multiplayer game in Immersive 3D failing with a connection error, which left the host unable to enter the lobby they had just created.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.219 - Visible Warheads
 
 - Nuclear weapons in Immersive 3D now show their real artwork, so an incoming strike is readable again instead of a sliver you could miss entirely.

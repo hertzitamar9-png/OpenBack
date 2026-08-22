@@ -605,7 +605,10 @@ export class HostLobbyModal extends BaseModal {
     // resolves. clientID is assigned by the server when we join the lobby.
 
     // Pass auth token for creator identification (server extracts persistentID from it)
-    createLobby()
+    // The experience has to be declared now, not in the config update that
+    // follows: this client connects to the lobby the moment it exists, and a
+    // game minted without it is born 2D and refuses that connection.
+    createLobby(this.experienceMode)
       .then(async (lobby) => {
         this.lobbyId = lobby.gameID;
         if (!isValidGameID(this.lobbyId)) {
@@ -1437,7 +1440,7 @@ export class HostLobbyModal extends BaseModal {
   }
 }
 
-async function createLobby(): Promise<GameInfo> {
+async function createLobby(experienceMode: ExperienceMode): Promise<GameInfo> {
   // Send JWT token for creator identification - server extracts persistentID from it
   // persistentID should never be exposed to other clients
   const token = await getPlayToken();
@@ -1450,6 +1453,7 @@ async function createLobby(): Promise<GameInfo> {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
+      body: JSON.stringify({ experienceMode }),
     });
 
     if (!response.ok) {
