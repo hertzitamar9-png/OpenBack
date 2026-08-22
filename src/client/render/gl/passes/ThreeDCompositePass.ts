@@ -9,6 +9,7 @@ import {
   THREE_D_WAVE_HEIGHT_SCALE,
   threeDWorldCycle,
 } from "../../../../core/world/ThreeDWorldCycle";
+import { SUN_BLAST_DETONATION } from "../../../openback/SunBlast";
 import { ThreeDCameraState } from "../three-d/ThreeDCamera";
 import { THREE_D_WATER_HEIGHT } from "../three-d/ThreeDSurfaceSampler";
 import { ThreeDTerrainChunks } from "../three-d/ThreeDTerrainChunks";
@@ -120,10 +121,27 @@ void main(){
   vec2 moonPos=arcPosition(uCyclePhase+0.5);
   vec2 aspect=vec2(1.0,0.62);
 
-  float sunSwell=1.0+uSunBlast*7.0;
+  // The detonation, in three acts. uSunBlast is a one-way progress through
+  // the whole thing, so these can run in order: the sun swells and brightens,
+  // lets go in a flash, then throws a shockwave outward while what is left of
+  // it burns down to nothing. Reading a single rise-and-fall strength -- which
+  // is what this did before -- only ever looked like the sun puffing up and
+  // quietly deflating again.
+  float blast=uSunBlast;
+  float detonation=${SUN_BLAST_DETONATION.toFixed(3)};
+  float charge=smoothstep(0.0,detonation,blast);
+  float flash=smoothstep(detonation,detonation+0.07,blast)
+    *(1.0-smoothstep(detonation+0.07,detonation+0.30,blast));
+  float thrown=smoothstep(detonation,1.0,blast);
+  // What is left of the body: consumed by its own blast.
+  float remains=1.0-thrown;
+
+  float sunSwell=1.0+charge*6.0*remains;
   float sunDist=length((vUV-sunPos)*aspect);
-  float sunDisc=smoothstep(0.052*sunSwell,0.030*sunSwell,sunDist);
-  float sunGlow=smoothstep(0.34*sunSwell,0.0,sunDist);
+  float sunDisc=smoothstep(0.052*sunSwell,0.030*sunSwell,sunDist)
+    *mix(1.0,remains,step(0.001,blast));
+  float sunGlow=smoothstep(0.34*sunSwell,0.0,sunDist)
+    *mix(1.0,remains,step(0.001,blast));
   // Sun rays: a soft star burst, brightest along a few spokes.
   float angle=atan(vUV.y-sunPos.y,(vUV.x-sunPos.x)*aspect.x/aspect.y);
   float rays=pow(max(0.0,0.5+0.5*sin(angle*8.0+uTime*0.25)),3.0);
@@ -133,8 +151,28 @@ void main(){
   sky+=vec3(1.0,0.86,0.55)*sunGlow*0.30*sunVisible;
   sky+=vec3(1.0,0.90,0.62)*rays*rayFall*0.16*sunVisible;
   sky=mix(sky,vec3(1.0,0.97,0.86),sunDisc*sunVisible);
-  // The detonation blanches the whole sky as it peaks.
-  sky=mix(sky,vec3(1.0,0.95,0.80),uSunBlast*uSunBlast*0.75*uShowSky);
+
+  if(blast>0.001&&uShowSky>0.5){
+    // The moment it lets go: the whole sky goes white.
+    sky=mix(sky,vec3(1.0,0.97,0.88),flash*0.92);
+
+    // A shell of light thrown outward, thinning and dimming as it travels.
+    float shellRadius=thrown*1.05;
+    float shell=smoothstep(0.075,0.0,abs(sunDist-shellRadius))
+      *(1.0-thrown)*(1.0-thrown);
+    sky+=vec3(1.0,0.88,0.62)*shell*1.35;
+
+    // Debris riding the shell: brighter along spokes, gone by the time the
+    // shell reaches the edge of the sky.
+    float shardAngle=atan(vUV.y-sunPos.y,(vUV.x-sunPos.x)*aspect.x/aspect.y);
+    float shards=pow(max(0.0,0.5+0.5*sin(shardAngle*11.0+3.1)),5.0);
+    float withinShell=smoothstep(shellRadius+0.02,shellRadius-0.35,sunDist)
+      *step(sunDist,shellRadius+0.02);
+    sky+=vec3(1.0,0.72,0.36)*shards*withinShell*(1.0-thrown)*0.85;
+
+    // Burnt-out sky settling back down behind it all.
+    sky=mix(sky,vec3(0.10,0.07,0.09),thrown*thrown*0.35);
+  }
 
   float moonDist=length((vUV-moonPos)*aspect);
   float moonDisc=smoothstep(0.036,0.022,moonDist);

@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   clearSunBlast,
+  SUN_BLAST_DETONATION,
   sunBlastAmount,
   triggerSunBlast,
 } from "../../../src/client/openback/SunBlast";
@@ -49,16 +50,32 @@ describe("win-time sun detonation", () => {
     expect(sunBlastAmount(1000)).toBe(0);
   });
 
-  it("swells to full, then fades back to nothing", () => {
+  // This used to rise to full and fall back down the same curve, which the sky
+  // could only read as the sun puffing up and quietly deflating -- never as an
+  // explosion. It now runs one way through the whole sequence so the shader
+  // can charge, detonate and throw a shockwave outward in that order.
+  it("runs one way through charge, detonation and burnout", () => {
     vi.spyOn(performance, "now").mockReturnValue(0);
     triggerSunBlast();
-    expect(sunBlastAmount(0)).toBeCloseTo(0, 5);
-    expect(sunBlastAmount(800)).toBeGreaterThan(0.4);
-    expect(sunBlastAmount(1600)).toBeCloseTo(1, 2);
-    // Decaying afterwards.
-    expect(sunBlastAmount(2800)).toBeLessThan(1);
-    expect(sunBlastAmount(2800)).toBeGreaterThan(0);
-    // Fully finished, so the sky returns to normal daylight.
+
+    // Never exactly zero while running: zero is what "nothing is happening"
+    // means, and the sky keys the sun's visibility off it.
+    expect(sunBlastAmount(0)).toBeGreaterThan(0);
+    expect(sunBlastAmount(0)).toBeLessThan(0.01);
+
+    // Strictly forward, never doubling back.
+    let previous = sunBlastAmount(0);
+    for (const at of [400, 800, 1600, 2400, 3200, 4000]) {
+      const now = sunBlastAmount(at);
+      expect(now).toBeGreaterThan(previous);
+      expect(now).toBeLessThanOrEqual(1);
+      previous = now;
+    }
+
+    // It lets go when the charge ends.
+    expect(sunBlastAmount(1600)).toBeCloseTo(SUN_BLAST_DETONATION, 5);
+
+    // Finished, so the sky returns to its ordinary look.
     expect(sunBlastAmount(9000)).toBe(0);
     vi.restoreAllMocks();
   });

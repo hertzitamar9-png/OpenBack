@@ -1,3 +1,10 @@
+## OpenBack v0.36.217 - The Sun Actually Explodes
+
+- The victory sun now detonates properly -- it swells, lets go in a flash, and throws a shockwave of light and debris across the sky -- and it goes off when you choose to keep playing, so you are looking at the sky when it happens instead of at the win screen.
+- The bandaged sun shown afterwards is now the game's own sun wearing a plaster, and its message sits on a single slim line instead of a block covering the battlefield.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.216 - No Outside Store
 
 - Removed the store tab that sent players to an outside merchandise site.

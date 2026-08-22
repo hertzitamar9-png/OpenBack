@@ -155,6 +155,11 @@ export class WinModal extends LitElement implements Controller {
   private _handleKeepPlaying = () => {
     this.keptPlayingAfterBlast = true;
     this.hide();
+    // Send the sun up now, not when the match ended. The whole thing lasts
+    // about four seconds and the win screen was covering the view for all of
+    // them, so it was always over before anyone got back to the map to see it.
+    // This is the moment the player is actually looking at the sky again.
+    triggerSunBlast();
   };
 
   renderPatternButton() {
@@ -222,9 +227,6 @@ export class WinModal extends LitElement implements Controller {
 
   show() {
     crazyGamesSDK.gameplayStop();
-    // The match is over: send the sun up and let it go. The renderer samples
-    // this; with the sky hidden in settings it simply does nothing visible.
-    triggerSunBlast();
     // Check if this is a ranked game
     this.isRankedGame =
       this.game.config().gameConfig().rankedType !== undefined;
