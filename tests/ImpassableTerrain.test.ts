@@ -185,6 +185,23 @@ describe("Impassable Terrain", () => {
     }
   });
 
+  test("an active attack safely skips a target tile that becomes impassable", () => {
+    const attackerTile = game.ref(50, 50);
+    const targetTile = game.ref(51, 50);
+    player.conquer(attackerTile);
+    other.conquer(targetTile);
+    game.addExecution(new AttackExecution(1000, player, other.id()));
+
+    // Living-world and doomsday mechanics can change terrain after an attack
+    // was queued. Preserve ownership here to reproduce the stale attack-front
+    // state that crashed production in Config.attackLogic().
+    game.map().setTerrainByte(targetTile, IMPASSABLE);
+
+    expect(() => executeTicks(game, 3)).not.toThrow();
+    expect(game.owner(targetTile)).toBe(other);
+    expect(game.isImpassable(targetTile)).toBe(true);
+  });
+
   // ── Nukes: targeting ─────────────────────────────────────────────────
 
   test("canBuild(AtomBomb) returns false for impassable target", () => {

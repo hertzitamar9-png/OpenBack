@@ -1,3 +1,11 @@
+## OpenBack v0.36.221 - Safe Front Lines and OpenFront v0.33.8
+
+- Fixed matches crashing when an active attack reached terrain that had become impassable; attacks now skip those tiles safely and continue around them.
+- Updated the inherited game systems through OpenFront v0.33.8, including spectator support, stronger team-lobby handling, safer reconnects and older replays, improved Doomsday team behavior, the Yangtze River map, and consistent game-server routing.
+- Preserved OpenBack's profiles, friends, hosted 2D and 3D experiences, custom maps, units, and lobby controls while bringing in the upstream fixes.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.220 - Hosting Works in Immersive 3D
 
 - Fixed hosting a multiplayer game in Immersive 3D failing with a connection error, which left the host unable to enter the lobby they had just created.

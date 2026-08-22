@@ -94,6 +94,16 @@ const KICK_REASON_ADMIN = "kick_reason.admin";
 const KICK_REASON_HOST_LEFT = "kick_reason.host_left";
 const KICK_REASON_MATCH_CANCELLED = "kick_reason.match_cancelled";
 const KICK_REASON_TOO_MUCH_DATA = "kick_reason.too_much_data";
+
+// Messages that speak for a player in the simulation, so a spectator may not
+// send them — including hash, which feeds desync agreement. Ping and rejoin
+// remain connection housekeeping.
+const SPECTATOR_BLOCKED_MESSAGES = new Set([
+  "intent",
+  "winner",
+  "live_stats",
+  "hash",
+]);
 const KICK_REASON_INVALID_MESSAGE = "kick_reason.invalid_message";
 
 // Whether the host-only cheat block actually grants anything: mere presence
@@ -840,23 +850,26 @@ export class GameServer {
     // OFM: if an allowlist is set, only those publicIds may join. Re-checked on
     // every join attempt. Admins/root bypass it so moderation can reach any
     // private lobby; a kick still applies (checked above).
-    const allowedPublicIds = this.gameConfig.allowedPublicIds;
-    if (
-      allowedPublicIds !== undefined &&
-      allowedPublicIds.length > 0 &&
-      !isAdminRole(client.role) &&
-      (client.publicId === undefined ||
-        !allowedPublicIds.includes(client.publicId))
-    ) {
+    if (!this.passesAllowlist(client)) {
       this.log.warn("client not on allowlist, rejecting", {
         clientID: client.clientID,
       });
       return "not_allowlisted";
     }
 
+    // gameStartInfo.players is frozen at start, so a late arrival could never
+    // spawn. They used to join as a player anyway; watching is what actually
+    // happened to them, so it is what they join as.
+    if (this._hasStarted) {
+      client.spectator = true;
+    }
+
+    // Spectators take no slot: they never spawn, so a full lobby is still
+    // watchable and a caster can never displace a player.
     if (
+      !client.spectator &&
       this.gameConfig.maxPlayers &&
-      this.activeClients.length >= this.gameConfig.maxPlayers
+      this.playerCount() >= this.gameConfig.maxPlayers
     ) {
       this.log.warn(`cannot add client, game full`, {
         clientID: client.clientID,
@@ -920,8 +933,10 @@ export class GameServer {
     this.admittedPersistentIds.add(client.persistentID);
     this.activeClients.push(client);
     client.lastPing = Date.now();
-    this.markClientDisconnected(client.clientID, false);
+    // Registered before the first markClientDisconnected: that call consults the
+    // registry to tell a spectator from a player.
     this.allClients.set(client.clientID, client);
+    this.markClientDisconnected(client.clientID, false);
     this.emitTelemetry("player_joined", {
       identity: this.identityFor(client),
       joinedAt: Date.now(),
@@ -932,7 +947,7 @@ export class GameServer {
     this.addListeners(client);
     this.startLobbyInfoBroadcast();
 
-    if (this.activeClients.length >= (this.gameConfig.maxPlayers ?? Infinity)) {
+    if (this.playerCount() >= (this.gameConfig.maxPlayers ?? Infinity)) {
       this.hasReachedMaxPlayerCount = true;
     }
 
@@ -1090,6 +1105,18 @@ export class GameServer {
           });
           return;
         }
+        // A spectator is not in the simulation, so none of what it sends can be
+        // game state. Without this, claiming to spectate is a way past the lobby
+        // cap and into the intent stream.
+        if (
+          client.spectator &&
+          SPECTATOR_BLOCKED_MESSAGES.has(clientMsg.type)
+        ) {
+          this.log.warn(`dropping ${clientMsg.type} from spectator`, {
+            clientID: client.clientID,
+          });
+          return;
+        }
         switch (clientMsg.type) {
           case "rejoin": {
             // Client is already connected, no auth required, send start game message if game has started
@@ -1123,6 +1150,10 @@ export class GameServer {
           }
           case "hash": {
             client.hashes.set(clientMsg.turnNumber, clientMsg.hash);
+            break;
+          }
+          case "spectate": {
+            this.setSpectator(client, clientMsg.spectator);
             break;
           }
           case "winner": {
@@ -1233,12 +1264,12 @@ export class GameServer {
       return false;
     }
     const expected = this.gameConfig.maxPlayers;
-    if (expected === undefined || this.activeClients.length >= expected) {
+    if (expected === undefined || this.playerCount() >= expected) {
       return false;
     }
     this.log.info("cancelling matchmade game, missing players at deadline", {
       gameID: this.id,
-      connected: this.activeClients.length,
+      connected: this.playerCount(),
       expected,
     });
     for (const c of [...this.activeClients]) {
@@ -1410,18 +1441,20 @@ export class GameServer {
       lobbyCreatedAt: this.createdAt,
       visibleAt: this.visibleAt,
       config,
-      players: this.activeClients.map((c) => ({
-        username: c.username,
-        clanTag: c.clanTag ?? null,
-        clientID: c.clientID,
-        publicId: c.publicId,
-        profilePictureUrl: c.profilePictureUrl,
-        cosmetics: c.cosmetics,
-        isLobbyCreator: this.lobbyCreatorID === c.clientID,
-        friends: friendsFor(c),
-        teamIndex: this.matchmakingTeamIndex(c),
-        selectedTeam: this.selectedTeams.get(c.clientID),
-      })),
+      players: this.activeClients
+        .filter((c) => !c.spectator)
+        .map((c) => ({
+          username: c.username,
+          clanTag: c.clanTag ?? null,
+          clientID: c.clientID,
+          publicId: c.publicId,
+          profilePictureUrl: c.profilePictureUrl,
+          cosmetics: c.cosmetics,
+          isLobbyCreator: this.lobbyCreatorID === c.clientID,
+          friends: friendsFor(c),
+          teamIndex: this.matchmakingTeamIndex(c),
+          selectedTeam: this.selectedTeams.get(c.clientID),
+        })),
       tribes: this.tribes,
     });
     if (!result.success) {
@@ -1461,6 +1494,53 @@ export class GameServer {
       });
       this.sendStartGameMsg(c.ws, 0);
     });
+  }
+
+  // Connected clients who will actually play. Spectators are excluded
+  // everywhere a "player" is meant: the lobby cap, and gameStartInfo.
+  private playerCount(): number {
+    return this.activeClients.filter((c) => !c.spectator).length;
+  }
+
+  // ONE definition of who the allowlist admits, shared by every path that can
+  // put someone in (or seat someone into) this game — joinClient and the lobby
+  // Play/Spectate toggle. Admins bypass it so moderation can reach any lobby.
+  private passesAllowlist(client: Client): boolean {
+    const allowed = this.gameConfig.allowedPublicIds;
+    if (allowed === undefined || allowed.length === 0) return true;
+    if (isAdminRole(client.role)) return true;
+    return client.publicId !== undefined && allowed.includes(client.publicId);
+  }
+
+  // Switch a client between playing and watching from the lobby screen. Seating
+  // is refused once the game has started (the player list is frozen), when the
+  // lobby is full, or when the allowlist does not name them — the toggle must
+  // not be a way past either. The allowlist can gain entries AFTER people are in
+  // the lobby (update_game_config replaces it), so someone admitted before it
+  // was set is not proof they may hold a seat now.
+  private setSpectator(client: Client, spectator: boolean): void {
+    if (client.spectator === spectator) return;
+    if (!spectator) {
+      if (this._hasStarted || this._hasEnded) return;
+      if (!this.passesAllowlist(client)) return;
+      const max = this.gameConfig.maxPlayers;
+      if (max !== undefined && this.playerCount() >= max) return;
+    }
+    client.spectator = spectator;
+    // The lobby list is derived from this flag, so everyone's view of who is
+    // playing has to be refreshed rather than waiting out the next tick.
+    this.broadcastLobbyInfo();
+  }
+
+  // The electorate for the winner and live-stats votes. Spectators run the
+  // simulation but may not vote, so counting them would raise the bar for a
+  // majority without anyone able to meet it: five spectators watching four
+  // players make a strict majority of nine unreachable, and the game would
+  // never reach consensus, never archive, and never be scored.
+  private votingUniqueIPs(): number {
+    return new Set(
+      this.activeClients.filter((c) => !c.spectator).map((c) => c.ip),
+    ).size;
   }
 
   // Pin a publicId to a team slot after the lobby exists, so a lobby that fills
@@ -1762,6 +1842,9 @@ export class GameServer {
     return {
       gameID: this.id,
       experienceMode: normalizeExperienceMode(this.gameConfig),
+      // Everyone connected, spectators included and flagged. They are not in the
+      // simulation, but the lobby is the same view for them as for a player —
+      // filtering them out here emptied the roster of a lobby they were alone in.
       clients: this.activeClients.map((c) => {
         if (!this.seesReal(viewer, c.clientID)) {
           return {
@@ -1770,6 +1853,7 @@ export class GameServer {
             clientID: c.clientID,
             teamIndex: this.matchmakingTeamIndex(c),
             selectedTeam: this.selectedTeams.get(c.clientID) ?? null,
+            spectator: c.spectator || undefined,
           };
         }
         // A TEAMMATE reveal is deliberately narrower than the others. Seeing a
@@ -1791,6 +1875,7 @@ export class GameServer {
           verified: c.cosmetics?.verified,
           teamIndex: this.matchmakingTeamIndex(c),
           selectedTeam: this.selectedTeams.get(c.clientID) ?? null,
+          spectator: c.spectator || undefined,
         };
       }),
       lobbyCreatorClientID: this.lobbyCreatorID,
@@ -1813,7 +1898,11 @@ export class GameServer {
   private buildFriendsLookup(): (client: Client) => ClientID[] | undefined {
     const publicIdToClientID = new Map<string, ClientID>();
     for (const c of this.activeClients) {
-      if (c.publicId) publicIdToClientID.set(c.publicId, c.clientID);
+      // Spectators are not in the simulation, and friends feed team assignment —
+      // a player befriending a caster would be teamed with a clientID that never
+      // spawns.
+      if (c.publicId && !c.spectator)
+        publicIdToClientID.set(c.publicId, c.clientID);
     }
     return (client: Client) => {
       const friendClientIDs = client.friends
@@ -1829,6 +1918,27 @@ export class GameServer {
 
   public isListed(): boolean {
     return this.listed;
+  }
+
+  /** Who joined, and the account behind each one.
+   *
+   *  The public game record is PII-stripped, so a clientID can only be tied back
+   *  to an account by whoever ran the lobby. Without this a host can see that 96
+   *  people played and identify none of them. Restricted to lobbies the admin bot
+   *  created — never a public or matchmade game.
+   *
+   *  allClients, not activeClients: someone who joined and left still appears in
+   *  the record the host has to reconcile against. */
+  public roster(): {
+    clientID: ClientID;
+    publicId: string | undefined;
+    username: string;
+  }[] {
+    return [...this.allClients.values()].map((c) => ({
+      clientID: c.clientID,
+      publicId: c.publicId,
+      username: c.username,
+    }));
   }
 
   public setListed(listed: boolean): void {
@@ -1995,6 +2105,11 @@ export class GameServer {
 
   private markClientDisconnected(clientID: string, isDisconnected: boolean) {
     this.clientsDisconnectedStatus.set(clientID, isDisconnected);
+    // Connection status is tracked for every client, but only a player's reaches
+    // the simulation: a spectator has no entry in gameStartInfo.players, so an
+    // intent naming them refers to nobody — and it is kept in the archived turn
+    // log, where readers take mark_disconnected as a player having dropped.
+    if (this.allClients.get(clientID)?.spectator) return;
     this.addIntent({
       type: "mark_disconnected",
       clientID: clientID,
@@ -2167,7 +2282,7 @@ export class GameServer {
     // Add client vote. A cancelled match ends with winner omitted;
     // JSON.stringify(undefined) is not a string, so key those votes as "null".
     const winnerKey = JSON.stringify(clientMsg.winner ?? null);
-    const activeUniqueIPs = new Set(this.activeClients.map((c) => c.ip)).size;
+    const activeUniqueIPs = this.votingUniqueIPs();
     const votes = this.winnerVotes.add(winnerKey, clientMsg, client.ip);
 
     this.log.info(
@@ -2249,7 +2364,7 @@ export class GameServer {
     }
     entry.voters.add(client.clientID);
 
-    const activeUniqueIPs = new Set(this.activeClients.map((c) => c.ip)).size;
+    const activeUniqueIPs = this.votingUniqueIPs();
     entry.round.add(JSON.stringify(stats), stats, client.ip);
     const result = entry.round.result(activeUniqueIPs);
     if (result === null) {

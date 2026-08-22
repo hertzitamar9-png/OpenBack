@@ -485,7 +485,7 @@ export const maps: readonly MapInfo[] = [
     type: GameMapType.ChoppingBlock,
     translationKey: "map.choppingblock",
     categories: ["arcade"],
-    multiplayerFrequency: 5,
+    multiplayerFrequency: 0,
     specialTeamCount: 4,
   },
   {

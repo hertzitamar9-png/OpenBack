@@ -40,6 +40,7 @@ import {
   SUBSCRIPTIONS_ENABLED,
 } from "./Cosmetics";
 import { crazyGamesSDK, type CrazyGamesUser } from "./CrazyGamesSDK";
+import { consumeLoginResult, LoginResult } from "./LoginResult";
 import { prepareProfileImage } from "./ProfileImage";
 import { socialAttention, type SocialAttentionStage } from "./SocialAttention";
 import { translateText } from "./Utils";
@@ -76,6 +77,7 @@ export class AccountModal extends BaseModal {
   // Set on CrazyGames when a CrazyGames user is signed in. Their identity comes
   // from the SDK, not our backend user object.
   @state() private crazyGamesUser: CrazyGamesUser | null = null;
+  @state() private loginError: LoginResult | undefined;
 
   private userMeResponse: UserMeResponse | null = null;
   private cosmetics: Cosmetics | null = null;
@@ -906,6 +908,8 @@ export class AccountModal extends BaseModal {
             </p>
           </div>
 
+          ${this.renderLoginError()}
+
           <div class="space-y-6">
             <div class="space-y-3">
               <div class="relative group">
@@ -1014,6 +1018,30 @@ export class AccountModal extends BaseModal {
             </div>
           </div>
         </div>
+      </div>
+    `;
+  }
+
+  private renderLoginError(): TemplateResult {
+    if (this.loginError === undefined) return html``;
+    return html`
+      <div
+        class="mb-6 flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-4"
+        role="alert"
+      >
+        <span class="text-lg leading-none text-red-400" aria-hidden="true"
+          >&#9888;</span
+        >
+        <p class="flex-1 text-sm text-red-200">
+          ${translateText("account_modal.login_email_exists")}
+        </p>
+        <button
+          class="text-lg leading-none text-red-200/60 hover:text-red-200"
+          aria-label=${translateText("common.close")}
+          @click=${() => (this.loginError = undefined)}
+        >
+          &times;
+        </button>
       </div>
     `;
   }
@@ -1300,6 +1328,7 @@ export class AccountModal extends BaseModal {
     socialAttention.profileOpened();
     document.body.classList.add("account-flow-open");
     this.isLoadingUser = true;
+    this.loginError = consumeLoginResult(args);
     const requestedMode =
       args?.authMode === "signup" || args?.authMode === "login"
         ? args.authMode

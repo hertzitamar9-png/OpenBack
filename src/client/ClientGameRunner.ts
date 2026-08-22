@@ -105,6 +105,8 @@ export interface LobbyConfig {
   // GameRecord exists when replaying an archived game.
   gameRecord?: GameRecord;
   expectedExperienceMode?: "2d" | "3d";
+  // Watch without playing.
+  spectator?: boolean;
 }
 
 export interface JoinLobbyResult {

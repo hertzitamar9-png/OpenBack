@@ -777,6 +777,7 @@ export async function startWorker() {
           cosmeticResult.cosmetics,
           publicId,
           friends,
+          clientMsg.spectator === true,
           infiniteGold,
           profilePictureUrl,
         );

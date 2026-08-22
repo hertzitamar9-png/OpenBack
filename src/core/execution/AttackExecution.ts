@@ -327,7 +327,10 @@ export class AttackExecution implements Execution {
       ) {
         continue;
       }
-      if ((this.mapTerrain[tileToConquer] & LAND_BIT) === 0) {
+      if (
+        (this.mapTerrain[tileToConquer] & LAND_BIT) === 0 ||
+        this.map.isImpassable(tileToConquer)
+      ) {
         continue;
       }
       this.addNeighbors(tileToConquer);
@@ -372,6 +375,7 @@ export class AttackExecution implements Execution {
       const neighbor = this.nbuf[i];
       if (
         (this.mapTerrain[neighbor] & LAND_BIT) === 0 ||
+        this.map.isImpassable(neighbor) ||
         (this.mapState[neighbor] & OWNER_MASK) !== this.targetSmallID
       ) {
         continue;

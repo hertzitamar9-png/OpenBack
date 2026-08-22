@@ -176,6 +176,8 @@ export interface JoinLobbyEvent {
   source?: "public" | "private" | "host" | "matchmaking" | "singleplayer";
   publicLobbyInfo?: GameInfo | PublicGameInfo;
   expectedExperienceMode?: "2d" | "3d";
+  // Watch without playing.
+  spectator?: boolean;
 }
 
 class Client {
@@ -267,7 +269,18 @@ class Client {
     // Prefetch turnstile token so it is available when
     // the user joins a lobby.
     this.turnstileTokenPromise =
-      ClientEnv.env() === GameEnv.Dev ? null : getTurnstileToken();
+      ClientEnv.env() === GameEnv.Dev ||
+      ClientEnv.instanceId() === "desktop" ||
+      isReplayShellHost(window.location.hostname)
+        ? null
+        : getTurnstileToken();
+    // Prefetch turnstile token so it is available when the user joins a lobby.
+    // Desktop (Steam) has no Turnstile script and is server-side exempt, so
+    // skip it — otherwise getTurnstileToken() throws "Failed to load Turnstile
+    // script" after its load wait. Also skip on the versioned replay shells:
+    // the replay host may not be on the Turnstile site key's domain allowlist,
+    // so rendering the widget there alerts and rejects — and replays never
+    // send a token anyway (see getTurnstileToken below).
 
     const openBackFont = new FontFace(
       "OpenBack",
@@ -760,9 +773,14 @@ class Client {
         console.log(`reopening host lobby ${lobbyId}`);
         return;
       }
+      // ?spectate is the watch-only form of the same lobby link, so a cast or
+      // an archive can hand out a URL that never takes a player slot.
+      const spectate = new URLSearchParams(window.location.search).has(
+        "spectate",
+      );
       window.showPage?.("page-join-lobby");
-      this.joinModal.open({ lobbyId });
-      console.log(`joining lobby ${lobbyId}`);
+      this.joinModal.open({ lobbyId, spectate });
+      console.log(`${spectate ? "spectating" : "joining"} lobby ${lobbyId}`);
       return;
     }
     if (parseAppUrl(new URL(window.location.href)).kind !== "reserved") {
@@ -878,6 +896,7 @@ class Client {
         lobby.publicLobbyInfo?.experienceMode ??
         lobby.gameStartInfo?.config.experienceMode ??
         lobby.gameRecord?.info.config.experienceMode,
+      spectator: lobby.spectator,
     });
 
     if (this.mostRecentJoinEvent !== event.timeStamp) {
