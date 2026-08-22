@@ -1,18 +1,7 @@
 import { Game } from "../game/Game";
 import { TileRef } from "../game/GameMap";
 import { PseudoRandom } from "../PseudoRandom";
-import { MinHeap } from "./algorithms/PriorityQueue";
 import { PathFinder } from "./types";
-
-export function isAircraftLandingTooHigh(
-  game: {
-    config(): { experienceMode(): "2d" | "3d" };
-    magnitude(tile: TileRef): number;
-  },
-  tile: TileRef,
-): boolean {
-  return game.config().experienceMode() === "3d" && game.magnitude(tile) >= 18;
-}
 
 export class AirPathFinder implements PathFinder<TileRef> {
   private seed: number;
@@ -26,12 +15,12 @@ export class AirPathFinder implements PathFinder<TileRef> {
       throw new Error("AirPathFinder does not support multiple start points");
     }
 
-    // Low-flying aircraft can route around mountains, but cannot land on a
-    // tile above their fixed clearance. Classic 2D flight stays unrestricted.
-    if (isAircraftLandingTooHigh(this.game, to)) {
-      return null;
-    }
-
+    // Aircraft fly the same route in both experiences. Immersive 3D briefly
+    // had rules of its own -- no landing above magnitude 18, and rerouting
+    // around anything that tall -- which meant a plane could not be sent at
+    // all wherever no corridor existed, while the flat game happily flew the
+    // same order. One behaviour, so a plane placed in one mode behaves as it
+    // does in the other.
     const random = new PseudoRandom(this.seed);
     const path: TileRef[] = [from];
     let current = from;
@@ -43,67 +32,7 @@ export class AirPathFinder implements PathFinder<TileRef> {
       path.push(current);
     }
 
-    if (
-      this.game.config().experienceMode() !== "3d" ||
-      path.every((tile) => tile === to || this.game.magnitude(tile) < 18)
-    ) {
-      return path;
-    }
-    return this.findLowFlightPath(from, to);
-  }
-
-  /**
-   * Low aircraft fly beneath major mountain relief. A deterministic A* route
-   * treats those peaks as terrain to go around, with stable tile-order ties so
-   * every client and replay selects the same corridor.
-   */
-  private findLowFlightPath(from: TileRef, to: TileRef): TileRef[] | null {
-    const width = this.game.width();
-    const total = width * this.game.height();
-    const best = new Float64Array(total);
-    best.fill(Number.POSITIVE_INFINITY);
-    const previous = new Int32Array(total);
-    previous.fill(-1);
-    const open = new MinHeap(Math.max(16, total));
-    const processed = new Uint8Array(total);
-    open.push(from, 0);
-    best[from] = 0;
-
-    while (!open.isEmpty()) {
-      const current = open.pop() as TileRef;
-      if (processed[current]) continue;
-      processed[current] = 1;
-      if (current === to) {
-        const path: TileRef[] = [];
-        for (let tile = to; tile !== -1; tile = previous[tile]) path.push(tile);
-        path.reverse();
-        return path[0] === from ? path : null;
-      }
-      const x = this.game.x(current);
-      const y = this.game.y(current);
-      const neighbors = [
-        [x + 1, y],
-        [x - 1, y],
-        [x, y + 1],
-        [x, y - 1],
-      ] as const;
-      for (const [nx, ny] of neighbors) {
-        if (nx < 0 || ny < 0 || nx >= width || ny >= this.game.height())
-          continue;
-        const next = this.game.ref(nx, ny);
-        // Magnitude 18+ represents terrain above the aircraft's clearance.
-        if (this.game.magnitude(next) >= 18) continue;
-        const altitudeCost = 1 + Math.pow(this.game.magnitude(next) / 18, 2);
-        const nextCost = best[current] + altitudeCost;
-        if (nextCost >= best[next]) continue;
-        best[next] = nextCost;
-        previous[next] = current;
-        const heuristic =
-          Math.abs(nx - this.game.x(to)) + Math.abs(ny - this.game.y(to));
-        open.push(next, nextCost + heuristic);
-      }
-    }
-    return null;
+    return path;
   }
 
   private computeNext(

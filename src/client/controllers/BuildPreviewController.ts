@@ -21,7 +21,6 @@ import {
 } from "../../core/game/Game";
 import { TileRef } from "../../core/game/GameMap";
 import { UserSettings } from "../../core/game/UserSettings";
-import { isAircraftLandingTooHigh } from "../../core/pathfinding/PathFinder.Air";
 import { Controller } from "../Controller";
 import {
   ConfirmGhostStructureEvent,
@@ -37,7 +36,6 @@ import {
   SendUpgradeStructureIntentEvent,
 } from "../Transport";
 import { UIState } from "../UIState";
-import { translateText } from "../Utils";
 import { GameView } from "../view";
 import { isPointerOverVehicleSource } from "./VehicleSourceHover";
 
@@ -465,8 +463,6 @@ export class BuildPreviewController implements Controller {
     if (!myPlayer) return null;
 
     const u = this.ghostUnit.buildableUnit;
-    const aircraftLandingTooHigh =
-      u.type === UnitType.Plane && isAircraftLandingTooHigh(this.game, tileRef);
 
     const stackTargetTile =
       STACKABLE_OPENBACK_TYPES.has(u.type) &&
@@ -651,7 +647,7 @@ export class BuildPreviewController implements Controller {
       tileY: this.game.y(tileRef),
       radiusTileX,
       radiusTileY,
-      canBuild: u.canBuild !== false && !aircraftLandingTooHigh,
+      canBuild: u.canBuild !== false,
       canUpgrade,
       cost: Number(cost),
       multiplier: multiplier,
@@ -663,9 +659,6 @@ export class BuildPreviewController implements Controller {
       upgradeTargetTile,
       rangeRadius,
       rangeWarning: targetingAlly,
-      invalidReason: aircraftLandingTooHigh
-        ? "events_display.aircraft_land_too_high"
-        : undefined,
     };
   }
 
@@ -683,23 +676,6 @@ export class BuildPreviewController implements Controller {
     this.mousePos.x = e.x;
     this.mousePos.y = e.y;
     const tile = this.currentCursorTileRef();
-    if (
-      this.ghostUnit?.buildableUnit.type === UnitType.Plane &&
-      tile !== undefined &&
-      isAircraftLandingTooHigh(this.game, tile)
-    ) {
-      window.dispatchEvent(
-        new CustomEvent("show-message", {
-          detail: {
-            message: translateText("events_display.aircraft_land_too_high"),
-            duration: 2600,
-            color: "red",
-          },
-        }),
-      );
-      this.pendingConfirm = null;
-      return;
-    }
     // Never confirm with validation cached for a different tile. Queue this
     // tap and ask renderGhost() to validate its exact location immediately.
     if (tile !== this.validatedTileRef) {

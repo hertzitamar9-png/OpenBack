@@ -35,13 +35,4 @@ describe("3D train parity", () => {
     expect(renderer).toContain("this.railroadPass.prepareTextures()");
     expect(renderer).toContain("this.railroadPass.railroadTexture()");
   });
-
-  it("shows and enforces the 3D mountain landing reason in the build preview", () => {
-    const controller = source(
-      "src/client/controllers/BuildPreviewController.ts",
-    );
-    expect(controller).toContain("isAircraftLandingTooHigh");
-    expect(controller).toContain("events_display.aircraft_land_too_high");
-    expect(controller).toContain('new CustomEvent("show-message"');
-  });
 });

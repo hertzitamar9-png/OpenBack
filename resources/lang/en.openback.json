@@ -135,7 +135,6 @@
     "decaying": "Decaying -{rate} tiles/s"
   },
   "events_display": {
-    "aircraft_land_too_high": "Land is too high; aircraft cannot land there",
     "encirclement_started": "Your territory is encircled by {enemy}. Reopen a corridor within 15 seconds!",
     "living_world_nuclear_saturation": "Nuclear saturation has permanently fused a radioactive barrier into the map.",
     "living_world_nuclear_warning": "Critical fallout warning: nuclear saturation will permanently reshape this route in 5 seconds.",

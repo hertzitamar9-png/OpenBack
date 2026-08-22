@@ -1,3 +1,9 @@
+## OpenBack v0.36.223 - Aircraft Fly the Same in Both Modes
+
+- Aircraft in Immersive 3D are no longer blocked from landing on high ground or refused a flight path over it, which could leave them impossible to send at all; they now behave exactly as they do in Classic 2D.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.222 - Tanks and Aircraft Show Their Target
 
 - Deploying a tank or an aircraft now shows the targeting cursor, so you can see where it will go and whether it is within reach of the base sending it.
