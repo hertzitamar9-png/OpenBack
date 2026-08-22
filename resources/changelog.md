@@ -1,3 +1,9 @@
+## OpenBack v0.36.213 - Ships and Trains Keep Their Artwork
+
+- Ships and trains in Immersive 3D now use their real artwork, shown facing you from every angle, instead of models built from boxes and cones -- so train carriages no longer sit as disconnected lumps. Vessels keep their wake and their shadow.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.212 - Correct Production Hostname
 
 - The server now recognises the address the game is actually served from as its live deployment, instead of only an address it moved away from.

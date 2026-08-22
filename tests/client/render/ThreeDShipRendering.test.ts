@@ -114,3 +114,38 @@ describe("ship wake", () => {
     expect(unitPass3D).toContain("ANIMATION.none + surface * 10");
   });
 });
+
+// The generated models for ships and trains are assembled from a few boxes and
+// cones, which at the size they are actually seen reads as a pile of blocks --
+// train carriages especially, which sit as separate lumps with gaps between
+// them because each is placed independently rather than coupled to the next.
+// The flat sprite is real artwork and is drawn screen-facing in 3D, so it
+// shows its face from every angle.
+describe("units that keep their flat artwork in 3D", () => {
+  it("lists the ships and trains", () => {
+    for (const type of ["TransportShip", "TradeShip", "Warship", "Train"]) {
+      expect(unitPass3D).toContain(`UnitType.${type},`);
+    }
+    expect(unitPass3D).toContain("export const SPRITE_IN_THREE_D");
+  });
+
+  it("keeps them out of the ready-model set", () => {
+    // That set becomes the mask telling the sprite shader to stand down, so a
+    // type left in it would have its sprite hidden and nothing drawn at all.
+    expect(unitPass3D).toContain("if (SPRITE_IN_THREE_D.has(type)) return;");
+  });
+
+  it("still gives them a shadow and a wake", () => {
+    // Only the built hull is skipped. Dropping out of the loop earlier would
+    // have taken the ground shadow and the vessel wake with it.
+    const skip = unitPass3D.indexOf(
+      "if (SPRITE_IN_THREE_D.has(unit.unitType as UnitType)) continue;",
+    );
+    const wake = unitPass3D.indexOf("// Wake: a foam patch trailing a vessel");
+    const hull = unitPass3D.indexOf(
+      "const key = threeDModelBatchKey(unit.unitType as UnitType);",
+    );
+    expect(skip).toBeGreaterThan(wake);
+    expect(skip).toBeLessThan(hull);
+  });
+});

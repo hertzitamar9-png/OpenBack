@@ -31,6 +31,30 @@ const ANIMATION: Record<ThreeDAnimation, number> = {
   wheel: 4,
   hover: 5,
 };
+/**
+ * Units that keep their flat artwork in Immersive 3D instead of a built model.
+ *
+ * The generated models for these are assembled from a handful of boxes and
+ * cones, and at the sizes they are actually seen that reads as a pile of
+ * blocks rather than a ship or a train -- carriages in particular sit as
+ * separate lumps with visible gaps between them, because each one is placed
+ * independently rather than coupled to the next.
+ *
+ * The 2D sprite is real artwork, and in 3D it is drawn screen-facing, so it
+ * shows its face from every angle the camera can take. Leaving these types out
+ * of the model catalogue clears their bit in the renderer's model mask, which
+ * is what tells the sprite shader to stand down -- so the sprite comes back on
+ * its own and nothing draws twice.
+ *
+ * Moving a type back to a built model is a matter of deleting it from here.
+ */
+export const SPRITE_IN_THREE_D: ReadonlySet<UnitType> = new Set([
+  UnitType.TransportShip,
+  UnitType.TradeShip,
+  UnitType.Warship,
+  UnitType.Train,
+]);
+
 const SURFACE = {
   ground: 0,
   water: 1,
@@ -256,6 +280,9 @@ export class ThreeDUnitPass {
       Object.values(UnitType).map(async (type) => {
         const key = threeDModelBatchKey(type);
         try {
+          // Types that stay as sprites need no mesh, and must not join the
+          // ready set: that set becomes the mask that hides their sprite.
+          if (SPRITE_IN_THREE_D.has(type)) return;
           const mesh = await loadThreeDAsset(threeDAsset(type));
           if (this.disposed) return;
           this.meshes.set(key, this.createMesh(mesh));
@@ -465,6 +492,12 @@ export class ThreeDUnitPass {
             z,
           );
       }
+
+      // Everything above -- the ground shadow and a vessel's wake -- belongs
+      // to any unit sitting there, sprite or model. Only the built hull is
+      // skipped for the types that keep their flat artwork, so a ship still
+      // trails a wake across the water without a pile of boxes on top of it.
+      if (SPRITE_IN_THREE_D.has(unit.unitType as UnitType)) continue;
 
       const key = threeDModelBatchKey(unit.unitType as UnitType);
       const batch = this.batches.get(key);
