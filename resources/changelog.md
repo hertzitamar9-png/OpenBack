@@ -1,3 +1,9 @@
+## OpenBack v0.36.218 - Zoom Works at Every Angle
+
+- Fixed the Immersive 3D camera refusing to zoom when tilted down toward the ground, which left the view stuck far out with the zoom control doing nothing.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.217 - The Sun Actually Explodes
 
 - The victory sun now detonates properly -- it swells, lets go in a flash, and throws a shockwave of light and debris across the sky -- and it goes off when you choose to keep playing, so you are looking at the sky when it happens instead of at the win screen.

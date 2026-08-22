@@ -7,6 +7,7 @@ import {
   ZoomEvent,
 } from "../../src/client/InputHandler";
 import {
+  THREE_D_CLEARANCE_MIN_TILT,
   THREE_D_MAX_TILT,
   THREE_D_MIN_TILT,
   threeDCameraDistance,
@@ -108,8 +109,31 @@ describe("TransformHandler 3D camera", () => {
   });
 
   it("allows a close tactical camera while retaining surface clearance", () => {
-    const distance = threeDCameraDistance(400, 48, THREE_D_MIN_TILT);
-    expect(distance * Math.sin(THREE_D_MIN_TILT)).toBeCloseTo(77, 6);
+    // Clearance still holds the camera 77 units above the target plane down to
+    // the angle the rule reasons about...
+    const distance = threeDCameraDistance(400, 48, THREE_D_CLEARANCE_MIN_TILT);
+    expect(distance * Math.sin(THREE_D_CLEARANCE_MIN_TILT)).toBeCloseTo(77, 6);
+  });
+
+  // Clearance is a floor on distance and scales as 1/sin(pitch), so once the
+  // orbit reached near-ground angles it grew past anything zoom asked for --
+  // 430 units at the flattest tilt against 122 at the old limit. The view was
+  // pinned out there and the zoom control did nothing, which is what makes a
+  // camera feel broken. The angle the rule uses is clamped, so the floor stops
+  // at about 161 units and zoom answers at every angle.
+  it("keeps zoom working at the flattest tilt", () => {
+    const at = (zoom: number) =>
+      threeDCameraDistance(900, zoom, THREE_D_MIN_TILT);
+
+    // Zooming in genuinely brings the camera closer rather than hitting a wall.
+    expect(at(8)).toBeLessThan(at(4));
+    expect(at(4)).toBeLessThan(at(2));
+    expect(at(8)).toBeLessThan(200);
+
+    // The floor is still there, just bounded.
+    const floor = 77 / Math.sin(THREE_D_CLEARANCE_MIN_TILT);
+    expect(at(1000)).toBeCloseTo(floor, 6);
+    expect(floor).toBeLessThan(200);
   });
 
   it("uses the actual 3D camera target as the focus center", () => {

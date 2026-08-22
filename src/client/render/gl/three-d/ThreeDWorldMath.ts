@@ -18,6 +18,22 @@ export const THREE_D_TILT = 1.14;
 // NaN, so a margin has to remain.
 export const THREE_D_MIN_TILT = 0.18;
 export const THREE_D_MAX_TILT = Math.PI / 2 - 0.02;
+/**
+ * Shallowest angle the terrain-clearance rule is allowed to reason about.
+ *
+ * Clearance is a floor on how close the camera may come, and it scales as
+ * 1/sin(pitch) -- so at the near-ground angles the orbit now reaches it grows
+ * without bound: 122 units at 0.68, but 430 at 0.18. That floor sat above
+ * anything zoom asked for, so at a flat angle the view was pinned far out and
+ * the zoom control did nothing at all, which is what makes a camera feel
+ * broken.
+ *
+ * Clamping the angle the rule uses caps that floor at about 161 units. The
+ * trade is that a very low camera can pass nearer to a tall peak than it used
+ * to; a working zoom at every angle is worth more than never brushing a
+ * mountain.
+ */
+export const THREE_D_CLEARANCE_MIN_TILT = 0.5;
 export const THREE_D_FOV_DEGREES = 42;
 export const THREE_D_RELIEF_SCALE = 1.5;
 export const THREE_D_MAX_TERRAIN_HEIGHT = 38 * THREE_D_RELIEF_SCALE;
@@ -34,7 +50,7 @@ export function threeDCameraDistance(
   // perceived as violent shaking while panning.
   const terrainClearance =
     (THREE_D_MAX_TERRAIN_HEIGHT + 20) /
-    Math.max(0.1, Math.sin(Math.max(THREE_D_MIN_TILT, pitch)));
+    Math.max(0.1, Math.sin(Math.max(THREE_D_CLEARANCE_MIN_TILT, pitch)));
   return Math.max(requested, terrainClearance);
 }
 
