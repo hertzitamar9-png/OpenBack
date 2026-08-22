@@ -7,7 +7,7 @@
  */
 
 import type { GhostPreviewData } from "../../types";
-import { UT_MIRV, UT_WARSHIP } from "../../types";
+import { UT_MIRV, UT_PLANE, UT_TANK, UT_WARSHIP } from "../../types";
 import { createProgram } from "../utils/GlUtils";
 
 import fragSrc from "../shaders/crosshair/crosshair.frag.glsl?raw";
@@ -20,6 +20,24 @@ const statusAtlasUrl = assetUrl("atlases/status-atlas.png");
 /** Half-size of the crosshair quad in screen pixels. */
 const CROSSHAIR_PX = 20;
 const QUAD_VERTS = new Float32Array([0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1]);
+
+/**
+ * Whether placing this unit is aiming at a destination, and so wants the
+ * crosshair.
+ *
+ * Tanks and aircraft are ordered to a place on the map exactly as a warship
+ * move or a MIRV strike is, but they were missing here -- so deploying one
+ * drew no cursor at all, leaving no way to see where it would go or that it
+ * was about to be sent past the range its base allows.
+ */
+export function aimsAtADestination(ghostType: string | undefined): boolean {
+  return (
+    ghostType === UT_WARSHIP ||
+    ghostType === UT_MIRV ||
+    ghostType === UT_PLANE ||
+    ghostType === UT_TANK
+  );
+}
 
 export class CrosshairPass {
   private gl: WebGL2RenderingContext;
@@ -98,7 +116,7 @@ export class CrosshairPass {
   }
 
   updateGhostPreview(data: GhostPreviewData | null): void {
-    if (data && (data.ghostType === UT_WARSHIP || data.ghostType === UT_MIRV)) {
+    if (data && aimsAtADestination(data.ghostType)) {
       this.active = true;
       this.centerX = data.tileX;
       this.centerY = data.tileY;

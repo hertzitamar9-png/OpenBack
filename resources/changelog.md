@@ -1,3 +1,9 @@
+## OpenBack v0.36.222 - Tanks and Aircraft Show Their Target
+
+- Deploying a tank or an aircraft now shows the targeting cursor, so you can see where it will go and whether it is within reach of the base sending it.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.221 - No More Impassable Terrain Crash
 
 - Fixed a crash that ended the match for everyone in it when an attack reached terrain it could not cross.
