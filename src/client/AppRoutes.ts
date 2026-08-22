@@ -46,7 +46,6 @@ const STORE_TABS = new Set([
   "cosmetics",
   "effects",
   "tribes",
-  "merch",
 ]);
 const STORE_COSMETIC_TABS = new Set(["patterns", "flags", "crowns"]);
 const INVENTORY_TABS = new Set(["skins", "flags", "crowns", "effects"]);

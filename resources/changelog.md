@@ -1,3 +1,9 @@
+## OpenBack v0.36.216 - No Outside Store
+
+- Removed the store tab that sent players to an outside merchandise site.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.215 - The Sun Rises to Detonate
 
 - The victory sun detonation is now visible whenever a game is won; winning after dark used to set it off below the horizon, underneath the map, where nothing could be seen of it.
