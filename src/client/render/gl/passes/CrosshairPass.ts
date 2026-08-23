@@ -18,7 +18,7 @@ import { assetUrl } from "src/core/AssetUrls";
 const statusAtlasUrl = assetUrl("atlases/status-atlas.png");
 
 /** Half-size of the crosshair quad in screen pixels. */
-const CROSSHAIR_PX = 20;
+const CROSSHAIR_PX = 24;
 const QUAD_VERTS = new Float32Array([0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1]);
 
 /**
@@ -56,6 +56,13 @@ export class CrosshairPass {
 
   private statusAtlasTex: WebGLTexture | null = null;
   private disposed = false;
+
+  /**
+   * A tank or aircraft is being deployed, so the cursor is drawn in neutral
+   * white/grey rather than the warship and MIRV red -- these are moves, not
+   * strikes, and the red read as an attack marker.
+   */
+  private neutralVehicleCursor = false;
 
   private active = false;
   private centerX = 0;
@@ -121,6 +128,8 @@ export class CrosshairPass {
       this.centerX = data.tileX;
       this.centerY = data.tileY;
       this.canBuild = data.canBuild || data.canUpgrade;
+      this.neutralVehicleCursor =
+        data.ghostType === UT_PLANE || data.ghostType === UT_TANK;
     } else {
       this.active = false;
     }
@@ -184,7 +193,11 @@ export class CrosshairPass {
     gl.uniform1f(this.uIsDiagonal, 0.0);
     gl.uniform1f(this.uAlpha, 1.0);
 
-    if (this.canBuild) {
+    if (this.neutralVehicleCursor && this.canBuild) {
+      gl.uniform3f(this.uColor, 1.0, 1.0, 1.0); // white = this spot takes it
+    } else if (this.neutralVehicleCursor) {
+      gl.uniform3f(this.uColor, 0.62, 0.62, 0.62); // grey = out of reach
+    } else if (this.canBuild) {
       gl.uniform3f(this.uColor, 0.9, 0.15, 0.15); // red crosshair
     } else {
       gl.uniform3f(this.uColor, 0.4, 0.1, 0.1); // dark red = can't build

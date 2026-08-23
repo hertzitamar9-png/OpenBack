@@ -1,3 +1,9 @@
+## OpenBack v0.36.224 - The Tank and Aircraft Cursor Reads Right Again
+
+- The deployment cursor for tanks and aircraft is white over a spot that will take the vehicle and grey over one that will not, at its full size, instead of the warship's red with no sign of whether the tile was in reach. The white and grey were written once and then lost in a version merge; they are back, and now held in place by tests.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.223 - Aircraft Fly the Same in Both Modes
 
 - Aircraft in Immersive 3D are no longer blocked from landing on high ground or refused a flight path over it, which could leave them impossible to send at all; they now behave exactly as they do in Classic 2D.
