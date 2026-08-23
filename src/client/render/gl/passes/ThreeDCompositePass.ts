@@ -409,7 +409,13 @@ void main(){
   vec3 waveNormal=normalize(vWaveNormal);
   vec2 waveSlope=vec2(-waveNormal.x,-waveNormal.z)/max(0.18,waveNormal.y);
   float coastalBreak=shoreline?smoothstep(0.58,0.90,shoreBreak)*0.72:0.0;
-  float foamCrest=coastalBreak;
+  float openGlare=max(
+    smoothstep(0.992,0.9998,shineLayer(vWorld,vec2(1.0,0.24),0.070,1.05,0.7,uTime)),
+    smoothstep(0.992,0.9998,shineLayer(vWorld,vec2(-0.36,1.0),0.082,-0.82,3.2,uTime))
+  );
+  openGlare=max(openGlare,smoothstep(0.992,0.9998,shineLayer(vWorld,vec2(0.58,-1.0),0.095,1.18,5.6,uTime)));
+  openGlare=max(openGlare,smoothstep(0.992,0.9998,shineLayer(vWorld,vec2(-1.0,-0.41),0.058,-0.68,8.1,uTime)));
+  float foamCrest=max(coastalBreak,openGlare*0.09);
   float crest=foamCrest;
   float shimmer=clamp(0.28+wave*0.10+fine*0.055+crest*0.24,0.12,0.68);
   vec3 oceanBase=mix(deep,highlight,shimmer);

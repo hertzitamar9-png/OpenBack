@@ -88,7 +88,14 @@ export class ConstructionExecution implements Execution {
           // the amount deducted, and the lifetime purchase counter advance
           // together. The previous bespoke path forgot the purchase counter,
           // leaving every later stack at the second-purchase price.
-          this.player.upgradeUnit(stackedStructure);
+          const amount = Math.max(1, Math.min(5, this.amount ?? 1));
+          for (let i = 0; i < amount; i++) {
+            const cost = this.mg
+              .unitInfo(this.constructionType)
+              .cost(this.mg, this.player);
+            if (this.player.gold() < cost) break;
+            this.player.upgradeUnit(stackedStructure);
+          }
           this.active = false;
           return;
         }

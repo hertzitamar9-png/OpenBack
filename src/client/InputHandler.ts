@@ -286,7 +286,7 @@ export class InputHandler {
   // chord. A real Shift chord or selection-box drag does not arm the prefix.
   private openBackBuildPrefixUntil = 0;
   private shiftUsedAsChord = false;
-  private readonly OPENBACK_BUILD_PREFIX_MS = 3000;
+  private readonly OPENBACK_BUILD_PREFIX_MS = 5000;
 
   private readonly PAN_SPEED = 5;
   private readonly ZOOM_SPEED = 10;
@@ -464,7 +464,11 @@ export class InputHandler {
           if (matchedBuild !== null) {
             this.setGhostStructure(matchedBuild);
             if (!e.shiftKey && buildShift) {
-              this.openBackBuildPrefixUntil = 0;
+              // Temporary Caps Lock for OpenBack units: each 1-6 selection
+              // refreshes the window so a sequence such as Shift, 3, 1 works
+              // without holding Shift for either number.
+              this.openBackBuildPrefixUntil =
+                performance.now() + this.OPENBACK_BUILD_PREFIX_MS;
             }
           }
         },

@@ -178,7 +178,10 @@ export class MirvExecution implements Execution {
   private spawnWarheadsWithWait(remainingTicks: number): void {
     if (this.nuke === null) return;
 
-    const waitBase = Math.max(0, remainingTicks);
+    // Newly queued executions begin ticking on the following game step. One
+    // tick less keeps the first crown's wait state aligned with the parent
+    // missile's final visible step, avoiding a one-frame disappearance.
+    const waitBase = Math.max(0, remainingTicks - 1);
     const warheadSpeed = this.mg.config().nukeSpeed(UnitType.MIRVWarhead);
     for (const [i, dst] of this.stagedTargets.entries()) {
       let speedOffset = 4;
@@ -186,6 +189,10 @@ export class MirvExecution implements Execution {
       else if (i < 140) speedOffset = 1;
       else if (i < 210) speedOffset = 2;
       else if (i < 280) speedOffset = 3;
+      // The first visible crown appears exactly as the parent reaches the
+      // separation point. The rest peel away in deterministic staggered
+      // groups, making the split readable instead of popping in at impact.
+      const separationDelay = i < 24 ? 0 : this.random.nextInt(1, 15);
       this.mg.addExecution(
         new NukeExecution(
           UnitType.MIRVWarhead,
@@ -194,7 +201,7 @@ export class MirvExecution implements Execution {
           this.separateDst,
           // order of extra speed assign does not matter, they all spawn at once.
           warheadSpeed + speedOffset,
-          waitBase + this.random.nextInt(0, 15),
+          waitBase + separationDelay,
         ),
       );
     }

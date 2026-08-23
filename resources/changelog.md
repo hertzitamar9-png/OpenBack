@@ -1,3 +1,12 @@
+## OpenBack v0.36.230 - Continuous MIRV Split, Unit Bulk Stacks, and Real Sea Glare
+
+- MIRVs now remain visible through separation: the first warhead crown appears on the exact split tick, then the remaining warheads peel away in staggered groups instead of the missile disappearing and reappearing near impact.
+- Tapping Shift now enables a five-second temporary added-unit number layer, refreshed by each 1-6 selection, so sequences such as Shift, 3, 1 work without holding Shift. Held Shift+number remains supported.
+- Runways, MANPADs, Military Bases, and Tank Mines now support the same 1x/5x stacking workflow and cumulative bulk pricing as original upgradeable structures.
+- Extended the exact pale blue-white shoreline ribbon highlighted in the reference screenshot across open water as sparse moving glare, travelling from four headings at different speeds in both Classic 2D and Immersive 3D without covering the sea in stripes.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.229 - Purpose-Built Aircraft, Tank, and MIRV Reticles
 
 - Replaced the shared heavy plus cursor with three clean targeting designs: corner brackets for Aircraft, a compact circular ground lock for Tanks, and a segmented red strike ring for MIRVs.

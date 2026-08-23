@@ -1,4 +1,10 @@
-import { PlayerInfo, PlayerType, UnitType } from "../../src/core/game/Game";
+import { ConstructionExecution } from "../../src/core/execution/ConstructionExecution";
+import {
+  bulkCost,
+  PlayerInfo,
+  PlayerType,
+  UnitType,
+} from "../../src/core/game/Game";
 import { setup } from "../util/Setup";
 
 describe("OpenBack added-unit pricing", () => {
@@ -58,6 +64,44 @@ describe("OpenBack added-unit pricing", () => {
       player.upgradeUnit(structure);
       expect(beforeStack - player.gold()).toBe(prices[1]);
       expect(game.unitInfo(type).cost(game, player)).toBe(prices[2]);
+    },
+  );
+
+  test.each([
+    UnitType.Runway,
+    UnitType.MANPAD,
+    UnitType.MilitaryBase,
+    UnitType.TankMine,
+  ] as const)(
+    "bulk-stacks five %s levels through the build intent path",
+    async (type) => {
+      const info = new PlayerInfo("player", PlayerType.Human, null, "player");
+      const game = await setup(
+        "plains",
+        { startingGold: 100_000_000, instantBuild: true },
+        [info],
+      );
+      const player = game.player(info.id);
+      const tile = game.ref(5, 5);
+      player.conquer(tile);
+      const structure = player.buildUnit(type, tile, {});
+      const before = player.gold();
+      let expected = 0n;
+      for (let i = 0; i < 5; i++) {
+        expected += game.unitInfo(type).cost(game, player, i);
+      }
+      const buildable = player.buildableUnits(tile, [type])[0];
+      expect(buildable.upgradeCosts?.length).toBeGreaterThanOrEqual(5);
+      expect(bulkCost(buildable, 5)).toBe(expected);
+
+      game.addExecution(
+        new ConstructionExecution(player, type, tile, undefined, 5),
+      );
+      game.executeNextTick();
+      game.executeNextTick();
+
+      expect(structure.level()).toBe(6);
+      expect(before - player.gold()).toBe(expected);
     },
   );
 });

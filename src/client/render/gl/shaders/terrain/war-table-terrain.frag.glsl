@@ -126,12 +126,36 @@ void main() {
     shine = 1.0 - shine;
     color = mix(color, shorelineTint, shine * 0.95 * seaDetail);
 
-    // White break still belongs only at the shoreline.
+    // The pale shoreline ribbon the map already uses is also the open-water
+    // glare language. Broken high-frequency fields send that same blue-white
+    // light across the sea from independent headings and speeds, rather than
+    // replacing it with an unrelated broad tint.
     float shoreBreak = sin(world.x * 0.18 + world.y * 0.13 - uTime * 1.8);
     float coastalBreak = shore
       ? smoothstep(0.58, 0.90, shoreBreak) * 0.55 * seaDetail
       : 0.0;
-    color = mix(color, vec3(0.90, 0.97, 1.0), coastalBreak);
+    float openGlare = max(
+      smoothstep(0.992, 0.9998, shineLayer(
+        world, vec2(1.0, 0.24), 0.070, 1.05, 0.7, uTime
+      )),
+      smoothstep(0.992, 0.9998, shineLayer(
+        world, vec2(-0.36, 1.0), 0.082, -0.82, 3.2, uTime
+      ))
+    );
+    openGlare = max(
+      openGlare,
+      smoothstep(0.992, 0.9998, shineLayer(
+        world, vec2(0.58, -1.0), 0.095, 1.18, 5.6, uTime
+      ))
+    );
+    openGlare = max(
+      openGlare,
+      smoothstep(0.992, 0.9998, shineLayer(
+        world, vec2(-1.0, -0.41), 0.058, -0.68, 8.1, uTime
+      ))
+    );
+    float boundaryGlare = max(coastalBreak, openGlare * 0.08 * seaDetail);
+    color = mix(color, vec3(0.90, 0.97, 1.0), boundaryGlare);
     if (shore) color = mix(color, color + vec3(0.05, 0.08, 0.09), 0.32);
   }
 

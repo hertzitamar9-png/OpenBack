@@ -631,9 +631,7 @@ export class BuildPreviewController implements Controller {
 
     const isNuke = u.type === UnitType.AtomBomb;
     const multiplier =
-      u.canUpgrade !== false || isNuke
-        ? (this.uiState.upgradeMultiplier ?? 1)
-        : 1;
+      canUpgrade || isNuke ? (this.uiState.upgradeMultiplier ?? 1) : 1;
     const cost = bulkCost(u, multiplier);
     // Drives the red cost label: gold short of the bulk total, or (for
     // bombs) fewer loaded silo tubes than the selected amount.
@@ -738,6 +736,16 @@ export class BuildPreviewController implements Controller {
       }
 
       const isNuke = unitType === UnitType.AtomBomb;
+      const isStackingAddedStructure =
+        STACKABLE_OPENBACK_TYPES.has(unitType) &&
+        myPlayer
+          .units(unitType as UnitType.Runway)
+          .some(
+            (unit) =>
+              unit.isActive() &&
+              !unit.isUnderConstruction() &&
+              unit.tile() === this.ghostUnit!.buildableUnit.canBuild,
+          );
       const rocketDirectionUp =
         unitType === UnitType.AtomBomb || unitType === UnitType.HydrogenBomb
           ? this.uiState.rocketDirectionUp
@@ -747,7 +755,9 @@ export class BuildPreviewController implements Controller {
           unitType,
           targetTile,
           rocketDirectionUp,
-          isNuke ? this.uiState.upgradeMultiplier || 1 : undefined,
+          isNuke || isStackingAddedStructure
+            ? this.uiState.upgradeMultiplier || 1
+            : undefined,
           unitType === UnitType.Plane
             ? myPlayer.troops() * this.uiState.attackRatio
             : undefined,

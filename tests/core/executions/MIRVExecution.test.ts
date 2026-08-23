@@ -104,16 +104,20 @@ describe("MIRVExecution", () => {
 
     while (mirvExec.isActive()) {
       game.executeNextTick();
+      expect(
+        player.units(UnitType.MIRV).length +
+          player.units(UnitType.MIRVWarhead).length,
+      ).toBeGreaterThan(0);
     }
 
     expect(player.units(UnitType.MIRV)).toHaveLength(0);
     expect(mirvExec.isActive()).toBe(false);
 
-    // Wait one tick for NukeExecution
-    executeTicks(game, 1);
-
     // Exact number of warheads may vary due to randomness, but should be more than 0
-    expect(player.units(UnitType.MIRVWarhead).length).toBeGreaterThan(0);
+    const visibleWarheads = player
+      .units(UnitType.MIRVWarhead)
+      .filter((warhead) => warhead.nukeState().waitTicks === 0);
+    expect(visibleWarheads.length).toBeGreaterThan(0);
   });
 
   test("MIRV warheads should only target tiles owned by target player", async () => {

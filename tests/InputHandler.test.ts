@@ -927,7 +927,7 @@ describe("InputHandler AutoUpgrade", () => {
       expect(uiState.ghostStructure).toBe(UnitType.Plane);
     });
 
-    test("the standalone Shift prefix is consumed by one number", () => {
+    test("the standalone Shift prefix stays armed for an added-unit sequence", () => {
       inputHandler = new InputHandler(
         mockGameView,
         uiState,
@@ -950,7 +950,7 @@ describe("InputHandler AutoUpgrade", () => {
       window.dispatchEvent(
         new KeyboardEvent("keyup", { code: "Digit2", shiftKey: false }),
       );
-      expect(uiState.ghostStructure).toBe(UnitType.Factory);
+      expect(uiState.ghostStructure).toBe(UnitType.MANPAD);
     });
 
     test("a held Shift chord does not arm another number afterward", () => {
