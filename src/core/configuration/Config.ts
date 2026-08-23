@@ -1101,8 +1101,19 @@ export class Config {
     return this.structureMinDist();
   }
 
+  /**
+   * How far from a runway or a military base a click still counts as
+   * ordering the vehicle parked there.
+   *
+   * This used to be structureMinDist -- 15 tiles, the spacing rule for
+   * buildings, which has nothing to do with aiming. Clicking open ground a
+   * long way off deployed a vehicle from a base that was nowhere near the
+   * cursor, and with two bases in range the click could snap to whichever
+   * one happened to be closer rather than the one under the pointer. Kept
+   * deliberately tight so the cursor means the base it is sitting on.
+   */
   openBackVehicleSnapRadius(): number {
-    return this.structureMinDist();
+    return 3;
   }
 
   defaultSamRange(): number {

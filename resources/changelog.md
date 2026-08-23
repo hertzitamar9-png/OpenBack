@@ -1,3 +1,10 @@
+## OpenBack v0.36.225 - Deploying a Vehicle Means the Base You Clicked
+
+- Ordering a tank or an aircraft now only works from right next to the runway or military base it comes from, instead of anywhere within fifteen tiles. Clicking open ground a long way off no longer launches a vehicle from a base nowhere near the cursor, and with two bases nearby the order goes to the one you are actually pointing at.
+- The range ring shown while deploying no longer measures from a runway or base whose vehicle is already out, so it stops promising a reach the click cannot deliver.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.224 - The Tank and Aircraft Cursor Reads Right Again
 
 - The deployment cursor for tanks and aircraft is white over a spot that will take the vehicle and grey over one that will not, at its full size, instead of the warship's red with no sign of whether the tile was in reach. The white and grey were written once and then lost in a version merge; they are back, and now held in place by tests.

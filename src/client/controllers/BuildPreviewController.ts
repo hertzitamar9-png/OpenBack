@@ -925,16 +925,31 @@ export class BuildPreviewController implements Controller {
     return 1;
   }
 
+  /**
+   * The runway or base a click near `hoverTile` would deploy from, matching
+   * the rule the simulation applies.
+   *
+   * A base that already has its vehicle parked on it is skipped, exactly as
+   * canSpawnUnitType does. Without that the preview measured its range ring
+   * from a runway the simulation would refuse to use, so the ring promised a
+   * reach the click could not deliver.
+   */
   private hoveredCompletedSourceTile(
     player: NonNullable<ReturnType<GameView["myPlayer"]>>,
     type: UnitType.Runway | UnitType.MilitaryBase,
     hoverTile: TileRef,
   ): TileRef | null {
     const rangeSquared = this.game.config().openBackVehicleSnapRadius() ** 2;
+    const parkedOn = new Set<TileRef>();
+    const vehicle = type === UnitType.Runway ? UnitType.Plane : UnitType.Tank;
+    for (const unit of player.units(vehicle)) {
+      if (unit.isActive()) parkedOn.add(unit.tile());
+    }
     let best: TileRef | null = null;
     let bestDistance = Infinity;
     for (const unit of player.units(type)) {
       if (!unit.isActive() || unit.isUnderConstruction()) continue;
+      if (parkedOn.has(unit.tile())) continue;
       const distance = this.game.euclideanDistSquared(unit.tile(), hoverTile);
       if (distance <= rangeSquared && distance < bestDistance) {
         best = unit.tile();
