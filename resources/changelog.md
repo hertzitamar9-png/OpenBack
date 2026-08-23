@@ -1,3 +1,10 @@
+## OpenBack v0.36.226 - Every Page Is Just the Address
+
+- Moving around the site no longer writes a path into the address bar. The play screen, the store, your inventory, the leaderboard, clans, settings, news, help and the legal pages all sit on the plain address instead of things like /play/2d or /store/packs, and the rendering mode is no longer part of the URL.
+- Links that name something a person can open still keep their address, so sharing a profile, a game's stats, a clan or a written article works exactly as before. Older bookmarks and shared links still open the right page.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.230 - Continuous MIRV Split, Unit Bulk Stacks, and Real Sea Glare
 
 - MIRVs now remain visible through separation: the first warhead crown appears on the exact split tick, then the remaining warheads peel away in staggered groups instead of the missile disappearing and reappearing near impact.

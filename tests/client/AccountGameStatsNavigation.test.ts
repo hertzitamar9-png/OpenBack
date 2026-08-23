@@ -262,7 +262,7 @@ describe("Account Games stats navigation", () => {
       expect(modal.querySelector("player-game-history-view")).not.toBeNull();
       expect(shell.getScrollTop()).toBe(420);
     });
-    expect(window.location.pathname).toBe("/account/games");
+    expect(window.location.pathname).toBe("/");
 
     expect(fetchPublicPlayerGames).toHaveBeenCalledOnce();
   });

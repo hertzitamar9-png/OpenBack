@@ -102,7 +102,7 @@ describe("nav-account-menu", () => {
 
     expect(menu()).toBeNull();
     expect(itemKeys()).toEqual([]);
-    expect(location.pathname).toBe("/account");
+    expect(location.pathname).toBe("/");
     expect(showPage).toHaveBeenCalledWith("page-account", {});
   });
 
@@ -116,7 +116,7 @@ describe("nav-account-menu", () => {
     await click(trigger());
     expect(itemKeys()).toEqual([]);
     expect(menu()).toBeNull();
-    expect(location.pathname).toBe("/account");
+    expect(location.pathname).toBe("/");
   });
 
   it("uses the same one-click signed-out control on mobile", async () => {
@@ -131,7 +131,7 @@ describe("nav-account-menu", () => {
     await click(trigger());
 
     expect(menu()).toBeNull();
-    expect(location.pathname).toBe("/account");
+    expect(location.pathname).toBe("/");
     expect(showPage).toHaveBeenCalledWith("page-account", {});
   });
 

@@ -84,6 +84,6 @@ describe("OpenBack content routes", () => {
 
     const back = modal.querySelector<HTMLButtonElement>("[data-modal-back]")!;
     back.click();
-    await vi.waitFor(() => expect(location.pathname).toBe("/tutorials"));
+    await vi.waitFor(() => expect(location.pathname).toBe("/"));
   });
 });

@@ -355,7 +355,7 @@ describe("StoreModal cosmetic browser", () => {
       ...store.querySelectorAll<HTMLButtonElement>("button"),
     ].find((button) => button.textContent?.trim() === "store.crowns")!;
     crowns.click();
-    expect(location.pathname).toBe("/store/cosmetics/crowns");
+    expect(location.pathname).toBe("/");
   });
 
   it("selects the first visible item and purchases the selected variant", async () => {

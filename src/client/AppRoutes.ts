@@ -126,7 +126,7 @@ function invalid(): RouteResolution {
 export function parseAppUrl(url: URL): RouteResolution {
   if (isReserved(url)) return { kind: "reserved" };
 
-  if (url.pathname === "/") return app(PLAY, `/play/2d${url.search}`);
+  if (url.pathname === "/") return app(withQuery({ ...PLAY }, url.search));
 
   const simple = SIMPLE_PATHS.get(url.pathname);
   if (simple) return app(withQuery({ ...simple }, url.search));
@@ -192,7 +192,9 @@ export function parseAppUrl(url: URL): RouteResolution {
 
   if (section === "store") {
     if (segments.length === 1) {
-      return app({ pageId: "page-item-store", tab: "packs" }, "/store/packs");
+      return app(
+        withQuery({ pageId: "page-item-store", tab: "packs" }, url.search),
+      );
     }
     if (!second || !STORE_TABS.has(second)) return invalid();
     if (second !== "cosmetics") {
@@ -210,7 +212,6 @@ export function parseAppUrl(url: URL): RouteResolution {
           },
           url.search,
         ),
-        `/store/cosmetics/patterns${url.search}`,
       );
     }
     return segments.length === 3 && third && STORE_COSMETIC_TABS.has(third)
@@ -226,8 +227,7 @@ export function parseAppUrl(url: URL): RouteResolution {
   if (section === "inventory") {
     if (segments.length === 1) {
       return app(
-        { pageId: "page-inventory", tab: "skins" },
-        "/inventory/skins",
+        withQuery({ pageId: "page-inventory", tab: "skins" }, url.search),
       );
     }
     return segments.length === 2 && second && INVENTORY_TABS.has(second)
@@ -238,8 +238,7 @@ export function parseAppUrl(url: URL): RouteResolution {
   if (section === "leaderboard") {
     if (segments.length === 1) {
       return app(
-        { pageId: "page-leaderboard", tab: "players" },
-        "/leaderboard/1v1",
+        withQuery({ pageId: "page-leaderboard", tab: "players" }, url.search),
       );
     }
     const tab = second ? LEADERBOARD_PATH_TO_TAB.get(second) : undefined;
@@ -280,7 +279,9 @@ export function parseAppUrl(url: URL): RouteResolution {
 
   if (section === "clans") {
     if (segments.length === 1) {
-      return app({ pageId: "page-clan", tab: "my-clans" }, "/clans/my-clans");
+      return app(
+        withQuery({ pageId: "page-clan", tab: "my-clans" }, url.search),
+      );
     }
     if (segments.length === 2 && second && CLAN_LIST_TABS.has(second)) {
       return app(withQuery({ pageId: "page-clan", tab: second }, url.search));
@@ -300,7 +301,9 @@ export function parseAppUrl(url: URL): RouteResolution {
 
   if (section === "settings") {
     if (segments.length === 1) {
-      return app({ pageId: "page-settings", tab: "basic" }, "/settings/basic");
+      return app(
+        withQuery({ pageId: "page-settings", tab: "basic" }, url.search),
+      );
     }
     return segments.length === 2 && second && SETTINGS_TABS.has(second)
       ? app(withQuery({ pageId: "page-settings", tab: second }, url.search))
@@ -320,68 +323,81 @@ function requireValue(value: string | undefined, name: string): string {
   return encodeURIComponent(value);
 }
 
+/**
+ * Pages that carry no identity of their own live at the base URL.
+ *
+ * Navigating used to write a path for the page you were on -- /play/2d,
+ * /store/packs, /settings/basic -- which put the app's internal page names and
+ * the rendering mode in the address bar for no one's benefit. Only a link that
+ * names something another person could open keeps a path: a player's profile,
+ * one game's stats, a clan, a written article. Everything else is the base URL.
+ */
 export function pathForTarget(target: AppRouteTarget): string {
   const suffix = querySuffix(target);
   switch (target.pageId) {
     case "page-play":
-      return `/play/${target.experienceMode ?? "2d"}${suffix}`;
+      return `/${suffix}`;
     case "page-news":
-      return `/news${suffix}`;
+      return `/${suffix}`;
     case "page-help":
-      return `/help${suffix}`;
+      return `/${suffix}`;
     case "page-troubleshooting":
-      return `/help/troubleshooting${suffix}`;
+      return `/${suffix}`;
     case "page-tutorials":
       return target.article
         ? `/tutorials/${encodeURIComponent(target.article)}${suffix}`
-        : `/tutorials${suffix}`;
+        : `/${suffix}`;
     case "page-blog":
       return target.article
         ? `/blog/${encodeURIComponent(target.article)}${suffix}`
-        : `/blog${suffix}`;
+        : `/${suffix}`;
     case "page-terms":
-      return `/terms${suffix}`;
+      return `/${suffix}`;
     case "page-privacy":
-      return `/privacy${suffix}`;
+      return `/${suffix}`;
     case "page-language":
-      return `/language${suffix}`;
+      return `/${suffix}`;
     case "page-single-player":
-      return `/solo/${target.experienceMode ?? "2d"}${suffix}`;
+      return `/${suffix}`;
     case "page-ranked":
-      return `/ranked/${target.experienceMode ?? "2d"}${suffix}`;
+      return `/${suffix}`;
     case "page-host-lobby":
-      return `/multiplayer/host/${target.experienceMode ?? "2d"}${suffix}`;
+      return `/${suffix}`;
     case "page-join-lobby":
-      return `/multiplayer/join/${target.experienceMode ?? "2d"}${suffix}`;
+      return `/${suffix}`;
     case "page-item-store": {
       const tab = target.tab ?? "packs";
       if (!STORE_TABS.has(tab)) throw new Error(`Unknown Store tab: ${tab}`);
-      if (tab !== "cosmetics") return `/store/${tab}${suffix}`;
-      const subtab = target.subtab ?? "patterns";
-      if (!STORE_COSMETIC_TABS.has(subtab)) {
-        throw new Error(`Unknown Store cosmetic tab: ${subtab}`);
+      if (tab === "cosmetics") {
+        const subtab = target.subtab ?? "patterns";
+        if (!STORE_COSMETIC_TABS.has(subtab)) {
+          throw new Error(`Unknown Store cosmetic tab: ${subtab}`);
+        }
       }
-      return `/store/cosmetics/${subtab}${suffix}`;
+      return `/${suffix}`;
     }
     case "page-inventory": {
       const tab = target.tab ?? "skins";
       if (!INVENTORY_TABS.has(tab)) {
         throw new Error(`Unknown Inventory tab: ${tab}`);
       }
-      return `/inventory/${tab}${suffix}`;
+      return `/${suffix}`;
     }
     case "page-leaderboard": {
       const tab = target.tab ?? "players";
-      const path = LEADERBOARD_TAB_TO_PATH.get(tab);
-      if (!path) throw new Error(`Unknown Leaderboard tab: ${tab}`);
-      return `/leaderboard/${path}${suffix}`;
+      if (!LEADERBOARD_TAB_TO_PATH.has(tab)) {
+        throw new Error(`Unknown Leaderboard tab: ${tab}`);
+      }
+      return `/${suffix}`;
     }
     case "page-account": {
-      if (!target.tab) return `/account${suffix}`;
-      const tab = target.tab === "profile" ? "account" : target.tab;
-      if (!ACCOUNT_TABS.has(tab))
-        throw new Error(`Unknown Account tab: ${tab}`);
-      return `/account/${tab === "account" ? "profile" : tab}${suffix}`;
+      if (target.tab) {
+        const tab = target.tab === "profile" ? "account" : target.tab;
+        if (!ACCOUNT_TABS.has(tab)) {
+          throw new Error(`Unknown Account tab: ${tab}`);
+        }
+      }
+      return `/${suffix}`;
     }
     case "page-profile": {
       const publicID = requireValue(target.publicID, "publicID");
@@ -397,7 +413,7 @@ export function pathForTarget(target: AppRouteTarget): string {
         const tab = target.tab ?? "my-clans";
         if (!CLAN_LIST_TABS.has(tab))
           throw new Error(`Unknown Clan tab: ${tab}`);
-        return `/clans/${tab}${suffix}`;
+        return `/${suffix}`;
       }
       const tab = target.tab ?? "overview";
       if (!CLAN_DETAIL_TABS.has(tab)) {
@@ -409,7 +425,7 @@ export function pathForTarget(target: AppRouteTarget): string {
       const tab = target.tab ?? "basic";
       if (!SETTINGS_TABS.has(tab))
         throw new Error(`Unknown Settings tab: ${tab}`);
-      return `/settings/${tab}${suffix}`;
+      return `/${suffix}`;
     }
   }
 }

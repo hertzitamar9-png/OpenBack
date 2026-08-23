@@ -62,7 +62,7 @@ describe("subscription-panel", () => {
 
     // Without this the popup subscription modal stayed open behind the store.
     expect(closes).toHaveLength(1);
-    expect(window.location.pathname).toBe("/store/subscriptions");
+    expect(window.location.pathname).toBe("/");
   });
 
   it("swaps the actions for a subscription that is winding down", async () => {

@@ -129,7 +129,7 @@ describe("public player profile route", () => {
     backButton.click();
 
     expect(modal.isOpen()).toBe(false);
-    expect(window.location.pathname).toBe("/play/2d");
+    expect(window.location.pathname).toBe("/");
   });
 
   it("shows not-found when the profile fetch fails", async () => {

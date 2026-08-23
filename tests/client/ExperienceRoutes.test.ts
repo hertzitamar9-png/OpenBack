@@ -10,18 +10,23 @@ const url = (path: string) => new URL(path, "https://openback.test");
 describe("Twin World experience navigation", () => {
   afterEach(() => localStorage.clear());
 
-  it("uses clean experience routes and migrates old play paths to 2D", () => {
+  // The experience is remembered state, not an address. An old /play/3d link
+  // still selects the 3D world; it just does not leave "3d" in the bar.
+  it("keeps the experience out of the URL while still honouring old links", () => {
     expect(parseAppUrl(url("/play/3d"))).toMatchObject({
       kind: "app",
       target: { pageId: "page-play", experienceMode: "3d" },
-      canonicalPath: "/play/3d",
+      canonicalPath: "/",
     });
     expect(parseAppUrl(url("/solo"))).toMatchObject({
       target: { pageId: "page-single-player", experienceMode: "2d" },
-      canonicalPath: "/solo/2d",
+      canonicalPath: "/",
     });
     expect(pathForTarget({ pageId: "page-ranked", experienceMode: "3d" })).toBe(
-      "/ranked/3d",
+      "/",
+    );
+    expect(pathForTarget({ pageId: "page-play", experienceMode: "2d" })).toBe(
+      "/",
     );
   });
 

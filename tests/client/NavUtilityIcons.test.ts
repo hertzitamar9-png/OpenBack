@@ -60,7 +60,7 @@ describe("nav utility icons", () => {
     expect(settings.className).not.toContain("drop-shadow");
 
     settings.click();
-    expect(location.pathname).toBe("/settings/basic");
+    expect(location.pathname).toBe("/");
     expect(showPage).toHaveBeenCalledWith("page-settings", { tab: "basic" });
   });
 });

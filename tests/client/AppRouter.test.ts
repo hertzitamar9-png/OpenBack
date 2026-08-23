@@ -57,7 +57,7 @@ describe("AppRouter", () => {
   it("pushes user navigation and opens the registered page once", async () => {
     await router.navigate({ pageId: "page-news" });
 
-    expect(location.pathname).toBe("/news");
+    expect(location.pathname).toBe("/");
     expect(window.showPage).toHaveBeenCalledOnce();
     expect(window.showPage).toHaveBeenCalledWith("page-news", {});
     expect(news.open).toHaveBeenCalledOnce();
@@ -72,7 +72,7 @@ describe("AppRouter", () => {
       expect(settings.open).toHaveBeenCalledWith({ tab: "keybinds" });
     });
 
-    expect(location.pathname).toBe("/settings/keybinds");
+    expect(location.pathname).toBe("/");
     expect(window.showPage).toHaveBeenLastCalledWith("page-settings", {
       tab: "keybinds",
     });
@@ -83,7 +83,7 @@ describe("AppRouter", () => {
 
     expect(await router.start()).toBe(true);
 
-    expect(location.pathname).toBe("/news");
+    expect(location.pathname).toBe("/");
     expect(location.hash).toBe("");
     expect(news.open).toHaveBeenCalledOnce();
   });
@@ -93,7 +93,7 @@ describe("AppRouter", () => {
 
     expect(await router.start()).toBe(true);
 
-    expect(location.pathname).toBe("/settings/basic");
+    expect(location.pathname).toBe("/");
     expect(settings.open).toHaveBeenCalledWith({ tab: "basic" });
   });
 
@@ -111,7 +111,7 @@ describe("AppRouter", () => {
 
     router.syncTab("settings", "keybinds");
 
-    expect(location.pathname).toBe("/settings/keybinds");
+    expect(location.pathname).toBe("/");
     expect(window.showPage).not.toHaveBeenCalled();
     expect(settings.open).not.toHaveBeenCalled();
   });

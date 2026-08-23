@@ -300,11 +300,11 @@ describe("Cosmetic locker integration", () => {
   it("preserves the Inventory route tab and clears empty Store products", async () => {
     inventory.open({ tab: "skins" });
     await inventory.updateComplete;
-    expect(window.location.pathname).toBe("/inventory/skins");
+    expect(window.location.pathname).toBe("/");
 
     inventory.setActiveTab("effects");
     await inventory.updateComplete;
-    expect(window.location.pathname).toBe("/inventory/effects");
+    expect(window.location.pathname).toBe("/");
 
     history.replaceState(null, "", "/inventory/crowns");
     expect(await appRouter.start()).toBe(true);
@@ -313,7 +313,7 @@ describe("Cosmetic locker integration", () => {
         "crowns",
       ),
     );
-    expect(window.location.pathname).toBe("/inventory/crowns");
+    expect(window.location.pathname).toBe("/");
 
     store.open({ tab: "cosmetics" });
     await vi.waitFor(() =>

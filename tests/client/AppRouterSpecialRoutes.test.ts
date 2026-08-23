@@ -61,7 +61,7 @@ describe("AppRouter special route and leave protection", () => {
 
     expect(await router.navigate({ pageId: "page-news" })).toBe(true);
 
-    expect(location.pathname).toBe("/news");
+    expect(location.pathname).toBe("/");
     expect(showPage).toHaveBeenCalledWith("page-news", {});
   });
 

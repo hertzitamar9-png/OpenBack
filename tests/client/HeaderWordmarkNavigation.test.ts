@@ -62,7 +62,7 @@ describe("OpenBack header wordmark navigation", () => {
       expect(navigation.querySelector("img")?.closest("button")).toBeNull();
 
       control?.click();
-      expect(location.pathname).toBe("/play/2d");
+      expect(location.pathname).toBe("/");
       expect(showPage).toHaveBeenCalledWith("page-play", {});
     });
   }

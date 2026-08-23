@@ -111,7 +111,7 @@ describe("Inventory navigation", () => {
     desktop.querySelector<HTMLElement>('[data-page="page-inventory"]')!.click();
 
     await vi.waitFor(() => {
-      expect(window.location.pathname).toBe("/inventory/skins");
+      expect(window.location.pathname).toBe("/");
     });
     expect(
       desktop
@@ -120,7 +120,7 @@ describe("Inventory navigation", () => {
     ).toBe(true);
 
     inventory.setActiveTab("effects");
-    expect(window.location.pathname).toBe("/inventory/effects");
+    expect(window.location.pathname).toBe("/");
 
     inventory.close();
     history.replaceState(null, "", "/inventory/crowns");
@@ -130,6 +130,6 @@ describe("Inventory navigation", () => {
         "crowns",
       );
     });
-    expect(window.location.pathname).toBe("/inventory/crowns");
+    expect(window.location.pathname).toBe("/");
   });
 });

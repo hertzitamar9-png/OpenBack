@@ -9,21 +9,16 @@ import {
 const url = (path: string) => new URL(path, "https://openback.test");
 
 describe("AppRoutes", () => {
+  // Every page that is not a link to something in particular now lives at the
+  // base URL. Old paths still resolve -- a bookmark or a shared link keeps
+  // working -- they just canonicalise to "/" instead of staying in the bar.
   it.each<[string, AppRouteTarget]>([
     ["/play/2d", { pageId: "page-play", experienceMode: "2d" }],
     ["/news", { pageId: "page-news" }],
     ["/help", { pageId: "page-help" }],
     ["/help/troubleshooting", { pageId: "page-troubleshooting" }],
     ["/tutorials", { pageId: "page-tutorials" }],
-    [
-      "/tutorials/getting-started",
-      { pageId: "page-tutorials", article: "getting-started" },
-    ],
     ["/blog", { pageId: "page-blog" }],
-    [
-      "/blog/living-game-updates",
-      { pageId: "page-blog", article: "living-game-updates" },
-    ],
     ["/terms", { pageId: "page-terms" }],
     ["/privacy", { pageId: "page-privacy" }],
     ["/language", { pageId: "page-language" }],
@@ -39,16 +34,41 @@ describe("AppRoutes", () => {
     ],
     [
       "/store/cosmetics/flags",
-      {
-        pageId: "page-item-store",
-        tab: "cosmetics",
-        subtab: "flags",
-      },
+      { pageId: "page-item-store", tab: "cosmetics", subtab: "flags" },
     ],
     ["/inventory/effects", { pageId: "page-inventory", tab: "effects" }],
     ["/leaderboard/3v3", { pageId: "page-leaderboard", tab: "players3v3" }],
     ["/account/friends", { pageId: "page-account", tab: "friends" }],
     ["/account/profile", { pageId: "page-account", tab: "account" }],
+    ["/settings/keybinds", { pageId: "page-settings", tab: "keybinds" }],
+    ["/", { pageId: "page-play", experienceMode: "2d" }],
+    ["/solo", { pageId: "page-single-player", experienceMode: "2d" }],
+    ["/ranked", { pageId: "page-ranked", experienceMode: "2d" }],
+    ["/multiplayer/host", { pageId: "page-host-lobby", experienceMode: "2d" }],
+    ["/multiplayer/join", { pageId: "page-join-lobby", experienceMode: "2d" }],
+    ["/store", { pageId: "page-item-store", tab: "packs" }],
+    ["/inventory", { pageId: "page-inventory", tab: "skins" }],
+    ["/leaderboard", { pageId: "page-leaderboard", tab: "players" }],
+    ["/settings", { pageId: "page-settings", tab: "basic" }],
+    ["/clans", { pageId: "page-clan", tab: "my-clans" }],
+  ])("resolves %s and canonicalises it to the base URL", (path, target) => {
+    expect(parseAppUrl(url(path))).toEqual({
+      kind: "app",
+      target,
+      canonicalPath: "/",
+    });
+  });
+
+  // A link that names something another person could open keeps its path.
+  it.each<[string, AppRouteTarget]>([
+    [
+      "/tutorials/getting-started",
+      { pageId: "page-tutorials", article: "getting-started" },
+    ],
+    [
+      "/blog/living-game-updates",
+      { pageId: "page-blog", article: "living-game-updates" },
+    ],
     [
       "/profile/a%2Bb/games",
       { pageId: "page-profile", publicID: "a+b", tab: "games" },
@@ -58,8 +78,7 @@ describe("AppRoutes", () => {
       "/clans/T%26T/members",
       { pageId: "page-clan", clan: "T&T", tab: "members" },
     ],
-    ["/settings/keybinds", { pageId: "page-settings", tab: "keybinds" }],
-  ])("parses %s", (path, target) => {
+  ])("keeps the shareable path %s", (path, target) => {
     expect(parseAppUrl(url(path))).toEqual({
       kind: "app",
       target,
@@ -67,58 +86,57 @@ describe("AppRoutes", () => {
     });
   });
 
-  it.each([
-    ["/", "/play/2d", { pageId: "page-play", experienceMode: "2d" }],
-    [
-      "/solo",
-      "/solo/2d",
-      { pageId: "page-single-player", experienceMode: "2d" },
-    ],
-    ["/ranked", "/ranked/2d", { pageId: "page-ranked", experienceMode: "2d" }],
-    [
-      "/multiplayer/host",
-      "/multiplayer/host/2d",
-      { pageId: "page-host-lobby", experienceMode: "2d" },
-    ],
-    [
-      "/multiplayer/join",
-      "/multiplayer/join/2d",
-      { pageId: "page-join-lobby", experienceMode: "2d" },
-    ],
-    ["/store", "/store/packs", { pageId: "page-item-store", tab: "packs" }],
-    [
-      "/inventory",
-      "/inventory/skins",
-      { pageId: "page-inventory", tab: "skins" },
-    ],
-    [
-      "/leaderboard",
-      "/leaderboard/1v1",
-      { pageId: "page-leaderboard", tab: "players" },
-    ],
-    ["/settings", "/settings/basic", { pageId: "page-settings", tab: "basic" }],
-    ["/clans", "/clans/my-clans", { pageId: "page-clan", tab: "my-clans" }],
-  ])("canonicalizes %s to %s", (path, canonicalPath, target) => {
-    expect(parseAppUrl(url(path))).toEqual({
-      kind: "app",
-      target,
-      canonicalPath,
-    });
-  });
-
   it.each<AppRouteTarget>([
+    { pageId: "page-play", experienceMode: "2d" },
+    { pageId: "page-play", experienceMode: "3d" },
+    { pageId: "page-news" },
+    { pageId: "page-single-player", experienceMode: "3d" },
+    { pageId: "page-host-lobby", experienceMode: "3d" },
     { pageId: "page-item-store", tab: "subscriptions" },
+    { pageId: "page-item-store", tab: "cosmetics", subtab: "crowns" },
     { pageId: "page-inventory", tab: "crowns" },
     { pageId: "page-leaderboard", tab: "players4v4" },
     { pageId: "page-account", tab: "stats" },
+    { pageId: "page-settings", tab: "keybinds" },
+    { pageId: "page-clan", tab: "my-clans" },
+  ])("writes no path for page %#", (target) => {
+    // Neither the app's internal page names nor the rendering mode belong in
+    // the address bar.
+    expect(pathForTarget(target)).toBe("/");
+  });
+
+  it("keeps a query string on the base URL", () => {
+    expect(
+      pathForTarget({
+        pageId: "page-play",
+        experienceMode: "3d",
+        query: new URLSearchParams("join=AbCd1234"),
+      }),
+    ).toBe("/?join=AbCd1234");
+  });
+
+  it.each<AppRouteTarget>([
     { pageId: "page-profile", publicID: "a+b", tab: "clans" },
     { pageId: "page-clan", clan: "T&T", tab: "game-history" },
     { pageId: "page-blog", article: "dynamic-world-mechanics" },
-  ])("round-trips %#", (target) => {
+    { pageId: "page-tutorials", article: "getting-started" },
+    { pageId: "page-stats", gameID: "game-1" },
+  ])("round-trips the shareable target %#", (target) => {
     expect(parseAppUrl(url(pathForTarget(target)))).toMatchObject({
       kind: "app",
       target,
     });
+  });
+
+  it("still rejects a tab that does not exist", () => {
+    // The tab is no longer in the URL, but it is still validated -- a typo in
+    // calling code should fail loudly rather than silently open the default.
+    expect(() =>
+      pathForTarget({ pageId: "page-item-store", tab: "not-a-tab" }),
+    ).toThrow();
+    expect(() =>
+      pathForTarget({ pageId: "page-settings", tab: "not-a-tab" }),
+    ).toThrow();
   });
 
   it.each([
