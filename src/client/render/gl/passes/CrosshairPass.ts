@@ -39,6 +39,13 @@ export function aimsAtADestination(ghostType: string | undefined): boolean {
   );
 }
 
+export function reticleStyleForGhost(ghostType: string | undefined): number {
+  if (ghostType === UT_PLANE) return 1;
+  if (ghostType === UT_TANK) return 2;
+  if (ghostType === UT_MIRV) return 3;
+  return 0;
+}
+
 export class CrosshairPass {
   private gl: WebGL2RenderingContext;
   private program: WebGLProgram;
@@ -50,6 +57,7 @@ export class CrosshairPass {
   private uViewport: WebGLUniformLocation;
   private uColor: WebGLUniformLocation;
   private uIsDiagonal: WebGLUniformLocation;
+  private uReticleStyle: WebGLUniformLocation;
   private uAlpha: WebGLUniformLocation;
   private uStatusAtlas: WebGLUniformLocation;
   private uHasAtlas: WebGLUniformLocation;
@@ -68,6 +76,7 @@ export class CrosshairPass {
   private centerX = 0;
   private centerY = 0;
   private canBuild = false;
+  private reticleStyle = 0;
 
   private blockedXTile: {
     x: number;
@@ -86,6 +95,7 @@ export class CrosshairPass {
     this.uViewport = gl.getUniformLocation(this.program, "uViewport")!;
     this.uColor = gl.getUniformLocation(this.program, "uColor")!;
     this.uIsDiagonal = gl.getUniformLocation(this.program, "uIsDiagonal")!;
+    this.uReticleStyle = gl.getUniformLocation(this.program, "uReticleStyle")!;
     this.uAlpha = gl.getUniformLocation(this.program, "uAlpha")!;
     this.uStatusAtlas = gl.getUniformLocation(this.program, "uStatusAtlas")!;
     this.uHasAtlas = gl.getUniformLocation(this.program, "uHasAtlas")!;
@@ -130,6 +140,7 @@ export class CrosshairPass {
       this.canBuild = data.canBuild || data.canUpgrade;
       this.neutralVehicleCursor =
         data.ghostType === UT_PLANE || data.ghostType === UT_TANK;
+      this.reticleStyle = reticleStyleForGhost(data.ghostType);
     } else {
       this.active = false;
     }
@@ -175,6 +186,7 @@ export class CrosshairPass {
         );
         gl.uniform3f(this.uColor, 1.0, 0.05, 0.05); // bright red blocked X
         gl.uniform1f(this.uIsDiagonal, 1.0);
+        gl.uniform1f(this.uReticleStyle, 0.0);
         gl.uniform1f(this.uAlpha, animAlpha);
         gl.bindVertexArray(this.vao);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -188,9 +200,16 @@ export class CrosshairPass {
     gl.useProgram(this.program);
     gl.uniformMatrix3fv(this.uCamera, false, cameraMatrix);
     gl.uniform2f(this.uCenter, this.centerX, this.centerY);
-    gl.uniform1f(this.uHalfSize, CROSSHAIR_PX);
+    const halfSize =
+      this.reticleStyle === 1
+        ? 26
+        : this.reticleStyle === 3
+          ? 27
+          : CROSSHAIR_PX;
+    gl.uniform1f(this.uHalfSize, halfSize);
     gl.uniform2f(this.uViewport, gl.drawingBufferWidth, gl.drawingBufferHeight);
     gl.uniform1f(this.uIsDiagonal, 0.0);
+    gl.uniform1f(this.uReticleStyle, this.reticleStyle);
     gl.uniform1f(this.uAlpha, 1.0);
 
     if (this.neutralVehicleCursor && this.canBuild) {

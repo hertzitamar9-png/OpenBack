@@ -1,7 +1,10 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { aimsAtADestination } from "../../../src/client/render/gl/passes/CrosshairPass";
+import {
+  aimsAtADestination,
+  reticleStyleForGhost,
+} from "../../../src/client/render/gl/passes/CrosshairPass";
 import {
   UT_CITY,
   UT_MIRV,
@@ -62,6 +65,13 @@ describe("the tank and aircraft cursor colours", () => {
     );
   });
 
+  it("gives aircraft, tanks, and MIRVs distinct reticle geometry", () => {
+    expect(reticleStyleForGhost(UT_PLANE)).toBe(1);
+    expect(reticleStyleForGhost(UT_TANK)).toBe(2);
+    expect(reticleStyleForGhost(UT_MIRV)).toBe(3);
+    expect(reticleStyleForGhost(UT_WARSHIP)).toBe(0);
+  });
+
   it("goes white on a tile that takes it and grey on one that does not", () => {
     expect(src).toContain(
       "if (this.neutralVehicleCursor && this.canBuild) {\n" +
@@ -93,8 +103,12 @@ describe("the tank and aircraft cursor colours", () => {
       ),
       "utf8",
     );
-    expect(shader).toContain("NORMAL_OUTLINE_HALF_W");
-    expect(shader).toContain("mix(OUTLINE_BLACK, uColor, innerBlend)");
+    expect(shader).toContain("Aircraft: four light corner brackets");
+    expect(shader).toContain("Tank: compact circular ground lock");
+    expect(shader).toContain("MIRV: unmistakable segmented strike lock");
+    expect(shader).toContain(
+      "mix(OUTLINE_BLACK, uColor, clamp(innerBlend, 0.0, 1.0))",
+    );
   });
 
   it("draws the interaction cursor after structure artwork", () => {

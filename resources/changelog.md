@@ -1,3 +1,10 @@
+## OpenBack v0.36.229 - Purpose-Built Aircraft, Tank, and MIRV Reticles
+
+- Replaced the shared heavy plus cursor with three clean targeting designs: corner brackets for Aircraft, a compact circular ground lock for Tanks, and a segmented red strike ring for MIRVs.
+- Preserved Aircraft and Tank white/grey placement validity, but reduced the outline weight and kept each reticle compact so it reads clearly without covering the unit or destination.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.228 - Reliable Vehicle Cursor, Radius, and Shift Prefix
 
 - Aircraft and Tank placement now uses the visible Runway or Military Base icon under the pointer as the authoritative source, so every pixel of the icon validates consistently and a white crosshair always produces the same successful click. Both cursor colours now have a dark outline and render above vehicle artwork, so white cannot disappear against snow, sand, bright terrain, or the vehicle itself.
