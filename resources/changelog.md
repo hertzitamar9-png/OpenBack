@@ -1,3 +1,12 @@
+## OpenBack v0.36.228 - Reliable Vehicle Cursor, Radius, and Shift Prefix
+
+- Aircraft and Tank placement now uses the visible Runway or Military Base icon under the pointer as the authoritative source, so every pixel of the icon validates consistently and a white crosshair always produces the same successful click. Both cursor colours now have a dark outline and render above vehicle artwork, so white cannot disappear against snow, sand, bright terrain, or the vehicle itself.
+- Grey vehicle clicks no longer cancel the selected Aircraft or Tank, preventing the crosshair from disappearing while choosing another source or destination.
+- Hovering directly over a completed Runway or Military Base now shows its range even while Aircraft or Tank is selected and even when that source already has a parked vehicle.
+- Added-unit shortcuts now support a Shift prefix: tap and release Shift, then press 1-6 within three seconds. Existing held Shift+number shortcuts continue to work.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.227 - Sharp Featured Map Preview
 
 - Fixed the large featured map picture on the home screen loading the same small baseline image as the narrow cards and stretching it across roughly twice the width. The large desktop card and the featured mobile card now start from the double-resolution map artwork, while the smaller cards keep their lighter responsive images.

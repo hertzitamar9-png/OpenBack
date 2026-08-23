@@ -84,4 +84,26 @@ describe("the tank and aircraft cursor colours", () => {
     // Dropped to 20 by the same merge; the aiming cursor is drawn at 24.
     expect(src).toContain("const CROSSHAIR_PX = 24;");
   });
+
+  it("keeps the white and grey cursor visible over light terrain", () => {
+    const shader = readFileSync(
+      resolve(
+        process.cwd(),
+        "src/client/render/gl/shaders/crosshair/crosshair.frag.glsl",
+      ),
+      "utf8",
+    );
+    expect(shader).toContain("NORMAL_OUTLINE_HALF_W");
+    expect(shader).toContain("mix(OUTLINE_BLACK, uColor, innerBlend)");
+  });
+
+  it("draws the interaction cursor after structure artwork", () => {
+    const renderer = readFileSync(
+      resolve(process.cwd(), "src/client/render/gl/Renderer.ts"),
+      "utf8",
+    );
+    expect(renderer.indexOf("this.crosshairPass.draw(cam)")).toBeGreaterThan(
+      renderer.indexOf("this.structurePass.draw(cam, zoom)"),
+    );
+  });
 });

@@ -1740,7 +1740,6 @@ export class GPURenderer {
     this.samRadiusPass.draw(cam);
     this.rangeCirclePass.draw(cam);
     this.nukeTrajectoryPass.draw(cam);
-    this.crosshairPass.draw(cam);
     this.parkedVehicleGlowPass.draw(cam, this.frameTick);
     if (pe.structure && !omitWorldObjects) this.structurePass.draw(cam, zoom);
     if (pe.structure && !omitWorldObjects)
@@ -1751,6 +1750,10 @@ export class GPURenderer {
         screenFacingScale,
       );
     if (pe.bar && !omitWorldObjects) this.barPass.draw(cam);
+    // A placement cursor is interaction UI, not a world object. Keep it above
+    // the vehicle/structure ghost so a white cursor cannot disappear exactly
+    // where the player must click the Runway or Military Base.
+    this.crosshairPass.draw(cam);
     this.updateSelectionBox();
     this.selectionBoxPass.draw(cam, this.frameTick);
     this.moveIndicatorPass.draw(cam, zoom);

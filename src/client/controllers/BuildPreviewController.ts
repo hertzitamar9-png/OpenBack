@@ -254,10 +254,12 @@ export class BuildPreviewController implements Controller {
     const player = this.game.myPlayer();
     if (!player) return;
     const requestedType = this.ghostUnit.buildableUnit.type;
+    const validationTileRef =
+      this.vehicleSourceUnderPointer(player, requestedType, false) ?? tileRef;
     const generation = this.ghostQueryGeneration;
     this.ghostQueryInFlight = true;
     player
-      .buildables(tileRef, [requestedType])
+      .buildables(validationTileRef, [requestedType])
       .then((buildables) => {
         if (
           !this.ghostUnit ||
@@ -566,7 +568,6 @@ export class BuildPreviewController implements Controller {
         const runwayTile = this.hoveredCompletedSourceTile(
           myPlayer,
           UnitType.Runway,
-          tileRef,
         );
         if (runwayTile === null) {
           rangeRadius = 0;
@@ -587,7 +588,6 @@ export class BuildPreviewController implements Controller {
         const baseTile = this.hoveredCompletedSourceTile(
           myPlayer,
           UnitType.MilitaryBase,
-          tileRef,
         );
         if (baseTile === null) {
           rangeRadius = 0;
@@ -686,7 +686,7 @@ export class BuildPreviewController implements Controller {
     if (this.isGhostReadyForConfirm()) {
       this.createStructure(e);
     } else {
-      this.removeGhostStructure();
+      if (!this.isVehicleGhost()) this.removeGhostStructure();
     }
   }
 
@@ -698,7 +698,7 @@ export class BuildPreviewController implements Controller {
       this.ghostUnit.buildableUnit.canBuild === false &&
       this.ghostUnit.buildableUnit.canUpgrade === false
     ) {
-      this.removeGhostStructure();
+      if (!this.isVehicleGhost()) this.removeGhostStructure();
       return;
     }
     const tile = this.transformHandler.screenToWorldCoordinates(e.x, e.y);
@@ -722,7 +722,16 @@ export class BuildPreviewController implements Controller {
       }
     } else if (this.ghostUnit.buildableUnit.canBuild !== false) {
       const unitType = this.ghostUnit.buildableUnit.type;
-      const targetTile = this.game.ref(tile.x, tile.y);
+      let targetTile = this.game.ref(tile.x, tile.y);
+      if (
+        (unitType === UnitType.Plane || unitType === UnitType.Tank) &&
+        this.game.ownerID(targetTile) === myPlayer.smallID()
+      ) {
+        // Validation may have snapped an icon-edge click to the visible source.
+        // Send that exact source to the simulation so white always means the
+        // subsequent click succeeds, at every zoom level.
+        targetTile = this.ghostUnit.buildableUnit.canBuild;
+      }
 
       if (this.shouldBlockRecentAllyNuke(targetTile, unitType)) {
         return;
@@ -748,7 +757,7 @@ export class BuildPreviewController implements Controller {
         this.removeGhostStructure();
       }
     } else {
-      this.removeGhostStructure();
+      if (!this.isVehicleGhost()) this.removeGhostStructure();
     }
   }
 
@@ -827,10 +836,6 @@ export class BuildPreviewController implements Controller {
   }
 
   private updateHoveredSourceRange(): void {
-    if (this.uiState.ghostStructure !== null || this.ghostUnit !== null) {
-      this.view.updateHoverRange(null);
-      return;
-    }
     const player = this.game.myPlayer();
     if (!player) return;
     const hover = this.transformHandler.screenToWorldCoordinatesFloat(
@@ -930,37 +935,75 @@ export class BuildPreviewController implements Controller {
     return 1;
   }
 
-  /**
-   * The runway or base a click near `hoverTile` would deploy from, matching
-   * the rule the simulation applies.
-   *
-   * A base that already has its vehicle parked on it is skipped, exactly as
-   * canSpawnUnitType does. Without that the preview measured its range ring
-   * from a runway the simulation would refuse to use, so the ring promised a
-   * reach the click could not deliver.
-   */
+  /** The completed source icon currently under the pointer, occupied or not. */
   private hoveredCompletedSourceTile(
     player: NonNullable<ReturnType<GameView["myPlayer"]>>,
     type: UnitType.Runway | UnitType.MilitaryBase,
-    hoverTile: TileRef,
   ): TileRef | null {
-    const rangeSquared = this.game.config().openBackVehicleSnapRadius() ** 2;
-    const parkedOn = new Set<TileRef>();
-    const vehicle = type === UnitType.Runway ? UnitType.Plane : UnitType.Tank;
-    for (const unit of player.units(vehicle)) {
-      if (unit.isActive()) parkedOn.add(unit.tile());
-    }
-    let best: TileRef | null = null;
-    let bestDistance = Infinity;
-    for (const unit of player.units(type)) {
-      if (!unit.isActive() || unit.isUnderConstruction()) continue;
-      if (parkedOn.has(unit.tile())) continue;
-      const distance = this.game.euclideanDistSquared(unit.tile(), hoverTile);
-      if (distance <= rangeSquared && distance < bestDistance) {
-        best = unit.tile();
-        bestDistance = distance;
+    return this.vehicleSourceUnderPointer(player, type, true) ?? null;
+  }
+
+  private isVehicleGhost(): boolean {
+    const type = this.ghostUnit?.buildableUnit.type;
+    return type === UnitType.Plane || type === UnitType.Tank;
+  }
+
+  private vehicleSourceUnderPointer(
+    player: NonNullable<ReturnType<GameView["myPlayer"]>>,
+    requestedType:
+      | PlayerBuildableUnitType
+      | UnitType.Runway
+      | UnitType.MilitaryBase,
+    includeOccupied: boolean,
+  ): TileRef | undefined {
+    const sourceType =
+      requestedType === UnitType.Plane || requestedType === UnitType.Runway
+        ? UnitType.Runway
+        : requestedType === UnitType.Tank ||
+            requestedType === UnitType.MilitaryBase
+          ? UnitType.MilitaryBase
+          : null;
+    if (sourceType === null) return undefined;
+
+    const hover = this.transformHandler.screenToWorldCoordinatesFloat(
+      this.mousePos.x,
+      this.mousePos.y,
+    );
+    if (!this.game.isValidCoord(hover.x, hover.y)) return undefined;
+
+    const occupied = new Set<TileRef>();
+    if (!includeOccupied) {
+      const vehicle =
+        sourceType === UnitType.Runway ? UnitType.Plane : UnitType.Tank;
+      for (const unit of player.units(vehicle)) {
+        if (unit.isActive()) occupied.add(unit.tile());
       }
     }
-    return best;
+
+    let best: { tile: TileRef; distance: number } | undefined;
+    for (const source of player.units(sourceType)) {
+      if (!source.isActive() || source.isUnderConstruction()) continue;
+      if (occupied.has(source.tile())) continue;
+      const point = {
+        x: this.game.x(source.tile()),
+        y: this.game.y(source.tile()),
+      };
+      if (
+        !isPointerOverVehicleSource(
+          hover,
+          point,
+          this.transformHandler.scale,
+          sourceType,
+        )
+      ) {
+        continue;
+      }
+      const distance =
+        (hover.x - (point.x + 0.5)) ** 2 + (hover.y - (point.y + 0.5)) ** 2;
+      if (!best || distance < best.distance) {
+        best = { tile: source.tile(), distance };
+      }
+    }
+    return best?.tile;
   }
 }

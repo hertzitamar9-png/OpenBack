@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { BuildPreviewController } from "../../src/client/controllers/BuildPreviewController";
 import {
   isPointerOverVehicleSource,
   vehicleSourceHoverHalfExtent,
@@ -25,6 +26,71 @@ describe("vehicle source hover", () => {
         UnitType.Runway,
       ),
     ).toBe(false);
+  });
+
+  it("keeps an occupied source available for its hover radius", () => {
+    const sourceTile = 17;
+    const source = {
+      isActive: () => true,
+      isUnderConstruction: () => false,
+      tile: () => sourceTile,
+      level: () => 1,
+    };
+    const parkedTank = { isActive: () => true, tile: () => sourceTile };
+    const player = {
+      units: (type: UnitType) => {
+        if (type === UnitType.MilitaryBase) return [source];
+        if (type === UnitType.Tank) return [parkedTank];
+        return [];
+      },
+    };
+    const controller = Object.create(BuildPreviewController.prototype) as {
+      game: unknown;
+      transformHandler: unknown;
+      mousePos: { x: number; y: number };
+      vehicleSourceUnderPointer(
+        player: unknown,
+        type: UnitType,
+        includeOccupied: boolean,
+      ): number | undefined;
+    };
+    controller.game = {
+      isValidCoord: () => true,
+      x: () => 40,
+      y: () => 21,
+    };
+    controller.transformHandler = {
+      scale: 3,
+      screenToWorldCoordinatesFloat: () => ({ x: 40.5, y: 21.5 }),
+    };
+    controller.mousePos = { x: 100, y: 100 };
+
+    expect(
+      controller.vehicleSourceUnderPointer(player, UnitType.Tank, false),
+    ).toBeUndefined();
+    expect(
+      controller.vehicleSourceUnderPointer(player, UnitType.MilitaryBase, true),
+    ).toBe(sourceTile);
+
+    const updateHoverRange = vi.fn();
+    Object.assign(controller, {
+      view: { updateHoverRange },
+      game: {
+        isValidCoord: () => true,
+        x: () => 40,
+        y: () => 21,
+        myPlayer: () => player,
+        config: () => ({ tankMaxDriveRadius: () => 123 }),
+      },
+    });
+    (
+      controller as unknown as { updateHoveredSourceRange(): void }
+    ).updateHoveredSourceRange();
+    expect(updateHoverRange).toHaveBeenLastCalledWith({
+      x: 40,
+      y: 21,
+      radius: 123,
+    });
   });
 
   it("keeps the directly hovered icon usable at overview and close zoom", () => {

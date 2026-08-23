@@ -13,6 +13,7 @@ uniform float uHasAtlas;
 out vec4 fragColor;
 
 const float LINE_HALF_W = 0.10; // line half-width (normalized to quad)
+const float NORMAL_OUTLINE_HALF_W = 0.17;
 const float AA = 0.02;          // anti-alias width
 
 const vec3 OUTLINE_BLACK = vec3(0.0);
@@ -88,8 +89,20 @@ void main() {
               * (1.0 - smoothstep(1.0 - AA, 1.0, ay));
 
   float mask = max(hMask, vMask);
-  if (mask < 0.01) discard;
+  float hOutline = smoothstep(
+    NORMAL_OUTLINE_HALF_W + AA,
+    NORMAL_OUTLINE_HALF_W - AA,
+    ay
+  ) * (1.0 - smoothstep(1.0 - AA, 1.0, ax));
+  float vOutline = smoothstep(
+    NORMAL_OUTLINE_HALF_W + AA,
+    NORMAL_OUTLINE_HALF_W - AA,
+    ax
+  ) * (1.0 - smoothstep(1.0 - AA, 1.0, ay));
+  float outlineMask = max(hOutline, vOutline);
+  if (outlineMask < 0.01) discard;
 
-  fragColor = vec4(uColor, mask);
+  float innerBlend = outlineMask > 0.01 ? mask / outlineMask : 1.0;
+  fragColor = vec4(mix(OUTLINE_BLACK, uColor, innerBlend), outlineMask);
 }
 }

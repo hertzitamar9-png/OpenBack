@@ -281,6 +281,12 @@ export class InputHandler {
   private keybinds: Record<string, string> = {};
   private keybindAndEvent: Array<[string, KeybindEntry]> = [];
   private coordinateGridEnabled = false;
+  // A quick standalone Shift tap arms the six OpenBack build shortcuts. This
+  // lets players press and release Shift, then press 1-6, instead of holding a
+  // chord. A real Shift chord or selection-box drag does not arm the prefix.
+  private openBackBuildPrefixUntil = 0;
+  private shiftUsedAsChord = false;
+  private readonly OPENBACK_BUILD_PREFIX_MS = 3000;
 
   private readonly PAN_SPEED = 5;
   private readonly ZOOM_SPEED = 10;
@@ -452,15 +458,19 @@ export class InputHandler {
       this.addKeybindAndEvent(
         i,
         (e: KeyboardEvent) => {
-          const matchedBuild = this.resolveBuildKeybind(e.code, e.shiftKey);
+          const buildShift = this.buildShiftForEvent(e);
+          const matchedBuild = this.resolveBuildKeybind(e.code, buildShift);
 
           if (matchedBuild !== null) {
             this.setGhostStructure(matchedBuild);
+            if (!e.shiftKey && buildShift) {
+              this.openBackBuildPrefixUntil = 0;
+            }
           }
         },
         () => this.canUseBuildKeybinds(),
         (e: KeyboardEvent) =>
-          this.resolveBuildKeybind(e.code, e.shiftKey) !== null,
+          this.resolveBuildKeybind(e.code, this.buildShiftForEvent(e)) !== null,
       );
     }
     // Listen for warship selection to change cursor
@@ -534,6 +544,8 @@ export class InputHandler {
     // so the alternate view and drags aren't left latched when focus returns.
     window.addEventListener("blur", () => {
       this.activeKeys.clear();
+      this.openBackBuildPrefixUntil = 0;
+      this.shiftUsedAsChord = false;
       if (this.alternateView) {
         this.alternateView = false;
         this.eventBus.emit(new AlternateViewEvent(false));
@@ -615,6 +627,15 @@ export class InputHandler {
       const isTextInput = this.isTextInputTarget(e.target);
       if (isTextInput && e.code !== "Escape") {
         return;
+      }
+
+      if (e.code === "ShiftLeft" || e.code === "ShiftRight") {
+        if (!e.repeat) this.shiftUsedAsChord = false;
+      } else if (e.shiftKey) {
+        this.shiftUsedAsChord = true;
+        this.openBackBuildPrefixUntil = 0;
+      } else if (this.digitFromKeyCode(e.code) === null) {
+        this.openBackBuildPrefixUntil = 0;
       }
 
       if (this.keybindMatchesEvent(e, this.keybinds.toggleView)) {
@@ -732,6 +753,17 @@ export class InputHandler {
       const isTextInput = this.isTextInputTarget(e.target);
       if (isTextInput && !this.activeKeys.has(e.code)) {
         return;
+      }
+
+      if (e.code === "ShiftLeft" || e.code === "ShiftRight") {
+        if (
+          !this.shiftUsedAsChord &&
+          !this.selectionBoxActive &&
+          !this.multiSelectionActive
+        ) {
+          this.openBackBuildPrefixUntil =
+            performance.now() + this.OPENBACK_BUILD_PREFIX_MS;
+        }
       }
 
       // When the meta (cmd) or ctrl key is released, any keys that were held
@@ -1296,6 +1328,17 @@ export class InputHandler {
       return { shift: true, code: value.slice(6) };
     }
     return { shift: false, code: value };
+  }
+
+  private buildShiftForEvent(e: KeyboardEvent): boolean {
+    if (e.shiftKey) return true;
+    const digit = this.digitFromKeyCode(e.code);
+    return (
+      digit !== null &&
+      digit >= "1" &&
+      digit <= "6" &&
+      performance.now() <= this.openBackBuildPrefixUntil
+    );
   }
 
   /**

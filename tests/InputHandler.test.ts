@@ -905,6 +905,83 @@ describe("InputHandler AutoUpgrade", () => {
       expect(uiState.ghostStructure).toBe(expectedType);
     });
 
+    test("a standalone Shift tap arms the next added-unit number", () => {
+      inputHandler = new InputHandler(
+        mockGameView,
+        uiState,
+        mockCanvas,
+        eventBus,
+      );
+      inputHandler.initialize();
+
+      window.dispatchEvent(
+        new KeyboardEvent("keydown", { code: "ShiftLeft", shiftKey: true }),
+      );
+      window.dispatchEvent(
+        new KeyboardEvent("keyup", { code: "ShiftLeft", shiftKey: false }),
+      );
+      window.dispatchEvent(
+        new KeyboardEvent("keyup", { code: "Digit1", shiftKey: false }),
+      );
+
+      expect(uiState.ghostStructure).toBe(UnitType.Plane);
+    });
+
+    test("the standalone Shift prefix is consumed by one number", () => {
+      inputHandler = new InputHandler(
+        mockGameView,
+        uiState,
+        mockCanvas,
+        eventBus,
+      );
+      inputHandler.initialize();
+
+      window.dispatchEvent(
+        new KeyboardEvent("keydown", { code: "ShiftLeft", shiftKey: true }),
+      );
+      window.dispatchEvent(
+        new KeyboardEvent("keyup", { code: "ShiftLeft", shiftKey: false }),
+      );
+      window.dispatchEvent(
+        new KeyboardEvent("keyup", { code: "Digit1", shiftKey: false }),
+      );
+      expect(uiState.ghostStructure).toBe(UnitType.Plane);
+
+      window.dispatchEvent(
+        new KeyboardEvent("keyup", { code: "Digit2", shiftKey: false }),
+      );
+      expect(uiState.ghostStructure).toBe(UnitType.Factory);
+    });
+
+    test("a held Shift chord does not arm another number afterward", () => {
+      inputHandler = new InputHandler(
+        mockGameView,
+        uiState,
+        mockCanvas,
+        eventBus,
+      );
+      inputHandler.initialize();
+
+      window.dispatchEvent(
+        new KeyboardEvent("keydown", { code: "ShiftLeft", shiftKey: true }),
+      );
+      window.dispatchEvent(
+        new KeyboardEvent("keydown", { code: "Digit1", shiftKey: true }),
+      );
+      window.dispatchEvent(
+        new KeyboardEvent("keyup", { code: "Digit1", shiftKey: true }),
+      );
+      expect(uiState.ghostStructure).toBe(UnitType.Plane);
+      window.dispatchEvent(
+        new KeyboardEvent("keyup", { code: "ShiftLeft", shiftKey: false }),
+      );
+
+      window.dispatchEvent(
+        new KeyboardEvent("keyup", { code: "Digit2", shiftKey: false }),
+      );
+      expect(uiState.ghostStructure).toBe(UnitType.Factory);
+    });
+
     test("Shift+Digit1 sets City when buildCity is bound to Shift+Digit1", () => {
       testSettings.setKeybinds({ buildCity: "Shift+Digit1" });
       inputHandler = new InputHandler(
