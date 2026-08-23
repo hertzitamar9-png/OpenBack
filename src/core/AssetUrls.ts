@@ -22,10 +22,14 @@ function assertSafeAssetSegment(segment: string): string {
 }
 
 export function encodeAssetPath(path: string): string {
+  // `@` is a valid path-segment character and is used by the committed
+  // thumbnail@2x.webp files. Encoding it as %40 makes Vite's SPA fallback
+  // serve index.html instead of the image, so the high-resolution candidate
+  // silently fails. Keep it literal while still encoding unsafe characters.
   return normalizeAssetPath(path)
     .split("/")
     .filter((segment) => segment.length > 0)
-    .map((segment) => encodeURIComponent(segment))
+    .map((segment) => encodeURIComponent(segment).replace(/%40/gi, "@"))
     .join("/");
 }
 

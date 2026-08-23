@@ -2,6 +2,18 @@ import { describe, expect, test } from "vitest";
 import { buildAssetUrl, rewriteAssetsForCdn } from "../src/core/AssetUrls";
 
 describe("AssetUrls", () => {
+  test("keeps density-suffixed thumbnail paths directly fetchable", () => {
+    expect(buildAssetUrl("maps/world/thumbnail@2x.webp", {})).toBe(
+      "/maps/world/thumbnail@2x.webp",
+    );
+    expect(
+      buildAssetUrl("maps/world/thumbnail@2x.webp", {
+        "maps/world/thumbnail@2x.webp":
+          "/_assets/maps/world/thumbnail@2x.hash.webp",
+      }),
+    ).toBe("/maps/world/thumbnail@2x.webp?v=hash");
+  });
+
   test("returns stable versioned URLs for image asset matches", () => {
     expect(
       buildAssetUrl("images/Favicon.svg", {

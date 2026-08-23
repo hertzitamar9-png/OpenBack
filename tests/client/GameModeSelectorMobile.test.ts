@@ -38,6 +38,7 @@ describe("mobile lobby countdown", () => {
         renderLobbyCard(
           lobby: PublicGameInfo,
           title: string,
+          highResolution?: boolean,
         ): ReturnType<GameModeSelector["render"]>;
       }
     ).renderLobbyCard(lobby, "World");
@@ -49,5 +50,38 @@ describe("mobile lobby countdown", () => {
     expect(timer?.textContent?.trim()).toBe("1min 15s");
     expect(timer?.classList).toContain("whitespace-nowrap");
     expect(timer?.classList).not.toContain("truncate");
+  });
+
+  it("uses the double-resolution source as the featured card baseline", () => {
+    const selector = new GameModeSelector();
+    const lobby = {
+      startsAt: Date.now() + 75_900,
+      gameConfig: {
+        gameMap: GameMapType.World,
+        publicGameModifiers: [],
+      },
+      numClients: 0,
+      maxPlayers: 50,
+    } as unknown as PublicGameInfo;
+    const template = (
+      selector as unknown as {
+        renderLobbyCard(
+          lobby: PublicGameInfo,
+          title: string,
+          highResolution?: boolean,
+        ): ReturnType<GameModeSelector["render"]>;
+      }
+    ).renderLobbyCard(lobby, "World", true);
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    render(template, host);
+
+    const image = host.querySelector<HTMLImageElement>("img");
+    expect(decodeURIComponent(image?.getAttribute("src") ?? "")).toContain(
+      "thumbnail@2x.webp",
+    );
+    expect(decodeURIComponent(image?.getAttribute("srcset") ?? "")).toContain(
+      "thumbnail@2x.webp 1x",
+    );
   });
 });

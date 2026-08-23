@@ -220,7 +220,7 @@ export class GameModeSelector extends LitElement {
               <!-- Left col: main card (desktop only) -->
               ${ffa
                 ? html`<div class="desktop-lobby-feature hidden lg:block">
-                    ${this.renderLobbyCard(ffa, this.getLobbyTitle(ffa))}
+                    ${this.renderLobbyCard(ffa, this.getLobbyTitle(ffa), true)}
                   </div>`
                 : nothing}
 
@@ -250,7 +250,11 @@ export class GameModeSelector extends LitElement {
                         ? "mobile-lobby-feature"
                         : "mobile-lobby-secondary"}
                     >
-                      ${this.renderLobbyCard(lobby, this.getLobbyTitle(lobby))}
+                      ${this.renderLobbyCard(
+                        lobby,
+                        this.getLobbyTitle(lobby),
+                        index === 0,
+                      )}
                     </div>
                   `,
                 )}
@@ -371,18 +375,27 @@ export class GameModeSelector extends LitElement {
   private renderLobbyCard(
     lobby: PublicGameInfo,
     titleContent: string | TemplateResult,
+    highResolution = false,
   ) {
     const mapType = lobby.gameConfig!.gameMap as GameMapType;
     const mapData = terrainMapFileLoader.getMapData(mapType);
-    const mapImageSrc =
+    const mapImage1x =
       this.experienceMode === "3d"
         ? (mapData.webp3dPath ?? mapData.webpPath)
         : mapData.webpPath;
-    const mapImageSrcset = `${mapImageSrc} 1x, ${
+    const mapImage2x =
       this.experienceMode === "3d"
-        ? (mapData.webp3d2xPath ?? mapImageSrc)
-        : (mapData.webp2xPath ?? mapImageSrc)
-    } 2x`;
+        ? (mapData.webp3d2xPath ?? mapImage1x)
+        : (mapData.webp2xPath ?? mapImage1x);
+    // The featured card is roughly twice as wide as either secondary card.
+    // Density descriptors alone select the 300px 1x thumbnail on a DPR-1
+    // display without considering that rendered width, which stretches it
+    // across ~800px and makes only the big card blurry. Start that card from
+    // the 2x asset; smaller cards retain the lighter density-aware pair.
+    const mapImageSrc = highResolution ? mapImage2x : mapImage1x;
+    const mapImageSrcset = highResolution
+      ? `${mapImage2x} 1x`
+      : `${mapImage1x} 1x, ${mapImage2x} 2x`;
     const aspectRatio = this.mapAspectRatios.get(mapType);
     // Use object-contain for extreme aspect ratios (e.g. Amazon River ~20:1) so
     // the full map is visible instead of being cropped by object-cover.

@@ -1,3 +1,10 @@
+## OpenBack v0.36.227 - Sharp Featured Map Preview
+
+- Fixed the large featured map picture on the home screen loading the same small baseline image as the narrow cards and stretching it across roughly twice the width. The large desktop card and the featured mobile card now start from the double-resolution map artwork, while the smaller cards keep their lighter responsive images.
+- Fixed density-suffixed map image addresses being encoded into a route that returned the app shell instead of the picture, so the sharper `@2x` artwork now actually loads in development and production.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.226 - Aircraft Placement Actually Builds the Aircraft
 
 - Fixed the real mouse and touch placement path showing a valid white aircraft cursor but sending zero troops, which made the simulation cancel the build before a plane appeared. Aircraft now load the troop share selected by the attack-ratio control and visibly park on the runway after the click.
