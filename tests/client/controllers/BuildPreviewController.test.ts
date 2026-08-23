@@ -3,7 +3,7 @@ import {
   samThreatensNukePreview,
   shouldPreserveGhostAfterBuild,
 } from "../../../src/client/controllers/BuildPreviewController";
-import { BuildMenus } from "../../../src/core/game/Game";
+import { BuildMenus, UnitType } from "../../../src/core/game/Game";
 
 describe("BuildPreviewController repeat placement", () => {
   describe("shouldPreserveGhostAfterBuild", () => {
@@ -11,6 +11,13 @@ describe("BuildPreviewController repeat placement", () => {
       for (const type of BuildMenus.types) {
         expect(shouldPreserveGhostAfterBuild(type), type).toBe(true);
       }
+    });
+
+    test("explicitly keeps aircraft and tanks selected for repeated placement", () => {
+      expect(BuildMenus.types).toContain(UnitType.Plane);
+      expect(BuildMenus.types).toContain(UnitType.Tank);
+      expect(shouldPreserveGhostAfterBuild(UnitType.Plane)).toBe(true);
+      expect(shouldPreserveGhostAfterBuild(UnitType.Tank)).toBe(true);
     });
   });
 });

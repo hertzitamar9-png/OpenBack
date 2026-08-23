@@ -692,6 +692,8 @@ export class BuildPreviewController implements Controller {
 
   private createStructure(e: MouseUpEvent) {
     if (!this.ghostUnit) return;
+    const myPlayer = this.game.myPlayer();
+    if (!myPlayer) return;
     if (
       this.ghostUnit.buildableUnit.canBuild === false &&
       this.ghostUnit.buildableUnit.canUpgrade === false
@@ -718,7 +720,7 @@ export class BuildPreviewController implements Controller {
       if (!shouldPreserveGhostAfterBuild(unitType)) {
         this.removeGhostStructure();
       }
-    } else if (this.ghostUnit.buildableUnit.canBuild) {
+    } else if (this.ghostUnit.buildableUnit.canBuild !== false) {
       const unitType = this.ghostUnit.buildableUnit.type;
       const targetTile = this.game.ref(tile.x, tile.y);
 
@@ -737,6 +739,9 @@ export class BuildPreviewController implements Controller {
           targetTile,
           rocketDirectionUp,
           isNuke ? this.uiState.upgradeMultiplier || 1 : undefined,
+          unitType === UnitType.Plane
+            ? myPlayer.troops() * this.uiState.attackRatio
+            : undefined,
         ),
       );
       if (!shouldPreserveGhostAfterBuild(unitType)) {

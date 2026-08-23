@@ -67,6 +67,26 @@ describe("PlaneExecution", () => {
     expect(plane.tile()).toBe(game.ref(5, 5));
   });
 
+  test("the build-unit construction path forwards troops and creates the plane", () => {
+    game.addExecution(
+      new ConstructionExecution(
+        attacker,
+        UnitType.Plane,
+        game.ref(5, 5),
+        undefined,
+        undefined,
+        1_234,
+      ),
+    );
+    game.executeNextTick();
+    game.executeNextTick();
+
+    const plane = attacker.units(UnitType.Plane)[0];
+    expect(plane).toBeDefined();
+    expect(plane.troops()).toBe(1_234);
+    expect(plane.tile()).toBe(game.ref(5, 5));
+  });
+
   test("uses the legacy structure snap distance for runway and aircraft placement", () => {
     const nearby = game.ref(8, 5);
     attacker.conquer(nearby);

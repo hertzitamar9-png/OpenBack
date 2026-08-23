@@ -99,6 +99,19 @@ describe("intent schemas: troop and gold amounts stay fractional", () => {
     expect(BoatAttackIntentSchema.safeParse(intent).success).toBe(true);
   });
 
+  it("aircraft builds accept the attack-ratio troop payload", () => {
+    const intent = {
+      type: "build_unit",
+      unit: "Plane",
+      tile: 10,
+      troops: 1_234.5,
+    };
+    expect(BuildUnitIntentSchema.safeParse(intent).success).toBe(true);
+    expect(
+      BuildUnitIntentSchema.safeParse({ ...intent, troops: -1 }).success,
+    ).toBe(false);
+  });
+
   it("donations accept fractional amounts", () => {
     const troops = {
       type: "donate_troops",

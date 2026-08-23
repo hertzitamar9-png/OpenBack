@@ -1,3 +1,10 @@
+## OpenBack v0.36.226 - Aircraft Placement Actually Builds the Aircraft
+
+- Fixed the real mouse and touch placement path showing a valid white aircraft cursor but sending zero troops, which made the simulation cancel the build before a plane appeared. Aircraft now load the troop share selected by the attack-ratio control and visibly park on the runway after the click.
+- Kept Aircraft and Tank selected after a successful placement, with their white or grey crosshair ready for another affordable vehicle instead of silently dropping the placement tool.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.225 - Deploying a Vehicle Means the Base You Clicked
 
 - Ordering a tank or an aircraft now only works from right next to the runway or military base it comes from, instead of anywhere within fifteen tiles. Clicking open ground a long way off no longer launches a vehicle from a base nowhere near the cursor, and with two bases nearby the order goes to the one you are actually pointing at.

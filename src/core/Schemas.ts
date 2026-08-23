@@ -622,6 +622,10 @@ export const BuildUnitIntentSchema = z.object({
   tile: z.number().int().nonnegative(),
   rocketDirectionUp: z.boolean().optional(),
   amount: z.number().int().min(1).max(MAX_UPGRADE_AMOUNT).optional(),
+  // Aircraft carry the current attack-ratio share of the player's troops.
+  // Optional keeps old clients/replays readable; a missing value cannot load
+  // an aircraft and is rejected safely by PlaneExecution.
+  troops: z.number().nonnegative().optional(),
 });
 
 export const UpgradeStructureIntentSchema = z.object({
