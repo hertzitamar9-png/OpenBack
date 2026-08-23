@@ -73,7 +73,14 @@ void main() {
   bool land = (terrain & 128u) != 0u;
   bool shore = (terrain & 64u) != 0u;
   vec3 color = texture(uTerrain, vUV).rgb;
-  float detail = smoothstep(0.35, 1.15, uZoom) * clamp(uQuality, 0.45, 1.0);
+  // uZoom is device pixels per tile, not "how far in the player has zoomed".
+  // A phone showing the whole map sits near 0.22 and a desktop showing the same
+  // map sits near 1.7, so thresholds written for a desktop's numbers held the
+  // fade permanently on for handsets: land relief and grain measured 0.000 on a
+  // phone against 1.000 on a monitor, and the sea kept less than half its
+  // shine. The crests are 6 to 77 device pixels wide on a phone, so they are
+  // plainly resolvable -- the fade was simply tuned past where phones live.
+  float detail = smoothstep(0.10, 0.40, uZoom) * clamp(uQuality, 0.45, 1.0);
 
   if (land) {
     float west = heightAt(tile + ivec2(-1, 0));
@@ -89,10 +96,11 @@ void main() {
     color *= 1.0 + relief * 0.12 * detail + grain;
     if (shore) color *= 1.035;
   } else {
-    // Open water keeps most of its movement when the map is zoomed out. The
+    // Open water keeps most of its movement when the map is zoomed out, and
+    // "zoomed out" has to mean the same thing on a phone as on a monitor. The
     // shared `detail` term fades to zero below ~0.35 zoom, which left whole
     // oceans flat and made the glimmer look like a shore-only effect.
-    float seaDetail = mix(0.6, 1.0, smoothstep(0.12, 1.0, uZoom))
+    float seaDetail = mix(0.6, 1.0, smoothstep(0.05, 0.25, uZoom))
       * clamp(uQuality, 0.45, 1.0);
 
     vec3 oceanBase = color;

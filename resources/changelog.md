@@ -1,3 +1,9 @@
+## OpenBack v0.36.227 - The Sea Looks Right on a Phone
+
+- The ocean on a phone was left dark and flat, and the shading on land was switched off entirely, while the same map looked correct on a desktop. The detail was being faded out by a rule that measured the screen rather than how far you had zoomed, so a small screen was permanently treated as though the map were zoomed all the way out. Phones and tablets now get their waves, glare and terrain shading; desktops are unchanged.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.226 - Every Page Is Just the Address
 
 - Moving around the site no longer writes a path into the address bar. The play screen, the store, your inventory, the leaderboard, clans, settings, news, help and the legal pages all sit on the plain address instead of things like /play/2d or /store/packs, and the rendering mode is no longer part of the URL.
