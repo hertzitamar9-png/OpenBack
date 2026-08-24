@@ -1,5 +1,4 @@
 export interface WarTableQuality {
-  terrainDetail: number;
   secondaryAnimationRate: number;
   particleScale: number;
   shadowSamples: number;
@@ -8,19 +7,16 @@ export interface WarTableQuality {
 
 const TIERS = [
   {
-    terrainDetail: 1,
     secondaryAnimationRate: 1,
     particleScale: 1,
     shadowSamples: 2,
   },
   {
-    terrainDetail: 0.78,
     secondaryAnimationRate: 0.75,
     particleScale: 0.72,
     shadowSamples: 1,
   },
   {
-    terrainDetail: 0.58,
     secondaryAnimationRate: 0.5,
     particleScale: 0.48,
     shadowSamples: 0,

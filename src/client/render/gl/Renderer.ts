@@ -1687,12 +1687,10 @@ export class GPURenderer {
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.disable(gl.BLEND);
     if (pe.terrain) {
-      this.terrainPass.draw(
-        cam,
-        this.camera.zoom,
-        performance.now() / 1000,
-        this.warTableQuality.current().terrainDetail,
-      );
+      // No quality argument: the terrain shader has no branch on quality, so a
+      // lower tier cost the same GPU work for a fainter picture. What it fades
+      // is decided by pixels per tile inside the shader instead.
+      this.terrainPass.draw(cam, this.camera.zoom, performance.now() / 1000);
     }
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);

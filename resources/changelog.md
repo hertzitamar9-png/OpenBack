@@ -1,3 +1,10 @@
+## OpenBack v0.36.233 - The Same Sea on Every Screen
+
+- The ocean now looks exactly the same on a phone as on a desktop. It was being dimmed twice on small screens, once by a fade tied to screen size and once by a mobile quality setting, and neither of them made the game any faster: nothing in the water drawing was ever skipped, so a phone paid the full cost for a fainter sea. Both are gone.
+- Fixed the speckling introduced on phones in the previous release. Terrain relief and ground grain are far smaller than a single pixel on a handset, so they are once again smoothed away there rather than drawn as noise. Desktops are unaffected.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.232 - The Sea Looks Right on a Phone
 
 - The ocean on a phone was left dark and flat, and the shading on land was switched off entirely, while the same map looked correct on a desktop. The detail was being faded out by a rule that measured the screen rather than how far you had zoomed, so a small screen was permanently treated as though the map were zoomed all the way out. Phones and tablets now get their waves, glare and terrain shading; desktops are unchanged.
