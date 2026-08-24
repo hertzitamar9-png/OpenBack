@@ -190,9 +190,10 @@ void main() {
     // light across the sea from independent headings and speeds, rather than
     // replacing it with an unrelated broad tint.
     float shoreBreak = sin(world.x * 0.18 + world.y * 0.13 - uTime * 1.8);
-    float coastalBreak = shore
-      ? smoothstep(0.58, 0.90, shoreBreak) * 0.55 * seaDetail
-      : 0.0;
+    // The same expression the coastline has always used, with the `shore ?`
+    // gate taken off: identical maths, identical output, drawn on every water
+    // tile instead of only the ones touching land.
+    float coastalBreak = smoothstep(0.58, 0.90, shoreBreak) * 0.55 * seaDetail;
     float openGlare = max(
       smoothstep(GLARE_MIN, 0.9998, glareLayer(
         world, vec2(1.0, 0.14), 0.070, 0.7,

@@ -429,7 +429,7 @@ void main(){
   // scratches that hid the softer moving shine.
   vec3 waveNormal=normalize(vWaveNormal);
   vec2 waveSlope=vec2(-waveNormal.x,-waveNormal.z)/max(0.18,waveNormal.y);
-  float coastalBreak=shoreline?smoothstep(0.58,0.90,shoreBreak)*0.72:0.0;
+  float coastalBreak=smoothstep(0.58,0.90,shoreBreak)*0.72;
   float openGlare=max(
     smoothstep(GLARE_MIN,0.9998,glareLayer(vWorld,vec2(1.0,0.14),0.070,1.05,0.7,uTime,GLARE_MIN)),
     smoothstep(GLARE_MIN,0.9998,glareLayer(vWorld,vec2(-0.18,1.0),0.082,-0.82,3.2,uTime,GLARE_MIN))

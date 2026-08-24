@@ -1,3 +1,9 @@
+## OpenBack v0.36.237 - The Shoreline Glow, on All the Water
+
+- The glow that runs along the border between water and land now runs across every stretch of water, not just the tiles touching a coast. It is the same glow, unchanged: the same bands, the same brightness, the same drift, simply no longer restricted to the shoreline. Applied in both Classic 2D and Immersive 3D.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.236 - Take the Pale Bands Back Off the Sea
 
 - Removed the broad pale bands that appeared across the ocean in the previous release. Turning the open-water glint up to the brightness used along coastlines did not spread the coastal glow, it painted wide washes over the water, because those crests are three to four times wider than the shoreline's. The glint is faint again in both Classic 2D and Immersive 3D.
