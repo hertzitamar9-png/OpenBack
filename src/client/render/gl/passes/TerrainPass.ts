@@ -27,6 +27,43 @@ import {
 // TerrainPass
 // ---------------------------------------------------------------------------
 
+/**
+ * The four open-water glare layers, as the fragment shader declares them.
+ *
+ * Their animation depends only on time, never on the pixel, so working it out
+ * per fragment made every one of them recompute the same handful of sines.
+ * It is worked out once per frame here and handed over as uniforms instead.
+ *
+ * `speed` and `phase` must match the call sites in
+ * war-table-terrain.frag.glsl; a test asserts they do.
+ */
+const GLARE_LAYERS = [
+  { speed: 1.05, phase: 0.7 },
+  { speed: -0.82, phase: 3.2 },
+  { speed: 1.18, phase: 5.6 },
+  { speed: -0.68, phase: 8.1 },
+] as const;
+
+/**
+ * A layer's phase at `time`, and where its noise gate has wandered to.
+ *
+ * The wobble is added to the phase rather than multiplied into it, so the
+ * crests surge and ease off -- instantaneous speed swings roughly 0.58x to
+ * 1.42x -- without the wave ever jumping when the rate changes.
+ */
+function glareAnimation(time: number) {
+  const drift = new Float32Array(4);
+  const wanderX = new Float32Array(4);
+  const wanderY = new Float32Array(4);
+  for (let i = 0; i < GLARE_LAYERS.length; i++) {
+    const { speed, phase } = GLARE_LAYERS[i];
+    drift[i] = time * speed + 6.0 * Math.sin(time * 0.07 * speed + phase * 1.7);
+    wanderX[i] = Math.sin(time * 0.021 + phase * 2.3) * 9.0;
+    wanderY[i] = Math.cos(time * 0.017 + phase * 1.1) * 9.0;
+  }
+  return { drift, wanderX, wanderY };
+}
+
 export class TerrainPass {
   private program: WebGLProgram;
   private tex: WebGLTexture;
@@ -35,6 +72,9 @@ export class TerrainPass {
   private uCamera: WebGLUniformLocation;
   private uZoom: WebGLUniformLocation;
   private uTime: WebGLUniformLocation;
+  private uGlareDrift: WebGLUniformLocation;
+  private uGlareWanderX: WebGLUniformLocation;
+  private uGlareWanderY: WebGLUniformLocation;
   private mapW: number;
   private mapH: number;
   // Base ocean (deep water) color; reused by applyTerrainDelta and rebuilds.
@@ -67,6 +107,9 @@ export class TerrainPass {
     this.uCamera = gl.getUniformLocation(this.program, "uCamera")!;
     this.uZoom = gl.getUniformLocation(this.program, "uZoom")!;
     this.uTime = gl.getUniformLocation(this.program, "uTime")!;
+    this.uGlareDrift = gl.getUniformLocation(this.program, "uGlareDrift")!;
+    this.uGlareWanderX = gl.getUniformLocation(this.program, "uGlareWanderX")!;
+    this.uGlareWanderY = gl.getUniformLocation(this.program, "uGlareWanderY")!;
     gl.useProgram(this.program);
     gl.uniform1i(gl.getUniformLocation(this.program, "uTerrain"), 0);
     gl.uniform1i(gl.getUniformLocation(this.program, "uTerrainBytes"), 1);
@@ -254,6 +297,10 @@ export class TerrainPass {
     gl.uniformMatrix3fv(this.uCamera, false, cameraMatrix);
     gl.uniform1f(this.uZoom, zoom);
     gl.uniform1f(this.uTime, timeSeconds);
+    const glare = glareAnimation(timeSeconds);
+    gl.uniform4fv(this.uGlareDrift, glare.drift);
+    gl.uniform4fv(this.uGlareWanderX, glare.wanderX);
+    gl.uniform4fv(this.uGlareWanderY, glare.wanderY);
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.tex);

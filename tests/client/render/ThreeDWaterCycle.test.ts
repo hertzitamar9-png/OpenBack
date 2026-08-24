@@ -87,16 +87,21 @@ describe("3D water cycle shader", () => {
     );
     expect(threeD).not.toContain("float openCrest=");
     expect(terrain).toContain("float boundaryGlare = max(coastalBreak");
+    // Open sea now carries the same weight as each shader's own shoreline --
+    // 0.55 in 2D, 0.72 in 3D -- instead of a seventh of it.
     expect(threeD).toContain(
-      "float foamCrest=max(coastalBreak,openGlare*0.09);",
+      "float foamCrest=max(coastalBreak,openGlare*0.72);",
     );
-    for (const direction of [
-      "vec2(1.0, 0.24)",
-      "vec2(-0.36, 1.0)",
-      "vec2(0.58, -1.0)",
-      "vec2(-1.0, -0.41)",
+    // One layer travelling each way, and both seas must agree on them or the
+    // same ocean looks different depending on the mode you play in.
+    for (const [flat, packed] of [
+      ["vec2(1.0, 0.14)", "vec2(1.0,0.14)"],
+      ["vec2(-0.18, 1.0)", "vec2(-0.18,1.0)"],
+      ["vec2(-1.0, 0.22)", "vec2(-1.0,0.22)"],
+      ["vec2(0.26, -1.0)", "vec2(0.26,-1.0)"],
     ]) {
-      expect(terrain).toContain(direction);
+      expect(terrain).toContain(flat);
+      expect(threeD).toContain(packed);
     }
   });
 

@@ -382,6 +382,27 @@ float worldWave(vec2 p,float time){
   float cross=sin(dot(p,vec2(-0.021,0.039))-time*0.42);
   return broad*0.55+cross*0.45;
 }
+const float GLARE_MIN=0.992;
+// The open-water glint, which is only ever shown above GLARE_MIN. Its value is
+// a wave term times a noise gate, both in [0,1]: if the wave alone cannot
+// clear the threshold neither can the product, so the gate -- the expensive
+// half -- is skipped. Same reasoning, same numbers as the 2D sea.
+float glareLayer(vec2 world,vec2 direction,float frequency,float speed,float phase,float time,float threshold){
+  vec2 travel=normalize(direction);
+  vec2 across=vec2(-travel.y,travel.x);
+  // Rate surges and eases instead of marching: added to the phase, so the wave
+  // never jumps when it changes.
+  float drift=time*speed+6.0*sin(time*0.07*speed+phase*1.7);
+  float bend=sin(dot(world,across)*frequency*0.41+drift*0.19+phase)*0.72;
+  float wave=sin(dot(world,travel)*frequency+drift+phase+bend)*0.5+0.5;
+  float waveTerm=smoothstep(0.16,0.94,wave);
+  if(waveTerm<=threshold)return 0.0;
+  // The gate wanders in two dimensions so patches light up in different parts
+  // of the sea at different times.
+  vec2 wander=vec2(sin(time*0.021+phase*2.3),cos(time*0.017+phase*1.1))*9.0;
+  float gate=waterNoise(world*0.005+travel*drift*0.6+wander+vec2(phase*3.7,phase*1.9));
+  return waveTerm*smoothstep(0.26,0.74,gate);
+}
 float shineLayer(vec2 world,vec2 direction,float frequency,float speed,float phase,float time){
   vec2 travel=normalize(direction);
   vec2 across=vec2(-travel.y,travel.x);
@@ -410,12 +431,12 @@ void main(){
   vec2 waveSlope=vec2(-waveNormal.x,-waveNormal.z)/max(0.18,waveNormal.y);
   float coastalBreak=shoreline?smoothstep(0.58,0.90,shoreBreak)*0.72:0.0;
   float openGlare=max(
-    smoothstep(0.992,0.9998,shineLayer(vWorld,vec2(1.0,0.24),0.070,1.05,0.7,uTime)),
-    smoothstep(0.992,0.9998,shineLayer(vWorld,vec2(-0.36,1.0),0.082,-0.82,3.2,uTime))
+    smoothstep(GLARE_MIN,0.9998,glareLayer(vWorld,vec2(1.0,0.14),0.070,1.05,0.7,uTime,GLARE_MIN)),
+    smoothstep(GLARE_MIN,0.9998,glareLayer(vWorld,vec2(-0.18,1.0),0.082,-0.82,3.2,uTime,GLARE_MIN))
   );
-  openGlare=max(openGlare,smoothstep(0.992,0.9998,shineLayer(vWorld,vec2(0.58,-1.0),0.095,1.18,5.6,uTime)));
-  openGlare=max(openGlare,smoothstep(0.992,0.9998,shineLayer(vWorld,vec2(-1.0,-0.41),0.058,-0.68,8.1,uTime)));
-  float foamCrest=max(coastalBreak,openGlare*0.09);
+  openGlare=max(openGlare,smoothstep(GLARE_MIN,0.9998,glareLayer(vWorld,vec2(-1.0,0.22),0.095,1.18,5.6,uTime,GLARE_MIN)));
+  openGlare=max(openGlare,smoothstep(GLARE_MIN,0.9998,glareLayer(vWorld,vec2(0.26,-1.0),0.058,-0.68,8.1,uTime,GLARE_MIN)));
+  float foamCrest=max(coastalBreak,openGlare*0.72);
   float crest=foamCrest;
   float shimmer=clamp(0.28+wave*0.10+fine*0.055+crest*0.24,0.12,0.68);
   vec3 oceanBase=mix(deep,highlight,shimmer);

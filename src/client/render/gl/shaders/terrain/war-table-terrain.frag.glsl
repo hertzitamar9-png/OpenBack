@@ -7,6 +7,13 @@ uniform usampler2D uTerrainBytes;
 uniform vec2 uMapSize;
 uniform float uZoom;
 uniform float uTime;
+// Per-glare-layer animation. Both terms depend only on time and per-layer
+// constants -- never on the pixel -- so every fragment was recomputing the
+// same four sines and four cosines. They are worked out once per frame on the
+// CPU instead; x/y/z/w are layers 0..3.
+uniform vec4 uGlareDrift;
+uniform vec4 uGlareWanderX;
+uniform vec4 uGlareWanderY;
 
 in vec2 vUV;
 out vec4 fragColor;
@@ -72,23 +79,28 @@ float glareLayer(
   vec2 world,
   vec2 direction,
   float frequency,
-  float speed,
   float phase,
-  float time,
+  float drift,
+  vec2 wander,
   float threshold
 ) {
   vec2 travel = normalize(direction);
   vec2 across = vec2(-travel.y, travel.x);
   float bend = sin(
-    dot(world, across) * frequency * 0.41 + time * speed * 0.19 + phase
+    dot(world, across) * frequency * 0.41 + drift * 0.19 + phase
   ) * 0.72;
   float wave = sin(
-    dot(world, travel) * frequency + time * speed + phase + bend
+    dot(world, travel) * frequency + drift + phase + bend
   ) * 0.5 + 0.5;
   float waveTerm = smoothstep(0.16, 0.94, wave);
   if (waveTerm <= threshold) return 0.0;
+  // Where a glint may show is a noise field that wanders in two dimensions
+  // rather than sliding along one heading, so patches light up in different
+  // parts of the sea at different times instead of one band scrolling past
+  // forever.
   float gate = valueNoise(
-    world * 0.005 + travel * time * speed * 0.6 + vec2(phase * 3.7, phase * 1.9)
+    world * 0.005 + travel * drift * 0.6 + wander
+      + vec2(phase * 3.7, phase * 1.9)
   );
   return waveTerm * smoothstep(0.26, 0.74, gate);
 }
@@ -183,25 +195,33 @@ void main() {
       : 0.0;
     float openGlare = max(
       smoothstep(GLARE_MIN, 0.9998, glareLayer(
-        world, vec2(1.0, 0.24), 0.070, 1.05, 0.7, uTime, GLARE_MIN
+        world, vec2(1.0, 0.14), 0.070, 0.7,
+        uGlareDrift.x, vec2(uGlareWanderX.x, uGlareWanderY.x), GLARE_MIN
       )),
       smoothstep(GLARE_MIN, 0.9998, glareLayer(
-        world, vec2(-0.36, 1.0), 0.082, -0.82, 3.2, uTime, GLARE_MIN
+        world, vec2(-0.18, 1.0), 0.082, 3.2,
+        uGlareDrift.y, vec2(uGlareWanderX.y, uGlareWanderY.y), GLARE_MIN
       ))
     );
     openGlare = max(
       openGlare,
       smoothstep(GLARE_MIN, 0.9998, glareLayer(
-        world, vec2(0.58, -1.0), 0.095, 1.18, 5.6, uTime, GLARE_MIN
+        world, vec2(-1.0, 0.22), 0.095, 5.6,
+        uGlareDrift.z, vec2(uGlareWanderX.z, uGlareWanderY.z), GLARE_MIN
       ))
     );
     openGlare = max(
       openGlare,
       smoothstep(GLARE_MIN, 0.9998, glareLayer(
-        world, vec2(-1.0, -0.41), 0.058, -0.68, 8.1, uTime, GLARE_MIN
+        world, vec2(0.26, -1.0), 0.058, 8.1,
+        uGlareDrift.w, vec2(uGlareWanderX.w, uGlareWanderY.w), GLARE_MIN
       ))
     );
-    float boundaryGlare = max(coastalBreak, openGlare * 0.08 * seaDetail);
+    // The open sea gets the same strength as the shoreline ribbon. At 0.08 it
+    // was a seventh of the coast's 0.55, so the glare read as a shore-only
+    // effect and open water looked dead -- which is the whole point of having
+    // these four layers sweeping across it.
+    float boundaryGlare = max(coastalBreak, openGlare * 0.55 * seaDetail);
     color = mix(color, vec3(0.90, 0.97, 1.0), boundaryGlare);
     if (shore) color = mix(color, color + vec3(0.05, 0.08, 0.09), 0.32);
   }

@@ -3,23 +3,27 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * The open-water glare was half the terrain shader's cost for an effect that
- * is almost always invisible.
+ * The open-water glare is the most expensive thing in the terrain shader, and
+ * most of that cost buys nothing.
  *
- * Measured on a desktop GPU at 1080p, all-water worst case: the whole shader
- * ran in 0.138ms against 0.012ms for a bare texture fetch, and dropping the
- * four glare layers took it to 0.075ms -- 46% of the pass for a highlight
- * gated behind smoothstep(0.992, 0.9998, ...) and then mixed at 0.08 opacity.
+ * Measured on a desktop GPU, 1024x1024, all-water worst case, with every
+ * uniform held constant across the timed draws: the pass runs in 0.0557ms,
+ * 0.0703ms with the early-out removed, and 0.0385ms with the glare deleted
+ * outright. So the glare is 31% of the pass and the early-out takes 21% off
+ * it -- for a highlight gated behind smoothstep(GLARE_MIN, 0.9998, ...) that
+ * is zero at most pixels most of the time.
  *
- * It is not removed, because that would change how the sea looks. Instead each
- * layer's value is the product of a wave term and a noise gate, both in
- * [0, 1]: if the wave term alone cannot clear the threshold, neither can the
- * product, and the caller's smoothstep returns zero either way. So the gate --
- * four hash lookups, the expensive half -- is skipped. The wave term clears
- * 0.992 for 20.6% of the phase, so roughly four fifths of pixels skip it.
+ * (An earlier version of this file quoted 46% and 43.8%. Those came from a
+ * harness that updated a uniform between draws, which serialises on ANGLE and
+ * swamped the fragment cost it was supposed to be measuring. The figures above
+ * are from a loop that changes nothing between draws.)
  *
- * Measured after: 43.8% off the terrain pass, with 36 of 16.8 million channel
- * samples differing by 1/255 from boundary rounding and nothing more.
+ * The layers are not removed, because that would change how the sea looks.
+ * Each layer's value is a wave term times a noise gate, both in [0, 1]: if the
+ * wave term alone cannot clear the threshold, neither can the product, and the
+ * caller's smoothstep returns zero either way. So the gate -- four hash
+ * lookups, the expensive half -- is skipped. The wave term clears 0.992 for
+ * 20.6% of its phase, so roughly four fifths of pixels never touch the noise.
  */
 const source = readFileSync(
   resolve(

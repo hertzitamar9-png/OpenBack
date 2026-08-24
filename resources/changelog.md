@@ -1,6 +1,15 @@
+## OpenBack v0.36.235 - Glints Right Across the Ocean
+
+- The bright glint on the water now happens all over the open sea instead of only near coastlines. It was being drawn at a seventh of the strength used along the shore, which left it invisible out in deep water; open water now gets the same strength as the coast. Roughly an eighth of the open sea is catching the light at any moment.
+- The glints travel in every direction rather than one. There are four sets of crests, one heading right, one left, one up and one down, each at its own pace, and each speeds up and eases off as it goes instead of marching at a fixed rate.
+- Where they appear now drifts about the map in both directions, so patches of light come and go in different parts of the sea over time rather than the same band sliding past forever.
+- The same change is applied to Immersive 3D, so the sea looks the same whichever mode you play in.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.234 - Cheaper Water, Same Water
 
-- The map draws noticeably faster with no change to how it looks. Almost half the cost of drawing the terrain went on a bright glint on the open sea that is invisible at most moments, and the game was paying for it on every pixel of ocean whether it showed or not. It is now worked out only where it can actually appear. Measured on a desktop graphics card, drawing the terrain got 43.8% cheaper, which matters most on phones.
+- The map draws noticeably faster with no change to how it looks. Almost half the cost of drawing the terrain went on a bright glint on the open sea that is invisible at most moments, and the game was paying for it on every pixel of ocean whether it showed or not. It is now worked out only where it can actually appear. Measured on a desktop graphics card, drawing the terrain got about 21% cheaper, which matters most on phones.
 
 Created by **frootz jhklphy**.
 
