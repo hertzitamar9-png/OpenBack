@@ -190,10 +190,17 @@ void main() {
     // light across the sea from independent headings and speeds, rather than
     // replacing it with an unrelated broad tint.
     float shoreBreak = sin(world.x * 0.18 + world.y * 0.13 - uTime * 1.8);
-    // The same expression the coastline has always used, with the `shore ?`
-    // gate taken off: identical maths, identical output, drawn on every water
-    // tile instead of only the ones touching land.
-    float coastalBreak = smoothstep(0.58, 0.90, shoreBreak) * 0.55 * seaDetail;
+    // The same band the coastline has always used, now drawn on every water
+    // tile rather than only the ones touching land.
+    //
+    // The coast keeps its full 0.55. Open water gets the same glow far
+    // gentler, because the two are not seen the same way: on a shore the band
+    // is only ever visible on a thin, ragged strip, so it reads as a rim that
+    // lights up and fades as the wave passes. Across open sea the whole band
+    // is on show, and at 0.55 it stops being a glow and becomes hard bright
+    // stripes over the entire ocean.
+    float coastalBreak =
+      smoothstep(0.58, 0.90, shoreBreak) * (shore ? 0.55 : 0.13) * seaDetail;
     float openGlare = max(
       smoothstep(GLARE_MIN, 0.9998, glareLayer(
         world, vec2(1.0, 0.14), 0.070, 0.7,

@@ -1,3 +1,9 @@
+## OpenBack v0.36.238 - A Gentler Glow on the Open Sea
+
+- Toned down the shoreline glow where it runs across open water. Coastlines keep exactly the glow they had, lighting up and fading as the wave passes; out at sea the same glow is now soft rather than the hard bright stripes of the previous release. The two need different strengths because a coast only ever shows a thin sliver of the wave, while open water shows the whole of it.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.237 - The Shoreline Glow, on All the Water
 
 - The glow that runs along the border between water and land now runs across every stretch of water, not just the tiles touching a coast. It is the same glow, unchanged: the same bands, the same brightness, the same drift, simply no longer restricted to the shoreline. Applied in both Classic 2D and Immersive 3D.
