@@ -69,7 +69,7 @@ export function flowAnimation(time: number, mapW: number, mapH: number) {
     directionX[i] = dx;
     directionY[i] = dy;
     life[i] = smoothstep(0, 0.2, age) * (1 - smoothstep(0.72, 1, age));
-    curve[i] = 12 + flowRandom(seed, generation, 4) * 20;
+    curve[i] = 0.35 + flowRandom(seed, generation, 4) * 0.65;
   }
   return { centerX, centerY, directionX, directionY, life, curve };
 }
@@ -333,13 +333,16 @@ export class TerrainPass {
     gl.uniform4fv(this.uFlowDirectionY, flow.directionY);
     gl.uniform4fv(this.uFlowLife, flow.life);
     gl.uniform4fv(this.uFlowCurve, flow.curve);
+    // Keep the reference shimmer pixel-sized on screen. Fixed tile sizes look
+    // tiny at world overview and turn into giant white routes when zoomed in.
+    const safeZoom = Math.max(0.05, zoom);
     gl.uniform1f(
       this.uFlowHalfLength,
-      Math.max(70, Math.min(180, Math.min(this.mapW, this.mapH) * 0.1)),
+      Math.max(0.4, Math.min(28, 4 / safeZoom)),
     );
     gl.uniform1f(
       this.uFlowWidth,
-      Math.max(8, Math.min(18, Math.min(this.mapW, this.mapH) * 0.012)),
+      Math.max(0.15, Math.min(2.5, 0.65 / safeZoom)),
     );
 
     gl.activeTexture(gl.TEXTURE0);

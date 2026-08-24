@@ -24,7 +24,7 @@ describe("the real coastal glow flows across Classic 2D water", () => {
     expect(shader).toContain(
       "shore ? smoothstep(0.58, 0.90, shoreBreak) * 0.55 * seaDetail : 0.0;",
     );
-    expect(shader).toContain("waterFlow * 0.55 * seaDetail");
+    expect(shader).toContain("waterFlow * 0.16 * seaDetail");
     expect(shader).not.toContain("float openGlare");
   });
 
@@ -53,13 +53,22 @@ describe("the real coastal glow flows across Classic 2D water", () => {
         1,
         5,
       );
-      expect(first.curve[i]).toBeGreaterThanOrEqual(12);
-      expect(first.curve[i]).toBeLessThanOrEqual(32);
+      expect(first.curve[i]).toBeGreaterThanOrEqual(0.35);
+      expect(first.curve[i]).toBeLessThanOrEqual(1);
     }
     expect(
       new Set(Array.from(travelDistances, (distance) => distance.toFixed(3)))
         .size,
     ).toBe(4);
+  });
+
+  it("keeps each fragment at tiny shoreline-glint scale", () => {
+    const pass = readFileSync(
+      resolve(process.cwd(), "src/client/render/gl/passes/TerrainPass.ts"),
+      "utf8",
+    );
+    expect(pass).toContain("Math.max(0.4, Math.min(28, 4 / safeZoom))");
+    expect(pass).toContain("Math.max(0.15, Math.min(2.5, 0.65 / safeZoom))");
   });
 
   it("fades a flow fully out before assigning its next random generation", () => {

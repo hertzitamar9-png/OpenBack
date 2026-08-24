@@ -88,7 +88,7 @@ float coastFlowLayer(
   vec2 relative = world - center;
   float along = dot(relative, travel);
   float side = dot(relative, across);
-  float curvedCenter = sin(along * 0.025 + phase) * curve;
+  float curvedCenter = sin(along * 0.025 + phase) * curve * width * 1.4;
   float normalizedSide = clamp(abs(side - curvedCenter) / width, 0.0, 1.0);
   float ribbon = cos(normalizedSide * 3.14159265);
   float ribbonTerm = smoothstep(0.58, 0.90, ribbon);
@@ -213,7 +213,10 @@ void main() {
         uFlowLife.w, uFlowCurve.w, 8.1, uFlowHalfLength, uFlowWidth
       )
     );
-    float boundaryGlare = max(coastalBreak, waterFlow * 0.55 * seaDetail);
+    // Open-water fragments are intentionally much smaller and subtler than
+    // the full shoreline rim: the reference is a tiny pale-blue pixel glint,
+    // not a white route drawn across the sea.
+    float boundaryGlare = max(coastalBreak, waterFlow * 0.16 * seaDetail);
     color = mix(color, vec3(0.90, 0.97, 1.0), boundaryGlare);
     if (shore) color = mix(color, color + vec3(0.05, 0.08, 0.09), 0.32);
   }

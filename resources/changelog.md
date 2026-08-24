@@ -1,3 +1,10 @@
+## OpenBack v0.36.240 - Tiny Open-Water Shimmers
+
+- Corrected the new Classic 2D water flow to match the actual reference: tiny pale-blue pixel shimmers instead of long white curves. Their dimensions now adapt to camera zoom, remaining about eight screen pixels long and less than one pixel thick at both world overview and close coastline zoom. They are also less curved and less than one-third of the previous brightness.
+- The fragments still appear, drift, fade, and respawn with changing positions, directions, and speeds. The original shoreline glow and Immersive 3D coast-only behavior remain unchanged.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.239 - Calm Coastal Flow across the 2D Sea
 
 - Classic 2D now uses the actual calm coastal-glow color and threshold in localized flows across open water instead of approximating it with a different wave or glint effect. Four independent flows appear and fade in changing places, each receiving a new random direction, speed, curve, and position.
