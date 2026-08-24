@@ -1,3 +1,11 @@
+## OpenBack v0.36.239 - Calm Coastal Flow across the 2D Sea
+
+- Classic 2D now uses the actual calm coastal-glow color and threshold in localized flows across open water instead of approximating it with a different wave or glint effect. Four independent flows appear and fade in changing places, each receiving a new random direction, speed, curve, and position.
+- The original coastline glow remains unchanged. Immersive 3D keeps the effect attached only to shoreline water, as requested; its raised waves and other water lighting remain untouched.
+- The flow is deterministic for replays and multiplayer visuals, uses no map-sized distance texture, and calculates its randomized paths once per frame instead of running random-noise fields on every water pixel.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.238 - A Gentler Glow on the Open Sea
 
 - Toned down the shoreline glow where it runs across open water. Coastlines keep exactly the glow they had, lighting up and fading as the wave passes; out at sea the same glow is now soft rather than the hard bright stripes of the previous release. The two need different strengths because a coast only ever shows a thin sliver of the wave, while open water shows the whole of it.

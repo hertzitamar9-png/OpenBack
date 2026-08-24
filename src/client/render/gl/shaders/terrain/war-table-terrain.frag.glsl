@@ -7,13 +7,16 @@ uniform usampler2D uTerrainBytes;
 uniform vec2 uMapSize;
 uniform float uZoom;
 uniform float uTime;
-// Per-glare-layer animation. Both terms depend only on time and per-layer
-// constants -- never on the pixel -- so every fragment was recomputing the
-// same four sines and four cosines. They are worked out once per frame on the
-// CPU instead; x/y/z/w are layers 0..3.
-uniform vec4 uGlareDrift;
-uniform vec4 uGlareWanderX;
-uniform vec4 uGlareWanderY;
+// Four finite, independently animated flows. Their random generation is
+// calculated once per frame on the CPU; x/y/z/w are flows 0..3.
+uniform vec4 uFlowCenterX;
+uniform vec4 uFlowCenterY;
+uniform vec4 uFlowDirectionX;
+uniform vec4 uFlowDirectionY;
+uniform vec4 uFlowLife;
+uniform vec4 uFlowCurve;
+uniform float uFlowHalfLength;
+uniform float uFlowWidth;
 
 in vec2 vUV;
 out vec4 fragColor;
@@ -34,8 +37,6 @@ float valueNoise(vec2 p) {
   float d = hash21(cell + vec2(1.0, 1.0));
   return mix(mix(a, b, w.x), mix(c, d, w.x), w.y);
 }
-
-const float GLARE_MIN = 0.992;
 
 float shineLayer(
   vec2 world,
@@ -64,45 +65,35 @@ float shineLayer(
 }
 
 /**
- * A shine layer for the open-water glare, which is only ever shown above a
- * threshold.
+ * The actual coastal-flow expression, released into local patches of open
+ * water. It deliberately uses the shore's sine and 0.58..0.90 threshold,
+ * rather than the broad shine fields that looked like a different effect.
  *
- * The layer's value is the product of a wave term and a noise gate, both in
- * [0, 1]. If the wave term alone cannot clear the threshold the product cannot
- * either, and the caller's smoothstep returns zero for both -- so the gate,
- * which is four hash lookups and the expensive half of this function, can be
- * skipped outright. The output is identical, not an approximation; roughly a
- * fifth of pixels still evaluate the gate, and the wave field is smooth, so
- * neighbouring pixels take the same branch.
+ * Each path has one curved centerline and finite length. Its position,
+ * heading, speed, curve, and lifespan arrive as CPU-computed uniforms, so it
+ * can fade away and respawn elsewhere without per-pixel random fields.
  */
-float glareLayer(
+float coastFlowLayer(
   vec2 world,
+  vec2 center,
   vec2 direction,
-  float frequency,
+  float life,
+  float curve,
   float phase,
-  float drift,
-  vec2 wander,
-  float threshold
+  float halfLength,
+  float width
 ) {
   vec2 travel = normalize(direction);
   vec2 across = vec2(-travel.y, travel.x);
-  float bend = sin(
-    dot(world, across) * frequency * 0.41 + drift * 0.19 + phase
-  ) * 0.72;
-  float wave = sin(
-    dot(world, travel) * frequency + drift + phase + bend
-  ) * 0.5 + 0.5;
-  float waveTerm = smoothstep(0.16, 0.94, wave);
-  if (waveTerm <= threshold) return 0.0;
-  // Where a glint may show is a noise field that wanders in two dimensions
-  // rather than sliding along one heading, so patches light up in different
-  // parts of the sea at different times instead of one band scrolling past
-  // forever.
-  float gate = valueNoise(
-    world * 0.005 + travel * drift * 0.6 + wander
-      + vec2(phase * 3.7, phase * 1.9)
-  );
-  return waveTerm * smoothstep(0.26, 0.74, gate);
+  vec2 relative = world - center;
+  float along = dot(relative, travel);
+  float side = dot(relative, across);
+  float curvedCenter = sin(along * 0.025 + phase) * curve;
+  float normalizedSide = clamp(abs(side - curvedCenter) / width, 0.0, 1.0);
+  float ribbon = cos(normalizedSide * 3.14159265);
+  float ribbonTerm = smoothstep(0.58, 0.90, ribbon);
+  float endFade = 1.0 - smoothstep(halfLength * 0.62, halfLength, abs(along));
+  return ribbonTerm * endFade * life;
 }
 
 uint terrainAt(ivec2 p) {
@@ -185,51 +176,44 @@ void main() {
     shine = 1.0 - shine;
     color = mix(color, shorelineTint, shine * 0.95 * seaDetail);
 
-    // The pale shoreline ribbon the map already uses is also the open-water
-    // glare language. Broken high-frequency fields send that same blue-white
-    // light across the sea from independent headings and speeds, rather than
-    // replacing it with an unrelated broad tint.
+    // Keep the exact original coastal glow on shoreline water.
     float shoreBreak = sin(world.x * 0.18 + world.y * 0.13 - uTime * 1.8);
-    // The same band the coastline has always used, now drawn on every water
-    // tile rather than only the ones touching land.
-    //
-    // The coast keeps its full 0.55. Open water gets the same glow far
-    // gentler, because the two are not seen the same way: on a shore the band
-    // is only ever visible on a thin, ragged strip, so it reads as a rim that
-    // lights up and fades as the wave passes. Across open sea the whole band
-    // is on show, and at 0.55 it stops being a glow and becomes hard bright
-    // stripes over the entire ocean.
     float coastalBreak =
-      smoothstep(0.58, 0.90, shoreBreak) * (shore ? 0.55 : 0.13) * seaDetail;
-    float openGlare = max(
-      smoothstep(GLARE_MIN, 0.9998, glareLayer(
-        world, vec2(1.0, 0.14), 0.070, 0.7,
-        uGlareDrift.x, vec2(uGlareWanderX.x, uGlareWanderY.x), GLARE_MIN
-      )),
-      smoothstep(GLARE_MIN, 0.9998, glareLayer(
-        world, vec2(-0.18, 1.0), 0.082, 3.2,
-        uGlareDrift.y, vec2(uGlareWanderX.y, uGlareWanderY.y), GLARE_MIN
-      ))
+      shore ? smoothstep(0.58, 0.90, shoreBreak) * 0.55 * seaDetail : 0.0;
+
+    // In Classic 2D, that same calm coastal flow also spawns in localized
+    // patches of open water. Four independently moving layers make direction,
+    // speed, position and lifetime feel unplanned without desynchronizing the
+    // deterministic renderer.
+    float waterFlow = max(
+      coastFlowLayer(
+        world, vec2(uFlowCenterX.x, uFlowCenterY.x),
+        vec2(uFlowDirectionX.x, uFlowDirectionY.x),
+        uFlowLife.x, uFlowCurve.x, 0.7, uFlowHalfLength, uFlowWidth
+      ),
+      coastFlowLayer(
+        world, vec2(uFlowCenterX.y, uFlowCenterY.y),
+        vec2(uFlowDirectionX.y, uFlowDirectionY.y),
+        uFlowLife.y, uFlowCurve.y, 3.2, uFlowHalfLength, uFlowWidth
+      )
     );
-    openGlare = max(
-      openGlare,
-      smoothstep(GLARE_MIN, 0.9998, glareLayer(
-        world, vec2(-1.0, 0.22), 0.095, 5.6,
-        uGlareDrift.z, vec2(uGlareWanderX.z, uGlareWanderY.z), GLARE_MIN
-      ))
+    waterFlow = max(
+      waterFlow,
+      coastFlowLayer(
+        world, vec2(uFlowCenterX.z, uFlowCenterY.z),
+        vec2(uFlowDirectionX.z, uFlowDirectionY.z),
+        uFlowLife.z, uFlowCurve.z, 5.6, uFlowHalfLength, uFlowWidth
+      )
     );
-    openGlare = max(
-      openGlare,
-      smoothstep(GLARE_MIN, 0.9998, glareLayer(
-        world, vec2(0.26, -1.0), 0.058, 8.1,
-        uGlareDrift.w, vec2(uGlareWanderX.w, uGlareWanderY.w), GLARE_MIN
-      ))
+    waterFlow = max(
+      waterFlow,
+      coastFlowLayer(
+        world, vec2(uFlowCenterX.w, uFlowCenterY.w),
+        vec2(uFlowDirectionX.w, uFlowDirectionY.w),
+        uFlowLife.w, uFlowCurve.w, 8.1, uFlowHalfLength, uFlowWidth
+      )
     );
-    // Kept deliberately faint. Turned up to the shoreline's 0.55 these four
-    // fields stop being glints and become broad pale ribbons across the whole
-    // sea -- their crests are 66 to 108 tiles apart against the shoreline
-    // rim's 28, so the same strength paints sheets rather than highlights.
-    float boundaryGlare = max(coastalBreak, openGlare * 0.10 * seaDetail);
+    float boundaryGlare = max(coastalBreak, waterFlow * 0.55 * seaDetail);
     color = mix(color, vec3(0.90, 0.97, 1.0), boundaryGlare);
     if (shore) color = mix(color, color + vec3(0.05, 0.08, 0.09), 0.32);
   }

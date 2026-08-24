@@ -27,41 +27,51 @@ import {
 // TerrainPass
 // ---------------------------------------------------------------------------
 
-/**
- * The four open-water glare layers, as the fragment shader declares them.
- *
- * Their animation depends only on time, never on the pixel, so working it out
- * per fragment made every one of them recompute the same handful of sines.
- * It is worked out once per frame here and handed over as uniforms instead.
- *
- * `speed` and `phase` must match the call sites in
- * war-table-terrain.frag.glsl; a test asserts they do.
- */
-const GLARE_LAYERS = [
-  { speed: 1.05, phase: 0.7 },
-  { speed: -0.82, phase: 3.2 },
-  { speed: 1.18, phase: 5.6 },
-  { speed: -0.68, phase: 8.1 },
-] as const;
+const FLOW_SEEDS = [0.71, 2.93, 5.17, 8.41] as const;
+const FLOW_DURATIONS = [19, 23, 29, 31] as const;
+
+function flowRandom(seed: number, generation: number, salt: number): number {
+  const value = Math.sin(seed * 12.9898 + generation * 78.233 + salt * 37.719);
+  const scaled = value * 43758.5453;
+  return scaled - Math.floor(scaled);
+}
+
+function smoothstep(edge0: number, edge1: number, value: number): number {
+  const t = Math.max(0, Math.min(1, (value - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+}
 
 /**
- * A layer's phase at `time`, and where its noise gate has wandered to.
- *
- * The wobble is added to the phase rather than multiplied into it, so the
- * crests surge and ease off -- instantaneous speed swings roughly 0.58x to
- * 1.42x -- without the wave ever jumping when the rate changes.
+ * Four finite water flows. A path fades to zero before its next generation
+ * receives a new position, direction, speed and curve, so the random change
+ * is never visible as a teleport. Everything is calculated once per frame.
  */
-function glareAnimation(time: number) {
-  const drift = new Float32Array(4);
-  const wanderX = new Float32Array(4);
-  const wanderY = new Float32Array(4);
-  for (let i = 0; i < GLARE_LAYERS.length; i++) {
-    const { speed, phase } = GLARE_LAYERS[i];
-    drift[i] = time * speed + 6.0 * Math.sin(time * 0.07 * speed + phase * 1.7);
-    wanderX[i] = Math.sin(time * 0.021 + phase * 2.3) * 9.0;
-    wanderY[i] = Math.cos(time * 0.017 + phase * 1.1) * 9.0;
+export function flowAnimation(time: number, mapW: number, mapH: number) {
+  const centerX = new Float32Array(4);
+  const centerY = new Float32Array(4);
+  const directionX = new Float32Array(4);
+  const directionY = new Float32Array(4);
+  const life = new Float32Array(4);
+  const curve = new Float32Array(4);
+  for (let i = 0; i < FLOW_SEEDS.length; i++) {
+    const seed = FLOW_SEEDS[i];
+    const duration = FLOW_DURATIONS[i];
+    const cycle = time / duration + seed;
+    const generation = Math.floor(cycle);
+    const age = cycle - generation;
+    const angle = flowRandom(seed, generation, 2) * Math.PI * 2;
+    const dx = Math.cos(angle);
+    const dy = Math.sin(angle);
+    const speed = 0.35 + flowRandom(seed, generation, 3) * 0.75;
+    const travel = (age - 0.5) * duration * speed * 7;
+    centerX[i] = flowRandom(seed, generation, 0) * mapW + dx * travel;
+    centerY[i] = flowRandom(seed, generation, 1) * mapH + dy * travel;
+    directionX[i] = dx;
+    directionY[i] = dy;
+    life[i] = smoothstep(0, 0.2, age) * (1 - smoothstep(0.72, 1, age));
+    curve[i] = 12 + flowRandom(seed, generation, 4) * 20;
   }
-  return { drift, wanderX, wanderY };
+  return { centerX, centerY, directionX, directionY, life, curve };
 }
 
 export class TerrainPass {
@@ -72,9 +82,14 @@ export class TerrainPass {
   private uCamera: WebGLUniformLocation;
   private uZoom: WebGLUniformLocation;
   private uTime: WebGLUniformLocation;
-  private uGlareDrift: WebGLUniformLocation;
-  private uGlareWanderX: WebGLUniformLocation;
-  private uGlareWanderY: WebGLUniformLocation;
+  private uFlowCenterX: WebGLUniformLocation;
+  private uFlowCenterY: WebGLUniformLocation;
+  private uFlowDirectionX: WebGLUniformLocation;
+  private uFlowDirectionY: WebGLUniformLocation;
+  private uFlowLife: WebGLUniformLocation;
+  private uFlowCurve: WebGLUniformLocation;
+  private uFlowHalfLength: WebGLUniformLocation;
+  private uFlowWidth: WebGLUniformLocation;
   private mapW: number;
   private mapH: number;
   // Base ocean (deep water) color; reused by applyTerrainDelta and rebuilds.
@@ -107,9 +122,23 @@ export class TerrainPass {
     this.uCamera = gl.getUniformLocation(this.program, "uCamera")!;
     this.uZoom = gl.getUniformLocation(this.program, "uZoom")!;
     this.uTime = gl.getUniformLocation(this.program, "uTime")!;
-    this.uGlareDrift = gl.getUniformLocation(this.program, "uGlareDrift")!;
-    this.uGlareWanderX = gl.getUniformLocation(this.program, "uGlareWanderX")!;
-    this.uGlareWanderY = gl.getUniformLocation(this.program, "uGlareWanderY")!;
+    this.uFlowCenterX = gl.getUniformLocation(this.program, "uFlowCenterX")!;
+    this.uFlowCenterY = gl.getUniformLocation(this.program, "uFlowCenterY")!;
+    this.uFlowDirectionX = gl.getUniformLocation(
+      this.program,
+      "uFlowDirectionX",
+    )!;
+    this.uFlowDirectionY = gl.getUniformLocation(
+      this.program,
+      "uFlowDirectionY",
+    )!;
+    this.uFlowLife = gl.getUniformLocation(this.program, "uFlowLife")!;
+    this.uFlowCurve = gl.getUniformLocation(this.program, "uFlowCurve")!;
+    this.uFlowHalfLength = gl.getUniformLocation(
+      this.program,
+      "uFlowHalfLength",
+    )!;
+    this.uFlowWidth = gl.getUniformLocation(this.program, "uFlowWidth")!;
     gl.useProgram(this.program);
     gl.uniform1i(gl.getUniformLocation(this.program, "uTerrain"), 0);
     gl.uniform1i(gl.getUniformLocation(this.program, "uTerrainBytes"), 1);
@@ -297,10 +326,21 @@ export class TerrainPass {
     gl.uniformMatrix3fv(this.uCamera, false, cameraMatrix);
     gl.uniform1f(this.uZoom, zoom);
     gl.uniform1f(this.uTime, timeSeconds);
-    const glare = glareAnimation(timeSeconds);
-    gl.uniform4fv(this.uGlareDrift, glare.drift);
-    gl.uniform4fv(this.uGlareWanderX, glare.wanderX);
-    gl.uniform4fv(this.uGlareWanderY, glare.wanderY);
+    const flow = flowAnimation(timeSeconds, this.mapW, this.mapH);
+    gl.uniform4fv(this.uFlowCenterX, flow.centerX);
+    gl.uniform4fv(this.uFlowCenterY, flow.centerY);
+    gl.uniform4fv(this.uFlowDirectionX, flow.directionX);
+    gl.uniform4fv(this.uFlowDirectionY, flow.directionY);
+    gl.uniform4fv(this.uFlowLife, flow.life);
+    gl.uniform4fv(this.uFlowCurve, flow.curve);
+    gl.uniform1f(
+      this.uFlowHalfLength,
+      Math.max(70, Math.min(180, Math.min(this.mapW, this.mapH) * 0.1)),
+    );
+    gl.uniform1f(
+      this.uFlowWidth,
+      Math.max(8, Math.min(18, Math.min(this.mapW, this.mapH) * 0.012)),
+    );
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.tex);

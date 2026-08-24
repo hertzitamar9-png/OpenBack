@@ -54,7 +54,7 @@ describe("3D water cycle shader", () => {
     expect(terrain).not.toContain("smoothstep(0.82, 0.97, waves)");
   });
 
-  it("carries the real shoreline blend through independently moving open-water shine", () => {
+  it("keeps 2D coastal flow independent while 3D foam stays coast-only", () => {
     const terrain = readFileSync(
       "src/client/render/gl/shaders/terrain/war-table-terrain.frag.glsl",
       "utf8",
@@ -87,20 +87,9 @@ describe("3D water cycle shader", () => {
     );
     expect(threeD).not.toContain("float openCrest=");
     expect(terrain).toContain("float boundaryGlare = max(coastalBreak");
-    expect(threeD).toContain(
-      "float foamCrest=max(coastalBreak,openGlare*0.12);",
-    );
-    // One layer travelling each way, and both seas must agree on them or the
-    // same ocean looks different depending on the mode you play in.
-    for (const [flat, packed] of [
-      ["vec2(1.0, 0.14)", "vec2(1.0,0.14)"],
-      ["vec2(-0.18, 1.0)", "vec2(-0.18,1.0)"],
-      ["vec2(-1.0, 0.22)", "vec2(-1.0,0.22)"],
-      ["vec2(0.26, -1.0)", "vec2(0.26,-1.0)"],
-    ]) {
-      expect(terrain).toContain(flat);
-      expect(threeD).toContain(packed);
-    }
+    expect(threeD).toContain("float foamCrest=coastalBreak;");
+    expect(threeD).not.toContain("coastFlowLayer");
+    expect(terrain.match(/coastFlowLayer\(/g)).toHaveLength(5);
   });
 
   // A sine on its own runs as endless parallel bands: the same crests in the
@@ -120,11 +109,11 @@ describe("3D water cycle shader", () => {
       "utf8",
     );
 
-    expect(terrain).toContain("smoothstep(0.26, 0.74, gate)");
+    expect(terrain).toContain("return ribbonTerm * endFade * life;");
     expect(threeD).toContain("smoothstep(0.26,0.74,gate)");
     // The gate travels with its layer, so a layer running the other way takes
     // its patches the other way too.
-    expect(terrain).toContain("world * 0.005 + travel * time * speed * 0.6");
+    expect(terrain).toContain("float curvedCenter = sin(");
     expect(threeD).toContain("world*0.005+travel*time*speed*0.6");
 
     // "patch" is a reserved word in GLSL ES 3.0 -- naming the variable that

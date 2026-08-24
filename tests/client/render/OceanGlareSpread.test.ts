@@ -1,22 +1,8 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { flowAnimation } from "../../../src/client/render/gl/passes/TerrainPass";
 
-/**
- * The glint has to happen all over the sea, not just near land, and it has to
- * look unplanned.
- *
- * Open water was mixed at 0.08 against the shoreline ribbon's 0.55 -- a
- * seventh of the strength -- so a glint out at sea reached brightness 37 of
- * 255 and read as nothing at all. The four layers also marched at fixed rates,
- * and their noise gate slid along one heading, so the same band scrolled past
- * forever.
- *
- * Now: full strength everywhere, one layer travelling each way, a rate that
- * surges and eases, and a gate that wanders in two dimensions so patches light
- * up in different places at different times. Measured after: 12-14% of open
- * ocean lit at any instant, varying frame to frame.
- */
 const shader = readFileSync(
   resolve(
     process.cwd(),
@@ -24,117 +10,76 @@ const shader = readFileSync(
   ),
   "utf8",
 );
-const pass = readFileSync(
-  resolve(process.cwd(), "src/client/render/gl/passes/TerrainPass.ts"),
+const threeD = readFileSync(
+  resolve(process.cwd(), "src/client/render/gl/passes/ThreeDCompositePass.ts"),
   "utf8",
 );
 
-/** The `vec2(x, y), frequency, phase` each glareLayer call is given. */
-function glareCalls(): Array<{ dir: [number, number]; phase: number }> {
-  return shader
-    .split("glareLayer(")
-    .slice(1)
-    .filter((chunk) => chunk.includes("uGlareDrift."))
-    .map((chunk) => chunk.slice(0, chunk.indexOf("uGlareDrift.")))
-    .map((chunk) => {
-      const inside = chunk.slice(chunk.indexOf("vec2(") + 5);
-      const [x, y] = inside
-        .slice(0, inside.indexOf(")"))
-        .split(",")
-        .map(Number);
-      const rest = inside
-        .slice(inside.indexOf(")") + 1)
-        .split(",")
-        .map((piece) => piece.trim())
-        .filter((piece) => piece.length > 0)
-        .map(Number)
-        .filter((value) => Number.isFinite(value));
-      return { dir: [x, y] as [number, number], phase: rest[1] };
-    });
-}
-
-describe("the open-sea glint stays a glint", () => {
-  it("keeps the open-sea fields faint", () => {
-    // At the shoreline's 0.55 these stop being glints and become broad pale
-    // ribbons: their crests are 66-108 tiles apart against the rim's 28, so
-    // the same strength paints sheets across the whole sea rather than
-    // highlights on it. Rendered and looked at before walking it back.
-    const weight = Number(
-      shader.split("openGlare * ")[1].split(" ")[0].replace(",", ""),
+describe("the real coastal glow flows across Classic 2D water", () => {
+  it("uses the exact coastal threshold, color, and full glow strength", () => {
+    expect(shader).toContain("float coastFlowLayer(");
+    expect(shader).toContain(
+      "float ribbonTerm = smoothstep(0.58, 0.90, ribbon);",
     );
-    expect(weight).toBeGreaterThan(0);
-    expect(weight).toBeLessThanOrEqual(0.15);
-  });
-});
-
-describe("the glint travels every way, not one", () => {
-  const LAYERS = [
-    { speed: 1.05 },
-    { speed: -0.82 },
-    { speed: 1.18 },
-    { speed: -0.68 },
-  ];
-
-  it("declares four layers", () => {
-    expect(glareCalls()).toHaveLength(4);
+    expect(shader).toContain(
+      "shore ? smoothstep(0.58, 0.90, shoreBreak) * 0.55 * seaDetail : 0.0;",
+    );
+    expect(shader).toContain("waterFlow * 0.55 * seaDetail");
+    expect(shader).not.toContain("float openGlare");
   });
 
-  it("covers right, left, up and down", () => {
-    // A negative speed runs the layer against its heading, so the direction
-    // actually seen is the heading times the sign of the speed.
-    const seen = new Set<string>();
-    glareCalls().forEach(({ dir }, i) => {
-      const sign = Math.sign(LAYERS[i].speed);
-      const [x, y] = [dir[0] * sign, dir[1] * sign];
-      seen.add(
-        Math.abs(x) > Math.abs(y)
-          ? x > 0
-            ? "right"
-            : "left"
-          : y > 0
-            ? "down"
-            : "up",
+  it("draws four finite curved paths instead of periodic sea-wide stripes", () => {
+    expect(shader.match(/coastFlowLayer\(/g)).toHaveLength(5);
+    expect(shader).toContain("float curvedCenter = sin(");
+    expect(shader).toContain("float normalizedSide = clamp(");
+    expect(shader).toContain(
+      "float endFade = 1.0 - smoothstep(halfLength * 0.62, halfLength",
+    );
+    expect(shader).toContain("return ribbonTerm * endFade * life;");
+  });
+
+  it("generates changing normalized directions, positions, speeds, and curves", () => {
+    const first = flowAnimation(8, 4096, 2048);
+    const next = flowAnimation(9, 4096, 2048);
+    const travelDistances = first.centerX.map((x, index) =>
+      Math.hypot(
+        next.centerX[index] - x,
+        next.centerY[index] - first.centerY[index],
+      ),
+    );
+
+    for (let i = 0; i < 4; i++) {
+      expect(Math.hypot(first.directionX[i], first.directionY[i])).toBeCloseTo(
+        1,
+        5,
       );
-    });
-    expect([...seen].sort()).toEqual(["down", "left", "right", "up"]);
+      expect(first.curve[i]).toBeGreaterThanOrEqual(12);
+      expect(first.curve[i]).toBeLessThanOrEqual(32);
+    }
+    expect(
+      new Set(Array.from(travelDistances, (distance) => distance.toFixed(3)))
+        .size,
+    ).toBe(4);
   });
 
-  it("gives each layer its own rate", () => {
-    const rates = LAYERS.map((l) => Math.abs(l.speed));
-    expect(new Set(rates).size).toBe(rates.length);
+  it("fades a flow fully out before assigning its next random generation", () => {
+    // Flow zero: seed .71, duration 19, so generation 1 begins here.
+    const boundary = (1 - 0.71) * 19;
+    const before = flowAnimation(boundary - 0.001, 4096, 2048);
+    const after = flowAnimation(boundary + 0.001, 4096, 2048);
+
+    expect(before.life[0]).toBeCloseTo(0, 5);
+    expect(after.life[0]).toBeCloseTo(0, 5);
+    expect(after.centerX[0]).not.toBeCloseTo(before.centerX[0], 2);
   });
 });
 
-describe("the animation is worked out once per frame, not once per pixel", () => {
-  it("takes drift and wander as uniforms", () => {
-    expect(shader).toContain("uniform vec4 uGlareDrift;");
-    expect(shader).toContain("uniform vec4 uGlareWanderX;");
-    expect(shader).toContain("uniform vec4 uGlareWanderY;");
-  });
-
-  it("leaves no per-pixel trig beyond the two waves themselves", () => {
-    // Hoisting these cut 16.2% off the pass with a bit-identical picture, so a
-    // future edit must not quietly move them back inside.
-    const body = shader.slice(shader.indexOf("float glareLayer("));
-    const fn = body.slice(0, body.indexOf("\n}"));
-    const trig = (fn.match(/\bsin\(|\bcos\(/g) ?? []).length;
-    expect(trig).toBe(2);
-  });
-
-  it("computes them on the CPU from the same constants", () => {
-    expect(pass).toContain("const GLARE_LAYERS = [");
-    expect(pass).toContain("function glareAnimation(");
-    for (const { speed } of [
-      { speed: 1.05 },
-      { speed: -0.82 },
-      { speed: 1.18 },
-      { speed: -0.68 },
-    ]) {
-      expect(pass).toContain(`speed: ${speed},`);
-    }
-    // The phases the shader passes must be the ones the CPU animates.
-    for (const { phase } of glareCalls()) {
-      expect(pass).toContain(`phase: ${phase} }`);
-    }
+describe("Immersive 3D keeps the calm glow at the coast", () => {
+  it("does not inject the Classic 2D open-water flows", () => {
+    expect(threeD).not.toContain("coastFlowLayer");
+    expect(threeD).toContain(
+      "float coastalBreak=shoreline?smoothstep(0.58,0.90,shoreBreak)*0.72:0.0;",
+    );
+    expect(threeD).toContain("float foamCrest=coastalBreak;");
   });
 });
