@@ -1,3 +1,10 @@
+## OpenBack v0.36.236 - Take the Pale Bands Back Off the Sea
+
+- Removed the broad pale bands that appeared across the ocean in the previous release. Turning the open-water glint up to the brightness used along coastlines did not spread the coastal glow, it painted wide washes over the water, because those crests are three to four times wider than the shoreline's. The glint is faint again in both Classic 2D and Immersive 3D.
+- Kept from the previous release: the glints travel in four directions at their own pace, speeding up and easing off, and appear in patches that drift around the map.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.235 - Glints Right Across the Ocean
 
 - The bright glint on the water now happens all over the open sea instead of only near coastlines. It was being drawn at a seventh of the strength used along the shore, which left it invisible out in deep water; open water now gets the same strength as the coast. Roughly an eighth of the open sea is catching the light at any moment.

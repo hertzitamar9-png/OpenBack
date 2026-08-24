@@ -436,7 +436,7 @@ void main(){
   );
   openGlare=max(openGlare,smoothstep(GLARE_MIN,0.9998,glareLayer(vWorld,vec2(-1.0,0.22),0.095,1.18,5.6,uTime,GLARE_MIN)));
   openGlare=max(openGlare,smoothstep(GLARE_MIN,0.9998,glareLayer(vWorld,vec2(0.26,-1.0),0.058,-0.68,8.1,uTime,GLARE_MIN)));
-  float foamCrest=max(coastalBreak,openGlare*0.72);
+  float foamCrest=max(coastalBreak,openGlare*0.12);
   float crest=foamCrest;
   float shimmer=clamp(0.28+wave*0.10+fine*0.055+crest*0.24,0.12,0.68);
   vec3 oceanBase=mix(deep,highlight,shimmer);

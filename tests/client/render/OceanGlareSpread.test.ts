@@ -53,14 +53,17 @@ function glareCalls(): Array<{ dir: [number, number]; phase: number }> {
     });
 }
 
-describe("the glint covers the whole sea", () => {
-  it("gives open water the shoreline's strength", () => {
-    expect(shader).toContain("openGlare * 0.55 * seaDetail");
-    // The shoreline ribbon it now matches.
-    expect(shader).toContain(
-      "smoothstep(0.58, 0.90, shoreBreak) * 0.55 * seaDetail",
+describe("the open-sea glint stays a glint", () => {
+  it("keeps the open-sea fields faint", () => {
+    // At the shoreline's 0.55 these stop being glints and become broad pale
+    // ribbons: their crests are 66-108 tiles apart against the rim's 28, so
+    // the same strength paints sheets across the whole sea rather than
+    // highlights on it. Rendered and looked at before walking it back.
+    const weight = Number(
+      shader.split("openGlare * ")[1].split(" ")[0].replace(",", ""),
     );
-    expect(shader).not.toContain("openGlare * 0.08");
+    expect(weight).toBeGreaterThan(0);
+    expect(weight).toBeLessThanOrEqual(0.15);
   });
 });
 

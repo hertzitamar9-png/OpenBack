@@ -217,11 +217,11 @@ void main() {
         uGlareDrift.w, vec2(uGlareWanderX.w, uGlareWanderY.w), GLARE_MIN
       ))
     );
-    // The open sea gets the same strength as the shoreline ribbon. At 0.08 it
-    // was a seventh of the coast's 0.55, so the glare read as a shore-only
-    // effect and open water looked dead -- which is the whole point of having
-    // these four layers sweeping across it.
-    float boundaryGlare = max(coastalBreak, openGlare * 0.55 * seaDetail);
+    // Kept deliberately faint. Turned up to the shoreline's 0.55 these four
+    // fields stop being glints and become broad pale ribbons across the whole
+    // sea -- their crests are 66 to 108 tiles apart against the shoreline
+    // rim's 28, so the same strength paints sheets rather than highlights.
+    float boundaryGlare = max(coastalBreak, openGlare * 0.10 * seaDetail);
     color = mix(color, vec3(0.90, 0.97, 1.0), boundaryGlare);
     if (shore) color = mix(color, color + vec3(0.05, 0.08, 0.09), 0.32);
   }
