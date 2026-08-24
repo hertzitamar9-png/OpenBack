@@ -1,3 +1,11 @@
+## OpenBack v0.36.241 - Tiny Shimmers throughout Every Ocean
+
+- Distributed the subtle Classic 2D pale-blue shimmer throughout the entire ocean instead of spawning only four fragments that could all appear near land. Every broad ocean region now owns an independent tiny shimmer with its own position, direction, speed, curve, and fade cycle.
+- Preserved the corrected pixel-sized dimensions and low brightness from the previous release. Coverage scales from at least 32 independent regions on compact maps to more than 100 on the World map without looping over every shimmer per pixel.
+- Immersive 3D remains unchanged with the glow restricted to coastlines.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.240 - Tiny Open-Water Shimmers
 
 - Corrected the new Classic 2D water flow to match the actual reference: tiny pale-blue pixel shimmers instead of long white curves. Their dimensions now adapt to camera zoom, remaining about eight screen pixels long and less than one pixel thick at both world overview and close coastline zoom. They are also less curved and less than one-third of the previous brightness.

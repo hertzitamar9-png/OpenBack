@@ -7,16 +7,6 @@ uniform usampler2D uTerrainBytes;
 uniform vec2 uMapSize;
 uniform float uZoom;
 uniform float uTime;
-// Four finite, independently animated flows. Their random generation is
-// calculated once per frame on the CPU; x/y/z/w are flows 0..3.
-uniform vec4 uFlowCenterX;
-uniform vec4 uFlowCenterY;
-uniform vec4 uFlowDirectionX;
-uniform vec4 uFlowDirectionY;
-uniform vec4 uFlowLife;
-uniform vec4 uFlowCurve;
-uniform float uFlowHalfLength;
-uniform float uFlowWidth;
 
 in vec2 vUV;
 out vec4 fragColor;
@@ -94,6 +84,50 @@ float coastFlowLayer(
   float ribbonTerm = smoothstep(0.58, 0.90, ribbon);
   float endFade = 1.0 - smoothstep(halfLength * 0.62, halfLength, abs(along));
   return ribbonTerm * endFade * life;
+}
+
+float flowRandom(vec2 cell, float generation, float salt) {
+  return hash21(
+    cell + vec2(
+      generation * 13.17 + salt * 7.31,
+      generation * 5.91 - salt * 11.70
+    )
+  );
+}
+
+/**
+ * One tiny shimmer per broad map cell. Because every ocean region owns its
+ * own lifecycle, open water everywhere receives the effect instead of four
+ * global paths happening to land near a coast. Centers stay safely inside
+ * their cells, so a path never gets clipped at a cell boundary.
+ */
+float oceanShimmer(vec2 world, vec2 mapSize, float time, float zoom) {
+  float cellSize = clamp(min(mapSize.x, mapSize.y) / 6.0, 64.0, 260.0);
+  vec2 cell = floor(world / cellSize);
+  vec2 cellOrigin = cell * cellSize;
+  float seed = hash21(cell + vec2(17.3, 41.9));
+  float duration = mix(17.0, 31.0, hash21(cell + vec2(63.1, 9.7)));
+  float cycle = time / duration + seed;
+  float generation = floor(cycle);
+  float age = fract(cycle);
+  float angle = flowRandom(cell, generation, 2.0) * 6.2831853;
+  vec2 direction = vec2(cos(angle), sin(angle));
+  float speed = mix(0.30, 1.0, flowRandom(cell, generation, 3.0));
+  float travel = (age - 0.5) * min(18.0, cellSize * 0.08) * speed;
+  vec2 center = cellOrigin + cellSize * vec2(
+    mix(0.28, 0.72, flowRandom(cell, generation, 0.0)),
+    mix(0.28, 0.72, flowRandom(cell, generation, 1.0))
+  ) + direction * travel;
+  float life = smoothstep(0.0, 0.20, age)
+    * (1.0 - smoothstep(0.72, 1.0, age));
+  float curve = mix(0.35, 1.0, flowRandom(cell, generation, 4.0));
+  float safeZoom = max(0.05, zoom);
+  float halfLength = clamp(4.0 / safeZoom, 0.4, min(28.0, cellSize * 0.10));
+  float width = clamp(0.65 / safeZoom, 0.15, 2.5);
+  return coastFlowLayer(
+    world, center, direction, life, curve, seed * 6.2831853,
+    halfLength, width
+  );
 }
 
 uint terrainAt(ivec2 p) {
@@ -181,38 +215,8 @@ void main() {
     float coastalBreak =
       shore ? smoothstep(0.58, 0.90, shoreBreak) * 0.55 * seaDetail : 0.0;
 
-    // In Classic 2D, that same calm coastal flow also spawns in localized
-    // patches of open water. Four independently moving layers make direction,
-    // speed, position and lifetime feel unplanned without desynchronizing the
-    // deterministic renderer.
-    float waterFlow = max(
-      coastFlowLayer(
-        world, vec2(uFlowCenterX.x, uFlowCenterY.x),
-        vec2(uFlowDirectionX.x, uFlowDirectionY.x),
-        uFlowLife.x, uFlowCurve.x, 0.7, uFlowHalfLength, uFlowWidth
-      ),
-      coastFlowLayer(
-        world, vec2(uFlowCenterX.y, uFlowCenterY.y),
-        vec2(uFlowDirectionX.y, uFlowDirectionY.y),
-        uFlowLife.y, uFlowCurve.y, 3.2, uFlowHalfLength, uFlowWidth
-      )
-    );
-    waterFlow = max(
-      waterFlow,
-      coastFlowLayer(
-        world, vec2(uFlowCenterX.z, uFlowCenterY.z),
-        vec2(uFlowDirectionX.z, uFlowDirectionY.z),
-        uFlowLife.z, uFlowCurve.z, 5.6, uFlowHalfLength, uFlowWidth
-      )
-    );
-    waterFlow = max(
-      waterFlow,
-      coastFlowLayer(
-        world, vec2(uFlowCenterX.w, uFlowCenterY.w),
-        vec2(uFlowDirectionX.w, uFlowDirectionY.w),
-        uFlowLife.w, uFlowCurve.w, 8.1, uFlowHalfLength, uFlowWidth
-      )
-    );
+    // Every broad region of Classic 2D water owns a tiny independent shimmer.
+    float waterFlow = oceanShimmer(world, uMapSize, uTime, uZoom);
     // Open-water fragments are intentionally much smaller and subtler than
     // the full shoreline rim: the reference is a tiny pale-blue pixel glint,
     // not a white route drawn across the sea.

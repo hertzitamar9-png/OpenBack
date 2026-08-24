@@ -3,10 +3,9 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * Random placement, direction, speed, curvature and lifespan are calculated
- * once per frame on the CPU. The fragment shader receives four finished paths
- * and only measures a pixel against them; it must never rebuild random/noise
- * fields per water pixel.
+ * Each pixel evaluates only the shimmer assigned to its broad spatial cell.
+ * Adding coverage across the whole ocean must not become a loop over every
+ * shimmer on the map.
  */
 const source = readFileSync(
   resolve(
@@ -16,15 +15,12 @@ const source = readFileSync(
   "utf8",
 );
 
-describe("finite coastal flows keep random work off the GPU", () => {
-  it("has one finite-path function with no per-pixel noise", () => {
+describe("distributed coastal flows keep bounded GPU cost", () => {
+  it("has one finite-path calculation and no global shimmer loop", () => {
     expect(source).toContain("float coastFlowLayer(");
-    const body = source
-      .slice(source.indexOf("float coastFlowLayer("))
-      .split("\n}")[0];
-    expect(body).not.toContain("valueNoise(");
-    expect(body).not.toContain("hash21(");
-    expect(body).not.toContain("uTime");
+    expect(source).toContain("float oceanShimmer(");
+    expect(source.match(/coastFlowLayer\(/g)).toHaveLength(2);
+    expect(source).not.toMatch(/for\s*\([^)]*shimmer/i);
   });
 
   it("bounds every flow in length, width, and lifespan", () => {
@@ -35,8 +31,11 @@ describe("finite coastal flows keep random work off the GPU", () => {
     expect(source).toContain("return ribbonTerm * endFade * life;");
   });
 
-  it("draws exactly four paths", () => {
-    expect(source.split("coastFlowLayer(").length - 1).toBe(5);
+  it("selects one region directly from world position", () => {
+    expect(source).toContain("vec2 cell = floor(world / cellSize);");
+    expect(source).toContain(
+      "float waterFlow = oceanShimmer(world, uMapSize, uTime, uZoom);",
+    );
   });
 
   it("leaves the always-visible shine layers alone", () => {

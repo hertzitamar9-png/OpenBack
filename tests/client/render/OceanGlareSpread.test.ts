@@ -1,7 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { flowAnimation } from "../../../src/client/render/gl/passes/TerrainPass";
 
 const shader = readFileSync(
   resolve(
@@ -28,8 +27,12 @@ describe("the real coastal glow flows across Classic 2D water", () => {
     expect(shader).not.toContain("float openGlare");
   });
 
-  it("draws four finite curved paths instead of periodic sea-wide stripes", () => {
-    expect(shader.match(/coastFlowLayer\(/g)).toHaveLength(5);
+  it("draws one finite curved path per broad ocean region", () => {
+    expect(shader.match(/coastFlowLayer\(/g)).toHaveLength(2);
+    expect(shader).toContain(
+      "float cellSize = clamp(min(mapSize.x, mapSize.y) / 6.0, 64.0, 260.0);",
+    );
+    expect(shader).toContain("vec2 cell = floor(world / cellSize);");
     expect(shader).toContain("float curvedCenter = sin(");
     expect(shader).toContain("float normalizedSide = clamp(");
     expect(shader).toContain(
@@ -38,48 +41,31 @@ describe("the real coastal glow flows across Classic 2D water", () => {
     expect(shader).toContain("return ribbonTerm * endFade * life;");
   });
 
-  it("generates changing normalized directions, positions, speeds, and curves", () => {
-    const first = flowAnimation(8, 4096, 2048);
-    const next = flowAnimation(9, 4096, 2048);
-    const travelDistances = first.centerX.map((x, index) =>
-      Math.hypot(
-        next.centerX[index] - x,
-        next.centerY[index] - first.centerY[index],
-      ),
-    );
-
-    for (let i = 0; i < 4; i++) {
-      expect(Math.hypot(first.directionX[i], first.directionY[i])).toBeCloseTo(
-        1,
-        5,
-      );
-      expect(first.curve[i]).toBeGreaterThanOrEqual(0.35);
-      expect(first.curve[i]).toBeLessThanOrEqual(1);
-    }
-    expect(
-      new Set(Array.from(travelDistances, (distance) => distance.toFixed(3)))
-        .size,
-    ).toBe(4);
+  it("generates changing directions, positions, speeds, curves, and lifetimes", () => {
+    expect(shader).toContain("float generation = floor(cycle);");
+    expect(shader).toContain("float angle = flowRandom(");
+    expect(shader).toContain("float speed = mix(0.30, 1.0");
+    expect(shader).toContain("vec2 center = cellOrigin + cellSize * vec2(");
+    expect(shader).toContain("float curve = mix(0.35, 1.0");
+    expect(shader).toContain("float life = smoothstep(0.0, 0.20, age)");
   });
 
   it("keeps each fragment at tiny shoreline-glint scale", () => {
-    const pass = readFileSync(
-      resolve(process.cwd(), "src/client/render/gl/passes/TerrainPass.ts"),
-      "utf8",
+    expect(shader).toContain(
+      "float halfLength = clamp(4.0 / safeZoom, 0.4, min(28.0, cellSize * 0.10));",
     );
-    expect(pass).toContain("Math.max(0.4, Math.min(28, 4 / safeZoom))");
-    expect(pass).toContain("Math.max(0.15, Math.min(2.5, 0.65 / safeZoom))");
+    expect(shader).toContain(
+      "float width = clamp(0.65 / safeZoom, 0.15, 2.5);",
+    );
   });
 
-  it("fades a flow fully out before assigning its next random generation", () => {
-    // Flow zero: seed .71, duration 19, so generation 1 begins here.
-    const boundary = (1 - 0.71) * 19;
-    const before = flowAnimation(boundary - 0.001, 4096, 2048);
-    const after = flowAnimation(boundary + 0.001, 4096, 2048);
-
-    expect(before.life[0]).toBeCloseTo(0, 5);
-    expect(after.life[0]).toBeCloseTo(0, 5);
-    expect(after.centerX[0]).not.toBeCloseTo(before.centerX[0], 2);
+  it("covers every ocean with many independent regions", () => {
+    const regionCount = (width: number, height: number) => {
+      const size = Math.max(64, Math.min(260, Math.min(width, height) / 6));
+      return Math.ceil(width / size) * Math.ceil(height / size);
+    };
+    expect(regionCount(512, 256)).toBeGreaterThanOrEqual(32);
+    expect(regionCount(4096, 2048)).toBeGreaterThanOrEqual(100);
   });
 });
 

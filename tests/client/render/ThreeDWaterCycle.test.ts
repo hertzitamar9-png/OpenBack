@@ -89,7 +89,7 @@ describe("3D water cycle shader", () => {
     expect(terrain).toContain("float boundaryGlare = max(coastalBreak");
     expect(threeD).toContain("float foamCrest=coastalBreak;");
     expect(threeD).not.toContain("coastFlowLayer");
-    expect(terrain.match(/coastFlowLayer\(/g)).toHaveLength(5);
+    expect(terrain.match(/coastFlowLayer\(/g)).toHaveLength(2);
   });
 
   // A sine on its own runs as endless parallel bands: the same crests in the

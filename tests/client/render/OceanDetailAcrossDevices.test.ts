@@ -65,11 +65,14 @@ describe("the sea is identical on every device", () => {
     expect(source).toContain("float seaDetail = 1.0;");
   });
 
-  it("never lets zoom reach the water", () => {
-    // Everything from `seaDetail` to the end of the water branch must be free
-    // of uZoom, or a phone and a desktop diverge again.
+  it("uses zoom only to keep the tiny shimmer pixel-sized", () => {
+    // Base water, waves, shine, and coastline must remain device-identical.
+    // The one exception is the new tiny shimmer's geometry: it divides by
+    // zoom specifically so the same effect stays the same screen size.
     const water = source.slice(source.indexOf("float seaDetail"));
-    expect(water).not.toContain("uZoom");
+    const shimmerCall = "oceanShimmer(world, uMapSize, uTime, uZoom)";
+    expect(water).toContain(shimmerCall);
+    expect(water.replace(shimmerCall, "")).not.toContain("uZoom");
   });
 
   it("has no quality dial left to dim it", () => {

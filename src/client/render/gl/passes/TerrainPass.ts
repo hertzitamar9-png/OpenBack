@@ -27,53 +27,6 @@ import {
 // TerrainPass
 // ---------------------------------------------------------------------------
 
-const FLOW_SEEDS = [0.71, 2.93, 5.17, 8.41] as const;
-const FLOW_DURATIONS = [19, 23, 29, 31] as const;
-
-function flowRandom(seed: number, generation: number, salt: number): number {
-  const value = Math.sin(seed * 12.9898 + generation * 78.233 + salt * 37.719);
-  const scaled = value * 43758.5453;
-  return scaled - Math.floor(scaled);
-}
-
-function smoothstep(edge0: number, edge1: number, value: number): number {
-  const t = Math.max(0, Math.min(1, (value - edge0) / (edge1 - edge0)));
-  return t * t * (3 - 2 * t);
-}
-
-/**
- * Four finite water flows. A path fades to zero before its next generation
- * receives a new position, direction, speed and curve, so the random change
- * is never visible as a teleport. Everything is calculated once per frame.
- */
-export function flowAnimation(time: number, mapW: number, mapH: number) {
-  const centerX = new Float32Array(4);
-  const centerY = new Float32Array(4);
-  const directionX = new Float32Array(4);
-  const directionY = new Float32Array(4);
-  const life = new Float32Array(4);
-  const curve = new Float32Array(4);
-  for (let i = 0; i < FLOW_SEEDS.length; i++) {
-    const seed = FLOW_SEEDS[i];
-    const duration = FLOW_DURATIONS[i];
-    const cycle = time / duration + seed;
-    const generation = Math.floor(cycle);
-    const age = cycle - generation;
-    const angle = flowRandom(seed, generation, 2) * Math.PI * 2;
-    const dx = Math.cos(angle);
-    const dy = Math.sin(angle);
-    const speed = 0.35 + flowRandom(seed, generation, 3) * 0.75;
-    const travel = (age - 0.5) * duration * speed * 7;
-    centerX[i] = flowRandom(seed, generation, 0) * mapW + dx * travel;
-    centerY[i] = flowRandom(seed, generation, 1) * mapH + dy * travel;
-    directionX[i] = dx;
-    directionY[i] = dy;
-    life[i] = smoothstep(0, 0.2, age) * (1 - smoothstep(0.72, 1, age));
-    curve[i] = 0.35 + flowRandom(seed, generation, 4) * 0.65;
-  }
-  return { centerX, centerY, directionX, directionY, life, curve };
-}
-
 export class TerrainPass {
   private program: WebGLProgram;
   private tex: WebGLTexture;
@@ -82,14 +35,6 @@ export class TerrainPass {
   private uCamera: WebGLUniformLocation;
   private uZoom: WebGLUniformLocation;
   private uTime: WebGLUniformLocation;
-  private uFlowCenterX: WebGLUniformLocation;
-  private uFlowCenterY: WebGLUniformLocation;
-  private uFlowDirectionX: WebGLUniformLocation;
-  private uFlowDirectionY: WebGLUniformLocation;
-  private uFlowLife: WebGLUniformLocation;
-  private uFlowCurve: WebGLUniformLocation;
-  private uFlowHalfLength: WebGLUniformLocation;
-  private uFlowWidth: WebGLUniformLocation;
   private mapW: number;
   private mapH: number;
   // Base ocean (deep water) color; reused by applyTerrainDelta and rebuilds.
@@ -122,23 +67,6 @@ export class TerrainPass {
     this.uCamera = gl.getUniformLocation(this.program, "uCamera")!;
     this.uZoom = gl.getUniformLocation(this.program, "uZoom")!;
     this.uTime = gl.getUniformLocation(this.program, "uTime")!;
-    this.uFlowCenterX = gl.getUniformLocation(this.program, "uFlowCenterX")!;
-    this.uFlowCenterY = gl.getUniformLocation(this.program, "uFlowCenterY")!;
-    this.uFlowDirectionX = gl.getUniformLocation(
-      this.program,
-      "uFlowDirectionX",
-    )!;
-    this.uFlowDirectionY = gl.getUniformLocation(
-      this.program,
-      "uFlowDirectionY",
-    )!;
-    this.uFlowLife = gl.getUniformLocation(this.program, "uFlowLife")!;
-    this.uFlowCurve = gl.getUniformLocation(this.program, "uFlowCurve")!;
-    this.uFlowHalfLength = gl.getUniformLocation(
-      this.program,
-      "uFlowHalfLength",
-    )!;
-    this.uFlowWidth = gl.getUniformLocation(this.program, "uFlowWidth")!;
     gl.useProgram(this.program);
     gl.uniform1i(gl.getUniformLocation(this.program, "uTerrain"), 0);
     gl.uniform1i(gl.getUniformLocation(this.program, "uTerrainBytes"), 1);
@@ -326,24 +254,6 @@ export class TerrainPass {
     gl.uniformMatrix3fv(this.uCamera, false, cameraMatrix);
     gl.uniform1f(this.uZoom, zoom);
     gl.uniform1f(this.uTime, timeSeconds);
-    const flow = flowAnimation(timeSeconds, this.mapW, this.mapH);
-    gl.uniform4fv(this.uFlowCenterX, flow.centerX);
-    gl.uniform4fv(this.uFlowCenterY, flow.centerY);
-    gl.uniform4fv(this.uFlowDirectionX, flow.directionX);
-    gl.uniform4fv(this.uFlowDirectionY, flow.directionY);
-    gl.uniform4fv(this.uFlowLife, flow.life);
-    gl.uniform4fv(this.uFlowCurve, flow.curve);
-    // Keep the reference shimmer pixel-sized on screen. Fixed tile sizes look
-    // tiny at world overview and turn into giant white routes when zoomed in.
-    const safeZoom = Math.max(0.05, zoom);
-    gl.uniform1f(
-      this.uFlowHalfLength,
-      Math.max(0.4, Math.min(28, 4 / safeZoom)),
-    );
-    gl.uniform1f(
-      this.uFlowWidth,
-      Math.max(0.15, Math.min(2.5, 0.65 / safeZoom)),
-    );
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.tex);
