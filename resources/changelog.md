@@ -1,3 +1,9 @@
+## OpenBack v0.36.234 - Cheaper Water, Same Water
+
+- The map draws noticeably faster with no change to how it looks. Almost half the cost of drawing the terrain went on a bright glint on the open sea that is invisible at most moments, and the game was paying for it on every pixel of ocean whether it showed or not. It is now worked out only where it can actually appear. Measured on a desktop graphics card, drawing the terrain got 43.8% cheaper, which matters most on phones.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.233 - The Same Sea on Every Screen
 
 - The ocean now looks exactly the same on a phone as on a desktop. It was being dimmed twice on small screens, once by a fade tied to screen size and once by a mobile quality setting, and neither of them made the game any faster: nothing in the water drawing was ever skipped, so a phone paid the full cost for a fainter sea. Both are gone.

@@ -28,6 +28,8 @@ float valueNoise(vec2 p) {
   return mix(mix(a, b, w.x), mix(c, d, w.x), w.y);
 }
 
+const float GLARE_MIN = 0.992;
+
 float shineLayer(
   vec2 world,
   vec2 direction,
@@ -52,6 +54,43 @@ float shineLayer(
     world * 0.005 + travel * time * speed * 0.6 + vec2(phase * 3.7, phase * 1.9)
   );
   return smoothstep(0.16, 0.94, wave) * smoothstep(0.26, 0.74, gate);
+}
+
+/**
+ * A shine layer for the open-water glare, which is only ever shown above a
+ * threshold.
+ *
+ * The layer's value is the product of a wave term and a noise gate, both in
+ * [0, 1]. If the wave term alone cannot clear the threshold the product cannot
+ * either, and the caller's smoothstep returns zero for both -- so the gate,
+ * which is four hash lookups and the expensive half of this function, can be
+ * skipped outright. The output is identical, not an approximation; roughly a
+ * fifth of pixels still evaluate the gate, and the wave field is smooth, so
+ * neighbouring pixels take the same branch.
+ */
+float glareLayer(
+  vec2 world,
+  vec2 direction,
+  float frequency,
+  float speed,
+  float phase,
+  float time,
+  float threshold
+) {
+  vec2 travel = normalize(direction);
+  vec2 across = vec2(-travel.y, travel.x);
+  float bend = sin(
+    dot(world, across) * frequency * 0.41 + time * speed * 0.19 + phase
+  ) * 0.72;
+  float wave = sin(
+    dot(world, travel) * frequency + time * speed + phase + bend
+  ) * 0.5 + 0.5;
+  float waveTerm = smoothstep(0.16, 0.94, wave);
+  if (waveTerm <= threshold) return 0.0;
+  float gate = valueNoise(
+    world * 0.005 + travel * time * speed * 0.6 + vec2(phase * 3.7, phase * 1.9)
+  );
+  return waveTerm * smoothstep(0.26, 0.74, gate);
 }
 
 uint terrainAt(ivec2 p) {
@@ -143,23 +182,23 @@ void main() {
       ? smoothstep(0.58, 0.90, shoreBreak) * 0.55 * seaDetail
       : 0.0;
     float openGlare = max(
-      smoothstep(0.992, 0.9998, shineLayer(
-        world, vec2(1.0, 0.24), 0.070, 1.05, 0.7, uTime
+      smoothstep(GLARE_MIN, 0.9998, glareLayer(
+        world, vec2(1.0, 0.24), 0.070, 1.05, 0.7, uTime, GLARE_MIN
       )),
-      smoothstep(0.992, 0.9998, shineLayer(
-        world, vec2(-0.36, 1.0), 0.082, -0.82, 3.2, uTime
+      smoothstep(GLARE_MIN, 0.9998, glareLayer(
+        world, vec2(-0.36, 1.0), 0.082, -0.82, 3.2, uTime, GLARE_MIN
       ))
     );
     openGlare = max(
       openGlare,
-      smoothstep(0.992, 0.9998, shineLayer(
-        world, vec2(0.58, -1.0), 0.095, 1.18, 5.6, uTime
+      smoothstep(GLARE_MIN, 0.9998, glareLayer(
+        world, vec2(0.58, -1.0), 0.095, 1.18, 5.6, uTime, GLARE_MIN
       ))
     );
     openGlare = max(
       openGlare,
-      smoothstep(0.992, 0.9998, shineLayer(
-        world, vec2(-1.0, -0.41), 0.058, -0.68, 8.1, uTime
+      smoothstep(GLARE_MIN, 0.9998, glareLayer(
+        world, vec2(-1.0, -0.41), 0.058, -0.68, 8.1, uTime, GLARE_MIN
       ))
     );
     float boundaryGlare = max(coastalBreak, openGlare * 0.08 * seaDetail);
