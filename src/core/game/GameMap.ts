@@ -36,6 +36,9 @@ export interface GameMap {
   setOwnerID(ref: TileRef, playerId: number): void;
   hasFallout(ref: TileRef): boolean;
   setFallout(ref: TileRef, value: boolean): void;
+  /** Permanent local blast damage, from 0 (untouched) to 3 (blackened). */
+  devastation(ref: TileRef): number;
+  setDevastation(ref: TileRef, level: number): void;
   isOnEdgeOfMap(ref: TileRef): boolean;
   isBorder(ref: TileRef): boolean;
   isBorderForOwner(ref: TileRef, ownerID: number): boolean;
@@ -99,8 +102,10 @@ export interface GameMap {
    *
    * The bit layout of each `uint16` matches the renderer's tile state:
    *   bits  0-11: ownerID
+   *   bit   12:  devastation low bit
    *   bit   13:  fallout
    *   bit   14:  defense bonus
+   *   bit   15:  devastation high bit
    */
   tileStateBuffer(): Uint16Array;
   terrainBuffer(): Uint8Array;
@@ -136,9 +141,11 @@ export class GameMapImpl implements GameMap {
 
   // State bits (Uint16Array)
   private static readonly PLAYER_ID_MASK = 0xfff;
+  private static readonly DEVASTATION_LOW_BIT = 12;
   private static readonly FALLOUT_BIT = 13;
   private static readonly DEFENSE_BONUS_BIT = 14;
-  // Bit 15 still reserved
+  private static readonly DEVASTATION_HIGH_BIT = 15;
+  private static readonly MAX_DEVASTATION = 3;
 
   constructor(
     width: number,
@@ -254,6 +261,7 @@ export class GameMapImpl implements GameMap {
 
   setWater(ref: TileRef): void {
     if (!this.isLand(ref) || this.isImpassable(ref)) return;
+    this.setDevastation(ref, 0);
     this.terrain[ref] = 0; // Lake water: no land, no ocean, no shoreline, magnitude 0
     this.numLandTiles_--;
   }
@@ -282,6 +290,7 @@ export class GameMapImpl implements GameMap {
     const wasLand = this.isLand(ref);
     this.terrain[ref] = value;
     const isLand = this.isLand(ref);
+    if (!isLand) this.setDevastation(ref, 0);
     if (wasLand !== isLand) this.numLandTiles_ += isLand ? 1 : -1;
   }
 
@@ -321,6 +330,26 @@ export class GameMapImpl implements GameMap {
         this.state[ref] &= ~(1 << GameMapImpl.FALLOUT_BIT);
       }
     }
+  }
+
+  devastation(ref: TileRef): number {
+    const low = (this.state[ref] >> GameMapImpl.DEVASTATION_LOW_BIT) & 1;
+    const high = (this.state[ref] >> GameMapImpl.DEVASTATION_HIGH_BIT) & 1;
+    return low | (high << 1);
+  }
+
+  setDevastation(ref: TileRef, level: number): void {
+    level = Math.max(
+      0,
+      Math.min(GameMapImpl.MAX_DEVASTATION, Math.floor(level)),
+    );
+    const mask =
+      (1 << GameMapImpl.DEVASTATION_LOW_BIT) |
+      (1 << GameMapImpl.DEVASTATION_HIGH_BIT);
+    this.state[ref] &= ~mask;
+    this.state[ref] |=
+      ((level & 1) << GameMapImpl.DEVASTATION_LOW_BIT) |
+      (((level >> 1) & 1) << GameMapImpl.DEVASTATION_HIGH_BIT);
   }
 
   isOnEdgeOfMap(ref: TileRef): boolean {

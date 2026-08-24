@@ -387,7 +387,8 @@ export class NukeExecution implements Execution {
       }
 
       // Queue land tiles for batched water conversion
-      if (mg.isLand(tile)) {
+      if (mg.isLand(tile) && !mg.isImpassable(tile)) {
+        mg.setDevastation(tile, mg.devastation(tile) + 1);
         mg.queueWaterConversion(tile);
       }
 

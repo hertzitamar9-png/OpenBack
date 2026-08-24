@@ -39,8 +39,11 @@ void main() {
   uint raw = texelFetch(uTileTex, tc, 0).r;
   uint owner = raw & uint(OWNER_MASK);
   bool fallout = (raw & (1u << FALLOUT_BIT)) != 0u;
+  uint devastation = ((raw >> DEVASTATION_LOW_BIT) & 1u)
+    | (((raw >> DEVASTATION_HIGH_BIT) & 1u) << 1u);
+  float devastationRatio = float(devastation) / 3.0;
 
-  if (owner == 0u && !fallout) discard;
+  if (owner == 0u && !fallout && devastation == 0u) discard;
 
   // --- Stale-nuke ground (any fallout tile, owned or not) ---
   // Renders for owned tiles too so the player's territory color can't bleed
@@ -48,7 +51,16 @@ void main() {
   if (fallout) {
     float h = fract(sin(float(tc.x) * 12.9898 + float(tc.y) * 78.233) * 43758.5453);
     float noise = uStaleNukeBase + h * uStaleNukeVariation;
-    fragColor = vec4(uStaleNukeColor + vec3(noise), uStaleNukeAlpha);
+    vec3 falloutGround = uStaleNukeColor + vec3(noise);
+    falloutGround = mix(falloutGround, vec3(0.008), devastationRatio * 0.90);
+    fragColor = vec4(falloutGround, uStaleNukeAlpha);
+    return;
+  }
+
+  // Unowned blasted ground still darkens the base terrain. The alpha steps
+  // rise with each overlapping explosion; level three is almost black.
+  if (owner == 0u) {
+    fragColor = vec4(vec3(0.008), devastationRatio * 0.88);
     return;
   }
 
@@ -112,6 +124,11 @@ void main() {
     float contrast = 1.0 + uHighlightBrighten;
     color.rgb = clamp((color.rgb - 0.5) * contrast + 0.5, 0.0, 1.0);
   }
+
+  // Claimed devastated ground keeps its scars instead of returning to a clean
+  // player color. This is visual only; the matching local capture resistance
+  // is applied by Config.attackLogic in the deterministic simulation.
+  color.rgb = mix(color.rgb, vec3(0.008), devastationRatio * 0.88);
 
   // Defense bonus: darken the fill on interior tiles defended by a same-owner
   // post. Border tiles are skipped — they get the checkerboard overlay from

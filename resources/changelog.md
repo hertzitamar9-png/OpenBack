@@ -1,3 +1,11 @@
+## OpenBack v0.36.242 - Persistent Blast Scars and Mobile Landscape
+
+- Repeated nuclear explosions now permanently devastate the exact affected terrain in four stages. Overlapping Atom Bombs, Hydrogen Bombs, and MIRV warheads progressively darken ground toward near-black in Classic 2D, including after another player claims it.
+- Devastation is authoritative gameplay state, not a visual filter: each darker stage increases the troop losses and time required to capture that specific tile. The four stages are packed into previously unused synchronized tile bits, so multiplayer clients and replays receive them without another map-sized buffer.
+- OpenBack no longer declares portrait-only orientation. Mobile players can rotate into landscape normally, including installed Android/PWA mode, and a portrait-only in-game landscape control enters fullscreen before requesting the browser's landscape lock. Unsupported Xiaomi/Android browsers receive an OpenBack UI hint to enable Auto-rotate.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.241 - Tiny Shimmers throughout Every Ocean
 
 - Distributed the subtle Classic 2D pale-blue shimmer throughout the entire ocean instead of spawning only four fragments that could all appear near land. Every broad ocean region now owns an independent tiny shimmer with its own position, direction, speed, curve, and fade cycle.

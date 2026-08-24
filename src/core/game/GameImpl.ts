@@ -278,6 +278,18 @@ export class GameImpl implements Game {
     this.recordTileUpdate(tile);
   }
 
+  devastation(tile: TileRef): number {
+    return this._map.devastation(tile);
+  }
+
+  setDevastation(tile: TileRef, level: number): void {
+    const previous = this._map.devastation(tile);
+    this._map.setDevastation(tile, level);
+    if (this._map.devastation(tile) !== previous) {
+      this.recordTileUpdate(tile);
+    }
+  }
+
   setWater(tile: TileRef): void {
     if (!this.isLand(tile)) return;
     if (this.hasOwner(tile)) {

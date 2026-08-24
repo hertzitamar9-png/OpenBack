@@ -74,6 +74,24 @@ describe("NukeExecution", () => {
     expect(defensePost.touch).not.toHaveBeenCalled();
   });
 
+  test("overlapping explosions stack local devastation to black", () => {
+    const launchTile = game.ref(1, 1);
+    const targetTile = game.ref(50, 50);
+    for (let x = 1; x <= 4; x++) {
+      const siloTile = game.ref(x, 1);
+      player.conquer(siloTile);
+      player.buildUnit(UnitType.MissileSilo, siloTile, {});
+    }
+
+    for (let hit = 1; hit <= 4; hit++) {
+      game.addExecution(
+        new NukeExecution(UnitType.AtomBomb, player, targetTile, launchTile),
+      );
+      executeTicks(game, 200);
+      expect(game.devastation(targetTile)).toBe(Math.min(3, hit));
+    }
+  });
+
   test.each([
     UnitType.AtomBomb,
     UnitType.HydrogenBomb,

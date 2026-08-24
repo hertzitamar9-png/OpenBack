@@ -1509,6 +1509,12 @@ export class GameView implements GameMap {
   setFallout(ref: TileRef, value: boolean): void {
     return this._map.setFallout(ref, value);
   }
+  devastation(ref: TileRef): number {
+    return this._map.devastation(ref);
+  }
+  setDevastation(ref: TileRef, level: number): void {
+    return this._map.setDevastation(ref, level);
+  }
   isBorder(ref: TileRef): boolean {
     return this._map.isBorder(ref);
   }

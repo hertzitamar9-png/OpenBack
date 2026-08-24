@@ -238,6 +238,10 @@ export class Config {
     // So defense modifier is between [5, 2.5]
     return 5 - falloutRatio * 2;
   }
+  devastationDefenseModifier(level: number): number {
+    const clamped = Math.max(0, Math.min(3, Math.floor(level)));
+    return 1 + clamped * 0.2 + clamped * clamped * 0.08;
+  }
   msPerTick(): number {
     return 100;
   }
@@ -811,6 +815,13 @@ export class Config {
       const falloutRatio = gm.numTilesWithFallout() / gm.numLandTiles();
       mag *= this.falloutDefenseModifier(falloutRatio);
       speed *= this.falloutDefenseModifier(falloutRatio);
+    }
+
+    const devastation = gm.devastation(tileToConquer);
+    if (devastation > 0) {
+      const modifier = this.devastationDefenseModifier(devastation);
+      mag *= modifier;
+      speed *= modifier;
     }
 
     if (attacker.isPlayer() && defender.isPlayer()) {

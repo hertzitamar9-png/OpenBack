@@ -42,6 +42,10 @@
     "win_modal.join_discord",
     "win_modal.join_server"
   ],
+  "mobile_orientation": {
+    "enable_auto_rotate": "OpenBack could not rotate this browser automatically. Enable Auto-rotate, then turn your phone sideways.",
+    "enter_landscape": "Play in landscape"
+  },
   "account_modal": {
     "account_exists": "An OpenBack account already uses this email. Log in to restore it instead.",
     "auth_choice_desc": "Create a saved account for the first time, or return to an account you logged out of.",

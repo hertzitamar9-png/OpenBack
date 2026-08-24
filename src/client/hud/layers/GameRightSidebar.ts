@@ -27,6 +27,7 @@ const newLobbyIcon = assetUrl("images/ReplayRegularIconWhite.svg");
 const settingsIcon = assetUrl("images/SettingIconWhite.svg");
 const fullscreenIcon = assetUrl("images/FullscreenIconWhite.svg");
 const exitFullscreenIcon = assetUrl("images/ExitFullscreenIconWhite.svg");
+const landscapeIcon = assetUrl("images/LandscapeIconWhite.svg");
 
 const LAST_MINUTE_SECONDS = 60;
 const FLASH_TIMER_SECONDS = 30;
@@ -52,6 +53,9 @@ export class GameRightSidebar extends LitElement implements Controller {
 
   @state()
   private isFullscreen: boolean = false;
+
+  @state()
+  private showLandscapeControl: boolean = false;
 
   @state()
   private timer: number = 0;
@@ -121,17 +125,46 @@ export class GameRightSidebar extends LitElement implements Controller {
 
   private onFullscreenChange = () => {
     this.isFullscreen = !!document.fullscreenElement;
+    this.updateOrientationState();
+  };
+
+  private isTouchPrimary(): boolean {
+    return (
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(pointer: coarse)").matches
+    );
+  }
+
+  private updateOrientationState = () => {
+    const touchPrimary = this.isTouchPrimary();
+    const portrait = window.innerHeight > window.innerWidth;
+    const next = touchPrimary && portrait;
+    if (this.showLandscapeControl !== next) {
+      this.showLandscapeControl = next;
+      this.requestUpdate();
+    }
   };
 
   connectedCallback() {
     super.connectedCallback();
     document.addEventListener("fullscreenchange", this.onFullscreenChange);
+    window.addEventListener("resize", this.updateOrientationState);
+    screen.orientation?.addEventListener?.(
+      "change",
+      this.updateOrientationState,
+    );
     this.onFullscreenChange();
+    this.updateOrientationState();
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     document.removeEventListener("fullscreenchange", this.onFullscreenChange);
+    window.removeEventListener("resize", this.updateOrientationState);
+    screen.orientation?.removeEventListener?.(
+      "change",
+      this.updateOrientationState,
+    );
   }
 
   getTickIntervalMs() {
@@ -318,12 +351,36 @@ export class GameRightSidebar extends LitElement implements Controller {
     );
   }
 
-  private onFullscreenButtonClick() {
+  private async requestLandscapeMode(): Promise<boolean> {
+    try {
+      if (!document.fullscreenElement && document.fullscreenEnabled) {
+        await document.documentElement.requestFullscreen();
+      }
+      const orientation = screen.orientation as ScreenOrientation & {
+        lock?: (orientation: OrientationLockType) => Promise<void>;
+      };
+      if (typeof orientation?.lock === "function") {
+        await orientation.lock("landscape");
+        return true;
+      }
+    } catch (error) {
+      console.warn("Failed to request landscape orientation:", error);
+    }
+    showToast(translateText("mobile_orientation.enable_auto_rotate"), "green");
+    return false;
+  }
+
+  private async onFullscreenButtonClick() {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch((err) => {
-        console.warn("Failed to enter fullscreen:", err);
-      });
+      if (this.isTouchPrimary()) {
+        await this.requestLandscapeMode();
+      } else {
+        document.documentElement.requestFullscreen().catch((err) => {
+          console.warn("Failed to enter fullscreen:", err);
+        });
+      }
     } else {
+      screen.orientation?.unlock?.();
       document.exitFullscreen().catch((err) => {
         console.warn("Failed to exit fullscreen:", err);
       });
@@ -410,6 +467,17 @@ export class GameRightSidebar extends LitElement implements Controller {
           <img src=${settingsIcon} alt="settings" width="20" height="20" />
         </div>
 
+        ${this.showLandscapeControl
+          ? html`<button
+              type="button"
+              class="cursor-pointer border-0 bg-transparent p-0"
+              aria-label=${translateText("mobile_orientation.enter_landscape")}
+              title=${translateText("mobile_orientation.enter_landscape")}
+              @click=${this.requestLandscapeMode}
+            >
+              <img src=${landscapeIcon} alt="" width="20" height="20" />
+            </button>`
+          : ""}
         ${document.fullscreenEnabled && !this.onCrazyGames
           ? html`<div
               class="cursor-pointer"
