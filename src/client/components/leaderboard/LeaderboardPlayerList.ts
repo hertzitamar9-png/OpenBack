@@ -559,7 +559,9 @@ export class LeaderboardPlayerList extends LitElement {
             class="scroll-container h-full overflow-y-auto overflow-x-auto scrollbar-thin scrollbar-thumb-white/20"
             @scroll=${() => this.handleScroll()}
           >
-            <table class="w-full text-sm border-collapse table-fixed">
+            <table
+              class="leaderboard-player-table w-full text-sm border-collapse table-fixed"
+            >
               <colgroup>
                 <col style="width: 4rem" />
                 <col style="width: 12rem" />

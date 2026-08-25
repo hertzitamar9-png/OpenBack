@@ -193,7 +193,9 @@ export class JoinLobbyModal extends BaseModal {
       : "";
     return html`
       <div class="flex flex-col h-full">
-        <div class="flex-1 custom-scrollbar p-6 space-y-4 mr-1">
+        <div
+          class="lobby-config-scroll flex-1 min-h-0 overflow-y-auto custom-scrollbar p-6 space-y-4 mr-1"
+        >
           ${this.isConnecting
             ? html`
                 <div
@@ -232,7 +234,7 @@ export class JoinLobbyModal extends BaseModal {
 
         ${html`
           <div
-            class="p-6 lg:p-6 border-t border-white/10 bg-black/60 backdrop-blur-md shrink-0 sticky bottom-0 z-10"
+            class="lobby-status-footer p-6 lg:p-6 border-t border-white/10 bg-black/60 backdrop-blur-md shrink-0 sticky bottom-0 z-10"
           >
             <div
               class="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 flex items-center justify-between gap-3"

@@ -1,3 +1,14 @@
+## OpenBack v0.36.243 - Connected Friends and Adaptive Mobile Lobbies
+
+- Friend requests now show the player's in-game name instead of exposing a raw friend code. Friend and request lists update immediately while the page is open, and every friend row opens their complete public profile or a persistent live chat without requiring a refresh.
+- Public profiles now expose real ranked wins, losses, games played, ladder position, clan membership, cosmetics, and match history. The ranked leaderboard keeps all of its useful columns while fitting narrow phone screens instead of forcing important stats off-screen.
+- Private-lobby guests now remain in the visible read-only lobby with the host's live settings and roster until the host manually starts the match. Lobby codes and invite URLs share one responsive copy panel instead of scattering across compact headers.
+- The in-game build bar now adapts from sixteen to twelve or eight columns according to the actual usable screen width and curved-screen safe areas. Lobby panels, status controls, friend requests, and chat controls also reflow at narrow widths instead of clipping.
+- Every shop card now receives a deterministic item-specific presentation accent in addition to its own artwork, palette, rarity treatment, and equipped state, making visually related wraps and effects easier to distinguish.
+- Local-development profile, leaderboard, game-history, and replay requests now reach the OpenBack server instead of falling through to an HTML page. This removes the false JSON errors that appeared after opening or refreshing lobby links during development.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.242 - Persistent Blast Scars and Mobile Landscape
 
 - Repeated nuclear explosions now permanently devastate the exact affected terrain in four stages. Overlapping Atom Bombs, Hydrogen Bombs, and MIRV warheads progressively darken ground toward near-black in Classic 2D, including after another player claims it.

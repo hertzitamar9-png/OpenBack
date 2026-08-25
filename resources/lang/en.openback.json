@@ -166,6 +166,7 @@
   },
   "flag_input": {},
   "friends": {
+    "chat": "Chat",
     "active_party": "Active party with:",
     "block_player": "Block {player}",
     "invite": "Invite",

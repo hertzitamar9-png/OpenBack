@@ -1940,9 +1940,11 @@ export function authRouter(): express.Router {
 
   const friendEntry = (publicId: string, createdAt: string) => {
     const target = userByPublicId(publicId);
+    const username = target ? usernameFor(target) : null;
     return {
       publicId,
-      displayName: target ? usernameFor(target) : publicId,
+      username,
+      displayName: username ?? publicId,
       createdAt,
       online: isPlayerOnline(publicId),
       lastSeenAt: target?.lastSeenAt,
@@ -2460,22 +2462,71 @@ export function authRouter(): express.Router {
       .filter((candidate) => candidate.elo !== undefined)
       .sort((a, b) => (b.elo ?? 0) - (a.elo ?? 0))
       .findIndex((candidate) => candidate.publicId === target.publicId);
-    res.json(
-      PlayerProfileSchema.parse({
-        createdAt: new Date(target.createdAt).toISOString(),
-        publicId: target.publicId,
-        displayName: usernameFor(target),
-        bio: target.bio,
-        bannerColor: target.bannerColor,
-        selectedFlag: target.selectedFlag,
-        selectedCosmetic: target.selectedCosmetic,
-        profilePictureUrl: profilePictureUrlFor(target),
-        elo: target.elo,
-        rank: rankedPosition >= 0 ? rankedPosition + 1 : undefined,
-        clanTag: clanTagFor(target) ?? undefined,
-        stats: {},
-      }),
-    );
+    const rankedStats = Object.values(RankedType).flatMap((rankedType) => {
+      const rankings = (["2d", "3d"] as const)
+        .map((experience) => target.rankings?.[experience]?.[rankedType])
+        .filter((ranking) => ranking !== undefined);
+      if (rankings.length === 0) return [];
+      const wins = rankings.reduce((sum, ranking) => sum + ranking.wins, 0);
+      const losses = rankings.reduce((sum, ranking) => sum + ranking.losses, 0);
+      return [
+        [
+          rankedType,
+          {
+            wins: String(wins),
+            losses: String(losses),
+            total: String(wins + losses),
+            stats: undefined,
+            recent: {
+              games: Math.min(100, wins + losses),
+              wins: Math.min(100, wins),
+            },
+          },
+        ] as const,
+      ];
+    });
+    const targetClans = [...clansByTag.values()].flatMap((clan) => {
+      const member = clan.members.find((m) => m.publicId === target.publicId);
+      return member
+        ? [
+            {
+              tag: clan.tag,
+              name: clan.name,
+              role: member.role,
+              joinedAt: member.joinedAt,
+              memberCount: clan.members.length,
+            },
+          ]
+        : [];
+    });
+    const payload = {
+      createdAt: new Date(target.createdAt).toISOString(),
+      publicId: target.publicId,
+      displayName: usernameFor(target),
+      username: usernameFor(target),
+      bio: target.bio,
+      bannerColor: target.bannerColor,
+      selectedFlag: target.selectedFlag,
+      selectedCosmetic: target.selectedCosmetic,
+      profilePictureUrl: profilePictureUrlFor(target),
+      elo: target.elo,
+      rank: rankedPosition >= 0 ? rankedPosition + 1 : undefined,
+      clanTag: clanTagFor(target) ?? undefined,
+      clans: targetClans,
+      stats:
+        rankedStats.length > 0
+          ? { Ranked: Object.fromEntries(rankedStats) }
+          : {},
+    };
+    // Validate without returning Zod's bigint-transformed result: the public
+    // JSON wire format intentionally carries aggregate counters as strings.
+    const validation = PlayerProfileSchema.safeParse(payload);
+    if (!validation.success) {
+      console.error("[auth] invalid public profile response", validation.error);
+      res.status(500).json({ error: "profile_unavailable" });
+      return;
+    }
+    res.json(payload);
   });
 
   // Ranked 1v1 leaderboard, sorted by OB descending, paginated.

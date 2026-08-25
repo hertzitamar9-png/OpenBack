@@ -297,6 +297,15 @@ export class CosmeticCard extends LitElement {
     }
   }
 
+  private identityHue(key: string): number {
+    let hash = 2166136261;
+    for (const character of key) {
+      hash ^= character.charCodeAt(0);
+      hash = Math.imul(hash, 16777619);
+    }
+    return Math.abs(hash) % 360;
+  }
+
   private renderSwatches() {
     const variants = this.variants.filter(
       (variant) => variant.colorPalette !== null,
@@ -371,6 +380,7 @@ export class CosmeticCard extends LitElement {
     const active = this.activeResolved;
     const rarity = cosmeticRarity(active);
     const displayName = cosmeticDisplayName(active);
+    const identityHue = this.identityHue(active.key);
     const isFocused = this.state === "focused";
     const isEquipped = this.state === "equipped";
     const shellClass = `${this.rarityClass(rarity)} ${
@@ -399,7 +409,8 @@ export class CosmeticCard extends LitElement {
     const content = html`
       <div class="relative w-full ${previewShape}">
         <div
-          class="flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-white/5 p-2"
+          class="flex h-full w-full items-center justify-center overflow-hidden rounded-lg p-2"
+          style="background: radial-gradient(circle at 24% 18%, hsl(${identityHue} 82% 62% / 0.18), transparent 42%), linear-gradient(145deg, hsl(${identityHue} 35% 16% / 0.72), rgba(255,255,255,0.035));"
         >
           <cosmetic-preview .resolved=${active} size="card"></cosmetic-preview>
         </div>
@@ -426,6 +437,8 @@ export class CosmeticCard extends LitElement {
       data-cosmetic-shell
       data-cosmetic-state=${this.state}
       data-cosmetic-rarity=${rarity}
+      data-cosmetic-key=${active.key}
+      style="--cosmetic-identity-hue:${identityHue}"
       class="relative flex h-full flex-col items-center overflow-visible rounded-xl border transition-all duration-200 ease-out hover:-translate-y-1 ${shellClass}"
     >
       ${rarity === "epic" || rarity === "legendary"

@@ -147,6 +147,30 @@ textarea:focus-visible {
 /* Phone and tablet ergonomics are centralized here so every current and future
    menu page inherits the same safe sizing, touch behavior and keyboard rules. */
 @media (max-width: 1023px) {
+  .lobby-share-cluster {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.4rem;
+    width: min(100%, 30rem);
+    min-width: 0;
+  }
+
+  .lobby-share-cluster copy-button,
+  .lobby-share-cluster copy-button > div {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .lobby-config-scroll {
+    padding: clamp(0.7rem, 3vw, 1.25rem) !important;
+    margin-right: 0 !important;
+  }
+
+  .lobby-status-footer {
+    padding: max(0.7rem, env(safe-area-inset-bottom)) 0.7rem !important;
+  }
+
   .game-safe-area {
     box-sizing: border-box;
     padding-left: max(0.25rem, env(safe-area-inset-left));
@@ -481,8 +505,16 @@ textarea:focus-visible {
     padding-bottom: 0.125rem !important;
   }
 
+  .game-hud-primary {
+    box-sizing: border-box;
+    padding-left: max(0.25rem, env(safe-area-inset-left));
+    padding-right: max(0.25rem, env(safe-area-inset-right));
+  }
+
   .game-unit-grid {
-    grid-template-columns: repeat(16, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+    width: 100%;
+    min-width: 0;
   }
 
   .game-unit-item > div:last-child {
@@ -501,6 +533,53 @@ textarea:focus-visible {
     width: min(20rem, 42vw) !important;
     max-height: 45dvh;
     overflow: hidden;
+  }
+}
+
+@media (max-width: 560px) {
+  .leaderboard-player-table col:nth-child(1) {
+    width: 2.5rem !important;
+  }
+
+  .leaderboard-player-table col:nth-child(2) {
+    width: 8rem !important;
+  }
+
+  .leaderboard-player-table col:nth-child(3),
+  .leaderboard-player-table col:nth-child(4) {
+    width: 3.75rem !important;
+  }
+
+  .leaderboard-player-table col:nth-child(5) {
+    width: 4.75rem !important;
+  }
+
+  .leaderboard-player-table th,
+  .leaderboard-player-table td {
+    padding-left: 0.35rem !important;
+    padding-right: 0.35rem !important;
+  }
+
+  .leaderboard-player-table {
+    font-size: 0.72rem !important;
+  }
+
+  .game-unit-grid {
+    grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
+  }
+
+  .game-unit-item > div:last-child {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .lobby-share-cluster {
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+  }
+
+  .lobby-share-cluster copy-button > div {
+    width: 100%;
   }
 }
 

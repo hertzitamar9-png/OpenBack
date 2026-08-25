@@ -283,7 +283,10 @@ export default defineConfig(({ mode }) => {
       : (accept ?? "");
     if (!acceptValue.includes("text/html")) return undefined;
     if (!req.url) return undefined;
-    if (/^\/w\d+\/game\/[^/]+/.test(req.url)) {
+    if (
+      /^\/w\d+\/game\/[^/]+/.test(req.url) ||
+      /^\/game\/[^/]+/.test(req.url)
+    ) {
       return "/";
     }
     return undefined;
@@ -424,6 +427,34 @@ export default defineConfig(({ mode }) => {
         },
         // API proxies
         "/api": {
+          target: "http://localhost:3000",
+          changeOrigin: true,
+          secure: false,
+        },
+        // Same-origin JSON routes. HTML navigation to /game/:id still goes
+        // through Vite's SPA shell via devGameHtmlBypass above.
+        "/game": {
+          target: "http://localhost:3000",
+          changeOrigin: true,
+          secure: false,
+          bypass: (req) => devGameHtmlBypass(req),
+        },
+        "/player": {
+          target: "http://localhost:3000",
+          changeOrigin: true,
+          secure: false,
+        },
+        "/public/player": {
+          target: "http://localhost:3000",
+          changeOrigin: true,
+          secure: false,
+        },
+        "/leaderboard": {
+          target: "http://localhost:3000",
+          changeOrigin: true,
+          secure: false,
+        },
+        "/profile-images": {
           target: "http://localhost:3000",
           changeOrigin: true,
           secure: false,

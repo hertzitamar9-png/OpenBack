@@ -204,19 +204,21 @@ export class HostLobbyModal extends BaseModal {
       },
       ariaLabel: translateText("common.back"),
       rightContent: html`
-        <copy-button
-          .lobbyId=${this.lobbyId}
-          .copyText=${this.lobbyId}
-          .displayText=${this.lobbyId}
-          .showVisibilityToggle=${false}
-        ></copy-button>
-        <copy-button
-          .lobbyId=${this.lobbyId}
-          .copyText=${this.inviteUrl}
-          .displayText=${this.inviteUrl}
-          .showVisibilityToggle=${false}
-          .noTruncate=${true}
-        ></copy-button>
+        <div class="lobby-share-cluster">
+          <copy-button
+            .lobbyId=${this.lobbyId}
+            .copyText=${this.lobbyId}
+            .displayText=${this.lobbyId}
+            .showVisibilityToggle=${false}
+          ></copy-button>
+          <copy-button
+            .lobbyId=${this.lobbyId}
+            .copyText=${this.inviteUrl}
+            .displayText=${this.inviteUrl}
+            .showVisibilityToggle=${false}
+            .wide=${true}
+          ></copy-button>
+        </div>
       `,
     });
   }
@@ -405,7 +407,7 @@ export class HostLobbyModal extends BaseModal {
     return html`
       <div class="flex flex-col h-full">
         <div
-          class="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-6 mr-1 mx-auto w-full max-w-5xl"
+          class="lobby-config-scroll flex-1 min-h-0 overflow-y-auto custom-scrollbar p-6 mr-1 mx-auto w-full max-w-5xl"
         >
           <game-config-settings
             class="block"

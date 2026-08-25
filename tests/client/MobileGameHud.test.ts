@@ -64,7 +64,10 @@ describe("mobile game HUD", () => {
       /@media \(orientation: landscape\)[^{]*\(max-height: 600px\)/,
     );
     expect(styles).toMatch(
-      /\.game-unit-grid\s*{[^}]*grid-template-columns:\s*repeat\(16,/s,
+      /\.game-unit-grid\s*{[^}]*grid-template-columns:\s*repeat\(12,/s,
+    );
+    expect(styles).toMatch(
+      /@media \(max-width: 560px\)[\s\S]*?\.game-unit-grid\s*{[^}]*grid-template-columns:\s*repeat\(8,/,
     );
     expect(styles).toContain("#game-bottom-hud");
     expect(styles).not.toMatch(

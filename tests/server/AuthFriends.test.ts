@@ -105,7 +105,13 @@ describe("friends API", () => {
 
     const incoming = await authenticated("/friends/requests", b.jwt);
     await expect(incoming.json()).resolves.toMatchObject({
-      incoming: [{ publicId: a.publicId }],
+      incoming: [
+        {
+          publicId: a.publicId,
+          username: a.publicId,
+          displayName: a.publicId,
+        },
+      ],
     });
 
     const accepted = await authenticated(
@@ -119,12 +125,17 @@ describe("friends API", () => {
       const friends = await authenticated("/friends?page=1&limit=20", user.jwt);
       const body = (await friends.json()) as {
         total: number;
-        results: Array<{ publicId: string }>;
+        results: Array<{
+          publicId: string;
+          username: string;
+          displayName: string;
+        }>;
       };
       expect(body.total).toBe(1);
       expect(body.results[0].publicId).toBe(
         user === a ? b.publicId : a.publicId,
       );
+      expect(body.results[0].username).toBe(body.results[0].displayName);
     }
 
     const removed = await authenticated(`/friends/${b.publicId}`, a.jwt, {
@@ -202,6 +213,15 @@ describe("friends API", () => {
     const clanHistory = await authenticated(`/clans/${clanTag}/chat`, a.jwt);
     await expect(clanHistory.json()).resolves.toMatchObject({
       results: [{ sender: a.publicId, text: "clan hello" }],
+    });
+
+    const publicProfile = await fetch(`${origin}/public/player/${a.publicId}`);
+    expect(publicProfile.status).toBe(200);
+    await expect(publicProfile.json()).resolves.toMatchObject({
+      publicId: a.publicId,
+      username: a.publicId,
+      clans: [{ tag: clanTag, name: "Chat Clan", role: "leader" }],
+      stats: {},
     });
   });
 });

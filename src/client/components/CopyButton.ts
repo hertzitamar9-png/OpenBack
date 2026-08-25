@@ -24,6 +24,7 @@ export class CopyButton extends LitElement {
   @property({ type: Boolean, attribute: "show-copy-icon" })
   showCopyIcon = true;
   @property({ type: Boolean }) compact = false;
+  @property({ type: Boolean }) wide = false;
 
   @state() private lobbyIdVisible = true;
 
@@ -127,7 +128,10 @@ export class CopyButton extends LitElement {
 
     return html`
       <div
-        class="flex items-center gap-0.5 bg-white/5 rounded-lg px-2 py-1 border border-white/10 max-w-[220px] flex-nowrap"
+        class="flex items-center gap-0.5 bg-white/5 rounded-lg px-2 py-1 border border-white/10 ${this
+          .wide
+          ? "w-full max-w-full"
+          : "max-w-[220px]"} flex-nowrap min-w-0"
       >
         ${this.showVisibilityToggle
           ? html`<button
@@ -174,7 +178,7 @@ export class CopyButton extends LitElement {
           @click=${this.handleCopy}
           @dblclick=${this.enableSelectAll}
           @mouseleave=${this.clearSelectAll}
-          class="font-mono text-xs font-bold text-white px-2 cursor-pointer select-none min-w-[80px] text-center truncate tracking-wider bg-transparent border-0 ${disabledClass}"
+          class="font-mono text-xs font-bold text-white px-2 cursor-pointer select-none min-w-0 flex-1 text-center truncate tracking-wider bg-transparent border-0 ${disabledClass}"
           title="${translateText("common.click_to_copy")}"
           aria-label="${translateText("common.click_to_copy")}"
           ?disabled=${!canCopy}

@@ -11,6 +11,7 @@ import {
 } from "../FriendsApi";
 import { showInGameConfirm } from "../InGameModal";
 import { showToast, translateText } from "../Utils";
+import "./SocialChat";
 import { playerNameLink } from "./ui/PlayerNameLink";
 
 const PAGE_LIMIT = 20;
@@ -54,6 +55,7 @@ export class FriendsList extends LitElement {
   }
 
   @property({ type: String }) myPublicId = "";
+  @property({ type: String }) clanTag = "";
 
   @state() private loading = true;
   @state() private actionPending = false;
@@ -66,7 +68,31 @@ export class FriendsList extends LitElement {
 
   connectedCallback(): void {
     super.connectedCallback();
+    document.addEventListener(
+      "social-friends-changed",
+      this.handleSocialChange,
+    );
     void this.loadAll();
+  }
+
+  disconnectedCallback(): void {
+    document.removeEventListener(
+      "social-friends-changed",
+      this.handleSocialChange,
+    );
+    super.disconnectedCallback();
+  }
+
+  private readonly handleSocialChange = () => void this.loadAll();
+
+  private displayName(entry: FriendEntry): string {
+    return entry.displayName ?? entry.username ?? entry.publicId;
+  }
+
+  private openChat(publicId: string): void {
+    document.dispatchEvent(
+      new CustomEvent("open-friend-chat", { detail: { publicId } }),
+    );
   }
 
   private async loadAll(): Promise<void> {
@@ -271,6 +297,13 @@ export class FriendsList extends LitElement {
       <div class="flex flex-col gap-6">
         ${this.renderTeamInfo()} ${this.renderAddSection()}
         ${this.renderRequestsSection()} ${this.renderFriendsSection()}
+        ${this.friends.length > 0
+          ? html`<social-chat
+              .friends=${this.friends}
+              .myPublicId=${this.myPublicId}
+              .clanTag=${this.clanTag}
+            ></social-chat>`
+          : ""}
       </div>
     `;
   }
@@ -369,15 +402,17 @@ export class FriendsList extends LitElement {
   ): TemplateResult {
     return html`
       <div
-        class="flex items-center gap-3 bg-white/5 rounded-lg border border-white/10 p-3"
+        class="friend-request-row flex flex-col min-[430px]:flex-row min-[430px]:items-center gap-3 bg-white/5 rounded-lg border border-white/10 p-3"
       >
         <div class="flex-1 min-w-0">
-          ${playerNameLink(this, entry.username, entry.publicId)}
+          ${playerNameLink(this, this.displayName(entry), entry.publicId)}
           <div class="text-white/30 text-[10px] mt-0.5">
             ${this.formatDate(entry.createdAt)}
           </div>
         </div>
-        <div class="flex items-center gap-2 shrink-0">
+        <div
+          class="flex items-center gap-2 shrink-0 self-stretch min-[430px]:self-auto justify-end"
+        >
           ${direction === "incoming"
             ? html`
                 <button
@@ -438,23 +473,33 @@ export class FriendsList extends LitElement {
           ${this.friends.map(
             (f) => html`
               <div
-                class="flex items-center gap-3 bg-white/5 rounded-lg border border-white/10 p-3"
+                class="friend-row flex flex-col min-[430px]:flex-row min-[430px]:items-center gap-3 bg-white/5 rounded-lg border border-white/10 p-3"
               >
                 <div class="flex-1 min-w-0">
-                  ${playerNameLink(this, f.username, f.publicId)}
+                  ${playerNameLink(this, this.displayName(f), f.publicId)}
                   <div class="text-white/30 text-[10px] mt-0.5">
                     ${translateText("friends.friends_since", {
                       date: this.formatDate(f.createdAt),
                     })}
                   </div>
                 </div>
-                <button
-                  @click=${() => void this.handleRemove(f.publicId)}
-                  ?disabled=${this.actionPending}
-                  class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-all disabled:opacity-50 disabled:pointer-events-none shrink-0"
+                <div
+                  class="flex items-center gap-2 self-stretch min-[430px]:self-auto justify-end"
                 >
-                  ${translateText("friends.remove")}
-                </button>
+                  <button
+                    @click=${() => this.openChat(f.publicId)}
+                    class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg bg-malibu-blue/15 text-malibu-blue border border-malibu-blue/30 hover:bg-malibu-blue/25 transition-all shrink-0"
+                  >
+                    ${translateText("friends.chat")}
+                  </button>
+                  <button
+                    @click=${() => void this.handleRemove(f.publicId)}
+                    ?disabled=${this.actionPending}
+                    class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-all disabled:opacity-50 disabled:pointer-events-none shrink-0"
+                  >
+                    ${translateText("friends.remove")}
+                  </button>
+                </div>
               </div>
             `,
           )}
