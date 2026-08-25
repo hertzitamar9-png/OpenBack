@@ -595,13 +595,53 @@ export class HostLobbyModal extends BaseModal {
     `;
   }
 
-  protected onOpen(): void {
+  protected onOpen(args?: Record<string, unknown>): void {
     this.startLobbyUpdates();
     document.addEventListener(
       "social-friends-changed",
       this.blockedPlayersChanged,
     );
     void this.refreshBlockedPlayers();
+    if (this.modalEl) {
+      this.modalEl.onClose = () => {
+        this.close();
+      };
+    }
+    const existingLobbyId =
+      typeof args?.existingLobbyId === "string" &&
+      isValidGameID(args.existingLobbyId)
+        ? args.existingLobbyId
+        : null;
+    if (existingLobbyId !== null) {
+      this.lobbyId = existingLobbyId;
+      void this.constructUrl().then((url) => {
+        this.inviteUrl = url;
+        this.updateLobbyHistory(url);
+      });
+      this.dispatchEvent(
+        new CustomEvent("join-lobby", {
+          detail: {
+            gameID: existingLobbyId,
+            source: "host",
+          } as JoinLobbyEvent,
+          bubbles: true,
+          composed: true,
+        }),
+      );
+      this.loadNationCount();
+      return;
+    }
+
+    // A normal Host Multiplayer press always starts cleanly, even if a stale
+    // game URL or disconnected handle survived an earlier exit.
+    this.dispatchEvent(
+      new CustomEvent("leave-lobby", {
+        detail: { cause: "new-host-lobby" },
+        bubbles: true,
+        composed: true,
+      }),
+    );
+
     // The server mints the game id, so we don't know it until createLobby
     // resolves. clientID is assigned by the server when we join the lobby.
 
@@ -639,11 +679,6 @@ export class HostLobbyModal extends BaseModal {
         // Clear clipboard so the host doesn't accidentally share a dead link
         void navigator.clipboard.writeText("").catch(() => {});
       });
-    if (this.modalEl) {
-      this.modalEl.onClose = () => {
-        this.close();
-      };
-    }
     this.loadNationCount();
   }
 
@@ -1322,7 +1357,7 @@ export class HostLobbyModal extends BaseModal {
               ? { enabled: true, speed: this.doomsdayClockSpeed }
               : { enabled: false },
             worldMechanics: {
-              encirclement: true,
+              encirclement: false,
               warExhaustion: true,
               logisticsCargo: true,
               strategicObjectives: this.strategicObjectives,

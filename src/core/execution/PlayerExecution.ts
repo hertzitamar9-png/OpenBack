@@ -371,6 +371,12 @@ export class PlayerExecution implements Execution {
       return;
     }
 
+    // A border cluster around an internal crater/enclave is not proof that
+    // the player's complete connected territory is enclosed. Verify that the
+    // actual land about to change hands cannot reach water or the map edge.
+    // This preserves immediate annexation without allowing inverse annexation.
+    if (!this.isEnclosed(firstTile)) return;
+
     const tiles = this.floodFillWithGen(
       this.bumpGeneration(),
       this.traversalState().visited,
@@ -386,6 +392,31 @@ export class PlayerExecution implements Execution {
     for (const tile of tiles) {
       capturing.conquer(tile);
     }
+  }
+
+  private isEnclosed(start: TileRef): boolean {
+    const map = this.map;
+    const mySmallID = this.player.smallID();
+    const visited = this.traversalState().visited;
+    const generation = this.bumpGeneration();
+    const stack: TileRef[] = [start];
+    visited[start] = generation;
+
+    while (stack.length > 0) {
+      const tile = stack.pop()!;
+      if (map.isOnEdgeOfMap(tile)) return false;
+      const count = map.neighbors4(tile, this.nbuf);
+      for (let i = 0; i < count; i++) {
+        const neighbor = this.nbuf[i];
+        if (visited[neighbor] === generation) continue;
+        const ownerId = this.mapState[neighbor] & 0xfff;
+        if (ownerId !== 0 && ownerId !== mySmallID) continue;
+        if (ownerId === 0 && !map.isLand(neighbor)) return false;
+        visited[neighbor] = generation;
+        stack.push(neighbor);
+      }
+    }
+    return true;
   }
 
   private updateWarExhaustion(): number {

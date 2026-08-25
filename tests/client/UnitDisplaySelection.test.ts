@@ -4,6 +4,7 @@ import type { UIState } from "../../src/client/UIState";
 import type { GameView } from "../../src/client/view";
 import { EventBus } from "../../src/core/EventBus";
 import { UnitType } from "../../src/core/game/Game";
+import { UserSettings } from "../../src/core/game/UserSettings";
 
 describe("UnitDisplay selection cleanup", () => {
   afterEach(() => document.body.replaceChildren());
@@ -39,5 +40,34 @@ describe("UnitDisplay selection cleanup", () => {
 
     expect(uiState.ghostStructure).toBeNull();
     expect(display.querySelector(".game-unit-mobile-info")).toBeNull();
+  });
+
+  it("can hide build descriptions without hiding the build bar", async () => {
+    (
+      UserSettings as unknown as { cache: Map<string, string | null> }
+    ).cache.clear();
+    localStorage.setItem("settings.buildBarDescriptions", "false");
+    const uiState = { ghostStructure: UnitType.City } as UIState;
+    const display = new UnitDisplay();
+    display.game = {
+      inSpawnPhase: () => false,
+      myPlayer: () => ({
+        gold: () => 1_000_000n,
+        isAlive: () => true,
+        totalUnitLevels: () => 1,
+        units: () => [],
+      }),
+      config: () => ({
+        isUnitDisabled: (type: UnitType) => type !== UnitType.City,
+      }),
+    } as unknown as GameView;
+    display.uiState = uiState;
+    display.eventBus = new EventBus();
+    document.body.appendChild(display);
+    await display.updateComplete;
+
+    expect(display.querySelector(".game-unit-item")).not.toBeNull();
+    expect(display.querySelector(".game-unit-mobile-info")).toBeNull();
+    localStorage.removeItem("settings.buildBarDescriptions");
   });
 });

@@ -76,6 +76,24 @@ describe("mobile top bar utilities", () => {
     expect(backdrop.classList).toContain("open");
     expect(document.documentElement.classList).toContain("overflow-hidden");
   });
+
+  it("gives the wordmark its own full-size row on narrow subpages", async () => {
+    const topBar = new MobileTopBar();
+    document.body.appendChild(topBar);
+    window.dispatchEvent(new CustomEvent("showPage", { detail: "page-help" }));
+    await topBar.updateComplete;
+
+    expect(
+      topBar.querySelector(".mobile-top-bar-layout-subpage"),
+    ).not.toBeNull();
+    const styles = readFileSync(
+      resolve(process.cwd(), "src/client/styles/openback.css"),
+      "utf8",
+    );
+    expect(styles).toContain(
+      ".mobile-top-bar-layout-subpage .mobile-wordmark-cell",
+    );
+  });
 });
 
 // Signing in widens the trailing group (avatar + chevron join the three

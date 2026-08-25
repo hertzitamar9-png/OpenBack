@@ -299,6 +299,14 @@ export class UserSettings {
     return this.getBool("settings.cursorCostLabel", legacy);
   }
 
+  buildBarDescriptions() {
+    return this.getBool("settings.buildBarDescriptions", true);
+  }
+
+  toggleBuildBarDescriptions() {
+    this.setBool("settings.buildBarDescriptions", !this.buildBarDescriptions());
+  }
+
   toggleLeftClickOpenMenu() {
     this.setBool("settings.leftClickOpensMenu", !this.leftClickOpensMenu());
   }

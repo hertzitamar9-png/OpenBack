@@ -389,6 +389,8 @@
     "tank_mine": "Tank Mine"
   },
   "user_setting": {
+    "build_bar_descriptions_desc": "Show the selected unit's name, purpose, and price above the build bar.",
+    "build_bar_descriptions_label": "Build unit descriptions",
     "celestial_bodies_desc": "Show the sun, moon, stars and clouds. Waves and the night tide keep running either way.",
     "celestial_bodies_label": "Sun, moon and sky",
     "confirm_leave_game": "Leave the game? Your current match will be abandoned.",

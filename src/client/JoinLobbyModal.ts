@@ -477,8 +477,9 @@ export class JoinLobbyModal extends BaseModal {
     const lobbyInfo = args?.lobbyInfo as GameInfo | PublicGameInfo | undefined;
     if (lobbyId) {
       this.startTrackingLobby(lobbyId, lobbyInfo);
-      // If opened with lobbyId but no lobbyInfo (URL join case), auto-join the lobby
-      if (!lobbyInfo) {
+      // URL joins initiate their own connection. Social invites already
+      // dispatched the join event, so they only need this read-only lobby UI.
+      if (!lobbyInfo && args?.alreadyJoining !== true) {
         this.handleUrlJoin(lobbyId, args?.spectate === true);
       }
     }

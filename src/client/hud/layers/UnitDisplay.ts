@@ -55,6 +55,7 @@ export class UnitDisplay extends LitElement implements Controller {
   private allDisabled = false;
   private _hoveredUnit: PlayerBuildableUnitType | null = null;
   private buildablesRequestInFlight = false;
+  private readonly userSettings = new UserSettings();
 
   createRenderRoot() {
     return this;
@@ -62,9 +63,7 @@ export class UnitDisplay extends LitElement implements Controller {
 
   init() {
     const config = this.game.config();
-    const userSettings = new UserSettings();
-
-    this.keybinds = userSettings.parsedUserKeybinds();
+    this.keybinds = this.userSettings.parsedUserKeybinds();
 
     this.allDisabled = BuildMenus.types.every((u) => config.isUnitDisabled(u));
     this.requestUpdate();
@@ -346,12 +345,12 @@ export class UnitDisplay extends LitElement implements Controller {
           this.requestUpdate();
         }}
       >
-        ${hovered
+        ${hovered && this.userSettings.buildBarDescriptions()
           ? renderUnitInfo(
               "game-unit-tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-1 text-gray-200 text-center w-max max-w-[min(22rem,calc(100vw-1rem))] text-xs bg-gray-800/95 backdrop-blur-xs rounded-md p-2 z-[100] shadow-lg pointer-events-none",
             )
           : null}
-        ${selected || hovered
+        ${selected && this.userSettings.buildBarDescriptions()
           ? renderUnitInfo(
               "game-unit-mobile-info text-gray-100 text-center text-xs bg-gray-900/97 border border-white/15 rounded-lg p-2 shadow-xl pointer-events-none",
             )

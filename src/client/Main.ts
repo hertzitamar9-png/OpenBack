@@ -173,7 +173,13 @@ export interface JoinLobbyEvent {
   gameStartInfo?: GameStartInfo;
   // GameRecord exists when replaying an archived game.
   gameRecord?: GameRecord;
-  source?: "public" | "private" | "host" | "matchmaking" | "singleplayer";
+  source?:
+    | "public"
+    | "private"
+    | "host"
+    | "invite"
+    | "matchmaking"
+    | "singleplayer";
   publicLobbyInfo?: GameInfo | PublicGameInfo;
   expectedExperienceMode?: "2d" | "3d";
   // Watch without playing.
@@ -864,6 +870,12 @@ class Client {
         lobbyInfo: lobby.publicLobbyInfo,
       });
     }
+    if (lobby.source === "invite") {
+      this.joinModal?.open({
+        lobbyId: lobby.gameID,
+        alreadyJoining: true,
+      });
+    }
     // Only update URL immediately for private lobbies, not public ones
     if (lobby.source !== "public") {
       this.updateJoinUrlForShare(lobby.gameID);
@@ -1044,12 +1056,11 @@ class Client {
   }
 
   private async handleLeaveLobby(event?: CustomEvent) {
-    if (this.lobbyHandle === null) {
-      return;
+    if (this.lobbyHandle !== null) {
+      console.log("leaving lobby, cancelling game");
+      this.lobbyHandle.stop(true);
+      this.lobbyHandle = null;
     }
-    console.log("leaving lobby, cancelling game");
-    this.lobbyHandle.stop(true);
-    this.lobbyHandle = null;
     this.currentUrl = null;
 
     try {

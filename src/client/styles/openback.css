@@ -177,6 +177,23 @@ textarea:focus-visible {
     padding-right: max(0.25rem, env(safe-area-inset-right));
   }
 
+  .game-hud-primary {
+    box-sizing: border-box;
+    padding-left: max(
+      clamp(0.65rem, 3.5vw, 1.5rem),
+      env(safe-area-inset-left)
+    ) !important;
+    padding-right: max(
+      clamp(0.65rem, 3.5vw, 1.5rem),
+      env(safe-area-inset-right)
+    ) !important;
+  }
+
+  .game-unit-grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+    width: 100%;
+  }
+
   page-footer .footer-language-selector #lang-selector {
     width: 2rem;
     height: 2rem;
@@ -507,8 +524,6 @@ textarea:focus-visible {
 
   .game-hud-primary {
     box-sizing: border-box;
-    padding-left: max(0.25rem, env(safe-area-inset-left));
-    padding-right: max(0.25rem, env(safe-area-inset-right));
   }
 
   .game-unit-grid {
@@ -571,6 +586,16 @@ textarea:focus-visible {
   .game-unit-item > div:last-child {
     min-width: 0;
     width: 100%;
+    height: 2.6rem !important;
+  }
+
+  .game-unit-item > div:last-child > div:last-child {
+    display: -webkit-box;
+    overflow: hidden;
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-height: 0.65rem;
   }
 
   .lobby-share-cluster {
@@ -580,6 +605,28 @@ textarea:focus-visible {
 
   .lobby-share-cluster copy-button > div {
     width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .mobile-top-bar-layout-subpage {
+    position: relative;
+    height: 5rem !important;
+    align-items: start !important;
+    padding-top: 0.2rem;
+  }
+
+  .mobile-top-bar-layout-subpage .mobile-wordmark-cell {
+    position: absolute;
+    left: 50%;
+    bottom: 0.2rem;
+    width: 9rem;
+    height: 1.65rem;
+    transform: translateX(-50%);
+  }
+
+  body.openback-subpage-open .page-content {
+    padding-top: calc(env(safe-area-inset-top) + 80px);
   }
 }
 

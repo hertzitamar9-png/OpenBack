@@ -1233,6 +1233,19 @@ export class InputHandler {
         this.uiState.ghostStructure !== null
       ) {
         this.touchGestureMode = "preview";
+        // Building on a phone should retain the normal one-finger map pan.
+        // Move the camera and then refresh the ghost under the same finger so
+        // the preview remains aligned while the player searches for a tile.
+        if (
+          Math.hypot(
+            event.clientX - this.lastPointerDownX,
+            event.clientY - this.lastPointerDownY,
+          ) >= this.TOUCH_TAP_SLOP_PX
+        ) {
+          this.eventBus.emit(
+            new DragEvent(deltaX, deltaY, event.clientX, event.clientY),
+          );
+        }
         this.eventBus.emit(new MouseMoveEvent(event.clientX, event.clientY));
         event.preventDefault();
       } else {

@@ -27,6 +27,9 @@ function languageFixture() {
     "user_setting.mobile_controls_title": "Mobile Controls",
     "user_setting.mobile_controls_desc":
       "Drag to move. Pinch to zoom. Two fingers rotate 3D.",
+    "user_setting.build_bar_descriptions_label": "Build unit descriptions",
+    "user_setting.build_bar_descriptions_desc":
+      "Show selected unit information above the build bar.",
   };
   language.defaultTranslations = language.translations;
   document.body.appendChild(language);
@@ -58,6 +61,11 @@ describe("mobile settings presentation", () => {
       host.querySelector("#left-click-toggle")?.getAttribute("label"),
     ).toBe("Tap to Open Menu");
     expect(host.textContent).toContain("Mobile Controls");
+    expect(
+      host
+        .querySelector("#build-bar-descriptions-toggle")
+        ?.getAttribute("label"),
+    ).toBe("Build unit descriptions");
   });
 
   it("retains keybinds on a hybrid touch device", () => {

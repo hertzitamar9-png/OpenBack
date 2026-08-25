@@ -113,3 +113,23 @@ describe("JoinLobbyModal spectate link", () => {
     expect((modal as any).showMessage).not.toHaveBeenCalled();
   });
 });
+
+describe("JoinLobbyModal social invite presentation", () => {
+  it("shows the lobby without initiating a duplicate join", () => {
+    const modal = new JoinLobbyModal();
+    (modal as any).hostedLobbySocket.start = vi.fn();
+    (modal as any).startTrackingLobby = vi.fn();
+    (modal as any).handleUrlJoin = vi.fn();
+
+    (modal as any).onOpen({
+      lobbyId: "AbCd1234",
+      alreadyJoining: true,
+    });
+
+    expect((modal as any).startTrackingLobby).toHaveBeenCalledWith(
+      "AbCd1234",
+      undefined,
+    );
+    expect((modal as any).handleUrlJoin).not.toHaveBeenCalled();
+  });
+});

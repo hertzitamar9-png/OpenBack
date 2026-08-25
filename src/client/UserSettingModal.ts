@@ -278,6 +278,11 @@ export class UserSettingModal extends BaseModal {
     this.requestUpdate();
   }
 
+  private toggleBuildBarDescriptions() {
+    this.userSettings.toggleBuildBarDescriptions();
+    this.requestUpdate();
+  }
+
   private sliderAttackRatio(e: CustomEvent<{ value: number }>) {
     const value = e.detail?.value;
     if (typeof value === "number") {
@@ -878,6 +883,16 @@ export class UserSettingModal extends BaseModal {
         id="cursor_cost_label-toggle"
         .checked=${this.userSettings.cursorCostLabel()}
         @change=${this.toggleCursorCostLabel}
+      ></setting-toggle>
+
+      <setting-toggle
+        label="${translateText("user_setting.build_bar_descriptions_label")}"
+        description="${translateText(
+          "user_setting.build_bar_descriptions_desc",
+        )}"
+        id="build-bar-descriptions-toggle"
+        .checked=${this.userSettings.buildBarDescriptions()}
+        @change=${this.toggleBuildBarDescriptions}
       ></setting-toggle>
 
       <!-- 🖱️ Left Click Menu -->

@@ -227,6 +227,16 @@ describe("email account lifecycle", () => {
     const cookie = refresh.headers.get("set-cookie")?.split(";")[0];
     expect(cookie).toBeTruthy();
 
+    const namelessProfile = await fetch(`${origin}/users/@me`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${refreshBody.jwt}`,
+      },
+      body: JSON.stringify({ bio: "Missing required name" }),
+    });
+    expect(namelessProfile.status).toBe(400);
+
     const profileResponse = await fetch(`${origin}/users/@me`, {
       method: "PATCH",
       headers: {

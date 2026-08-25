@@ -1,3 +1,16 @@
+## OpenBack v0.36.244 - Reliable Lobbies and Mobile Building
+
+- Friends accepting a private-lobby invite now enter the complete live lobby screen immediately. They can see the host's map, rules, roster, and countdown without being able to edit them, and the match still starts only when the host presses Start.
+- Leaving a match now clears stale game handles and URLs even when the connection already ended. A normal Host Multiplayer press always creates a fresh lobby, while an intentional successor-lobby link reconnects its host to that exact lobby.
+- Mobile building now moves the selected placement preview and pans the map together after a deliberate drag, while small finger movement remains a stable placement tap. Build descriptions disappear as soon as a unit is unselected.
+- Added a Build unit descriptions setting for every device. Players can hide the name, purpose, and price panel without hiding or disabling the build bar.
+- The mobile build bar now uses device-width breakpoints, larger two-line labels, and adaptive curved-screen insets instead of assuming every phone has a rectangular usable viewport.
+- Restored immediate OpenFront-style annexation for genuinely enclosed territory. Plane beachhead protection and the safety checks that prevent inverse or false annexation remain intact.
+- Profile saves now require a valid in-game name in both the interface and server validation. Bio, banner color, and profile picture remain optional.
+- On narrow subpages, the OpenBack wordmark receives its own full-size row so opening Account, Store, News, or another tab no longer crushes the logo between navigation controls.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.243 - Connected Friends and Adaptive Mobile Lobbies
 
 - Friend requests now show the player's in-game name instead of exposing a raw friend code. Friend and request lists update immediately while the page is open, and every friend row opens their complete public profile or a persistent live chat without requiring a refresh.

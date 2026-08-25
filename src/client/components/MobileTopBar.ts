@@ -96,7 +96,9 @@ export class MobileTopBar extends LitElement {
              side columns to their content and letting the middle flex means
              the groups can never collide, whatever the right group holds. -->
         <div
-          class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center h-14 px-2 gap-1"
+          class="mobile-top-bar-layout ${this.onSubPage
+            ? "mobile-top-bar-layout-subpage"
+            : ""} grid grid-cols-[auto_minmax(0,1fr)_auto] items-center h-14 px-2 gap-1"
         >
           <div class="col-start-1 justify-self-start flex items-center gap-1">
             <button
@@ -157,7 +159,7 @@ export class MobileTopBar extends LitElement {
           </div>
 
           <div
-            class="col-start-2 flex items-center justify-center text-malibu-blue min-w-0 overflow-hidden"
+            class="mobile-wordmark-cell col-start-2 flex items-center justify-center text-malibu-blue min-w-0 overflow-hidden"
           >
             <!-- Full size when the bar has room; object-contain scales it down
                  on narrow phones instead of pushing into the controls. -->

@@ -75,13 +75,15 @@ describe("InputHandler mobile placement gestures", () => {
     document.body.replaceChildren();
   });
 
-  it("moves a selected build preview with the finger without panning", () => {
+  it("moves a selected build preview and pans the map with the finger", () => {
     const ctx = setup(UnitType.City);
     pointer(ctx.canvas, "pointerdown", 1, 100, 100);
     pointer(window, "pointermove", 1, 140, 180);
 
     expect(ctx.moves[ctx.moves.length - 1]).toMatchObject({ x: 140, y: 180 });
-    expect(ctx.drags).toHaveLength(0);
+    expect(ctx.drags).toEqual([
+      expect.objectContaining({ deltaX: 40, deltaY: 80, x: 140, y: 180 }),
+    ]);
     ctx.handler.destroy();
   });
 

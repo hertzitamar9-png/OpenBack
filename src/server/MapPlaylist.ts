@@ -492,7 +492,7 @@ export class MapPlaylist {
       spawnImmunityDuration: 30 * 10,
       disabledUnits: [],
       worldMechanics: {
-        encirclement: true,
+        encirclement: false,
         warExhaustion: true,
         logisticsCargo: true,
         strategicObjectives,

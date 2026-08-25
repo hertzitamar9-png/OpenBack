@@ -962,7 +962,7 @@ export class SinglePlayerModal extends BaseModal {
                 }
               : {}),
             worldMechanics: {
-              encirclement: true,
+              encirclement: false,
               warExhaustion: true,
               logisticsCargo: true,
               strategicObjectives: this.strategicObjectives,

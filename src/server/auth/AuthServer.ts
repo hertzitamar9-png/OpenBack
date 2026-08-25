@@ -1858,7 +1858,7 @@ export function authRouter(): express.Router {
     }
     const parsed = z
       .object({
-        displayName: z.string().trim().min(3).max(27).optional(),
+        displayName: z.string().trim().min(3).max(27),
         bio: z.string().trim().max(160).optional(),
         bannerColor: z
           .string()

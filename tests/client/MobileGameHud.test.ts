@@ -39,6 +39,7 @@ describe("mobile game HUD", () => {
   it("keeps curved-screen safe areas inside the mobile HUD", () => {
     expect(styles).toContain("max(0.25rem, env(safe-area-inset-left))");
     expect(styles).toContain("max(0.25rem, env(safe-area-inset-right))");
+    expect(styles).toContain("clamp(0.65rem, 3.5vw, 1.5rem)");
     // The column count comes from the variable the panel sets per render, not
     // a hardcoded number. It carries a fallback now -- an unset custom
     // property with no fallback makes the whole declaration invalid, which

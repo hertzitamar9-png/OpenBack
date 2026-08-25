@@ -190,7 +190,9 @@ export class Config {
   worldMechanics() {
     const c = this._gameConfig.worldMechanics;
     return {
-      encirclement: c?.encirclement ?? true,
+      // OpenBack keeps OpenFront's immediate surrounded-territory annexation
+      // unless a future lobby explicitly opts into the slower siege variant.
+      encirclement: c?.encirclement ?? false,
       warExhaustion: c?.warExhaustion ?? true,
       strategicObjectives: c?.strategicObjectives ?? false,
       logisticsCargo: c?.logisticsCargo ?? true,
