@@ -1,7 +1,9 @@
 # OpenBack Mobile Input, Adaptive HUD, and Private Analytics Design
 
-**Date:** 2026-08-27  
-**Status:** Approved architecture; specification awaiting user review  
+**Date:** 2026-08-27
+
+**Status:** Approved
+
 **Owner:** frootz jhklphy
 
 ## Purpose
@@ -80,13 +82,14 @@ No state may emit both a tap and a hold. Once a session becomes `hold`, `drag`, 
 
 ### Coordinate contract
 
-All touch gameplay resolves through one conversion function:
+All touch gameplay resolves through one conversion path:
 
-1. Read `clientX/clientY` from the active pointer.
-2. Subtract the current canvas `getBoundingClientRect()` origin.
-3. Convert CSS pixels to renderer coordinates using the canvas-to-CSS scale.
-4. Apply the active 2D or 3D projection exactly once.
-5. Bounds-check before producing a tile reference.
+1. Snapshot `clientX/clientY` from the active pointer release.
+2. Pass that screen-space point directly to the existing `TransformHandler`.
+3. Let `TransformHandler` subtract the current canvas rectangle and apply the active 2D or 3D projection exactly once.
+4. Bounds-check before producing a tile reference.
+
+The input layer must not multiply coordinates by device-pixel ratio or backing-canvas scale. WebGL uses a high-DPI backing buffer, but `TransformHandler` intentionally consumes CSS screen coordinates; scaling twice would shift touch targets.
 
 The same resolved coordinate is passed to preview rendering, validation, menus, and final intent emission. No subsystem may re-read the last mouse position or a stale hover coordinate for a touch action.
 
