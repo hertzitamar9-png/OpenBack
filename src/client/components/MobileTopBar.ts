@@ -164,7 +164,9 @@ export class MobileTopBar extends LitElement {
             <!-- Full size when the bar has room; object-contain scales it down
                  on narrow phones instead of pushing into the controls. -->
             ${openBackHomeWordmark({
-              wrapperClass: "block h-7 w-full min-w-0 max-w-[9rem]",
+              wrapperClass: `block h-7 w-full min-w-0 ${
+                this.onSubPage ? "max-w-[8.5rem]" : "max-w-[9rem]"
+              }`,
               imageClass: "block h-full w-full object-contain",
             })}
           </div>

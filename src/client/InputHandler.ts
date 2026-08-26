@@ -981,11 +981,11 @@ export class InputHandler {
     this.longPressActive = false;
     if (wasLongPress) {
       this.canvas.style.cursor = "";
-      // If long-press fired but no drag happened (selectionBoxActive is false),
-      // suppress the tap so we don't emit a spurious TouchEvent
-      if (!this.selectionBoxActive) {
-        this.suppressNextTap = true;
-      }
+      // A long press owns this entire pointer sequence. Even a few pixels of
+      // finger drift can activate the selection rectangle; its short release
+      // must still never fall through into a country tap/attack after the
+      // alliance or action menu closes.
+      this.suppressNextTap = true;
     }
 
     // Complete selection box if it was active
@@ -995,6 +995,7 @@ export class InputHandler {
         Math.abs(event.clientX - this.lastPointerDownX) +
         Math.abs(event.clientY - this.lastPointerDownY);
       if (dist >= this.DRAG_THRESHOLD_PX) {
+        this.suppressNextTap = false;
         this.eventBus.emit(
           new WarshipSelectionBoxCompleteEvent(
             this.lastPointerDownX,

@@ -37,7 +37,7 @@ import { profanityMatcher } from "../Censor";
 import { getMapNationCount } from "../MapLandTiles";
 import { ServerEnv } from "../ServerEnv";
 import { publishSocialEvent } from "../SocialEvents";
-import { isPlayerOnline } from "../SocialPresence";
+import { isPlayerOnline, onlinePlayerIds } from "../SocialPresence";
 import { requireDurableAuthStorage } from "./AuthPersistence";
 import {
   ExperienceRankings,
@@ -3408,6 +3408,31 @@ export function authRouter(): express.Router {
       );
       res.status(401).json({ error: "invalid_token" });
     }
+  });
+
+  router.get("/public/platform-stats", (_req, res) => {
+    const owners = new Set(
+      [...usersByPid.values()]
+        .filter(
+          (user) => user.email?.toLowerCase() === OWNER_STORE_CURRENCY_EMAIL,
+        )
+        .map((user) => user.publicId),
+    );
+    const online = onlinePlayerIds();
+    res.set("Cache-Control", "no-store, max-age=0").json({
+      onlinePlayers: online.length,
+      onlinePlayersExcludingOwner: online.filter((id) => !owners.has(id))
+        .length,
+      everPlayers: usersByPid.size,
+      everPlayersExcludingOwner: [...usersByPid.values()].filter(
+        (user) => user.email?.toLowerCase() !== OWNER_STORE_CURRENCY_EMAIL,
+      ).length,
+      completedMatches: new Set(playerGames.map((game) => game.gameId)).size,
+      playersWithCompletedMatches: new Set(
+        playerGames.map((game) => game.publicId),
+      ).size,
+      measuredAt: new Date().toISOString(),
+    });
   });
 
   return router;

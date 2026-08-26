@@ -449,6 +449,11 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           secure: false,
         },
+        "/public/platform-stats": {
+          target: "http://localhost:3000",
+          changeOrigin: true,
+          secure: false,
+        },
         "/leaderboard": {
           target: "http://localhost:3000",
           changeOrigin: true,

@@ -303,6 +303,9 @@ export class BuildPreviewController implements Controller {
           this.pendingConfirm = null;
           if (this.isGhostReadyForConfirm()) {
             this.createStructure(ev);
+          } else {
+            this.removeGhostStructure();
+            return;
           }
         }
 
@@ -684,7 +687,7 @@ export class BuildPreviewController implements Controller {
     if (this.isGhostReadyForConfirm()) {
       this.createStructure(e);
     } else {
-      if (!this.isVehicleGhost()) this.removeGhostStructure();
+      this.removeGhostStructure();
     }
   }
 
@@ -696,7 +699,7 @@ export class BuildPreviewController implements Controller {
       this.ghostUnit.buildableUnit.canBuild === false &&
       this.ghostUnit.buildableUnit.canUpgrade === false
     ) {
-      if (!this.isVehicleGhost()) this.removeGhostStructure();
+      this.removeGhostStructure();
       return;
     }
     const tile = this.transformHandler.screenToWorldCoordinates(e.x, e.y);

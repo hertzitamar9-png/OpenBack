@@ -1,3 +1,16 @@
+## OpenBack v0.36.245 - Mobile Control and Instant Resume
+
+- Returned the mobile header to one clean row. Subpages now compact the menu/back controls just enough to keep the largest OpenBack wordmark that fits, without the oversized second logo row.
+- Landscape games keep all sixteen build units on one line. Portrait games use two balanced rows and apply curved-screen padding to the real HUD container, fixing the previous inset rule that had no effect because its target used `display: contents`.
+- Returning to OpenBack from another app now forces a camera-synchronised battlefield frame immediately and again on the next paint. Android `visibilitychange`, focus, and back-forward-cache restores all use the same fast resume path.
+- Mobile long-press actions such as alliance requests now consume their complete pointer sequence, including small finger drift, so closing the action menu cannot trigger an accidental attack.
+- Tapping water, enemy land, or another invalid placement now unequips the selected build unit consistently, including Aircraft and Tank previews.
+- Transport ships can only target land. Water presses are rejected instead of resolving to an unrelated distant shore, while valid reachable coastal invasions no longer have an extra 100-tile click limit that made normal launches appear to require a Port.
+- Verified the annexation implementation against the latest OpenFront source: genuinely enclosed territory is annexed immediately, while the enclosure validation prevents crater, enclave, and inverse-annexation mistakes.
+- Added a privacy-safe live platform statistics endpoint reporting online players, total players, completed matches, and the same player totals excluding the OpenBack owner account.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.244 - Reliable Lobbies and Mobile Building
 
 - Friends accepting a private-lobby invite now enter the complete live lobby screen immediately. They can see the host's map, rules, roster, and countdown without being able to edit them, and the match still starts only when the host presses Start.

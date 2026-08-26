@@ -211,6 +211,23 @@ describe("email account lifecycle", () => {
     });
   });
 
+  test("publishes privacy-safe aggregate platform counts", async () => {
+    const response = await fetch(`${origin}/public/platform-stats`);
+    expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toContain("no-store");
+    const stats = (await response.json()) as Record<string, unknown>;
+    expect(stats).toMatchObject({
+      onlinePlayers: expect.any(Number),
+      onlinePlayersExcludingOwner: expect.any(Number),
+      everPlayers: expect.any(Number),
+      everPlayersExcludingOwner: expect.any(Number),
+      completedMatches: expect.any(Number),
+      playersWithCompletedMatches: expect.any(Number),
+      measuredAt: expect.any(String),
+    });
+    expect(stats).not.toHaveProperty("email");
+  });
+
   test("calculates OB changes from both players' ratings", () => {
     expect(calculateObGain(100, 100)).toBe(50);
     expect(calculateObGain(10_000, 100)).toBe(10);

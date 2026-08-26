@@ -146,4 +146,16 @@ describe("InputHandler mobile placement gestures", () => {
     expect(ctx.placements).toHaveLength(0);
     ctx.handler.destroy();
   });
+
+  it("never turns a slightly moved long press into a country tap", async () => {
+    const ctx = setup();
+    pointer(ctx.canvas, "pointerdown", 9, 100, 100);
+    await vi.advanceTimersByTimeAsync(800);
+    pointer(window, "pointermove", 9, 104, 104);
+    pointer(window, "pointerup", 9, 104, 104);
+
+    expect(ctx.touches).toHaveLength(0);
+    expect(ctx.placements).toHaveLength(0);
+    ctx.handler.destroy();
+  });
 });

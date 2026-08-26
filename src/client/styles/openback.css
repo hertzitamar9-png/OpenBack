@@ -173,12 +173,6 @@ textarea:focus-visible {
 
   .game-safe-area {
     box-sizing: border-box;
-    padding-left: max(0.25rem, env(safe-area-inset-left));
-    padding-right: max(0.25rem, env(safe-area-inset-right));
-  }
-
-  .game-hud-primary {
-    box-sizing: border-box;
     padding-left: max(
       clamp(0.65rem, 3.5vw, 1.5rem),
       env(safe-area-inset-left)
@@ -187,11 +181,6 @@ textarea:focus-visible {
       clamp(0.65rem, 3.5vw, 1.5rem),
       env(safe-area-inset-right)
     ) !important;
-  }
-
-  .game-unit-grid {
-    grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
-    width: 100%;
   }
 
   page-footer .footer-language-selector #lang-selector {
@@ -527,7 +516,7 @@ textarea:focus-visible {
   }
 
   .game-unit-grid {
-    grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(16, minmax(0, 1fr)) !important;
     width: 100%;
     min-width: 0;
   }
@@ -608,25 +597,35 @@ textarea:focus-visible {
   }
 }
 
+@media (orientation: portrait) and (max-width: 760px) {
+  .game-unit-grid {
+    grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
+  }
+}
+
 @media (max-width: 480px) {
-  .mobile-top-bar-layout-subpage {
-    position: relative;
-    height: 5rem !important;
-    align-items: start !important;
-    padding-top: 0.2rem;
+  .mobile-top-bar-layout-subpage #hamburger-btn,
+  .mobile-top-bar-layout-subpage #mobile-back-btn {
+    width: 2.6rem;
+    height: 2.5rem;
+    aspect-ratio: auto;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 600px) and (max-width: 1366px) {
+  .game-unit-grid {
+    grid-template-columns: repeat(16, minmax(0, 1fr)) !important;
   }
 
-  .mobile-top-bar-layout-subpage .mobile-wordmark-cell {
-    position: absolute;
-    left: 50%;
-    bottom: 0.2rem;
-    width: 9rem;
-    height: 1.65rem;
-    transform: translateX(-50%);
+  .game-unit-item > div:last-child {
+    height: 2.15rem !important;
   }
 
-  body.openback-subpage-open .page-content {
-    padding-top: calc(env(safe-area-inset-top) + 80px);
+  .game-unit-item > div:last-child > div:last-child {
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    line-height: 0.75rem;
   }
 }
 

@@ -77,7 +77,7 @@ describe("mobile top bar utilities", () => {
     expect(document.documentElement.classList).toContain("overflow-hidden");
   });
 
-  it("gives the wordmark its own full-size row on narrow subpages", async () => {
+  it("keeps the largest fitting wordmark in the main subpage row", async () => {
     const topBar = new MobileTopBar();
     document.body.appendChild(topBar);
     window.dispatchEvent(new CustomEvent("showPage", { detail: "page-help" }));
@@ -90,9 +90,9 @@ describe("mobile top bar utilities", () => {
       resolve(process.cwd(), "src/client/styles/openback.css"),
       "utf8",
     );
-    expect(styles).toContain(
-      ".mobile-top-bar-layout-subpage .mobile-wordmark-cell",
-    );
+    expect(topBar.innerHTML).toContain("max-w-[8.5rem]");
+    expect(styles).toContain(".mobile-top-bar-layout-subpage #mobile-back-btn");
+    expect(styles).not.toContain("height: 5rem !important");
   });
 });
 

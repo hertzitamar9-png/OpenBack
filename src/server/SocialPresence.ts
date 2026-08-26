@@ -12,3 +12,7 @@ export function setPlayerConnected(publicId: string, connected: boolean): void {
 export function isPlayerOnline(publicId: string): boolean {
   return (connections.get(publicId) ?? 0) > 0;
 }
+
+export function onlinePlayerIds(): string[] {
+  return [...connections.keys()];
+}

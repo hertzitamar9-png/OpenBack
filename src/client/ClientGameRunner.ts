@@ -495,6 +495,7 @@ function mountWebGLFrameLoop(
   // renderer's captured frame callback (which draws). One RAF = one
   // synchronized camera-update + WebGL render.
   let rafId: number | null = null;
+  let resumeFrameId: number | null = null;
   const minimumFrameInterval = mobileRenderFrameIntervalMs();
   let lastFrameAt = -Infinity;
   const driveFrame = (now: number): void => {
@@ -517,6 +518,23 @@ function mountWebGLFrameLoop(
   };
   rafId = requestAnimationFrame(driveFrame);
 
+  const resumeRenderingImmediately = (): void => {
+    if (document.visibilityState === "hidden") return;
+    lastFrameAt = -Infinity;
+    // Android can resume DOM/UI RAF before the captured WebGL loop gets its
+    // first callback. Push one camera-synchronised frame immediately and one
+    // on the next paint so the mandatory map never trails the HUD.
+    syncCamera();
+    if (resumeFrameId !== null) cancelAnimationFrame(resumeFrameId);
+    resumeFrameId = requestAnimationFrame(() => {
+      resumeFrameId = null;
+      syncCamera();
+    });
+  };
+  document.addEventListener("visibilitychange", resumeRenderingImmediately);
+  window.addEventListener("pageshow", resumeRenderingImmediately);
+  window.addEventListener("focus", resumeRenderingImmediately);
+
   // Tear down the per-frame loop so a stopped game stops driving WebGL and
   // releases the view for disposal. Left running, the RAF keeps the WebGL
   // context referenced (and alive) forever — each new game would then stack
@@ -526,6 +544,16 @@ function mountWebGLFrameLoop(
       cancelAnimationFrame(rafId);
       rafId = null;
     }
+    if (resumeFrameId !== null) {
+      cancelAnimationFrame(resumeFrameId);
+      resumeFrameId = null;
+    }
+    document.removeEventListener(
+      "visibilitychange",
+      resumeRenderingImmediately,
+    );
+    window.removeEventListener("pageshow", resumeRenderingImmediately);
+    window.removeEventListener("focus", resumeRenderingImmediately);
     resizeObs.disconnect();
   };
 
@@ -557,6 +585,7 @@ function mountWebGLFrameLoop(
     view.updateRelations(frameData.relationMatrix, frameData.relationSize);
 
     builder.update(gameView);
+    resumeRenderingImmediately();
   };
 
   return { builder, stopFrameLoop };
@@ -1301,7 +1330,7 @@ export class ClientGameRunner {
 
   private doBoatAttackUnderCursor(): void {
     const tile = this.getTileUnderCursor();
-    if (tile === null) {
+    if (tile === null || !this.gameView.isLand(tile)) {
       return;
     }
 
@@ -1462,7 +1491,7 @@ export class ClientGameRunner {
   }
 
   private sendBoatAttackIntent(tile: TileRef) {
-    if (!this.myPlayer) return;
+    if (!this.myPlayer || !this.gameView.isLand(tile)) return;
 
     this.eventBus.emit(
       new SendBoatAttackIntentEvent(
@@ -1474,18 +1503,10 @@ export class ClientGameRunner {
 
   private canAutoBoat(buildables: BuildableUnit[], tile: TileRef): boolean {
     if (!this.gameView.isLand(tile)) return false;
-
-    const canBuild = this.canBoatAttack(buildables);
-    if (canBuild === false) return false;
-
-    // TODO: Global enable flag
-    // TODO: Global limit autoboat to nearby shore flag
-    // if (!enableAutoBoat) return false;
-    // if (!limitAutoBoatNear) return true;
-    const distanceSquared = this.gameView.euclideanDistSquared(tile, canBuild);
-    const limit = 100;
-    const limitSquared = limit * limit;
-    return distanceSquared < limitSquared;
+    // canBuildTransportShip already proves there is a reachable source shore
+    // and water path. Do not add a second arbitrary 100-tile click limit: it
+    // made ordinary coastal invasions appear to require a Port.
+    return this.canBoatAttack(buildables) !== false;
   }
 
   private onMouseMove(event: MouseMoveEvent) {
