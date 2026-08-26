@@ -1,3 +1,10 @@
+## OpenBack v0.36.247 - Correct Search Identity
+
+- Strengthened the homepage site-name metadata so Google receives OpenBack as the preferred name and `openback.dedyn.io` as the final domain fallback instead of inheriting the deSEC dynamic-DNS provider label.
+- Kept the page title, application name, web manifest, Open Graph site name, organization, game identity, logo, and visible homepage branding consistently named OpenBack.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.246 - Live Player Insights
 
 - Every account now keeps a durable last-online timestamp. Public profiles, friend and pending-request rows, and clan member and join-request lists show either Online now or a localized last-online time.
