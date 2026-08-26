@@ -1,3 +1,12 @@
+## OpenBack v0.36.246 - Live Player Insights
+
+- Every account now keeps a durable last-online timestamp. Public profiles, friend and pending-request rows, and clan member and join-request lists show either Online now or a localized last-online time.
+- Added a private owner-only OpenBack Analytics dashboard with live online players, registered players, completed games, combined playtime, active and new-player windows, returning-player counts, average session length, and searchable per-player engagement.
+- The dashboard breaks usage down by game mode, public/private/solo game type, and Classic 2D versus Immersive 3D so future gameplay updates can be based on real player behavior.
+- Dashboard figures are rebuilt from authoritative persisted accounts and completed match records, exclude the owner account, refresh automatically while visible, and never expose player emails or authentication data.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.245 - Mobile Control and Instant Resume
 
 - Returned the mobile header to one clean row. Subpages now compact the menu/back controls just enough to keep the largest OpenBack wordmark that fits, without the oversized second logo row.

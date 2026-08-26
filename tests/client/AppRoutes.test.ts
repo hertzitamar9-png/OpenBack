@@ -61,6 +61,7 @@ describe("AppRoutes", () => {
 
   // A link that names something another person could open keeps its path.
   it.each<[string, AppRouteTarget]>([
+    ["/analytics", { pageId: "page-analytics" }],
     [
       "/tutorials/getting-started",
       { pageId: "page-tutorials", article: "getting-started" },
@@ -121,6 +122,7 @@ describe("AppRoutes", () => {
     { pageId: "page-blog", article: "dynamic-world-mechanics" },
     { pageId: "page-tutorials", article: "getting-started" },
     { pageId: "page-stats", gameID: "game-1" },
+    { pageId: "page-analytics" },
   ])("round-trips the shareable target %#", (target) => {
     expect(parseAppUrl(url(pathForTarget(target)))).toMatchObject({
       kind: "app",

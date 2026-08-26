@@ -45,6 +45,7 @@ import { MatchmakingModal } from "./Matchmaking";
 import { updateAccountNavButton } from "./NavAccountButton";
 import { initNavigation } from "./Navigation";
 import "./NewsModal";
+import "./OwnerAnalyticsModal";
 import "./PlayerProfileModal";
 import { RewardsModal } from "./RewardsModal";
 import "./SinglePlayerModal";
@@ -236,6 +237,10 @@ class Client {
     appRouter.register("account", {
       tag: "account-modal",
       pageId: "page-account",
+    });
+    appRouter.register("analytics", {
+      tag: "owner-analytics-modal",
+      pageId: "page-analytics",
     });
     appRouter.register("stats", {
       tag: "game-stats-modal",

@@ -19,7 +19,8 @@ export type AppPageId =
   | "page-account"
   | "page-profile"
   | "page-stats"
-  | "page-settings";
+  | "page-settings"
+  | "page-analytics";
 
 export interface AppRouteTarget {
   pageId: AppPageId;
@@ -75,6 +76,7 @@ const SIMPLE_PATHS = new Map<string, AppRouteTarget>([
   ["/terms", { pageId: "page-terms" }],
   ["/privacy", { pageId: "page-privacy" }],
   ["/language", { pageId: "page-language" }],
+  ["/analytics", { pageId: "page-analytics" }],
   ["/solo", { pageId: "page-single-player", experienceMode: "2d" }],
   ["/ranked", { pageId: "page-ranked", experienceMode: "2d" }],
   ["/multiplayer/host", { pageId: "page-host-lobby", experienceMode: "2d" }],
@@ -427,6 +429,8 @@ export function pathForTarget(target: AppRouteTarget): string {
         throw new Error(`Unknown Settings tab: ${tab}`);
       return `/${suffix}`;
     }
+    case "page-analytics":
+      return `/analytics${suffix}`;
   }
 }
 

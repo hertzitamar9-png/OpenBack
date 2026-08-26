@@ -211,6 +211,18 @@ export class NavAccountMenu extends LitElement {
           void appRouter.navigate({ pageId: "page-account" });
         },
       },
+      ...(player?.analyticsAccess
+        ? [
+            {
+              key: "analytics",
+              labelKey: "nav_account_menu.analytics",
+              icon: iconAnalytics,
+              onSelect: () => {
+                void appRouter.navigate({ pageId: "page-analytics" });
+              },
+            },
+          ]
+        : []),
       {
         key: "account-settings",
         labelKey: "nav_account_menu.account_settings",
@@ -531,6 +543,24 @@ const iconUser = html`<svg
 >
   <path d="M20 21a8 8 0 0 0-16 0" />
   <path d="M12 13a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" />
+</svg>`;
+
+const iconAnalytics = html`<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.8"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  class="w-full h-full"
+  aria-hidden="true"
+>
+  <path d="M4 19V9" />
+  <path d="M10 19V5" />
+  <path d="M16 19v-7" />
+  <path d="M22 19V2" />
+  <path d="M2 19h22" />
 </svg>`;
 
 const iconGear = html`<svg

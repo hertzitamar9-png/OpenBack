@@ -10,6 +10,7 @@ import {
   sendFriendRequest,
 } from "../FriendsApi";
 import { showInGameConfirm } from "../InGameModal";
+import { formatLastOnline } from "../utilities/LastOnline";
 import { showToast, translateText } from "../Utils";
 import "./SocialChat";
 import { playerNameLink } from "./ui/PlayerNameLink";
@@ -407,6 +408,7 @@ export class FriendsList extends LitElement {
         <div class="flex-1 min-w-0">
           ${playerNameLink(this, this.displayName(entry), entry.publicId)}
           <div class="text-white/30 text-[10px] mt-0.5">
+            ${formatLastOnline(entry.lastSeenAt, entry.online ?? false)} ·
             ${this.formatDate(entry.createdAt)}
           </div>
         </div>
@@ -478,6 +480,7 @@ export class FriendsList extends LitElement {
                 <div class="flex-1 min-w-0">
                   ${playerNameLink(this, this.displayName(f), f.publicId)}
                   <div class="text-white/30 text-[10px] mt-0.5">
+                    ${formatLastOnline(f.lastSeenAt, f.online ?? false)} ·
                     ${translateText("friends.friends_since", {
                       date: this.formatDate(f.createdAt),
                     })}

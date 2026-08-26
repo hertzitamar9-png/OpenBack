@@ -10,6 +10,8 @@ import {
   GetMyTribeNamesResponse,
   GetMyTribeNamesResponseSchema,
   NewsItemSchema,
+  OwnerAnalyticsResponse,
+  OwnerAnalyticsResponseSchema,
   PlayerGameModeFilter,
   PlayerGameTypeFilter,
   PlayerProfile,
@@ -122,6 +124,31 @@ export async function fetchPublicPlayerProfile(
     return parsed.data;
   } catch (err) {
     console.warn("fetchPublicPlayerProfile: request failed", err);
+    return false;
+  }
+}
+
+export async function fetchOwnerAnalytics(): Promise<
+  OwnerAnalyticsResponse | false
+> {
+  try {
+    const authorization = await getAuthHeader();
+    if (!authorization) return false;
+    const response = await fetch(`${getApiBase()}/owner/analytics`, {
+      headers: { Accept: "application/json", Authorization: authorization },
+      cache: "no-store",
+    });
+    if (!response.ok) return false;
+    const parsed = OwnerAnalyticsResponseSchema.safeParse(
+      await response.json(),
+    );
+    if (!parsed.success) {
+      console.warn("fetchOwnerAnalytics: invalid response", parsed.error);
+      return false;
+    }
+    return parsed.data;
+  } catch (error) {
+    console.warn("fetchOwnerAnalytics: request failed", error);
     return false;
   }
 }

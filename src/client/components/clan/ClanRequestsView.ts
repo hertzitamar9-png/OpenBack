@@ -7,6 +7,7 @@ import {
   denyClanRequest,
   fetchClanRequests,
 } from "../../ClanApi";
+import { formatLastOnline } from "../../utilities/LastOnline";
 import { translateText } from "../../Utils";
 import { playerNameLink } from "../ui/PlayerNameLink";
 import {
@@ -155,6 +156,16 @@ export class ClanRequestsView extends LitElement {
                     >
                       <div class="flex-1 min-w-0">
                         ${playerNameLink(this, req.username, req.publicId)}
+                        <div
+                          class="text-[10px] ${req.online
+                            ? "text-emerald-300"
+                            : "text-white/35"}"
+                        >
+                          ${formatLastOnline(
+                            req.lastSeenAt,
+                            req.online ?? false,
+                          )}
+                        </div>
                         <span class="text-white/30 text-[10px]">
                           ${translateText("clan_modal.requested_on", {
                             tag: this.selectedClan?.tag ?? this.clanTag,

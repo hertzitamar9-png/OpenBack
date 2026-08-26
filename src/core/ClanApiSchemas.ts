@@ -142,6 +142,8 @@ export const ClanMemberSchema = z.object({
   username: z.string().nullable().optional(),
   displayName: z.string().optional(),
   profilePictureUrl: z.string().optional(),
+  online: z.boolean().optional(),
+  lastSeenAt: z.iso.datetime().optional(),
   stats: ClanMemberStatsSchema.optional(),
 });
 export type ClanMember = z.infer<typeof ClanMemberSchema>;
@@ -161,6 +163,8 @@ export const ClanJoinRequestSchema = z.object({
   username: z.string().nullable().optional(),
   displayName: z.string().optional(),
   profilePictureUrl: z.string().optional(),
+  online: z.boolean().optional(),
+  lastSeenAt: z.iso.datetime().optional(),
   createdAt: z.iso.datetime(),
 });
 export type ClanJoinRequest = z.infer<typeof ClanJoinRequestSchema>;

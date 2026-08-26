@@ -17,6 +17,7 @@ import "./components/PlayerName";
 import { modalHeader } from "./components/ui/ModalHeader";
 import { usernameText } from "./components/ui/UsernameText";
 import { verifiedBadge } from "./components/ui/VerifiedBadge";
+import { formatLastOnline } from "./utilities/LastOnline";
 import { playerProfileUrl } from "./utilities/PlayerProfileUrl";
 import { translateText } from "./Utils";
 
@@ -34,6 +35,8 @@ export class PlayerProfileModal extends BaseModal {
   @state() private profilePictureUrl: string | null = null;
   @state() private statsTree: PlayerStatsTree | null = null;
   @state() private clans: NonNullable<PlayerProfile["clans"]> = [];
+  @state() private lastSeenAt: string | undefined;
+  @state() private online = false;
   @state() private loading = false;
   private openedFrom: ProfileOrigin | null = null;
   // Mirrors the account modal's Games tab: keep the accumulated history list +
@@ -223,6 +226,19 @@ export class PlayerProfileModal extends BaseModal {
       return this.renderNotFound();
     }
     return html`
+      <div
+        class="mb-4 flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm ${this
+          .online
+          ? "text-emerald-300"
+          : "text-white/55"}"
+      >
+        <span
+          class="h-2.5 w-2.5 rounded-full ${this.online
+            ? "bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]"
+            : "bg-white/25"}"
+        ></span>
+        ${formatLastOnline(this.lastSeenAt, this.online)}
+      </div>
       <player-stats-tree-view
         .statsTree=${this.statsTree}
       ></player-stats-tree-view>
@@ -276,6 +292,8 @@ export class PlayerProfileModal extends BaseModal {
     this.profilePictureUrl = null;
     this.statsTree = null;
     this.clans = [];
+    this.lastSeenAt = undefined;
+    this.online = false;
     this.gameHistoryCache = null;
     this.gamesScrollTop = 0;
     this.restoreGamesScrollAfterOpen = false;
@@ -298,6 +316,8 @@ export class PlayerProfileModal extends BaseModal {
     this.profilePictureUrl =
       profile === false ? null : (profile.profilePictureUrl ?? null);
     this.clans = profile === false ? [] : (profile.clans ?? []);
+    this.lastSeenAt = profile === false ? undefined : profile.lastSeenAt;
+    this.online = profile === false ? false : (profile.online ?? false);
   }
 
   // Intentionally preserves publicId/statsTree/history cache/scroll: the page

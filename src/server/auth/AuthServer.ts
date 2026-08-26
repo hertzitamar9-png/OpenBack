@@ -7,6 +7,7 @@ import { Pool } from "pg";
 import cosmeticsJson from "resources/cosmetics.json" with { type: "json" };
 import { z } from "zod";
 import {
+  OwnerAnalyticsResponseSchema,
   PlayerGameModeFilter,
   PlayerGameTypeFilter,
   PlayerProfileSchema,
@@ -31,6 +32,7 @@ import {
   ExperienceMode,
   GameRecord,
   GameRecordSchema,
+  normalizeExperienceMode,
 } from "../../core/Schemas";
 import { generateID, replacer } from "../../core/Util";
 import { profanityMatcher } from "../Censor";
@@ -196,6 +198,7 @@ interface StoredPurchase {
 }
 interface StoredPlayerGame extends PublicPlayerGame {
   publicId: string;
+  experienceMode?: ExperienceMode;
 }
 interface StoredFriendship {
   a: string;
@@ -259,6 +262,7 @@ function hydrate(raw: PersistShape) {
   tribeRegistry = new TribeRegistry(raw.tribeNames ?? []);
   for (const u of raw.users ?? []) {
     u.rankings = migrateExperienceRankings(u);
+    u.lastSeenAt ??= new Date(u.createdAt).toISOString();
     usersByEmail.set(u.email?.toLowerCase() ?? u.persistentId, u);
     usersByPid.set(u.persistentId, u);
   }
@@ -500,6 +504,7 @@ function userMeFor(user: StoredUser): UserMeResponse {
         ),
       lifetimeAccess: true,
       subscription: null,
+      analyticsAccess: user.email?.toLowerCase() === OWNER_STORE_CURRENCY_EMAIL,
     },
   });
 }
@@ -544,11 +549,13 @@ function findOrCreateUser(opts: {
     );
     if (existing) return existing;
   }
+  const createdAt = Date.now();
   const user: StoredUser = {
     persistentId: crypto.randomUUID(),
     email: opts.email ? opts.email.toLowerCase() : null,
     publicId: generateID(),
-    createdAt: Date.now(),
+    createdAt,
+    lastSeenAt: new Date(createdAt).toISOString(),
     googleSub: opts.googleSub,
   };
   usersByEmail.set(user.email?.toLowerCase() ?? user.persistentId, user);
@@ -683,7 +690,9 @@ async function userFromBearer(
 ): Promise<StoredUser | null> {
   const auth = req.headers.authorization;
   if (!auth?.startsWith("Bearer ")) return null;
-  return userFromToken(auth.slice(7));
+  const user = await userFromToken(auth.slice(7));
+  if (user) touchPlayerSeen(user);
+  return user;
 }
 
 // New ranked players begin at zero OB and build their rating through play.
@@ -742,6 +751,16 @@ export function markPlayerSeen(publicId: string): void {
   const user = userByPublicId(publicId);
   if (!user) return;
   user.lastSeenAt = new Date().toISOString();
+  persist();
+}
+
+function touchPlayerSeen(user: StoredUser, now = Date.now()): void {
+  const previous = user.lastSeenAt ? Date.parse(user.lastSeenAt) : 0;
+  // Social/account pages can poll frequently. A one-minute write throttle keeps
+  // last-online useful without rewriting the complete durable state document
+  // for every authenticated request.
+  if (Number.isFinite(previous) && now - previous < 60_000) return;
+  user.lastSeenAt = new Date(now).toISOString();
   persist();
 }
 
@@ -917,12 +936,23 @@ function memberFor(clan: StoredClan, user: StoredUser) {
 // UI can show a friendly name. The publicId stays on the object for friending.
 function withDisplayName<T extends { publicId: string }>(
   entry: T,
-): T & { displayName?: string; profilePictureUrl?: string } {
+): T & {
+  username?: string;
+  displayName?: string;
+  profilePictureUrl?: string;
+  online?: boolean;
+  lastSeenAt?: string;
+} {
   const user = userByPublicId(entry.publicId);
   return {
     ...entry,
+    username: user ? usernameFor(user) : undefined,
     displayName: user?.displayName,
     profilePictureUrl: user ? profilePictureUrlFor(user) : undefined,
+    online: isPlayerOnline(entry.publicId),
+    lastSeenAt:
+      user?.lastSeenAt ??
+      (user ? new Date(user.createdAt).toISOString() : undefined),
   };
 }
 
@@ -1175,6 +1205,7 @@ function summariesForGame(record: GameRecord): StoredPlayerGame[] {
         playerTeams:
           config.playerTeams === undefined ? null : String(config.playerTeams),
         rankedType: config.rankedType ?? "unranked",
+        experienceMode: normalizeExperienceMode(config),
         result: gameResultFor(record, player.clientID),
         totalPlayers: record.info.players.length,
         username: player.username,
@@ -2504,6 +2535,8 @@ export function authRouter(): express.Router {
       publicId: target.publicId,
       displayName: usernameFor(target),
       username: usernameFor(target),
+      online: isPlayerOnline(target.publicId),
+      lastSeenAt: target.lastSeenAt ?? new Date(target.createdAt).toISOString(),
       bio: target.bio,
       bannerColor: target.bannerColor,
       selectedFlag: target.selectedFlag,
@@ -3433,6 +3466,166 @@ export function authRouter(): express.Router {
       ).size,
       measuredAt: new Date().toISOString(),
     });
+  });
+
+  router.get("/owner/analytics", async (req, res) => {
+    const owner = await userFromBearer(req);
+    if (
+      !owner?.email ||
+      owner.email.toLowerCase() !== OWNER_STORE_CURRENCY_EMAIL
+    ) {
+      res.status(403).json({ error: "owner_only" });
+      return;
+    }
+
+    const trackedUsers = [...usersByPid.values()].filter(
+      (user) => user.email?.toLowerCase() !== OWNER_STORE_CURRENCY_EMAIL,
+    );
+    const trackedIds = new Set(trackedUsers.map((user) => user.publicId));
+    const trackedGames = playerGames.filter((game) =>
+      trackedIds.has(game.publicId),
+    );
+    const now = Date.now();
+    const windows = {
+      day: now - 24 * 60 * 60 * 1000,
+      week: now - 7 * 24 * 60 * 60 * 1000,
+      month: now - 30 * 24 * 60 * 60 * 1000,
+    };
+
+    type Breakdown = {
+      gameIds: Set<string>;
+      playerIds: Set<string>;
+      playSeconds: number;
+    };
+    const addBreakdown = (
+      target: Map<string, Breakdown>,
+      key: string,
+      game: StoredPlayerGame,
+    ) => {
+      const entry = target.get(key) ?? {
+        gameIds: new Set<string>(),
+        playerIds: new Set<string>(),
+        playSeconds: 0,
+      };
+      entry.gameIds.add(game.gameId);
+      entry.playerIds.add(game.publicId);
+      entry.playSeconds += game.durationSeconds;
+      target.set(key, entry);
+    };
+    const modeFor = (game: StoredPlayerGame): string => {
+      if (game.rankedType !== "unranked") {
+        return `Ranked ${game.rankedType.toUpperCase()}`;
+      }
+      if (game.playerTeams === HumansVsNations) return "Humans vs Nations";
+      if (game.mode === GameMode.Team) {
+        return game.playerTeams ? `Team (${game.playerTeams})` : "Team";
+      }
+      return "Free For All";
+    };
+    const gameTypes = new Map<string, Breakdown>();
+    const gameModes = new Map<string, Breakdown>();
+    const experiences = new Map<string, Breakdown>();
+    for (const game of trackedGames) {
+      addBreakdown(gameTypes, game.type || "Unknown", game);
+      addBreakdown(gameModes, modeFor(game), game);
+      addBreakdown(
+        experiences,
+        (game.experienceMode ?? "2d").toUpperCase(),
+        game,
+      );
+    }
+    const serializeBreakdown = (source: Map<string, Breakdown>) =>
+      [...source.entries()]
+        .map(([key, entry]) => ({
+          key,
+          games: entry.gameIds.size,
+          playSeconds: Math.round(entry.playSeconds),
+          players: entry.playerIds.size,
+        }))
+        .sort(
+          (a, b) =>
+            b.games - a.games ||
+            b.playSeconds - a.playSeconds ||
+            a.key.localeCompare(b.key),
+        );
+
+    const perPlayer = new Map<string, StoredPlayerGame[]>();
+    for (const game of trackedGames) {
+      const games = perPlayer.get(game.publicId) ?? [];
+      games.push(game);
+      perPlayer.set(game.publicId, games);
+    }
+    const players = trackedUsers
+      .map((user) => {
+        const games = perPlayer.get(user.publicId) ?? [];
+        const modeCounts = new Map<string, number>();
+        for (const game of games) {
+          const key = modeFor(game);
+          modeCounts.set(key, (modeCounts.get(key) ?? 0) + 1);
+        }
+        const favoriteMode = [...modeCounts.entries()].sort(
+          (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
+        )[0]?.[0];
+        return {
+          publicId: user.publicId,
+          username: usernameFor(user),
+          createdAt: new Date(user.createdAt).toISOString(),
+          lastSeenAt: user.lastSeenAt ?? new Date(user.createdAt).toISOString(),
+          online: isPlayerOnline(user.publicId),
+          gamesPlayed: new Set(games.map((game) => game.gameId)).size,
+          playSeconds: Math.round(
+            games.reduce((sum, game) => sum + game.durationSeconds, 0),
+          ),
+          wins: games.filter((game) => game.result === "victory").length,
+          favoriteMode: favoriteMode ?? null,
+        };
+      })
+      .sort(
+        (a, b) =>
+          Number(b.online) - Number(a.online) ||
+          b.lastSeenAt.localeCompare(a.lastSeenAt) ||
+          a.username.localeCompare(b.username),
+      );
+
+    const response = OwnerAnalyticsResponseSchema.parse({
+      measuredAt: new Date(now).toISOString(),
+      totals: {
+        onlinePlayers: players.filter((player) => player.online).length,
+        registeredPlayers: trackedUsers.length,
+        completedMatches: new Set(trackedGames.map((game) => game.gameId)).size,
+        playerGameSessions: trackedGames.length,
+        playersWithGames: perPlayer.size,
+        totalPlaySeconds: Math.round(
+          trackedGames.reduce((sum, game) => sum + game.durationSeconds, 0),
+        ),
+        returningPlayers: players.filter((player) => player.gamesPlayed >= 2)
+          .length,
+      },
+      activePlayers: {
+        day: players.filter(
+          (player) => Date.parse(player.lastSeenAt) >= windows.day,
+        ).length,
+        week: players.filter(
+          (player) => Date.parse(player.lastSeenAt) >= windows.week,
+        ).length,
+        month: players.filter(
+          (player) => Date.parse(player.lastSeenAt) >= windows.month,
+        ).length,
+      },
+      registrations: {
+        day: trackedUsers.filter((user) => user.createdAt >= windows.day)
+          .length,
+        week: trackedUsers.filter((user) => user.createdAt >= windows.week)
+          .length,
+        month: trackedUsers.filter((user) => user.createdAt >= windows.month)
+          .length,
+      },
+      gameTypes: serializeBreakdown(gameTypes),
+      gameModes: serializeBreakdown(gameModes),
+      experiences: serializeBreakdown(experiences),
+      players,
+    });
+    res.set("Cache-Control", "no-store, max-age=0").json(response);
   });
 
   return router;

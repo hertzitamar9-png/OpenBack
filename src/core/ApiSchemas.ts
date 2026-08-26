@@ -286,6 +286,10 @@ export const UserMeResponseSchema = z.object({
         hasEmail: z.boolean(),
       })
       .optional(),
+    // Only true for the OpenBack owner account. The client uses this to expose
+    // the private analytics dashboard; the server independently authorizes
+    // every dashboard request, so this is presentation state, not authority.
+    analyticsAccess: z.boolean().optional(),
   }),
 });
 export type UserMeResponse = z.infer<typeof UserMeResponseSchema>;
@@ -547,6 +551,8 @@ export const PlayerProfileSchema = z.object({
   // parse it — compare players by publicId only. Optional so responses from
   // an API without the field still parse.
   username: z.string().nullable().optional(),
+  online: z.boolean().optional(),
+  lastSeenAt: z.iso.datetime().optional(),
   stats: PlayerStatsTreeSchema,
   // Clans this player belongs to, tag-ordered. Optional so responses from an
   // API without the field still parse (→ no clans shown).
@@ -686,6 +692,55 @@ export const FriendEntrySchema = z.object({
   lastSeenAt: z.iso.datetime().optional(),
 });
 export type FriendEntry = z.infer<typeof FriendEntrySchema>;
+
+export const OwnerAnalyticsBreakdownSchema = z.object({
+  key: z.string(),
+  games: z.number().int().nonnegative(),
+  playSeconds: z.number().int().nonnegative(),
+  players: z.number().int().nonnegative(),
+});
+
+export const OwnerAnalyticsPlayerSchema = z.object({
+  publicId: z.string(),
+  username: z.string(),
+  createdAt: z.iso.datetime(),
+  lastSeenAt: z.iso.datetime(),
+  online: z.boolean(),
+  gamesPlayed: z.number().int().nonnegative(),
+  playSeconds: z.number().int().nonnegative(),
+  wins: z.number().int().nonnegative(),
+  favoriteMode: z.string().nullable(),
+});
+
+export const OwnerAnalyticsResponseSchema = z.object({
+  measuredAt: z.iso.datetime(),
+  totals: z.object({
+    onlinePlayers: z.number().int().nonnegative(),
+    registeredPlayers: z.number().int().nonnegative(),
+    completedMatches: z.number().int().nonnegative(),
+    playerGameSessions: z.number().int().nonnegative(),
+    playersWithGames: z.number().int().nonnegative(),
+    totalPlaySeconds: z.number().int().nonnegative(),
+    returningPlayers: z.number().int().nonnegative(),
+  }),
+  activePlayers: z.object({
+    day: z.number().int().nonnegative(),
+    week: z.number().int().nonnegative(),
+    month: z.number().int().nonnegative(),
+  }),
+  registrations: z.object({
+    day: z.number().int().nonnegative(),
+    week: z.number().int().nonnegative(),
+    month: z.number().int().nonnegative(),
+  }),
+  gameTypes: OwnerAnalyticsBreakdownSchema.array(),
+  gameModes: OwnerAnalyticsBreakdownSchema.array(),
+  experiences: OwnerAnalyticsBreakdownSchema.array(),
+  players: OwnerAnalyticsPlayerSchema.array(),
+});
+export type OwnerAnalyticsResponse = z.infer<
+  typeof OwnerAnalyticsResponseSchema
+>;
 
 export const FriendRequestsResponseSchema = z.object({
   incoming: FriendEntrySchema.array(),

@@ -186,12 +186,80 @@ describe("email account lifecycle", () => {
       player: {
         lifetimeAccess: true,
         infiniteGold: false,
+        analyticsAccess: true,
         currency: {
           soft: Number.MAX_SAFE_INTEGER,
           hard: Number.MAX_SAFE_INTEGER,
         },
       },
     });
+
+    const analytics = await fetch(`${origin}/owner/analytics`, {
+      headers: { Authorization: `Bearer ${jwt}` },
+    });
+    expect(analytics.status).toBe(200);
+    expect(analytics.headers.get("cache-control")).toContain("no-store");
+    const analyticsBody = (await analytics.json()) as Record<string, unknown>;
+    expect(analyticsBody).toMatchObject({
+      measuredAt: expect.any(String),
+      totals: {
+        onlinePlayers: expect.any(Number),
+        registeredPlayers: expect.any(Number),
+        completedMatches: expect.any(Number),
+        playerGameSessions: expect.any(Number),
+        playersWithGames: expect.any(Number),
+        totalPlaySeconds: expect.any(Number),
+        returningPlayers: expect.any(Number),
+      },
+      activePlayers: {
+        day: expect.any(Number),
+        week: expect.any(Number),
+        month: expect.any(Number),
+      },
+      gameTypes: expect.any(Array),
+      gameModes: expect.any(Array),
+      experiences: expect.any(Array),
+      players: expect.any(Array),
+    });
+    expect(JSON.stringify(analyticsBody)).not.toContain("@example.com");
+  });
+
+  test("publishes last-online state but keeps owner analytics private", async () => {
+    const email = `presence-${Date.now()}@example.com`;
+    const requested = await postJson("/auth/request-code", {
+      email,
+      mode: "signup",
+    });
+    const { devCode } = (await requested.json()) as { devCode: string };
+    const verified = await postJson("/auth/verify-code", {
+      email,
+      code: devCode,
+      mode: "signup",
+    });
+    const auth = (await verified.json()) as { jwt: string };
+    const me = await fetch(`${origin}/users/@me`, {
+      headers: { Authorization: `Bearer ${auth.jwt}` },
+    });
+    const userMe = (await me.json()) as {
+      player: { publicId: string; analyticsAccess?: boolean };
+    };
+    expect(userMe.player.analyticsAccess).toBe(false);
+
+    const profile = await fetch(
+      `${origin}/public/player/${userMe.player.publicId}`,
+    );
+    expect(profile.status).toBe(200);
+    await expect(profile.json()).resolves.toMatchObject({
+      publicId: userMe.player.publicId,
+      online: false,
+      lastSeenAt: expect.any(String),
+    });
+
+    const forbidden = await fetch(`${origin}/owner/analytics`, {
+      headers: { Authorization: `Bearer ${auth.jwt}` },
+    });
+    expect(forbidden.status).toBe(403);
+    await expect(forbidden.json()).resolves.toEqual({ error: "owner_only" });
   });
 
   test("requires an email account before starting checkout", async () => {

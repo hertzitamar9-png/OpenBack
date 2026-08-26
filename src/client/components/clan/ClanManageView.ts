@@ -14,6 +14,7 @@ import {
   promoteMember,
   updateClan,
 } from "../../ClanApi";
+import { formatLastOnline } from "../../utilities/LastOnline";
 import { translateText } from "../../Utils";
 import "../ConfirmDialog";
 import { playerNameLink } from "../ui/PlayerNameLink";
@@ -576,6 +577,13 @@ export class ClanManageView extends LitElement {
             ${renderRoleIcon(member.role)}
           </div>
           ${playerNameLink(this, member.username, member.publicId)}
+          <span
+            class="text-[10px] whitespace-nowrap ${member.online
+              ? "text-emerald-300"
+              : "text-white/35"}"
+          >
+            ${formatLastOnline(member.lastSeenAt, member.online ?? false)}
+          </span>
           <span class="text-white/30 text-[10px] whitespace-nowrap">
             ${translateText("clan_modal.joined_date", {
               date: formatClanDate(member.joinedAt),
