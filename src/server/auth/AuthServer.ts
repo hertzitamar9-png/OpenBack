@@ -40,6 +40,7 @@ import { getMapNationCount } from "../MapLandTiles";
 import { ServerEnv } from "../ServerEnv";
 import { publishSocialEvent } from "../SocialEvents";
 import { isPlayerOnline, onlinePlayerIds } from "../SocialPresence";
+import { observeApproximateCountry } from "./ApproximateCountry";
 import { requireDurableAuthStorage } from "./AuthPersistence";
 import {
   ExperienceRankings,
@@ -104,6 +105,9 @@ interface StoredUser {
   lifetimeAccess?: boolean;
   lifetimePurchasedAt?: string;
   lastSeenAt?: string;
+  approximateCountry?: string;
+  countryFirstSeenAt?: string;
+  countryLastSeenAt?: string;
   blockedPublicIds?: string[];
   lastTribePurchaseAt?: number;
   nextUsernameChangeAt?: string;
@@ -691,7 +695,10 @@ async function userFromBearer(
   const auth = req.headers.authorization;
   if (!auth?.startsWith("Bearer ")) return null;
   const user = await userFromToken(auth.slice(7));
-  if (user) touchPlayerSeen(user);
+  if (user) {
+    touchPlayerSeen(user);
+    touchPlayerCountry(user, req.ip);
+  }
   return user;
 }
 
@@ -761,6 +768,30 @@ function touchPlayerSeen(user: StoredUser, now = Date.now()): void {
   // for every authenticated request.
   if (Number.isFinite(previous) && now - previous < 60_000) return;
   user.lastSeenAt = new Date(now).toISOString();
+  persist();
+}
+
+function touchPlayerCountry(
+  user: StoredUser,
+  requestIp: string | undefined,
+  now = Date.now(),
+): void {
+  const country = observeApproximateCountry(requestIp);
+  if (!country) return;
+  const lastObserved = user.countryLastSeenAt
+    ? Date.parse(user.countryLastSeenAt)
+    : 0;
+  if (
+    user.approximateCountry === country &&
+    Number.isFinite(lastObserved) &&
+    now - lastObserved < 60_000
+  ) {
+    return;
+  }
+  const iso = new Date(now).toISOString();
+  user.approximateCountry = country;
+  user.countryFirstSeenAt ??= iso;
+  user.countryLastSeenAt = iso;
   persist();
 }
 
@@ -3433,6 +3464,8 @@ export function authRouter(): express.Router {
         res.status(404).json({ error: "not_found" });
         return;
       }
+      touchPlayerSeen(user);
+      touchPlayerCountry(user, req.ip);
       res.json(userMeFor(user));
     } catch (e) {
       console.error(

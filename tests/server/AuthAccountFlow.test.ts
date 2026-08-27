@@ -27,6 +27,7 @@ beforeAll(async () => {
   calculateObLoss = auth.calculateObLoss;
   recordRankedResult = auth.recordRankedResult;
   const app = express();
+  app.set("trust proxy", 1);
   app.use(express.json());
   app.use(auth.authRouter());
   server = app.listen(0, "127.0.0.1");
@@ -238,12 +239,39 @@ describe("email account lifecycle", () => {
     });
     const auth = (await verified.json()) as { jwt: string };
     const me = await fetch(`${origin}/users/@me`, {
-      headers: { Authorization: `Bearer ${auth.jwt}` },
+      headers: {
+        Authorization: `Bearer ${auth.jwt}`,
+        "X-Forwarded-For": "8.8.8.8",
+      },
     });
     const userMe = (await me.json()) as {
       player: { publicId: string; analyticsAccess?: boolean };
     };
     expect(userMe.player.analyticsAccess).toBe(false);
+
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    const persistedText = fs.readFileSync(
+      path.join(authDataDir, "openback-auth.json"),
+      "utf8",
+    );
+    const persisted = JSON.parse(persistedText) as {
+      users: Array<{
+        publicId: string;
+        approximateCountry?: string;
+        countryFirstSeenAt?: string;
+        countryLastSeenAt?: string;
+      }>;
+    };
+    expect(
+      persisted.users.find(
+        (candidate) => candidate.publicId === userMe.player.publicId,
+      ),
+    ).toMatchObject({
+      approximateCountry: "US",
+      countryFirstSeenAt: expect.any(String),
+      countryLastSeenAt: expect.any(String),
+    });
+    expect(persistedText).not.toContain("8.8.8.8");
 
     const profile = await fetch(
       `${origin}/public/player/${userMe.player.publicId}`,

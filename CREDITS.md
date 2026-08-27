@@ -15,6 +15,14 @@ is not an official OpenFront release or endorsed by OpenFront Inc. The complete
 corresponding source for the version served over the network is available at
 <https://github.com/hertzitamar9-png/OpenBack>.
 
+### Approximate country lookup
+
+OpenBack uses the Apache-2.0 `geoip-country` runtime for offline country-level
+lookup. This product includes GeoLite2 data created by MaxMind, available from
+<https://www.maxmind.com/> and used under the database terms distributed with
+the `geoip-country` package. OpenBack stores only the resulting two-letter
+country code and never stores the source IP address.
+
 ## Game Assets
 
 Inherited game assets under `resources/` originate from **OpenFront Inc.** and
