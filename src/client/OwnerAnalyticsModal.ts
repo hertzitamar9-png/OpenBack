@@ -22,6 +22,7 @@ export class OwnerAnalyticsModal extends BaseModal {
   @state() private failed = false;
   @state() private search = "";
   @state() private refreshing = false;
+  @state() private expandedPlayerId: string | null = null;
   private refreshTimer: ReturnType<typeof setInterval> | null = null;
   private requestGeneration = 0;
 
@@ -86,6 +87,11 @@ export class OwnerAnalyticsModal extends BaseModal {
     }
     this.analytics = next;
     this.failed = false;
+  }
+
+  private togglePlayer(publicId: string): void {
+    this.expandedPlayerId =
+      this.expandedPlayerId === publicId ? null : publicId;
   }
 
   protected renderBody(): TemplateResult {
@@ -298,7 +304,7 @@ export class OwnerAnalyticsModal extends BaseModal {
               />
             </div>
             <div class="overflow-x-auto">
-              <table class="w-full min-w-[760px] text-left text-sm">
+              <table class="w-full min-w-[960px] text-left text-sm">
                 <thead
                   class="bg-black/20 text-[10px] uppercase tracking-wider text-white/35"
                 >
@@ -321,12 +327,29 @@ export class OwnerAnalyticsModal extends BaseModal {
                     <th class="px-4 py-3">
                       ${translateText("analytics.favorite_mode")}
                     </th>
+                    <th class="px-4 py-3">
+                      ${translateText("analytics.selected_flag")}
+                    </th>
+                    <th class="px-4 py-3">
+                      ${translateText("analytics.approximate_country")}
+                    </th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-white/[0.06]">
                   ${players.map(
-                    (player) =>
-                      html`<tr class="hover:bg-white/[0.035]">
+                    (player) => html`
+                      <tr
+                        data-analytics-player=${player.publicId}
+                        class="cursor-pointer hover:bg-white/[0.055]"
+                        tabindex="0"
+                        @click=${() => this.togglePlayer(player.publicId)}
+                        @keydown=${(event: KeyboardEvent) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            this.togglePlayer(player.publicId);
+                          }
+                        }}
+                      >
                         <td class="px-4 py-3">
                           <div class="font-bold text-white">
                             ${player.username}
@@ -360,7 +383,24 @@ export class OwnerAnalyticsModal extends BaseModal {
                         <td class="px-4 py-3 text-white/55">
                           ${player.favoriteMode ?? "—"}
                         </td>
-                      </tr>`,
+                        <td
+                          class="max-w-36 truncate px-4 py-3 text-white/55"
+                          title=${player.selectedFlag ?? ""}
+                        >
+                          ${player.selectedFlag ?? "—"}
+                        </td>
+                        <td class="px-4 py-3 font-bold text-white/70">
+                          ${player.approximateCountry ?? "Unknown"}
+                        </td>
+                      </tr>
+                      ${this.expandedPlayerId === player.publicId
+                        ? html`<tr>
+                            <td colspan="8" class="bg-black/20 p-0">
+                              ${this.renderPlayerDetail(player)}
+                            </td>
+                          </tr>`
+                        : nothing}
+                    `,
                   )}
                 </tbody>
               </table>
@@ -399,6 +439,134 @@ export class OwnerAnalyticsModal extends BaseModal {
       </div>
       <div class="mt-1 text-[10px] text-white/35">${detail}</div>
     </div>`;
+  }
+
+  private renderPlayerDetail(
+    player: OwnerAnalyticsResponse["players"][number],
+  ): TemplateResult {
+    const value = (label: string, content: string) => html`
+      <div class="rounded-xl border border-white/10 bg-white/[0.035] p-3">
+        <div
+          class="text-[9px] font-bold uppercase tracking-wider text-white/30"
+        >
+          ${label}
+        </div>
+        <div class="mt-1 break-words text-xs font-semibold text-white/75">
+          ${content}
+        </div>
+      </div>
+    `;
+    return html`
+      <div
+        data-analytics-detail=${player.publicId}
+        class="grid gap-4 p-4 lg:grid-cols-[1fr_1fr]"
+      >
+        <div class="space-y-3">
+          <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            ${value(
+              translateText("analytics.account_email"),
+              player.email ?? "—",
+            )}
+            ${value(translateText("analytics.player_id"), player.publicId)}
+            ${value(
+              translateText("analytics.created"),
+              new Date(player.createdAt).toLocaleString(),
+            )}
+            ${value(
+              translateText("analytics.selected_flag"),
+              player.selectedFlag ?? "—",
+            )}
+            ${value(
+              translateText("analytics.approximate_country"),
+              player.approximateCountry ?? "Unknown",
+            )}
+            ${value(
+              translateText("analytics.cosmetic"),
+              player.selectedCosmetic ?? "—",
+            )}
+            ${value(
+              translateText("analytics.clans"),
+              player.clans.length
+                ? player.clans
+                    .map((clan) => `[${clan.tag}] ${clan.name}`)
+                    .join(", ")
+                : "—",
+            )}
+            ${value(
+              translateText("analytics.profile_picture"),
+              player.hasProfilePicture
+                ? translateText("common.yes")
+                : translateText("common.no"),
+            )}
+            ${value(
+              translateText("analytics.results"),
+              `${player.wins}W · ${player.losses}L · ${player.incompleteGames} incomplete`,
+            )}
+            ${value(
+              translateText("analytics.average_game"),
+              this.formatDuration(player.averageGameSeconds),
+            )}
+            ${value(
+              translateText("analytics.first_game"),
+              player.firstGameAt
+                ? new Date(player.firstGameAt).toLocaleString()
+                : "—",
+            )}
+            ${value(
+              translateText("analytics.last_game"),
+              player.lastGameAt
+                ? new Date(player.lastGameAt).toLocaleString()
+                : "—",
+            )}
+          </div>
+        </div>
+        <div class="grid gap-3 sm:grid-cols-2">
+          ${this.detailBreakdown(
+            translateText("analytics.game_modes"),
+            player.modeBreakdown,
+          )}
+          ${this.detailBreakdown(
+            translateText("analytics.game_types"),
+            player.typeBreakdown,
+          )}
+          ${this.detailBreakdown(
+            translateText("analytics.experiences"),
+            player.experienceBreakdown,
+          )}
+          ${this.detailBreakdown(
+            translateText("analytics.maps"),
+            player.mapBreakdown,
+          )}
+        </div>
+      </div>
+    `;
+  }
+
+  private detailBreakdown(title: string, entries: Breakdown[]): TemplateResult {
+    return html`
+      <section class="rounded-xl border border-white/10 bg-black/15 p-3">
+        <h4
+          class="text-[10px] font-black uppercase tracking-wider text-malibu-blue"
+        >
+          ${title}
+        </h4>
+        <div class="mt-2 space-y-1.5">
+          ${entries.length
+            ? entries.slice(0, 8).map(
+                (entry) =>
+                  html`<div
+                    class="flex items-center justify-between gap-2 text-[11px]"
+                  >
+                    <span class="truncate text-white/55">${entry.key}</span>
+                    <span class="shrink-0 tabular-nums text-white/75">
+                      ${entry.games} · ${this.formatDuration(entry.playSeconds)}
+                    </span>
+                  </div>`,
+              )
+            : html`<div class="text-[11px] text-white/25">—</div>`}
+        </div>
+      </section>
+    `;
   }
 
   private smallStat(label: string, value: number): TemplateResult {

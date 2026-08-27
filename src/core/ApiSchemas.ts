@@ -703,13 +703,31 @@ export const OwnerAnalyticsBreakdownSchema = z.object({
 export const OwnerAnalyticsPlayerSchema = z.object({
   publicId: z.string(),
   username: z.string(),
+  email: z.string().email().nullable(),
   createdAt: z.iso.datetime(),
   lastSeenAt: z.iso.datetime(),
   online: z.boolean(),
+  selectedFlag: z.string().nullable(),
+  approximateCountry: z
+    .string()
+    .regex(/^[A-Z]{2}$/)
+    .nullable(),
+  selectedCosmetic: z.string().nullable(),
+  clans: z.array(z.object({ tag: z.string(), name: z.string() })),
+  hasProfilePicture: z.boolean(),
   gamesPlayed: z.number().int().nonnegative(),
   playSeconds: z.number().int().nonnegative(),
   wins: z.number().int().nonnegative(),
+  losses: z.number().int().nonnegative(),
+  incompleteGames: z.number().int().nonnegative(),
+  averageGameSeconds: z.number().int().nonnegative(),
+  firstGameAt: z.iso.datetime().nullable(),
+  lastGameAt: z.iso.datetime().nullable(),
   favoriteMode: z.string().nullable(),
+  modeBreakdown: OwnerAnalyticsBreakdownSchema.array(),
+  typeBreakdown: OwnerAnalyticsBreakdownSchema.array(),
+  experienceBreakdown: OwnerAnalyticsBreakdownSchema.array(),
+  mapBreakdown: OwnerAnalyticsBreakdownSchema.array(),
 });
 
 export const OwnerAnalyticsResponseSchema = z.object({

@@ -3581,6 +3581,14 @@ export function authRouter(): express.Router {
             b.playSeconds - a.playSeconds ||
             a.key.localeCompare(b.key),
         );
+    const breakdownForGames = (
+      games: StoredPlayerGame[],
+      keyFor: (game: StoredPlayerGame) => string,
+    ) => {
+      const result = new Map<string, Breakdown>();
+      for (const game of games) addBreakdown(result, keyFor(game), game);
+      return serializeBreakdown(result);
+    };
 
     const perPlayer = new Map<string, StoredPlayerGame[]>();
     for (const game of trackedGames) {
@@ -3599,18 +3607,53 @@ export function authRouter(): express.Router {
         const favoriteMode = [...modeCounts.entries()].sort(
           (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
         )[0]?.[0];
+        const orderedGames = [...games].sort((a, b) =>
+          a.start.localeCompare(b.start),
+        );
+        const playSeconds = Math.round(
+          games.reduce((sum, game) => sum + game.durationSeconds, 0),
+        );
+        const clans = [...clansByTag.values()]
+          .filter((clan) =>
+            clan.members.some((member) => member.publicId === user.publicId),
+          )
+          .map((clan) => ({ tag: clan.tag, name: clan.name }));
         return {
           publicId: user.publicId,
           username: usernameFor(user),
+          email: user.email,
           createdAt: new Date(user.createdAt).toISOString(),
           lastSeenAt: user.lastSeenAt ?? new Date(user.createdAt).toISOString(),
           online: isPlayerOnline(user.publicId),
+          selectedFlag: user.selectedFlag ?? null,
+          approximateCountry: user.approximateCountry ?? null,
+          selectedCosmetic: user.selectedCosmetic ?? null,
+          clans,
+          hasProfilePicture: user.profilePictureRevision !== undefined,
           gamesPlayed: new Set(games.map((game) => game.gameId)).size,
-          playSeconds: Math.round(
-            games.reduce((sum, game) => sum + game.durationSeconds, 0),
-          ),
+          playSeconds,
           wins: games.filter((game) => game.result === "victory").length,
+          losses: games.filter((game) => game.result === "defeat").length,
+          incompleteGames: games.filter((game) => game.result === "incomplete")
+            .length,
+          averageGameSeconds: games.length
+            ? Math.round(playSeconds / games.length)
+            : 0,
+          firstGameAt: orderedGames[0]?.start ?? null,
+          lastGameAt: orderedGames[orderedGames.length - 1]?.start ?? null,
           favoriteMode: favoriteMode ?? null,
+          modeBreakdown: breakdownForGames(games, modeFor),
+          typeBreakdown: breakdownForGames(
+            games,
+            (game) => game.type || "Unknown",
+          ),
+          experienceBreakdown: breakdownForGames(games, (game) =>
+            (game.experienceMode ?? "2d").toUpperCase(),
+          ),
+          mapBreakdown: breakdownForGames(
+            games,
+            (game) => game.map || "Unknown",
+          ),
         };
       })
       .sort(

@@ -222,7 +222,24 @@ describe("email account lifecycle", () => {
       experiences: expect.any(Array),
       players: expect.any(Array),
     });
-    expect(JSON.stringify(analyticsBody)).not.toContain("@example.com");
+    const players = analyticsBody.players as Array<Record<string, unknown>>;
+    expect(players[0]).toMatchObject({
+      email: expect.stringContaining("@"),
+      selectedFlag: null,
+      approximateCountry: null,
+      selectedCosmetic: null,
+      clans: expect.any(Array),
+      hasProfilePicture: expect.any(Boolean),
+      losses: expect.any(Number),
+      incompleteGames: expect.any(Number),
+      averageGameSeconds: expect.any(Number),
+      modeBreakdown: expect.any(Array),
+      typeBreakdown: expect.any(Array),
+      experienceBreakdown: expect.any(Array),
+      mapBreakdown: expect.any(Array),
+    });
+    expect(JSON.stringify(analyticsBody)).not.toContain("persistentId");
+    expect(JSON.stringify(analyticsBody)).not.toContain("openback_session");
   });
 
   test("publishes last-online state but keeps owner analytics private", async () => {
