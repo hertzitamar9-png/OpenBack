@@ -1,3 +1,9 @@
+## OpenBack v0.36.239 - Named OpenBack in Search Results
+
+- Google was showing the game's web address, and on some pages the name of the DNS provider, instead of OpenBack above its search results. The page was listing its own address as an acceptable alternative name for the site, so that address is no longer offered and only OpenBack is.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.248 - Precise Mobile Command
 
 - Rebuilt mobile touch handling so taps, holds, drags, and two-finger gestures are mutually exclusive. Closing an alliance or player menu can no longer trigger an accidental attack.
