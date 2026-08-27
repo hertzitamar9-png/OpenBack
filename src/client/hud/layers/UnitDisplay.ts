@@ -1,5 +1,5 @@
 import { html, LitElement } from "lit";
-import { customElement } from "lit/decorators.js";
+import { customElement, state } from "lit/decorators.js";
 import { assetUrl } from "../../../core/AssetUrls";
 import { EventBus } from "../../../core/EventBus";
 import {
@@ -18,6 +18,7 @@ import {
 import { UIState } from "../../UIState";
 import { renderNumber, translateText } from "../../Utils";
 import { GameView } from "../../view";
+import { bottomHudLayout, type BottomHudLayout } from "../layout/HudCapacity";
 const warshipIcon = assetUrl("images/BattleshipIconWhite.svg");
 const cityIcon = assetUrl("images/CityIconWhite.svg");
 const factoryIcon = assetUrl("images/FactoryIconWhite.svg");
@@ -59,10 +60,58 @@ export class UnitDisplay extends LitElement implements Controller {
   private _hoveredUnit: PlayerBuildableUnitType | null = null;
   private buildablesRequestInFlight = false;
   private readonly userSettings = new UserSettings();
+  @state() private hudLayout: BottomHudLayout = bottomHudLayout({
+    width: window.innerWidth,
+    height: window.innerHeight,
+    safeLeft: 0,
+    safeRight: 0,
+    units: BuildMenus.types.length,
+  });
+  private resizeObserver: ResizeObserver | null = null;
 
   createRenderRoot() {
     return this;
   }
+
+  connectedCallback() {
+    super.connectedCallback();
+    window.addEventListener("resize", this.refreshHudLayout);
+    void this.updateComplete.then(() => {
+      this.refreshHudLayout();
+      if (typeof ResizeObserver === "undefined") return;
+      const target = this.closest(".game-safe-area") ?? this;
+      this.resizeObserver = new ResizeObserver(this.refreshHudLayout);
+      this.resizeObserver.observe(target);
+    });
+  }
+
+  disconnectedCallback() {
+    window.removeEventListener("resize", this.refreshHudLayout);
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = null;
+    super.disconnectedCallback();
+  }
+
+  private readonly refreshHudLayout = () => {
+    const safeArea = this.closest<HTMLElement>(".game-safe-area");
+    const rect = safeArea?.getBoundingClientRect() ?? {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    };
+    const style = safeArea ? getComputedStyle(safeArea) : null;
+    const enabledUnits = this.game
+      ? BuildMenus.types.filter(
+          (unit) => !this.game.config().isUnitDisabled(unit),
+        ).length
+      : BuildMenus.types.length;
+    this.hudLayout = bottomHudLayout({
+      width: rect.width || window.innerWidth,
+      height: window.innerHeight,
+      safeLeft: Number.parseFloat(style?.paddingLeft ?? "0") || 0,
+      safeRight: Number.parseFloat(style?.paddingRight ?? "0") || 0,
+      units: Math.max(1, enabledUnits),
+    });
+  };
 
   init() {
     const config = this.game.config();
@@ -73,6 +122,7 @@ export class UnitDisplay extends LitElement implements Controller {
       this._hoveredUnit = event.unitType;
       this.requestUpdate();
     });
+    this.refreshHudLayout();
     this.requestUpdate();
   }
 
@@ -179,7 +229,10 @@ export class UnitDisplay extends LitElement implements Controller {
     return html`
       <div class="border-t border-white/10 px-1 py-0.5 w-full">
         <div
-          class="game-unit-grid grid grid-cols-8 sm:grid-cols-[repeat(16,minmax(0,1fr))] gap-px w-full"
+          class="game-unit-grid grid gap-px w-full"
+          data-label-mode=${this.hudLayout.labelMode}
+          style="--game-unit-columns:${this.hudLayout
+            .columns};--game-unit-rows:${this.hudLayout.rows}"
         >
           ${this.renderUnitItem(
             cityIcon,
@@ -425,7 +478,7 @@ export class UnitDisplay extends LitElement implements Controller {
               : null}
           </div>
           <div
-            class="w-full truncate text-center text-[8px] leading-3 font-semibold text-white/90"
+            class="game-unit-label w-full truncate text-center text-[8px] leading-3 font-semibold text-white/90"
           >
             ${translateText("unit_type." + structureKey)}
           </div>

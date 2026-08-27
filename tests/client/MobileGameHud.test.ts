@@ -39,7 +39,8 @@ describe("mobile game HUD", () => {
   it("keeps curved-screen safe areas inside the mobile HUD", () => {
     expect(styles).toContain("max(0.25rem, env(safe-area-inset-left))");
     expect(styles).toContain("max(0.25rem, env(safe-area-inset-right))");
-    expect(styles).toContain("clamp(0.65rem, 3.5vw, 1.5rem)");
+    expect(styles).toContain("max(0.5rem, env(safe-area-inset-left))");
+    expect(styles).toContain("max(0.5rem, env(safe-area-inset-right))");
     // The column count comes from the variable the panel sets per render, not
     // a hardcoded number. It carries a fallback now -- an unset custom
     // property with no fallback makes the whole declaration invalid, which
@@ -65,14 +66,12 @@ describe("mobile game HUD", () => {
       /@media \(orientation: landscape\)[^{]*\(max-height: 600px\)/,
     );
     expect(styles).toMatch(
-      /@media \(orientation: landscape\)[\s\S]*?\.game-unit-grid\s*{[^}]*grid-template-columns:\s*repeat\(16,/,
+      /\.game-unit-grid\s*{[^}]*grid-template-columns:\s*repeat\(\s*var\(--game-unit-columns(?:,\s*\d+)?\),/s,
     );
-    expect(styles).toMatch(
-      /@media \(max-width: 560px\)[\s\S]*?\.game-unit-grid\s*{[^}]*grid-template-columns:\s*repeat\(8,/,
-    );
-    expect(styles).toMatch(
-      /@media \(orientation: portrait\)[\s\S]*?\.game-unit-grid\s*{[^}]*grid-template-columns:\s*repeat\(8,/,
-    );
+    expect(styles).not.toMatch(/grid-template-columns:\s*repeat\((?:8|16),/);
+    expect(unitDisplay).toContain("bottomHudLayout");
+    expect(unitDisplay).toContain("ResizeObserver");
+    expect(unitDisplay).toContain("data-label-mode");
     expect(styles).toContain("#game-bottom-hud");
     expect(styles).not.toMatch(
       /@media \(orientation: landscape\)[\s\S]*?\.game-unit-grid\s*{[^}]*display:\s*none/,
