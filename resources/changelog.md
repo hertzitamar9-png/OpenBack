@@ -1,3 +1,13 @@
+## OpenBack v0.36.248 - Precise Mobile Command
+
+- Rebuilt mobile touch handling so taps, holds, drags, and two-finger gestures are mutually exclusive. Closing an alliance or player menu can no longer trigger an accidental attack.
+- Transport ships now use the exact land tile touched by the player. Water taps are rejected and nearby islands can no longer redirect ships across the world.
+- Every build cancellation now clears the selected unit, description, transparent models, range and trajectory overlays, and pending placement state together while supported successful builds remain ready for repeat placement.
+- Made portrait and landscape HUDs adapt to usable screen space and safe areas across phone sizes. Build units stay reachable, player counters balance automatically, and global controls remain visible while inspecting another country.
+- Expanded the private owner analytics dashboard with account identity, selected flag, approximate country, clans, cosmetics, detailed playtime, maps, modes, and 2D/3D usage without storing IP addresses or exposing private fields to players.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.247 - Correct Search Identity
 
 - Strengthened the homepage site-name metadata so Google receives OpenBack as the preferred name and `openback.dedyn.io` as the final domain fallback instead of inheriting the deSEC dynamic-DNS provider label.

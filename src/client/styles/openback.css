@@ -460,6 +460,13 @@ textarea:focus-visible {
     height: clamp(5.25rem, 24dvh, 7rem);
   }
 
+  .player-info-shell {
+    left: max(0px, env(safe-area-inset-left)) !important;
+    right: auto !important;
+    transform: none !important;
+    translate: none !important;
+  }
+
   .player-info-surface {
     width: auto !important;
     max-width: calc(

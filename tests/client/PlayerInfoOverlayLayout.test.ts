@@ -13,6 +13,12 @@ describe("mobile player unit counter balance", () => {
     expect(source).toContain("game-right-sidebar");
     expect(source).toContain("--player-unit-rows");
     expect(source).toContain("--game-global-controls-width");
+    expect(source).toContain("player-info-shell");
+
+    const styles = readFileSync("src/client/styles/openback.css", "utf8");
+    expect(styles).toContain(".player-info-shell");
+    expect(styles).toContain("transform: none !important");
+    expect(styles).toContain("translate: none !important");
   });
 
   it("arranges all twelve counters as two equal rows of six", () => {
