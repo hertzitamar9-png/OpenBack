@@ -1,3 +1,9 @@
+## OpenBack v0.36.250 - Missing Files Are No Longer Answered
+
+- The server used to answer a request for any file it did not have with the game itself, which meant made-up download links such as openback.dedyn.io/setup.exe came back as though the file really was there. Google flagged the site for hosting harmful downloads on that basis, which makes Chrome warn players before they reach the game. Requests for files that do not exist are now properly refused, and every real page and address is unaffected.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.249 - Named OpenBack in Search Results
 
 - Google was showing the game's web address above its search results instead of OpenBack. The previous release listed that address as a permitted fallback name for the site, intending to stop results being credited to the DNS provider; the address is a name Google may choose to display, so it displayed it. Only OpenBack is offered as a name now, while everything that ties the address to the site is unchanged.

@@ -269,8 +269,36 @@ app.get("/api/health", (_req, res) => {
   }
 });
 
+/**
+ * A request for a file that does not exist must not be answered with the app.
+ *
+ * express.static runs before this fallback, so anything arriving here that
+ * names a file is a file we do not have. Answering those with 200 and the app
+ * shell told the world that every such URL exists: a request for
+ * /setup.exe, /openback.apk or /files/crack.zip came back 200 with a 208 KB
+ * body. That is enough for a link posted anywhere to look like a real download
+ * hosted on this domain, and Google Safe Browsing flagged the site for hosting
+ * harmful downloads on exactly that basis. It also had Google indexing
+ * made-up paths such as /_assets as if they were pages.
+ *
+ * Application routes never name a file -- "/", "/settings", "/blog/an-article",
+ * "/clans/TAG/overview" -- so the test is whether the last path segment has an
+ * extension. Only that segment is examined, which keeps a route like
+ * /profile/some.id/stats working.
+ */
+const FILENAME_SEGMENT = /\.[A-Za-z0-9]{1,10}$/;
+
+function looksLikeAMissingFile(pathname: string): boolean {
+  const lastSegment = pathname.split("/").filter(Boolean).pop();
+  return lastSegment !== undefined && FILENAME_SEGMENT.test(lastSegment);
+}
+
 // SPA fallback route
-app.get("/{*splat}", async function (_req, res) {
+app.get("/{*splat}", async function (req, res) {
+  if (looksLikeAMissingFile(req.path)) {
+    res.status(404).type("text/plain").send("Not Found");
+    return;
+  }
   try {
     const htmlPath = path.join(__dirname, "../../static/index.html");
     await renderAppShell(res, htmlPath);
