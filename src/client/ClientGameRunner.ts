@@ -70,6 +70,7 @@ import { createCanvas } from "./Utils";
 import { WebGLFrameBuilder } from "./WebGLFrameBuilder";
 import { MapLayerController } from "./controllers/MapLayerController";
 import { createRenderer, GameRenderer } from "./hud/GameRenderer";
+import { landTargetAtScreenPoint } from "./input/PointerTarget";
 import { shouldConfirmLeaving } from "./openback/LeaveGuard";
 import {
   applyGraphicsOverrides,
@@ -1181,15 +1182,12 @@ export class ClientGameRunner {
     ) {
       return;
     }
-    const cell = this.renderer.transformHandler.screenToWorldCoordinates(
-      event.x,
-      event.y,
+    const tile = landTargetAtScreenPoint(
+      this.gameView,
+      this.renderer.transformHandler,
+      event,
     );
-    if (!this.gameView.isValidCoord(cell.x, cell.y)) {
-      return;
-    }
-    console.log(`clicked cell ${cell}`);
-    const tile = this.gameView.ref(cell.x, cell.y);
+    if (tile === null) return;
     if (
       this.gameView.isLand(tile) &&
       !this.gameView.hasOwner(tile) &&
