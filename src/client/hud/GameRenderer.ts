@@ -57,6 +57,7 @@ export function createRenderer(
   const uiState: UIState = {
     attackRatio: 20,
     ghostStructure: null,
+    activePlacementRevision: 0,
     rocketDirectionUp: true,
     upgradeMultiplier: 1,
   };

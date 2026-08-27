@@ -1,8 +1,10 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import {
+  BuildPreviewController,
   samThreatensNukePreview,
   shouldPreserveGhostAfterBuild,
 } from "../../../src/client/controllers/BuildPreviewController";
+import type { UIState } from "../../../src/client/UIState";
 import { BuildMenus, UnitType } from "../../../src/core/game/Game";
 
 describe("BuildPreviewController repeat placement", () => {
@@ -19,6 +21,44 @@ describe("BuildPreviewController repeat placement", () => {
       expect(shouldPreserveGhostAfterBuild(UnitType.Plane)).toBe(true);
       expect(shouldPreserveGhostAfterBuild(UnitType.Tank)).toBe(true);
     });
+  });
+});
+
+describe("BuildPreviewController placement teardown", () => {
+  test("clears selection and every renderer overlay together", () => {
+    const uiState = {
+      ghostStructure: UnitType.City,
+      activePlacementRevision: 0,
+    } as UIState;
+    const view = {
+      updateGhostPreview: vi.fn(),
+      updateNukeTrajectory: vi.fn(),
+      updateHoverRange: vi.fn(),
+    };
+    const controller = new BuildPreviewController(
+      {} as never,
+      { emit: vi.fn() } as never,
+      uiState,
+      {} as never,
+      view as never,
+      {} as never,
+    );
+    Object.assign(controller as unknown as Record<string, unknown>, {
+      ghostUnit: { buildableUnit: { type: UnitType.City } },
+      pendingConfirm: { x: 1, y: 2 },
+      validatedTileRef: 10,
+      lastGhostData: { ghostType: UnitType.City },
+      nukeTrajectoryStatic: { srcX: 1, srcY: 1, sams: [] },
+      ghostQueryInFlight: true,
+    });
+
+    controller.clearActivePlacement();
+
+    expect(uiState.ghostStructure).toBeNull();
+    expect(uiState.activePlacementRevision).toBe(1);
+    expect(view.updateGhostPreview).toHaveBeenLastCalledWith(null);
+    expect(view.updateNukeTrajectory).toHaveBeenLastCalledWith(null);
+    expect(view.updateHoverRange).toHaveBeenLastCalledWith(null);
   });
 });
 

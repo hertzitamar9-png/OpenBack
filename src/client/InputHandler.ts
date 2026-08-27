@@ -117,6 +117,10 @@ export class ToggleStructureEvent implements GameEvent {
   ) {}
 }
 
+export class ActivePlacementChangedEvent implements GameEvent {
+  constructor(public readonly unitType: PlayerBuildableUnitType | null) {}
+}
+
 export class ConfirmGhostStructureEvent implements GameEvent {}
 
 export class SwapRocketDirectionEvent implements GameEvent {
@@ -1315,6 +1319,9 @@ export class InputHandler {
       this.uiState.upgradeMultiplier = 1;
       this.uiState.ghostStructure = ghostStructure;
     }
+    this.uiState.activePlacementRevision =
+      (this.uiState.activePlacementRevision ?? 0) + 1;
+    this.eventBus.emit(new ActivePlacementChangedEvent(ghostStructure));
   }
 
   /**

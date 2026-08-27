@@ -23,6 +23,7 @@ import { TileRef } from "../../core/game/GameMap";
 import { UserSettings } from "../../core/game/UserSettings";
 import { Controller } from "../Controller";
 import {
+  ActivePlacementChangedEvent,
   ConfirmGhostStructureEvent,
   MouseMoveEvent,
   MouseUpEvent,
@@ -928,9 +929,18 @@ export class BuildPreviewController implements Controller {
     this.clearNukeTrajectory();
   }
 
-  private removeGhostStructure() {
+  public clearActivePlacement(): void {
     this.clearGhostStructure();
+    this.ghostQueryInFlight = false;
+    this.view.updateHoverRange(null);
     this.uiState.ghostStructure = null;
+    this.uiState.activePlacementRevision =
+      (this.uiState.activePlacementRevision ?? 0) + 1;
+    this.eventBus.emit(new ActivePlacementChangedEvent(null));
+  }
+
+  private removeGhostStructure() {
+    this.clearActivePlacement();
   }
 
   private resolveGhostRangeLevel(

@@ -11,7 +11,10 @@ import {
 } from "../../../core/game/Game";
 import { UserSettings } from "../../../core/game/UserSettings";
 import { Controller } from "../../Controller";
-import { ToggleStructureEvent } from "../../InputHandler";
+import {
+  ActivePlacementChangedEvent,
+  ToggleStructureEvent,
+} from "../../InputHandler";
 import { UIState } from "../../UIState";
 import { renderNumber, translateText } from "../../Utils";
 import { GameView } from "../../view";
@@ -66,6 +69,10 @@ export class UnitDisplay extends LitElement implements Controller {
     this.keybinds = this.userSettings.parsedUserKeybinds();
 
     this.allDisabled = BuildMenus.types.every((u) => config.isUnitDisabled(u));
+    this.eventBus.on(ActivePlacementChangedEvent, (event) => {
+      this._hoveredUnit = event.unitType;
+      this.requestUpdate();
+    });
     this.requestUpdate();
   }
 
@@ -369,6 +376,11 @@ export class UnitDisplay extends LitElement implements Controller {
             } else if (this.canBuild(unitType)) {
               this.uiState.ghostStructure = unitType;
             }
+            this.uiState.activePlacementRevision =
+              (this.uiState.activePlacementRevision ?? 0) + 1;
+            this.eventBus.emit(
+              new ActivePlacementChangedEvent(this.uiState.ghostStructure),
+            );
             this.requestUpdate();
           }}
           @mouseenter=${() => {
