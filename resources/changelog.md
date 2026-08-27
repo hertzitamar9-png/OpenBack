@@ -1,6 +1,6 @@
-## OpenBack v0.36.239 - Named OpenBack in Search Results
+## OpenBack v0.36.249 - Named OpenBack in Search Results
 
-- Google was showing the game's web address, and on some pages the name of the DNS provider, instead of OpenBack above its search results. The page was listing its own address as an acceptable alternative name for the site, so that address is no longer offered and only OpenBack is.
+- Google was showing the game's web address above its search results instead of OpenBack. The previous release listed that address as a permitted fallback name for the site, intending to stop results being credited to the DNS provider; the address is a name Google may choose to display, so it displayed it. Only OpenBack is offered as a name now, while everything that ties the address to the site is unchanged.
 
 Created by **frootz jhklphy**.
 
