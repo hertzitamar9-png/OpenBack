@@ -1,8 +1,20 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { balanceUnitCounterTypes } from "../../src/client/hud/layers/PlayerInfoOverlay";
 import { UnitType } from "../../src/core/game/Game";
 
 describe("mobile player unit counter balance", () => {
+  it("reserves the global-controls width before choosing counter rows", () => {
+    const source = readFileSync(
+      "src/client/hud/layers/PlayerInfoOverlay.ts",
+      "utf8",
+    );
+    expect(source).toContain("playerInfoCounterLayout");
+    expect(source).toContain("game-right-sidebar");
+    expect(source).toContain("--player-unit-rows");
+    expect(source).toContain("--game-global-controls-width");
+  });
+
   it("arranges all twelve counters as two equal rows of six", () => {
     const types = [
       UnitType.City,

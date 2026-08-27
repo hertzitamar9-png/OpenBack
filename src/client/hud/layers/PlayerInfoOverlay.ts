@@ -27,6 +27,7 @@ import {
   translateText,
 } from "../../Utils";
 import { GameView, PlayerView, UnitView } from "../../view";
+import { playerInfoCounterLayout } from "../layout/HudCapacity";
 import {
   EMOJI_ICON_KIND,
   getFirstPlacePlayer,
@@ -362,9 +363,22 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
     const enabledUnitCounters = PLAYER_UNIT_COUNTERS.filter(
       ({ type }) => !this.game.config().isUnitDisabled(type),
     );
-    const balancedUnitCounters = balanceUnitCounterTypes(
-      enabledUnitCounters.map(({ type }) => type),
+    const globalControlsWidth =
+      document
+        .querySelector<HTMLElement>("game-right-sidebar")
+        ?.getBoundingClientRect().width ?? 0;
+    const counterLayout = playerInfoCounterLayout(
+      enabledUnitCounters.length,
+      window.innerWidth,
+      globalControlsWidth + 8,
     );
+    const balancedUnitCounters = {
+      columns: counterLayout.columns,
+      rows: counterLayout.rows,
+      items: counterLayout.items.map((index) =>
+        index === null ? null : enabledUnitCounters[index].type,
+      ),
+    };
 
     return html`
       <div
@@ -455,7 +469,7 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
           </div>
           <div
             class="player-info-unit-grid gap-0.5 lg:gap-1 items-center mt-0.5"
-            style="--player-unit-columns:${balancedUnitCounters.columns}"
+            style="--player-unit-columns:${balancedUnitCounters.columns};--player-unit-rows:${balancedUnitCounters.rows}"
           >
             ${balancedUnitCounters.items.map((type) => {
               if (type === null) {
@@ -568,7 +582,10 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
     return html`
       <div
         class="fixed top-0 left-0 right-0 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-[1001]"
-        style="margin-top: ${this.barOffset}px;"
+        style="margin-top: ${this
+          .barOffset}px;--game-global-controls-width:${document
+          .querySelector<HTMLElement>("game-right-sidebar")
+          ?.getBoundingClientRect().width ?? 0}px"
         @click=${() => this.hide()}
         @contextmenu=${(e: MouseEvent) => e.preventDefault()}
       >
