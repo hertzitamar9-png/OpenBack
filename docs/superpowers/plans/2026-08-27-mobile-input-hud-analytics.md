@@ -722,7 +722,7 @@ git commit -m "Balance mobile player info without hiding controls"
 
 **Interfaces:**
 
-- Produces `trustedClientAddress`, `countryCodeForAddress`, and `observeApproximateCountry`.
+- Produces `normalizeIpAddress`, `countryCodeForAddress`, and `observeApproximateCountry(req.ip)`.
 - Persists `approximateCountry`, `countryFirstSeenAt`, and `countryLastSeenAt`; never the source address.
 
 - [ ] **Step 1: Add the exact offline dependency and declaration**
@@ -742,13 +742,8 @@ declare module "geoip-country" {
 - [ ] **Step 2: Write failing privacy and lookup tests**
 
 ```ts
-test("uses the first public address in the trusted proxy chain", () => {
-  expect(
-    trustedClientAddress({
-      forwardedFor: "8.8.8.8, 172.18.0.3",
-      socketAddress: "172.18.0.2",
-    }),
-  ).toBe("8.8.8.8");
+test("normalizes Express IPv4-mapped addresses", () => {
+  expect(normalizeIpAddress("::ffff:8.8.8.8")).toBe("8.8.8.8");
 });
 test.each(["127.0.0.1", "::1", "10.0.0.4", "172.18.0.2", "192.168.1.5"])(
   "does not geolocate private address %s",
@@ -771,16 +766,8 @@ Expected: FAIL because the module does not exist.
 import { isIP } from "node:net";
 import { lookup } from "geoip-country";
 
-export function trustedClientAddress(input: {
-  forwardedFor?: string | string[];
-  socketAddress?: string | null;
-}): string | undefined {
-  const forwarded = Array.isArray(input.forwardedFor)
-    ? input.forwardedFor[0]
-    : input.forwardedFor?.split(",")[0];
-  const candidate = (forwarded ?? input.socketAddress ?? "")
-    .trim()
-    .replace(/^::ffff:/, "");
+export function normalizeIpAddress(address: string): string | undefined {
+  const candidate = address.trim().replace(/^::ffff:/, "");
   return isIP(candidate) ? candidate : undefined;
 }
 
@@ -791,12 +778,12 @@ export function countryCodeForAddress(address: string): string | undefined {
 }
 ```
 
-`isPrivateOrReserved` rejects loopback, link-local, RFC1918, carrier-grade NAT, documentation, multicast, unspecified, and private IPv6 ranges. No branch logs the address.
+`isPrivateOrReserved` rejects loopback, link-local, RFC1918, carrier-grade NAT, documentation, multicast, unspecified, and private IPv6 ranges. `observeApproximateCountry` accepts only Express `req.ip`; `Master.ts` and `Worker.ts` already configure the trusted proxy depth. It never reads `X-Forwarded-For` directly, and no branch logs the address.
 
 - [ ] **Step 5: Persist country observations during authenticated activity**
 
 ```ts
-const country = observeApproximateCountry(req);
+const country = observeApproximateCountry(req.ip);
 if (country) {
   const now = new Date().toISOString();
   user.approximateCountry = country;
