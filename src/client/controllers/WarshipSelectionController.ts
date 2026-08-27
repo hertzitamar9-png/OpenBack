@@ -227,20 +227,16 @@ export class WarshipSelectionController implements Controller {
     }
     if (!this.game.isWater(clickRef)) {
       // On touch, enemy and neutral land must preserve the primary attack /
-      // expansion action. Previously every dry-land tap was converted into a
-      // context-menu request here, so a normal conquest tap could randomly
-      // appear to open boat/trade UI depending on nearby selectable units and
-      // event ordering. Own land still opens the radial building menu.
+      // expansion action. A self tap is deliberately inert; the player menu
+      // belongs to the long-press ContextMenuEvent path.
       const myPlayer = this.game.myPlayer();
       const isOwnLand =
         myPlayer !== null &&
         this.game.hasOwner(clickRef) &&
         this.game.owner(clickRef) === myPlayer;
-      this.eventBus.emit(
-        isOwnLand
-          ? new ContextMenuEvent(event.x, event.y)
-          : new MouseUpEvent(event.x, event.y),
-      );
+      if (!isOwnLand) {
+        this.eventBus.emit(new MouseUpEvent(event.x, event.y));
+      }
       return;
     }
     if (this.selectedUnit || this.multiSelectedWarships.length > 0) {

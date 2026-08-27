@@ -123,7 +123,7 @@ describe("WarshipSelectionController", () => {
     );
   });
 
-  it("opens the build menu when touching owned land", () => {
+  it("does not open the self menu from an ordinary owned-land tap", () => {
     const me = game.myPlayer();
     game.myPlayer = () => me;
     game.isValidCoord = () => true;
@@ -139,6 +139,9 @@ describe("WarshipSelectionController", () => {
       view,
     );
     ui["onTouch"](new TouchEvent(50, 60));
-    expect(eventBus.emit).toHaveBeenCalledWith(expect.any(ContextMenuEvent));
+    expect(eventBus.emit).not.toHaveBeenCalledWith(
+      expect.any(ContextMenuEvent),
+    );
+    expect(eventBus.emit).not.toHaveBeenCalledWith(expect.any(MouseUpEvent));
   });
 });

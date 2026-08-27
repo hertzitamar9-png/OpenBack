@@ -2,6 +2,7 @@ import { EventBus, GameEvent } from "../core/EventBus";
 import { experienceModeFromConfigView } from "../core/ExperienceMode";
 import { PlayerBuildableUnitType, UnitType } from "../core/game/Game";
 import { UserSettings } from "../core/game/UserSettings";
+import { MobileGestureArbiter } from "./input/MobileGestureArbiter";
 import { Platform } from "./Platform";
 import { UIState } from "./UIState";
 import { ReplaySpeedMultiplier } from "./utilities/ReplaySpeedMultiplier";
@@ -189,8 +190,6 @@ export class ReplaySpeedChangeEvent implements GameEvent {
 
 export class TogglePauseIntentEvent implements GameEvent {}
 
-type TouchGestureMode = "idle" | "pan" | "preview" | "multitouch" | "cancelled";
-
 export class GameSpeedUpIntentEvent implements GameEvent {}
 
 export class GameSpeedDownIntentEvent implements GameEvent {}
@@ -247,7 +246,10 @@ export class InputHandler {
 
   private lastPinchDistance: number = 0;
   private lastPinchCenter: { x: number; y: number } | null = null;
-  private touchGestureMode: TouchGestureMode = "idle";
+  private readonly touchGesture = new MobileGestureArbiter({
+    holdMs: 650,
+    slopPx: 18,
+  });
 
   // Scale of the in-progress Safari pinch, or null when no gesture is active.
   private lastGestureScale: number | null = null;
@@ -271,10 +273,8 @@ export class InputHandler {
   private unitSelectionActive: boolean = false;
 
   // Touch long-press state
-  private longPressTimer: ReturnType<typeof setTimeout> | null = null;
-  private longPressActive: boolean = false;
-  private suppressNextTap: boolean = false;
-  private readonly LONG_PRESS_MS = 800;
+  private touchHoldTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly LONG_PRESS_MS = 650;
 
   private moveInterval: NodeJS.Timeout | null = null;
   private activeKeys = new Set<string>();
@@ -291,7 +291,6 @@ export class InputHandler {
   private readonly PAN_SPEED = 5;
   private readonly ZOOM_SPEED = 10;
   private readonly DRAG_THRESHOLD_PX = 10;
-  private readonly TOUCH_TAP_SLOP_PX = 18;
 
   private readonly userSettings: UserSettings = new UserSettings();
 
@@ -559,12 +558,11 @@ export class InputHandler {
       this.multiTouchGesture = false;
       this.rightDragActive = false;
       this.lastGestureScale = null;
-      if (this.longPressTimer !== null) {
-        clearTimeout(this.longPressTimer);
-        this.longPressTimer = null;
+      if (this.touchHoldTimer !== null) {
+        clearTimeout(this.touchHoldTimer);
+        this.touchHoldTimer = null;
       }
-      this.longPressActive = false;
-      this.suppressNextTap = false;
+      this.touchGesture.cancel();
       if (this.selectionBoxActive || this.multiSelectionActive) {
         this.selectionBoxActive = false;
         this.multiSelectionActive = false;
@@ -848,48 +846,54 @@ export class InputHandler {
 
       // Start long-press timer for touch devices
       if (event.pointerType === "touch") {
-        this.touchGestureMode =
-          this.uiState.ghostStructure === null ? "pan" : "preview";
-        this.longPressActive = false;
-        if (this.longPressTimer !== null) {
-          clearTimeout(this.longPressTimer);
-          this.longPressTimer = null;
+        this.touchGesture.pointerDown(
+          event.pointerId,
+          event.clientX,
+          event.clientY,
+          event.timeStamp,
+        );
+        if (this.touchHoldTimer !== null) {
+          clearTimeout(this.touchHoldTimer);
+          this.touchHoldTimer = null;
         }
-        this.longPressTimer = setTimeout(() => {
-          this.longPressTimer = null;
+        this.touchHoldTimer = setTimeout(() => {
+          this.touchHoldTimer = null;
           if (this.isNuclearGhostSelected()) {
             this.setGhostStructure(null);
-            this.touchGestureMode = "cancelled";
-            this.suppressNextTap = true;
+            this.touchGesture.consume();
             this.canvas.style.cursor = "";
             return;
           }
           if (this.uiState.ghostStructure !== null) {
             return;
           }
-          this.longPressActive = true;
-          this.canvas.style.cursor = "crosshair";
-          this.eventBus.emit(
-            new TouchLongPressStartEvent(
-              this.lastPointerDownX,
-              this.lastPointerDownY,
-            ),
+          const decision = this.touchGesture.holdDeadline(
+            event.timeStamp + this.LONG_PRESS_MS,
           );
+          if (decision?.kind !== "hold") return;
+          this.eventBus.emit(
+            new TouchLongPressStartEvent(decision.x, decision.y),
+          );
+          this.eventBus.emit(new ContextMenuEvent(decision.x, decision.y));
         }, this.LONG_PRESS_MS);
       }
     } else if (this.pointers.size === 2) {
       this.multiTouchGesture = true;
-      this.touchGestureMode = "multitouch";
+      if (event.pointerType === "touch") {
+        this.touchGesture.pointerDown(
+          event.pointerId,
+          event.clientX,
+          event.clientY,
+          event.timeStamp,
+        );
+      }
       // Second finger down — cancel any pending long-press to avoid
       // triggering selection mode mid-pinch
-      if (this.longPressTimer !== null) {
-        clearTimeout(this.longPressTimer);
-        this.longPressTimer = null;
+      if (this.touchHoldTimer !== null) {
+        clearTimeout(this.touchHoldTimer);
+        this.touchHoldTimer = null;
       }
-      if (this.longPressActive) {
-        this.longPressActive = false;
-        this.canvas.style.cursor = "";
-      }
+      this.canvas.style.cursor = "";
       this.lastPinchDistance = this.getPinchDistance();
       this.lastPinchCenter = this.getPinchCenter();
     }
@@ -939,6 +943,14 @@ export class InputHandler {
     const wasMultiTouch = this.multiTouchGesture;
     this.pointers.delete(event.pointerId);
     if (this.pointers.size > 0) {
+      if (event.pointerType === "touch") {
+        this.touchGesture.pointerUp(
+          event.pointerId,
+          event.clientX,
+          event.clientY,
+          event.timeStamp,
+        );
+      }
       this.pointerDown = true;
       const remaining = this.pointers.values().next().value as
         | PointerEvent
@@ -952,40 +964,30 @@ export class InputHandler {
     this.pointerDown = false;
     this.multiTouchGesture = false;
 
-    // Clean up long-press state
-    if (this.longPressTimer !== null) {
-      clearTimeout(this.longPressTimer);
-      this.longPressTimer = null;
+    if (this.touchHoldTimer !== null) {
+      clearTimeout(this.touchHoldTimer);
+      this.touchHoldTimer = null;
     }
-    // A pinch ending must never become a tap on the country underneath the
-    // final finger. That phantom tap was another source of accidental boat /
-    // trade menus on phones.
-    if (wasMultiTouch) {
-      this.touchGestureMode = "idle";
+    if (event.pointerType === "touch") {
+      const decision = this.touchGesture.pointerUp(
+        event.pointerId,
+        event.clientX,
+        event.clientY,
+        event.timeStamp,
+      );
       this.lastPinchCenter = null;
-      this.longPressActive = false;
       this.selectionBoxActive = false;
-      this.suppressNextTap = false;
       this.canvas.style.cursor = "";
       event.preventDefault();
+      // Pinch, drag, hold, cancellation, and menu-owned gestures all consume
+      // their release. Only an unresolved short press becomes a tap.
+      if (wasMultiTouch || decision.kind !== "tap") return;
+      if (this.uiState.ghostStructure !== null) {
+        this.eventBus.emit(new MouseUpEvent(decision.x, decision.y, true));
+      } else {
+        this.eventBus.emit(new TouchEvent(decision.x, decision.y));
+      }
       return;
-    }
-    if (this.touchGestureMode === "cancelled") {
-      this.touchGestureMode = "idle";
-      this.suppressNextTap = false;
-      this.canvas.style.cursor = "";
-      event.preventDefault();
-      return;
-    }
-    const wasLongPress = this.longPressActive;
-    this.longPressActive = false;
-    if (wasLongPress) {
-      this.canvas.style.cursor = "";
-      // A long press owns this entire pointer sequence. Even a few pixels of
-      // finger drift can activate the selection rectangle; its short release
-      // must still never fall through into a country tap/attack after the
-      // alliance or action menu closes.
-      this.suppressNextTap = true;
     }
 
     // Complete selection box if it was active
@@ -995,7 +997,6 @@ export class InputHandler {
         Math.abs(event.clientX - this.lastPointerDownX) +
         Math.abs(event.clientY - this.lastPointerDownY);
       if (dist >= this.DRAG_THRESHOLD_PX) {
-        this.suppressNextTap = false;
         this.eventBus.emit(
           new WarshipSelectionBoxCompleteEvent(
             this.lastPointerDownX,
@@ -1010,26 +1011,18 @@ export class InputHandler {
       }
     }
     if (this.activeKeys.has(this.keybinds.buildMenuModifier)) {
-      this.suppressNextTap = false;
       this.eventBus.emit(new ShowBuildMenuEvent(event.clientX, event.clientY));
       return;
     }
     if (this.activeKeys.has(this.keybinds.emojiMenuModifier)) {
-      this.suppressNextTap = false;
       this.eventBus.emit(new ShowEmojiMenuEvent(event.clientX, event.clientY));
       return;
     }
 
     const deltaFromDownX = event.clientX - this.lastPointerDownX;
     const deltaFromDownY = event.clientY - this.lastPointerDownY;
-    const dist =
-      event.pointerType === "touch"
-        ? Math.hypot(deltaFromDownX, deltaFromDownY)
-        : Math.abs(deltaFromDownX) + Math.abs(deltaFromDownY);
-    const tapThreshold =
-      event.pointerType === "touch"
-        ? this.TOUCH_TAP_SLOP_PX
-        : this.DRAG_THRESHOLD_PX;
+    const dist = Math.abs(deltaFromDownX) + Math.abs(deltaFromDownY);
+    const tapThreshold = this.DRAG_THRESHOLD_PX;
     if (dist < tapThreshold) {
       // A selected build ghost owns the next primary tap on every input
       // device. Mobile normally emits TouchEvent so WarshipSelectionController
@@ -1041,21 +1034,8 @@ export class InputHandler {
           new MouseUpEvent(event.clientX, event.clientY, true),
         );
         event.preventDefault();
-        this.touchGestureMode = "idle";
         return;
       }
-      if (event.pointerType === "touch") {
-        if (this.suppressNextTap) {
-          this.suppressNextTap = false;
-          event.preventDefault();
-          return;
-        }
-        this.eventBus.emit(new TouchEvent(event.clientX, event.clientY));
-        event.preventDefault();
-        this.touchGestureMode = "idle";
-        return;
-      }
-
       if (
         !this.userSettings.leftClickOpensMenu() ||
         event.shiftKey ||
@@ -1067,23 +1047,24 @@ export class InputHandler {
         this.eventBus.emit(new ContextMenuEvent(event.clientX, event.clientY));
       }
     }
-    if (event.pointerType === "touch") this.touchGestureMode = "idle";
   }
 
   private onPointerCancel(event: PointerEvent): void {
     this.rightDragActive = false;
     this.pointers.delete(event.pointerId);
+    if (event.pointerType === "touch") {
+      this.pointers.clear();
+      this.touchGesture.cancel();
+    }
     if (this.pointers.size > 0) return;
     this.pointerDown = false;
     this.multiTouchGesture = false;
-    this.touchGestureMode = "idle";
+    this.touchGesture.cancel();
     this.lastPinchCenter = null;
     this.selectionBoxActive = false;
-    this.longPressActive = false;
-    this.suppressNextTap = false;
-    if (this.longPressTimer !== null) {
-      clearTimeout(this.longPressTimer);
-      this.longPressTimer = null;
+    if (this.touchHoldTimer !== null) {
+      clearTimeout(this.touchHoldTimer);
+      this.touchHoldTimer = null;
     }
     this.canvas.style.cursor = "";
     this.eventBus.emit(new WarshipSelectionBoxCancelEvent());
@@ -1188,7 +1169,11 @@ export class InputHandler {
     }
 
     if (this.pointers.size === 1) {
-      if (this.multiTouchGesture || this.touchGestureMode === "multitouch") {
+      if (
+        this.multiTouchGesture ||
+        (event.pointerType === "touch" &&
+          this.touchGesture.snapshot().mode === "multitouch")
+      ) {
         this.lastPointerX = event.clientX;
         this.lastPointerY = event.clientY;
         event.preventDefault();
@@ -1196,29 +1181,28 @@ export class InputHandler {
       }
       const deltaX = event.clientX - this.lastPointerX;
       const deltaY = event.clientY - this.lastPointerY;
-
-      // Cancel long-press if finger moved significantly before timer fires
-      if (this.longPressTimer !== null) {
-        const moveDist = Math.hypot(
-          event.clientX - this.lastPointerDownX,
-          event.clientY - this.lastPointerDownY,
-        );
-        const holdCancelThreshold =
-          event.pointerType === "touch"
-            ? this.TOUCH_TAP_SLOP_PX
-            : this.DRAG_THRESHOLD_PX;
-        if (moveDist >= holdCancelThreshold) {
-          clearTimeout(this.longPressTimer);
-          this.longPressTimer = null;
-        }
+      const touchDecision =
+        event.pointerType === "touch"
+          ? this.touchGesture.pointerMove(
+              event.pointerId,
+              event.clientX,
+              event.clientY,
+              event.timeStamp,
+            )
+          : null;
+      if (
+        touchDecision?.kind === "drag-start" &&
+        this.touchHoldTimer !== null
+      ) {
+        clearTimeout(this.touchHoldTimer);
+        this.touchHoldTimer = null;
       }
 
-      // If shift is held OR touch long-press is active OR selection box already
-      // started, continue emitting selection box updates
+      // Desktop shift-selection keeps its own selection rectangle. Touch hold
+      // is a context action and never borrows this drag path.
       if (
         this.selectionBoxActive ||
-        this.activeKeys.has(this.keybinds.boxSelectWarships) ||
-        this.longPressActive
+        this.activeKeys.has(this.keybinds.boxSelectWarships)
       ) {
         this.selectionBoxActive = true;
         this.eventBus.emit(
@@ -1233,23 +1217,20 @@ export class InputHandler {
         event.pointerType === "touch" &&
         this.uiState.ghostStructure !== null
       ) {
-        this.touchGestureMode = "preview";
         // Building on a phone should retain the normal one-finger map pan.
         // Move the camera and then refresh the ghost under the same finger so
         // the preview remains aligned while the player searches for a tile.
-        if (
-          Math.hypot(
-            event.clientX - this.lastPointerDownX,
-            event.clientY - this.lastPointerDownY,
-          ) >= this.TOUCH_TAP_SLOP_PX
-        ) {
+        if (this.touchGesture.snapshot().mode === "drag") {
           this.eventBus.emit(
             new DragEvent(deltaX, deltaY, event.clientX, event.clientY),
           );
         }
         this.eventBus.emit(new MouseMoveEvent(event.clientX, event.clientY));
         event.preventDefault();
-      } else {
+      } else if (
+        event.pointerType !== "touch" ||
+        this.touchGesture.snapshot().mode === "drag"
+      ) {
         this.eventBus.emit(
           new DragEvent(deltaX, deltaY, event.clientX, event.clientY),
         );
@@ -1504,6 +1485,11 @@ export class InputHandler {
       clearInterval(this.moveInterval);
     }
     this.activeKeys.clear();
+    if (this.touchHoldTimer !== null) {
+      clearTimeout(this.touchHoldTimer);
+      this.touchHoldTimer = null;
+    }
+    this.touchGesture.cancel();
     this.lastGestureScale = null;
     this.keybindAndEvent = [];
   }

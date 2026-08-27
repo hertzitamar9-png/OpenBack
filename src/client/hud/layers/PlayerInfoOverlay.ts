@@ -145,7 +145,9 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
     this.eventBus.on(ContextMenuEvent, (e: ContextMenuEvent) =>
       this.maybeShow(e.x, e.y),
     );
-    this.eventBus.on(TouchEvent, (e: TouchEvent) => this.maybeShow(e.x, e.y));
+    this.eventBus.on(TouchEvent, (e: TouchEvent) =>
+      this.maybeShow(e.x, e.y, true),
+    );
     this.eventBus.on(CloseRadialMenuEvent, () => this.hide());
     this.eventBus.on(SpawnBarVisibleEvent, (e) => {
       this.spawnBarVisible = e.visible;
@@ -171,7 +173,7 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
     this.player = null;
   }
 
-  public maybeShow(x: number, y: number) {
+  public maybeShow(x: number, y: number, suppressSelf = false) {
     this.hide();
     const worldCoord = this.transform.screenToWorldCoordinates(x, y);
     if (!this.game.isValidCoord(worldCoord.x, worldCoord.y)) {
@@ -184,6 +186,7 @@ export class PlayerInfoOverlay extends LitElement implements Controller {
     const owner = this.game.owner(tile);
 
     if (owner && owner.isPlayer()) {
+      if (suppressSelf && owner === this.game.myPlayer()) return;
       this.player = owner as PlayerView;
       this.player.profile().then((p) => {
         this.playerProfile = p;
