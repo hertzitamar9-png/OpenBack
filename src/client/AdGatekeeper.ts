@@ -31,7 +31,7 @@ export interface AdGatekeeperOptions {
  * Orthogonal to `window.adsEnabled` (the entitlement gate for adfree /
  * CrazyGames users). Construct/start it only for ad-eligible users — paid /
  * adfree users never build one, so no bait element or polling runs for them.
- * A fast external signal (e.g. Admiral's `measure.detected`) feeds `seed()`.
+ * A fast external signal from an ad provider can feed `seed()`.
  */
 export class AdGatekeeper {
   private state: AdblockState | null = null;
@@ -78,7 +78,7 @@ export class AdGatekeeper {
   }
 
   /**
-   * Feed an external adblock reading (e.g. Admiral's `measure.detected`) into
+   * Feed an external adblock reading from an ad provider into
    * the state machine as a fast, reliable signal. Ignored until started and
    * once 'blocked' has latched.
    */
