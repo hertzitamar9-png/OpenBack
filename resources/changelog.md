@@ -1,3 +1,9 @@
+## OpenBack v0.36.252 - Link Previews Show the Game
+
+- Sharing an OpenBack link on Discord, Twitter or Facebook now shows the game's preview image. The address of that image was being given to those services as a site-relative path, which they cannot resolve, so shared links appeared as an empty card.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.251 - Faster Fronts
 
 - Multiplayer game and lobby traffic now uses OpenFront v0.33.12's binary protocol, sharply reducing bandwidth while keeping the authoritative simulation unchanged.

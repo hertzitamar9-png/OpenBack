@@ -52,6 +52,25 @@ function isAbsoluteUrl(path: string): boolean {
   return /^(?:https?:\/\/|data:|blob:)/i.test(path);
 }
 
+/**
+ * An absolute URL for an asset that something other than this page has to
+ * fetch.
+ *
+ * Open Graph and Twitter card images are fetched by crawlers with no page to
+ * resolve a relative path against, so a site-relative URL is simply dropped
+ * and the link preview renders with no image. Asset URLs come back relative
+ * whenever no CDN is configured, which is the case for same-origin
+ * deployments, so the site origin has to be put back in front of them. A URL
+ * that is already absolute -- an asset on a CDN -- is returned untouched.
+ */
+export function toAbsoluteAssetUrl(url: string, siteOrigin: string): string {
+  if (isAbsoluteUrl(url)) {
+    return url;
+  }
+  const origin = siteOrigin.replace(/\/+$/, "");
+  return `${origin}${url.startsWith("/") ? "" : "/"}${url}`;
+}
+
 const RESILIENT_IMAGE_EXTENSIONS = new Set([
   ".avif",
   ".gif",

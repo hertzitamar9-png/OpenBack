@@ -1,7 +1,7 @@
 import ejs from "ejs";
 import type { Response } from "express";
 import fs from "node:fs/promises";
-import { buildAssetUrl } from "../core/AssetUrls";
+import { buildAssetUrl, toAbsoluteAssetUrl } from "../core/AssetUrls";
 import { setNoStoreHeaders } from "./NoStoreHeaders";
 import { getRuntimeAssetManifest } from "./RuntimeAssetManifest";
 import { ServerEnv } from "./ServerEnv";
@@ -67,10 +67,10 @@ export async function renderHtmlContent(
       assetManifest,
       cdnBase,
     ),
-    socialPreviewUrl: buildAssetUrl(
-      "images/OpenBackSocialPreview.png",
-      assetManifest,
-      cdnBase,
+    // Absolute: link-preview crawlers cannot resolve a site-relative path.
+    socialPreviewUrl: toAbsoluteAssetUrl(
+      buildAssetUrl("images/OpenBackSocialPreview.png", assetManifest, cdnBase),
+      siteOrigin,
     ),
     backgroundImageUrl: buildAssetUrl(
       "images/background.webp",

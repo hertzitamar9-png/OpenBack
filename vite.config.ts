@@ -10,6 +10,7 @@ import {
   type AssetManifest,
   buildAssetUrl,
   rewriteAssetsForCdn,
+  toAbsoluteAssetUrl,
 } from "./src/core/AssetUrls";
 import {
   buildPublicAssetManifest,
@@ -200,10 +201,10 @@ export default defineConfig(({ mode }) => {
       assetManifest,
       cdnBase,
     ),
-    socialPreviewUrl: buildAssetUrl(
-      "images/OpenBackSocialPreview.png",
-      assetManifest,
-      cdnBase,
+    // Absolute: link-preview crawlers cannot resolve a site-relative path.
+    socialPreviewUrl: toAbsoluteAssetUrl(
+      buildAssetUrl("images/OpenBackSocialPreview.png", assetManifest, cdnBase),
+      siteOrigin,
     ),
     backgroundImageUrl: buildAssetUrl(
       "images/background.webp",
