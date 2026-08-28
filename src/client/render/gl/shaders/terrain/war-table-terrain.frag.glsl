@@ -121,9 +121,18 @@ float oceanShimmer(vec2 world, vec2 mapSize, float time, float zoom) {
   float life = smoothstep(0.0, 0.20, age)
     * (1.0 - smoothstep(0.72, 1.0, age));
   float curve = mix(0.35, 1.0, flowRandom(cell, generation, 4.0));
+  // The glint is sized 1/zoom so it stays the same size on screen however far
+  // the player has zoomed. The ceilings on that used to bite only on phones:
+  // uZoom is device pixels per tile, so a handset showing a whole map sits
+  // near 0.2 against a desktop's 1.7, and it therefore asks for a glint many
+  // tiles across. On the giant map a phone wanted a width of 6.09 tiles and
+  // was cut to 2.50 -- 59% too thin -- and a length of 37.5 cut to 26, while a
+  // desktop was never clipped on any map. That is why the sea read differently
+  // on a phone. The ceilings are raised to clear what a handset actually asks
+  // for; they still exist to stop a degenerate value at extreme zoom-out.
   float safeZoom = max(0.05, zoom);
-  float halfLength = clamp(4.0 / safeZoom, 0.4, min(28.0, cellSize * 0.10));
-  float width = clamp(0.65 / safeZoom, 0.15, 2.5);
+  float halfLength = clamp(4.0 / safeZoom, 0.4, min(48.0, cellSize * 0.25));
+  float width = clamp(0.65 / safeZoom, 0.15, 8.0);
   return coastFlowLayer(
     world, center, direction, life, curve, seed * 6.2831853,
     halfLength, width

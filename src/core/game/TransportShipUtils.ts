@@ -7,6 +7,15 @@ export function canBuildTransportShip(
   player: Player,
   tile: TileRef,
 ): TileRef | false {
+  // A boat is an invasion, so the place the player picked has to be somewhere
+  // troops can land. Open water was accepted and then resolved to whatever
+  // shore happened to be nearest the click, which launched the boat at a coast
+  // the player never chose -- from mid-ocean that reads as a random
+  // destination on the far side of the map.
+  if (!game.isLand(tile)) {
+    return false;
+  }
+
   if (
     player.unitCount(UnitType.TransportShip) >= game.config().boatMaxNumber()
   ) {

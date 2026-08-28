@@ -1,3 +1,10 @@
+## OpenBack v0.36.253 - Matching Seas and Boats That Need a Shore
+
+- The ocean now looks the same on a phone as on a desktop. The moving glints were being trimmed to a maximum size that only ever affected phones, where they came out around 60% too thin, so the sea read differently there. Desktops are unchanged.
+- Sending a boat to open water is now refused. Tapping empty ocean used to be accepted and the boat would sail to whichever coast happened to be nearest the tap, which could be most of a map away. A boat now needs somewhere it can actually land.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.252 - Link Previews Show the Game
 
 - Sharing an OpenBack link on Discord, Twitter or Facebook now shows the game's preview image. The address of that image was being given to those services as a site-relative path, which they cannot resolve, so shared links appeared as an empty card.
