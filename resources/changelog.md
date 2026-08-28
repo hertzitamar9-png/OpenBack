@@ -4,6 +4,7 @@
 - Added optional Overtime: after its configured start, the territory required to win falls gradually so stalled wars reach a result. It can appear as a public FFA modifier.
 - Fixed long and merged railway networks disconnecting stations and preventing trains from spawning.
 - Inline pages now keep their scrolling inside the page while the Play screen retains OpenBack's fitted, non-scrolling layout.
+- Generated asset URLs now tell search engines not to index them as separate pages, removing stale deSEC-labeled asset results while leaving the real OpenBack pages crawlable.
 - Updated OpenBack to the published OpenFront v0.33.12 gameplay baseline while preserving OpenBack units, modes, mobile controls, accounts, social systems, maps, and 2D/3D experiences.
 
 Created by **frootz jhklphy**.

@@ -1,5 +1,9 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
-import { getStaticAssetCacheControl } from "../../src/server/StaticAssetCache";
+import {
+  applyStaticAssetCacheControl,
+  getStaticAssetCacheControl,
+} from "../../src/server/StaticAssetCache";
 
 describe("StaticAssetCache", () => {
   test("marks Vite asset namespace as immutable", () => {
@@ -12,6 +16,21 @@ describe("StaticAssetCache", () => {
     expect(
       getStaticAssetCacheControl("/_assets/maps/world/manifest.hash.json"),
     ).toBe("public, max-age=31536000, immutable");
+  });
+
+  test("marks generated asset namespaces noindex without blocking crawling", () => {
+    const headers = new Map<string, string>();
+    applyStaticAssetCacheControl(
+      (name, value) => headers.set(name, value),
+      "/_assets/changelog.hash.md",
+    );
+    expect(headers.get("X-Robots-Tag")).toBe("noindex, nofollow, noarchive");
+    expect(headers.get("Cache-Control")).toBe(
+      "public, max-age=31536000, immutable",
+    );
+
+    const nginx = readFileSync("nginx.conf", "utf8");
+    expect(nginx.match(/add_header X-Robots-Tag/g)).toHaveLength(3);
   });
 
   test("does not mark other paths as immutable", () => {

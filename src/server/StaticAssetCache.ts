@@ -21,6 +21,10 @@ function stripQueryString(urlPath: string): string {
   return urlPath.split("?", 1)[0];
 }
 
+function isGeneratedAssetPath(urlPath: string): boolean {
+  return urlPath.startsWith("/assets/") || urlPath.startsWith("/_assets/");
+}
+
 export function getStaticAssetCacheControl(
   urlPath: string | undefined,
 ): string | undefined {
@@ -33,10 +37,7 @@ export function getStaticAssetCacheControl(
     return NO_STORE_CACHE_CONTROL;
   }
 
-  if (
-    normalizedPath.startsWith("/assets/") ||
-    normalizedPath.startsWith("/_assets/")
-  ) {
+  if (isGeneratedAssetPath(normalizedPath)) {
     return IMMUTABLE_CACHE_CONTROL;
   }
 
@@ -54,5 +55,10 @@ export function applyStaticAssetCacheControl(
   const cacheControl = getStaticAssetCacheControl(urlPath);
   if (cacheControl) {
     setHeader("Cache-Control", cacheControl);
+  }
+  if (urlPath && isGeneratedAssetPath(stripQueryString(urlPath))) {
+    // These are implementation files, never standalone search results. Keep
+    // them crawlable so engines can observe noindex and remove old listings.
+    setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
   }
 }
