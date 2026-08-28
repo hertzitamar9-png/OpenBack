@@ -1,4 +1,11 @@
 import WebSocket from "ws";
+import type { ZbContext } from "../../zbin";
+import type { ClientMessage, ServerMessage } from "../core/Schemas";
+import {
+  createGameWireContext,
+  decodeServerMessage,
+  encodeClientMessage,
+} from "../core/ZbinWire";
 
 const baseUrl = process.env.OPENBACK_URL ?? "http://localhost:9000";
 const turnstileToken =
@@ -25,6 +32,16 @@ interface TurnCadence {
   gapsOver200Ms: number;
 }
 
+interface SmokeClient {
+  socket: WebSocket;
+  context: ZbContext | null;
+  binaryFramesReceived: number;
+  textFramesReceived: number;
+  turnTimes: number[];
+  roster: string[];
+  errors: string[];
+}
+
 function percentile(values: number[], fraction: number): number {
   const sorted = [...values].sort((a, b) => a - b);
   return sorted[
@@ -32,30 +49,7 @@ function percentile(values: number[], fraction: number): number {
   ];
 }
 
-async function measureTurnCadence(
-  socket: WebSocket,
-  turns: number,
-): Promise<TurnCadence> {
-  const receivedAt: number[] = [];
-  await new Promise<void>((resolve, reject) => {
-    const timeout = setTimeout(
-      () =>
-        reject(
-          new Error(`Timed out after receiving ${receivedAt.length} turns`),
-        ),
-      30_000,
-    );
-    const onMessage = (data: WebSocket.RawData) => {
-      const message = JSON.parse(data.toString()) as { type?: string };
-      if (message.type !== "turn") return;
-      receivedAt.push(performance.now());
-      if (receivedAt.length < turns) return;
-      clearTimeout(timeout);
-      socket.off("message", onMessage);
-      resolve();
-    };
-    socket.on("message", onMessage);
-  });
+function cadence(receivedAt: number[]): TurnCadence {
   const intervals = receivedAt
     .slice(1)
     .map((time, index) => time - receivedAt[index]);
@@ -66,6 +60,67 @@ async function measureTurnCadence(
     maxMs: Math.max(...intervals),
     gapsOver200Ms: intervals.filter((value) => value > 200).length,
   };
+}
+
+function send(client: SmokeClient, message: ClientMessage): void {
+  client.socket.send(encodeClientMessage(message, client.context ?? undefined));
+}
+
+function receive(client: SmokeClient, message: ServerMessage): void {
+  if (message.type === "start") {
+    client.context = createGameWireContext(message.gameStartInfo.players);
+    client.roster = message.gameStartInfo.players.map(
+      (player) => player.clientID,
+    );
+  } else if (message.type === "turn") {
+    client.turnTimes.push(performance.now());
+  } else if (message.type === "error") {
+    client.errors.push(message.error);
+  }
+}
+
+function createSmokeClient(socketUrl: string): SmokeClient {
+  const client: SmokeClient = {
+    socket: new WebSocket(socketUrl),
+    context: null,
+    binaryFramesReceived: 0,
+    textFramesReceived: 0,
+    turnTimes: [],
+    roster: [],
+    errors: [],
+  };
+  client.socket.on("message", (data, isBinary) => {
+    if (!isBinary) {
+      client.textFramesReceived++;
+      return;
+    }
+    client.binaryFramesReceived++;
+    try {
+      receive(
+        client,
+        decodeServerMessage(
+          new Uint8Array(data as Buffer),
+          client.context ?? undefined,
+        ),
+      );
+    } catch (error) {
+      client.errors.push(String(error));
+    }
+  });
+  return client;
+}
+
+async function waitFor(
+  predicate: () => boolean,
+  description: string,
+  timeoutMs = 30_000,
+): Promise<void> {
+  const deadline = performance.now() + timeoutMs;
+  while (performance.now() < deadline) {
+    if (predicate()) return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  throw new Error(`Timed out waiting for ${description}`);
 }
 
 async function main() {
@@ -95,33 +150,34 @@ async function main() {
   }
 
   const socketUrl = `${baseUrl.replace(/^http/, "ws")}/${game.workerPath}`;
-  const sockets = playerTokens.map(() => new WebSocket(socketUrl));
+  const clients = playerTokens.map(() => createSmokeClient(socketUrl));
 
   try {
     await Promise.all(
-      sockets.map(
-        (socket, index) =>
+      clients.map(
+        (client, index) =>
           new Promise<void>((resolve, reject) => {
-            socket.once("error", reject);
-            socket.once("open", () => {
-              socket.send(
-                JSON.stringify({
-                  type: "join",
-                  token: playerTokens[index],
-                  gameID: game.gameID,
-                  username: `SmokePlayer${index + 1}`,
-                  clanTag: null,
-                  cosmetics: {},
-                  turnstileToken,
-                }),
-              );
+            client.socket.once("error", reject);
+            client.socket.once("open", () => {
+              send(client, {
+                type: "join",
+                token: playerTokens[index],
+                gameID: game.gameID,
+                username: `SmokePlayer${index + 1}`,
+                clanTag: null,
+                cosmetics: {},
+                turnstileToken,
+              });
               resolve();
             });
           }),
       ),
     );
 
-    await new Promise((resolve) => setTimeout(resolve, 750));
+    await waitFor(
+      () => clients.every((client) => client.binaryFramesReceived > 0),
+      "binary lobby frames",
+    );
     const gameInfoResponse = await fetch(
       `${baseUrl}/${game.workerPath}/api/game/${game.gameID}`,
     );
@@ -131,14 +187,35 @@ async function main() {
       throw new Error(`Expected 2 connected players, found ${players.length}`);
     }
 
-    const cadencePromise = measureTurnCadence(sockets[0], 100);
-    sockets[0].send(
-      JSON.stringify({
-        type: "intent",
-        intent: { type: "toggle_game_start_timer" },
-      }),
+    send(clients[0], {
+      type: "intent",
+      intent: { type: "toggle_game_start_timer" },
+    });
+    await waitFor(
+      () => clients.every((client) => client.turnTimes.length >= 100),
+      "100 binary turns on both clients",
     );
-    const cadence = await cadencePromise;
+
+    for (const [index, client] of clients.entries()) {
+      if (client.errors.length > 0) {
+        throw new Error(
+          `Client ${index + 1} decode/server errors: ${client.errors.join("; ")}`,
+        );
+      }
+      if (client.textFramesReceived !== 0) {
+        throw new Error(`Client ${index + 1} received text WebSocket frames`);
+      }
+      if (client.binaryFramesReceived === 0 || client.turnTimes.length < 100) {
+        throw new Error(
+          `Client ${index + 1} did not receive the binary turn stream`,
+        );
+      }
+      if (client.roster.length !== 2) {
+        throw new Error(
+          `Client ${index + 1} did not receive the two-player roster`,
+        );
+      }
+    }
 
     console.log(
       JSON.stringify(
@@ -147,14 +224,19 @@ async function main() {
           workerPath: game.workerPath,
           connectedPlayers: players,
           clientCount: players.length,
-          turnCadence: cadence,
+          clients: clients.map((client) => ({
+            roster: client.roster,
+            binaryFramesReceived: client.binaryFramesReceived,
+            textFramesReceived: client.textFramesReceived,
+            turnCadence: cadence(client.turnTimes),
+          })),
         },
         null,
         2,
       ),
     );
   } finally {
-    sockets.forEach((socket) => socket.close(1000));
+    clients.forEach((client) => client.socket.close(1000));
   }
 }
 
