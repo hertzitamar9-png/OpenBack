@@ -862,6 +862,16 @@ async function createClientGame(
   }
 }
 
+/**
+ * How far from a tap a boat will look for land, in screen pixels -- about a
+ * fingertip. Converted to tiles with the current zoom so the tolerance feels
+ * identical however far in or out the map is.
+ */
+const BOAT_TAP_RADIUS_PX = 22;
+
+/** A hard ceiling so an extreme zoom-out cannot scan the whole map. */
+const BOAT_TAP_MAX_SNAP_TILES = 160;
+
 export class ClientGameRunner {
   private myPlayer: PlayerView | null = null;
   private isActive = false;
@@ -1326,11 +1336,53 @@ export class ClientGameRunner {
     });
   }
 
-  private doBoatAttackUnderCursor(): void {
-    const tile = this.getTileUnderCursor();
-    if (tile === null || !this.gameView.isLand(tile)) {
-      return;
+  /**
+   * The land tile a click or tap was aiming at, or null if there is none close
+   * enough to have been meant.
+   *
+   * A boat needs a shore to land on, so the target has to be land. Requiring
+   * the exact tile under the pointer to be land made that depend on zoom: a
+   * fingertip covers one tile when the map is zoomed in and a hundred when it
+   * is zoomed out, so tapping a small or distant country simply did nothing,
+   * while the same aim worked with a mouse. The tolerance here is a fixed
+   * number of screen pixels converted into tiles, so it is the size of a
+   * fingertip at every zoom and never reaches land the player cannot see.
+   */
+  private landTileForBoat(tile: TileRef): TileRef | null {
+    if (this.gameView.isLand(tile)) return tile;
+
+    const pixelsPerTile = Math.max(
+      0.05,
+      this.renderer.transformHandler.scale || 1,
+    );
+    const radius = Math.min(
+      BOAT_TAP_MAX_SNAP_TILES,
+      Math.max(1, Math.round(BOAT_TAP_RADIUS_PX / pixelsPerTile)),
+    );
+
+    const originX = this.gameView.x(tile);
+    const originY = this.gameView.y(tile);
+    // Ring by ring outwards, so the first land found is the nearest.
+    for (let r = 1; r <= radius; r++) {
+      for (let dx = -r; dx <= r; dx++) {
+        for (let dy = -r; dy <= r; dy++) {
+          if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+          const x = originX + dx;
+          const y = originY + dy;
+          if (!this.gameView.isValidCoord(x, y)) continue;
+          const candidate = this.gameView.ref(x, y);
+          if (this.gameView.isLand(candidate)) return candidate;
+        }
+      }
     }
+    return null;
+  }
+
+  private doBoatAttackUnderCursor(): void {
+    const pointed = this.getTileUnderCursor();
+    if (pointed === null) return;
+    const tile = this.landTileForBoat(pointed);
+    if (tile === null) return;
 
     if (this.myPlayer === null) {
       if (!this.clientID) return;
@@ -1500,6 +1552,7 @@ export class ClientGameRunner {
   }
 
   private canAutoBoat(buildables: BuildableUnit[], tile: TileRef): boolean {
+    // The caller has already snapped to land where one was within reach.
     if (!this.gameView.isLand(tile)) return false;
     // canBuildTransportShip already proves there is a reachable source shore
     // and water path. Do not add a second arbitrary 100-tile click limit: it

@@ -101,8 +101,32 @@ export class MapRenderer {
       this.caf,
     );
 
+    this.applyCanvasSize();
+  };
+
+  /**
+   * Hand the renderer the canvas's real size, waiting for layout if it has not
+   * happened yet.
+   *
+   * Only the width used to be checked while both were passed on, so a canvas
+   * measured mid-layout was sized to zero height and drew nothing. The
+   * ResizeObserver was the only thing that could put that right, and it fires
+   * on the canvas's own box -- in a standalone window whose CSS box is correct
+   * from the start it never fires again, which is why the map came up blank on
+   * the first launch and was fine after the app was reopened. Measure again on
+   * the following frames instead of depending on a change that may not come.
+   */
+  private applyCanvasSize = (attemptsLeft = 60): void => {
+    if (this.renderer === null) return;
     const rect = this.canvas.getBoundingClientRect();
-    if (rect.width > 0) this.renderer.resize(rect.width, rect.height);
+    if (rect.width > 0 && rect.height > 0) {
+      this.renderer.resize(rect.width, rect.height);
+      return;
+    }
+    if (attemptsLeft <= 0) return;
+    const schedule =
+      this.raf ?? ((cb: FrameRequestCallback) => requestAnimationFrame(cb));
+    schedule(() => this.applyCanvasSize(attemptsLeft - 1));
   };
 
   private handleContextLost = (e: Event) => {

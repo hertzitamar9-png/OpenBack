@@ -33,6 +33,18 @@ export class ControlPanel extends LitElement implements Controller {
   @state()
   private attackRatio: number = 0.2;
 
+  /**
+   * The percentage readout has been tapped and is accepting a typed number.
+   *
+   * The slider is the only way to set the attack size on a phone, and a
+   * fingertip on a 100-step track cannot land on a particular figure -- so
+   * asking for exactly 35% meant nudging and squinting. Tapping the number
+   * turns it into a field; it goes back to being plain text the moment focus
+   * leaves, so nothing extra is on screen unless it is being used.
+   */
+  @state()
+  private editingRatio = false;
+
   @state()
   private _maxTroops: number;
 
@@ -552,6 +564,62 @@ export class ControlPanel extends LitElement implements Controller {
     `;
   }
 
+  private renderMobileRatioValue() {
+    const percent = Math.round(this.attackRatio * 100);
+    if (!this.editingRatio) {
+      return html`<span
+        class="text-white text-xs font-bold tabular-nums cursor-pointer"
+        @click=${() => this.beginRatioEdit()}
+        >${percent}%</span
+      >`;
+    }
+    return html`<input
+      id="mobile-ratio-input"
+      type="number"
+      inputmode="numeric"
+      min="1"
+      max="100"
+      .value=${String(percent)}
+      class="w-8 bg-transparent border-none p-0 text-white text-xs font-bold tabular-nums text-center outline-none"
+      @keydown=${(e: KeyboardEvent) => this.onRatioKeyDown(e)}
+      @keyup=${(e: KeyboardEvent) => e.stopPropagation()}
+      @blur=${(e: Event) => this.commitRatioEdit(e)}
+    />`;
+  }
+
+  private beginRatioEdit() {
+    this.editingRatio = true;
+    // Wait for the field to exist before reaching for it.
+    this.updateComplete.then(() => {
+      const field = this.renderRoot.querySelector(
+        "#mobile-ratio-input",
+      ) as HTMLInputElement | null;
+      if (field === null) return;
+      field.focus();
+      field.select();
+    });
+  }
+
+  private onRatioKeyDown(e: KeyboardEvent) {
+    // Typing here must not also drive the game's keyboard shortcuts.
+    e.stopPropagation();
+    if (e.key === "Enter") {
+      (e.target as HTMLInputElement).blur();
+    } else if (e.key === "Escape") {
+      this.editingRatio = false;
+    }
+  }
+
+  private commitRatioEdit(e: Event) {
+    const typed = Number.parseInt((e.target as HTMLInputElement).value, 10);
+    this.editingRatio = false;
+    if (!Number.isFinite(typed)) return;
+    const percent = Math.min(100, Math.max(1, typed));
+    this.attackRatio = percent / 100;
+    // Same effect as dragging the slider there, no more and no less.
+    this.onAttackRatioChange(this.attackRatio);
+  }
+
   private renderMobile() {
     return html`
       ${this.renderNotification()}
@@ -590,9 +658,7 @@ export class ControlPanel extends LitElement implements Controller {
             height="10"
             style="filter: brightness(0) invert(1);"
           />
-          <span class="text-white text-xs font-bold tabular-nums"
-            >${(this.attackRatio * 100).toFixed(0)}%</span
-          >
+          ${this.renderMobileRatioValue()}
         </div>
         <!-- Attack ratio slider -->
         <div class="flex-1" translate="no">

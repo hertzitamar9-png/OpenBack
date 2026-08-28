@@ -1,3 +1,12 @@
+## OpenBack v0.36.254 - Aim, Type, Hold
+
+- Sending a boat no longer depends on how far the map is zoomed in. A tap now finds land within a fingertip of where it landed, so a distant or narrow coast can be invaded at any zoom, the way it always worked with a mouse. A boat still only ever goes to land you aimed at.
+- On a phone, tapping the attack percentage next to the sword lets you type the exact figure you want, from 1 to 100. Press enter or tap anywhere else and it goes back to plain text, so nothing extra is on screen unless you are using it.
+- Holding a finger down to inspect a player or offer an alliance is no longer sometimes taken as an attack. The hold was recognised by a timer that a busy moment could delay past the moment you lifted your finger, and the press then counted as a tap.
+- The map no longer comes up blank the first time the installed app is opened. The canvas could be measured before the window had finished laying out and was then given no height, with nothing afterwards to correct it.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.253 - Matching Seas and Boats That Need a Shore
 
 - The ocean now looks the same on a phone as on a desktop. The moving glints were being trimmed to a maximum size that only ever affected phones, where they came out around 60% too thin, so the sea read differently there. Desktops are unchanged.

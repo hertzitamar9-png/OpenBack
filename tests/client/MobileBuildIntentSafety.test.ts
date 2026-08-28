@@ -27,12 +27,34 @@ describe("mobile build intent safety", () => {
   });
 
   it("never launches a transport ship from a water target", () => {
+    // The tap is snapped to nearby land first, and the attack is abandoned
+    // when there is none -- open water must never become a destination.
     expect(runner).toMatch(
-      /doBoatAttackUnderCursor\(\)[\s\S]*?tile === null \|\| !this\.gameView\.isLand\(tile\)/,
+      /doBoatAttackUnderCursor\(\)[\s\S]*?this\.landTileForBoat\(pointed\)[\s\S]*?if \(tile === null\) return;/,
     );
     expect(runner).toMatch(
       /sendBoatAttackIntent\(tile: TileRef\)[\s\S]*?!this\.gameView\.isLand\(tile\)/,
     );
+  });
+
+  it("only ever snaps a boat target onto land", () => {
+    const start = runner.indexOf("private landTileForBoat");
+    const end = runner.indexOf("private doBoatAttackUnderCursor", start);
+    expect(start).toBeGreaterThan(-1);
+    const snap = runner.slice(start, end);
+    // Every path out of the search returns a tile it has just proved is land.
+    expect(snap).toContain("if (this.gameView.isLand(tile)) return tile;");
+    expect(snap).toContain(
+      "if (this.gameView.isLand(candidate)) return candidate;",
+    );
+    expect(snap).toContain("return null;");
+  });
+
+  it("keeps the snap tolerance a fixed size on screen, not in tiles", () => {
+    // Dividing a pixel radius by the zoom is what makes a tap behave the same
+    // however far in or out the map is.
+    expect(runner).toMatch(/BOAT_TAP_RADIUS_PX \/ pixelsPerTile/);
+    expect(runner).toContain("BOAT_TAP_MAX_SNAP_TILES");
   });
 
   it("uses the reachable-shore result without an extra click-distance cap", () => {

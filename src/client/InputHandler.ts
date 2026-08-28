@@ -985,7 +985,19 @@ export class InputHandler {
       event.preventDefault();
       // Pinch, drag, hold, cancellation, and menu-owned gestures all consume
       // their release. Only an unresolved short press becomes a tap.
-      if (wasMultiTouch || decision.kind !== "tap") return;
+      if (wasMultiTouch) return;
+      if (decision.kind === "hold") {
+        // A hold the timer was too late to announce. Give the player what
+        // they were holding for rather than silently swallowing it.
+        if (this.uiState.ghostStructure === null) {
+          this.eventBus.emit(
+            new TouchLongPressStartEvent(decision.x, decision.y),
+          );
+          this.eventBus.emit(new ContextMenuEvent(decision.x, decision.y));
+        }
+        return;
+      }
+      if (decision.kind !== "tap") return;
       if (this.uiState.ghostStructure !== null) {
         this.eventBus.emit(new MouseUpEvent(decision.x, decision.y, true));
       } else {

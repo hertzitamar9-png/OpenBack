@@ -78,15 +78,20 @@ export class MobileGestureArbiter {
     id: number,
     x: number,
     y: number,
-    _at: number,
+    at: number,
   ): MobileGestureDecision {
     const previous = this.mode;
+    const heldFor = this.primary ? at - this.primary.at : 0;
     this.pointers.delete(id);
     if (this.pointers.size > 0) return { kind: "consumed" };
     this.reset();
-    return previous === "pending"
-      ? { kind: "tap", x, y }
-      : { kind: "consumed" };
+    if (previous !== "pending") return { kind: "consumed" };
+    // The hold timer runs on the main thread, so a busy frame can delay it
+    // past the release -- the press was then still "pending" and a deliberate
+    // hold turned into a tap, which on the battlefield is an attack. Judge by
+    // the clock instead of by whether the timer got its turn.
+    if (heldFor >= this.options.holdMs) return { kind: "hold", x, y };
+    return { kind: "tap", x, y };
   }
 
   cancel(): MobileGestureDecision {
