@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GameMode, GameType } from "../../src/core/game/Game";
 import { Client } from "../../src/server/Client";
 import { GameServer, IntentActor } from "../../src/server/GameServer";
+import { testGameConfig } from "../util/Wire";
 
 function client(clientID: string, persistentID: string): Client {
   const ws = {
@@ -43,11 +44,11 @@ describe("GameServer team selection", () => {
       "test-game",
       logger as any,
       Date.now(),
-      {
+      testGameConfig({
         gameType: GameType.Private,
         gameMode: GameMode.Team,
         playerTeams: 2,
-      } as any,
+      }),
       "owner-pid",
     );
     game.joinClient(client("owner", "owner-pid"));

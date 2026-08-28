@@ -50,7 +50,11 @@ export class OvertimePanel extends LitElement {
   }
 
   render() {
-    const sd = this.game?.config().overtimeConfig();
+    const config = this.game?.config();
+    const sd =
+      typeof config?.overtimeConfig === "function"
+        ? config.overtimeConfig()
+        : null;
     const elapsed = Math.floor(this.game?.elapsedGameSeconds() ?? 0);
     const visible =
       !!sd?.enabled && !this.hasWinner && elapsed >= sd.startMinutes * 60;
