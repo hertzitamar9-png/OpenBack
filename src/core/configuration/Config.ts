@@ -141,6 +141,17 @@ const DOOMSDAY_CLOCK_DEFAULTS = {
   warshipDrainCurveExponent: 8, // >1 = convex: stays gentle early, then spikes
 };
 
+// Overtime tunables (anti-stalemate). Off unless enabled in GameConfig.
+// After startMinutes the percentage of tiles required to win falls from the
+// base (80% FFA / 95% team) by dropPercentPerMinute, with no floor: the bar
+// keeps sinking until the leading side crosses it, so a stalled game always
+// ends. Only `enabled` and `startMinutes` are wire-configurable.
+const OVERTIME_DEFAULTS = {
+  enabled: false,
+  startMinutes: 30,
+  dropPercentPerMinute: 2,
+};
+
 export class Config {
   private unitInfoCache = new Map<UnitType, UnitInfo>();
   constructor(
@@ -207,6 +218,18 @@ export class Config {
   }
   experienceMode(): ExperienceMode {
     return normalizeExperienceMode(this._gameConfig);
+  }
+
+  // Overtime config, resolved against defaults.
+  overtimeConfig(): typeof OVERTIME_DEFAULTS {
+    const c = this._gameConfig.overtime;
+    const d = OVERTIME_DEFAULTS;
+    return {
+      enabled: c?.enabled ?? d.enabled,
+      startMinutes: c?.startMinutes ?? d.startMinutes,
+      // The drop rate is internal (not wire-configurable): always the default.
+      dropPercentPerMinute: d.dropPercentPerMinute,
+    };
   }
   spawnImmunityDuration(): Tick {
     return (
@@ -738,12 +761,29 @@ export class Config {
     return 30;
   }
 
-  percentageTilesOwnedToWin(): number {
-    if (this._gameConfig.gameMode === GameMode.Team) {
-      if (this._gameConfig.rankedType !== undefined) return 80;
-      return 95;
+  percentageTilesOwnedToWin(elapsedGameSeconds: number = 0): number {
+    const base =
+      this._gameConfig.gameMode === GameMode.Team &&
+      this._gameConfig.rankedType === undefined
+        ? 95
+        : 80;
+    const sd = this.overtimeConfig();
+    if (!sd.enabled) {
+      return base;
     }
-    return 80;
+    // Whole seconds only: elapsedGameSeconds is ticks/10 and can carry a
+    // fractional part. The bar moves in WHOLE percentage points (one step
+    // every 60/dropPercentPerMinute seconds), so the HUD shows exactly the
+    // integer the sim checks — and integer math is trivially deterministic.
+    const secondsPastStart =
+      Math.floor(elapsedGameSeconds) - sd.startMinutes * 60;
+    if (secondsPastStart <= 0) {
+      return base;
+    }
+    return Math.max(
+      0,
+      base - Math.floor((secondsPastStart * sd.dropPercentPerMinute) / 60),
+    );
   }
   armyLimitWarningThreshold(): number {
     return 0.8;

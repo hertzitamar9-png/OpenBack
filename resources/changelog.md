@@ -1,3 +1,13 @@
+## OpenBack v0.36.251 - Faster Fronts
+
+- Multiplayer game and lobby traffic now uses OpenFront v0.33.12's binary protocol, sharply reducing bandwidth while keeping the authoritative simulation unchanged.
+- Added optional Overtime: after its configured start, the territory required to win falls gradually so stalled wars reach a result. It can appear as a public FFA modifier.
+- Fixed long and merged railway networks disconnecting stations and preventing trains from spawning.
+- Inline pages now keep their scrolling inside the page while the Play screen retains OpenBack's fitted, non-scrolling layout.
+- Updated OpenBack to the published OpenFront v0.33.12 gameplay baseline while preserving OpenBack units, modes, mobile controls, accounts, social systems, maps, and 2D/3D experiences.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.250 - Missing Files Are No Longer Answered
 
 - The server used to answer a request for any file it did not have with the game itself, which meant made-up download links such as openback.dedyn.io/setup.exe came back as though the file really was there. Google flagged the site for hosting harmful downloads on that basis, which makes Chrome warn players before they reach the game. Requests for files that do not exist are now properly refused, and every real page and address is unaffected.

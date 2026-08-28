@@ -270,6 +270,12 @@ export function getActiveModifiers(
     }
     result.push(info);
   }
+  if (modifiers.isOvertime) {
+    result.push({
+      labelKey: "overtime.title",
+      badgeKey: "public_game_modifier.overtime",
+    });
+  }
   return result;
 }
 

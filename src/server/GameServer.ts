@@ -3,6 +3,7 @@ import ipAnonymize from "ip-anonymize";
 import { Logger } from "winston";
 import WebSocket from "ws";
 import { z } from "zod";
+import { ZbContext } from "../../zbin";
 import { anonWordName } from "../core/AnonNames";
 import { isAdminRole } from "../core/ApiSchemas";
 import { GameEnv } from "../core/configuration/Config";
@@ -14,6 +15,7 @@ import {
 } from "../core/game/Game";
 import {
   ClientID,
+  ClientMessage,
   ClientMessageSchema,
   ClientSendLiveStatsMessage,
   ClientSendWinnerMessage,
@@ -47,6 +49,11 @@ import {
   sanitizeLobbyLabel,
   simpleHash,
 } from "../core/Util";
+import {
+  createGameWireContext,
+  decodeClientMessageUnvalidated,
+  encodeServerMessage,
+} from "../core/ZbinWire";
 import { archive, finalizeGameRecord } from "./Archive";
 import { Client } from "./Client";
 import { ClientMsgRateLimiter } from "./ClientMsgRateLimiter";
@@ -155,6 +162,12 @@ export class GameServer {
   // gameStartInfo unless disableClanTags is set, in which case clan tags
   // are stripped from players. Archive uses the original gameStartInfo.
   private wireGameStartInfo!: GameStartInfo;
+
+  // clientID dictionary for the binary wire, seeded from gameStartInfo.players
+  // at start (clients seed theirs from the same array in the start message).
+  // Undefined until the game starts, which is also the last moment either peer
+  // can send a dictionary-encoded field.
+  private zbinCtx: ZbContext | undefined;
 
   private log: Logger;
 
@@ -521,6 +534,9 @@ export class GameServer {
     if (gameConfig.doomsdayClock !== undefined) {
       this.gameConfig.doomsdayClock = gameConfig.doomsdayClock;
     }
+    if (gameConfig.overtime !== undefined) {
+      this.gameConfig.overtime = gameConfig.overtime;
+    }
     if (gameConfig.anonymizeNames !== undefined) {
       this.gameConfig.anonymizeNames = gameConfig.anonymizeNames;
     }
@@ -876,10 +892,13 @@ export class GameServer {
       });
 
       client.ws.send(
-        JSON.stringify({
-          type: "error",
-          error: "full-lobby",
-        } satisfies ServerErrorMessage),
+        encodeServerMessage(
+          {
+            type: "error",
+            error: "full-lobby",
+          } satisfies ServerErrorMessage,
+          this.zbinCtx,
+        ),
       );
       return "rejected";
     }
@@ -1015,41 +1034,33 @@ export class GameServer {
 
   private addListeners(client: Client) {
     client.ws.removeAllListeners("message");
-    client.ws.on("message", async (message: string) => {
+    client.ws.on("message", async (message: Buffer) => {
       try {
-        let json: unknown;
+        // Decode and validate in two steps (instead of one parseBytes) so a
+        // message that is structurally sound but fails validation — the
+        // signature of a buggy or cheating client — can still be attributed
+        // to its intent in telemetry, exactly like the JSON path did.
+        let raw: ClientMessage;
         try {
-          json = JSON.parse(message);
+          // A Buffer is a Uint8Array and zbin honours its byteOffset.
+          raw = decodeClientMessageUnvalidated(message, this.zbinCtx);
         } catch (e) {
-          this.log.warn(`Failed to parse client message JSON, kicking`, {
+          // Corrupt bytes: no readable type, nothing to attribute.
+          this.log.warn(`Failed to decode client message, kicking`, {
             clientID: client.clientID,
             error: String(e),
           });
           this.kickClient(client.clientID, KICK_REASON_INVALID_MESSAGE);
           return;
         }
-        const parsed = ClientMessageSchema.safeParse(json);
+        const parsed = ClientMessageSchema.safeParse(raw);
         if (!parsed.success) {
           const reasonDetail = z.prettifyError(parsed.error);
-          if (
-            typeof json === "object" &&
-            json !== null &&
-            "type" in json &&
-            json.type === "intent" &&
-            "intent" in json
-          ) {
-            const rawIntent = json.intent;
-            const intentType =
-              typeof rawIntent === "object" &&
-              rawIntent !== null &&
-              "type" in rawIntent &&
-              typeof rawIntent.type === "string"
-                ? rawIntent.type
-                : null;
+          if (raw.type === "intent") {
             this.emitIntentObserved(
               client,
-              rawIntent,
-              intentType,
+              raw.intent,
+              typeof raw.intent?.type === "string" ? raw.intent.type : null,
               "rejected",
               this.turns.length,
               KICK_REASON_INVALID_MESSAGE,
@@ -1064,7 +1075,7 @@ export class GameServer {
           return;
         }
         const clientMsg = parsed.data;
-        const bytes = Buffer.byteLength(message, "utf8");
+        const bytes = message.length;
         const rateResult = this.intentRateLimiter.check(
           client.clientID,
           clientMsg.type,
@@ -1303,7 +1314,7 @@ export class GameServer {
       return;
     }
 
-    const msg = JSON.stringify(prestartMsg.data);
+    const msg = encodeServerMessage(prestartMsg.data, this.zbinCtx);
     this.activeClients.forEach((c) => {
       this.log.info("sending prestart message", {
         clientID: c.clientID,
@@ -1377,11 +1388,14 @@ export class GameServer {
     const shared = this.gameConfig.anonymizeNames ? null : this.gameInfo();
     this.activeClients.forEach((c) => {
       if (c.ws.readyState === WebSocket.OPEN) {
-        const msg = JSON.stringify({
-          type: "lobby_info",
-          lobby: shared ?? this.gameInfo(c.clientID),
-          myClientID: c.clientID,
-        } satisfies ServerLobbyInfoMessage);
+        const msg = encodeServerMessage(
+          {
+            type: "lobby_info",
+            lobby: shared ?? this.gameInfo(c.clientID),
+            myClientID: c.clientID,
+          } satisfies ServerLobbyInfoMessage,
+          this.zbinCtx,
+        );
         c.ws.send(msg);
       }
     });
@@ -1405,10 +1419,13 @@ export class GameServer {
   }
 
   private broadcastNewLobby(gameID: GameID) {
-    const msg = JSON.stringify({
-      type: "new_lobby",
-      gameID,
-    } satisfies ServerNewLobbyMessage);
+    const msg = encodeServerMessage(
+      {
+        type: "new_lobby",
+        gameID,
+      } satisfies ServerNewLobbyMessage,
+      this.zbinCtx,
+    );
     this.activeClients.forEach((c) => {
       if (c.ws.readyState === WebSocket.OPEN) {
         c.ws.send(msg);
@@ -1482,6 +1499,9 @@ export class GameServer {
           })),
         }
       : wireGameStartInfo;
+    // Seed the dictionary from the same players array, in the same order,
+    // every client receives in the start message.
+    this.zbinCtx = createGameWireContext(this.gameStartInfo.players);
 
     this.endTurnIntervalID = setInterval(
       () => this.endTurn(),
@@ -1657,16 +1677,19 @@ export class GameServer {
         return;
       }
       ws.send(
-        JSON.stringify({
-          type: "start",
-          turns: this.turns.slice(lastTurn),
-          gameStartInfo: this.startInfoFor(
-            client.clientID,
-            isAdminRole(client.role),
-          ),
-          lobbyCreatedAt: this.createdAt,
-          myClientID: client.clientID,
-        } satisfies ServerStartGameMessage),
+        encodeServerMessage(
+          {
+            type: "start",
+            turns: this.turns.slice(lastTurn),
+            gameStartInfo: this.startInfoFor(
+              client.clientID,
+              isAdminRole(client.role),
+            ),
+            lobbyCreatedAt: this.createdAt,
+            myClientID: client.clientID,
+          } satisfies ServerStartGameMessage,
+          this.zbinCtx,
+        ),
       );
     } catch (error) {
       this.log.error(`error sending start message for game ${this.id}`, {
@@ -1707,10 +1730,13 @@ export class GameServer {
     this.handleSynchronization();
     this.checkDisconnectedStatus();
 
-    const msg = JSON.stringify({
-      type: "turn",
-      turn: pastTurn,
-    } satisfies ServerTurnMessage);
+    const msg = encodeServerMessage(
+      {
+        type: "turn",
+        turn: pastTurn,
+      } satisfies ServerTurnMessage,
+      this.zbinCtx,
+    );
     this.activeClients.forEach((c) => {
       if (c.ws.readyState === c.ws.OPEN) {
         c.ws.send(msg);
@@ -2062,10 +2088,13 @@ export class GameServer {
       });
       if (client.ws.readyState === WebSocket.OPEN) {
         client.ws.send(
-          JSON.stringify({
-            type: "error",
-            error: reasonKey,
-          } satisfies ServerErrorMessage),
+          encodeServerMessage(
+            {
+              type: "error",
+              error: reasonKey,
+            } satisfies ServerErrorMessage,
+            this.zbinCtx,
+          ),
         );
         client.ws.close(1000, reasonKey);
       }
@@ -2202,7 +2231,7 @@ export class GameServer {
       return;
     }
 
-    const desyncMsg = JSON.stringify(serverDesync.data);
+    const desyncMsg = encodeServerMessage(serverDesync.data, this.zbinCtx);
     for (const c of outOfSyncClients) {
       this.outOfSyncClients.add(c.clientID);
       if (this.sentDesyncMessageClients.has(c.clientID)) {

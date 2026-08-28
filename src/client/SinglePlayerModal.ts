@@ -68,6 +68,8 @@ const DEFAULT_OPTIONS = {
   waterNukes: false,
   doomsdayClock: false,
   doomsdayClockSpeed: "normal" as DoomsdayClockSpeed,
+  overtime: false,
+  overtimeStartMinutes: undefined as number | undefined,
   strategicObjectives: false,
   naturalDisasters: false,
   fogOfWar: false,
@@ -161,6 +163,9 @@ export class SinglePlayerModal extends BaseModal {
   @state() private doomsdayClock: boolean = DEFAULT_OPTIONS.doomsdayClock;
   @state() private doomsdayClockSpeed: DoomsdayClockSpeed =
     DEFAULT_OPTIONS.doomsdayClockSpeed;
+  @state() private overtime: boolean = DEFAULT_OPTIONS.overtime;
+  @state() private overtimeStartMinutes: number | undefined =
+    DEFAULT_OPTIONS.overtimeStartMinutes;
   @state() private strategicObjectives: boolean =
     DEFAULT_OPTIONS.strategicObjectives;
   @state() private naturalDisasters: boolean = DEFAULT_OPTIONS.naturalDisasters;
@@ -367,6 +372,21 @@ export class SinglePlayerModal extends BaseModal {
         .onKeyDown=${this.handleMaxTimerValueKeyDown}
       ></toggle-input-card>`,
       html`<toggle-input-card
+        .labelKey=${"single_modal.overtime"}
+        .checked=${this.overtime}
+        .inputMin=${1}
+        .inputMax=${120}
+        .inputStep=${1}
+        .inputValue=${this.overtimeStartMinutes}
+        .inputAriaLabel=${translateText("single_modal.overtime")}
+        .inputPlaceholder=${translateText("single_modal.mins_placeholder")}
+        .defaultInputValue=${30}
+        .minValidOnEnable=${1}
+        .onToggle=${this.handleOvertimeToggle}
+        .onInput=${this.handleOvertimeMinutesInput}
+        .onKeyDown=${this.handleOvertimeMinutesKeyDown}
+      ></toggle-input-card>`,
+      html`<toggle-input-card
         .labelKey=${"game_settings.gold_multiplier"}
         .checked=${this.goldMultiplier}
         .inputId=${"gold-multiplier-value"}
@@ -564,6 +584,7 @@ export class SinglePlayerModal extends BaseModal {
       // Pace only matters when the mode is on (startGame drops it when off).
       (this.doomsdayClock &&
         this.doomsdayClockSpeed !== DEFAULT_OPTIONS.doomsdayClockSpeed) ||
+      this.overtime !== DEFAULT_OPTIONS.overtime ||
       this.strategicObjectives !== DEFAULT_OPTIONS.strategicObjectives ||
       this.naturalDisasters !== DEFAULT_OPTIONS.naturalDisasters ||
       this.fogOfWar !== DEFAULT_OPTIONS.fogOfWar ||
@@ -599,6 +620,8 @@ export class SinglePlayerModal extends BaseModal {
     this.waterNukes = DEFAULT_OPTIONS.waterNukes;
     this.doomsdayClock = DEFAULT_OPTIONS.doomsdayClock;
     this.doomsdayClockSpeed = DEFAULT_OPTIONS.doomsdayClockSpeed;
+    this.overtime = DEFAULT_OPTIONS.overtime;
+    this.overtimeStartMinutes = DEFAULT_OPTIONS.overtimeStartMinutes;
     this.strategicObjectives = DEFAULT_OPTIONS.strategicObjectives;
     this.naturalDisasters = DEFAULT_OPTIONS.naturalDisasters;
     this.fogOfWar = DEFAULT_OPTIONS.fogOfWar;
@@ -784,6 +807,29 @@ export class SinglePlayerModal extends BaseModal {
     this.customAllianceMinutes = value;
   };
 
+  private handleOvertimeToggle = (
+    checked: boolean,
+    value: number | string | undefined,
+  ) => {
+    this.overtime = checked;
+    this.overtimeStartMinutes = toOptionalNumber(value);
+  };
+
+  private handleOvertimeMinutesKeyDown = (e: KeyboardEvent) => {
+    preventDisallowedKeys(e, ["-", "+", "e", "E"]);
+  };
+
+  private handleOvertimeMinutesInput = (e: Event) => {
+    const input = e.target as HTMLInputElement;
+    const value = parseBoundedIntegerFromInput(input, {
+      min: 1,
+      max: 120,
+      stripPattern: /[e+-]/gi,
+    });
+    if (value === undefined) return;
+    this.overtimeStartMinutes = value;
+  };
+
   private handleMaxTimerValueKeyDown = (e: KeyboardEvent) => {
     preventDisallowedKeys(e, ["-", "+", "e"]);
   };
@@ -958,6 +1004,14 @@ export class SinglePlayerModal extends BaseModal {
                   doomsdayClock: {
                     enabled: true,
                     speed: this.doomsdayClockSpeed,
+                  },
+                }
+              : {}),
+            ...(this.overtime
+              ? {
+                  overtime: {
+                    enabled: true,
+                    startMinutes: this.overtimeStartMinutes ?? 30,
                   },
                 }
               : {}),

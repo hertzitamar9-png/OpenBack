@@ -56,6 +56,7 @@ export function showPage(pageId: string, args?: Record<string, unknown>) {
     "openback-subpage-open",
     pageId !== "page-play",
   );
+  document.body.classList.toggle("page-open", pageId !== "page-play");
 
   // Close mobile sidebar if a nav item was clicked
   closeMobileSidebar();

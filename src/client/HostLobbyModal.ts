@@ -91,6 +91,8 @@ export class HostLobbyModal extends BaseModal {
   @state() private customAllianceMinutes: number | undefined = undefined;
   @state() private doomsdayClock: boolean = false;
   @state() private doomsdayClockSpeed: DoomsdayClockSpeed = "normal";
+  @state() private overtime: boolean = false;
+  @state() private overtimeStartMinutes: number | undefined = undefined;
   @state() private strategicObjectives = false;
   @state() private naturalDisasters = false;
   @state() private fogOfWar = false;
@@ -313,6 +315,21 @@ export class HostLobbyModal extends BaseModal {
         .onToggle=${this.handleCustomAlliancesToggle}
         .onInput=${this.handleCustomAllianceMinutesInput}
         .onKeyDown=${this.handleCustomAllianceMinutesKeyDown}
+      ></toggle-input-card>`,
+      html`<toggle-input-card
+        .labelKey=${"host_modal.overtime"}
+        .checked=${this.overtime}
+        .inputMin=${1}
+        .inputMax=${120}
+        .inputStep=${1}
+        .inputValue=${this.overtimeStartMinutes}
+        .inputAriaLabel=${translateText("host_modal.overtime")}
+        .inputPlaceholder=${translateText("host_modal.mins_placeholder")}
+        .defaultInputValue=${30}
+        .minValidOnEnable=${1}
+        .onToggle=${this.handleOvertimeToggle}
+        .onInput=${this.handleOvertimeMinutesInput}
+        .onKeyDown=${this.handleOvertimeMinutesKeyDown}
       ></toggle-input-card>`,
       html`<toggle-input-card
         .labelKey=${"game_settings.gold_multiplier"}
@@ -787,6 +804,8 @@ export class HostLobbyModal extends BaseModal {
     this.customAllianceMinutes = undefined;
     this.doomsdayClock = false;
     this.doomsdayClockSpeed = "normal";
+    this.overtime = false;
+    this.overtimeStartMinutes = undefined;
     this.strategicObjectives = false;
     this.naturalDisasters = false;
     this.fogOfWar = false;
@@ -1014,6 +1033,31 @@ export class HostLobbyModal extends BaseModal {
         Math.floor(Number((e.target as HTMLInputElement).value) || 2),
       ),
     );
+    this.putGameConfig();
+  };
+
+  private handleOvertimeToggle = (
+    checked: boolean,
+    value: number | string | undefined,
+  ) => {
+    this.overtime = checked;
+    this.overtimeStartMinutes = toOptionalNumber(value);
+    this.putGameConfig();
+  };
+
+  private handleOvertimeMinutesKeyDown = (e: KeyboardEvent) => {
+    preventDisallowedKeys(e, ["-", "+", "e", "E"]);
+  };
+
+  private handleOvertimeMinutesInput = (e: Event) => {
+    const input = e.target as HTMLInputElement;
+    const value = parseBoundedIntegerFromInput(input, {
+      min: 1,
+      max: 120,
+      stripPattern: /[e+-]/gi,
+    });
+    if (value === undefined) return;
+    this.overtimeStartMinutes = value;
     this.putGameConfig();
   };
 
@@ -1355,6 +1399,12 @@ export class HostLobbyModal extends BaseModal {
             // previously-enabled config and the toggle could never turn off.
             doomsdayClock: this.doomsdayClock
               ? { enabled: true, speed: this.doomsdayClockSpeed }
+              : { enabled: false },
+            overtime: this.overtime
+              ? {
+                  enabled: true,
+                  startMinutes: this.overtimeStartMinutes ?? 30,
+                }
               : { enabled: false },
             worldMechanics: {
               encirclement: false,

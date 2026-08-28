@@ -94,6 +94,15 @@ body {
     env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
+/* Inline pages keep the document fixed and scroll inside their own modal.
+   The Play page remains the fitted, non-scrolling OpenBack home screen. */
+body.page-open {
+  height: 100%;
+  overflow: hidden !important;
+  flex-direction: column;
+  flex-wrap: nowrap;
+}
+
 * {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;

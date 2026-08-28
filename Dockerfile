@@ -17,6 +17,13 @@ COPY eslint.config.js ./
 COPY index.html ./
 COPY resources ./resources
 COPY src ./src
+# build-prod runs scripts/buildAssetHashes.ts after vite, to emit
+# static/asset-hashes.json and static/core-version.txt for the desktop
+# release descriptor. Without this the image build fails at that step with
+# ERR_MODULE_NOT_FOUND -- the unit suite cannot catch it, because only the
+# container build runs build-prod from a copied tree.
+COPY scripts ./scripts
+COPY zbin ./zbin
 
 ARG GIT_COMMIT=unknown
 RUN GIT_COMMIT="$GIT_COMMIT" npm run build-prod
@@ -73,6 +80,7 @@ COPY resources ./resources
 RUN cp -r ./resources/maps/. ./static/maps/ && rm -rf ./resources/maps
 COPY tsconfig.json ./
 COPY src ./src
+COPY zbin ./zbin
 
 
 ARG GIT_COMMIT=unknown
@@ -91,7 +99,7 @@ RUN <<'EOF' tee /usr/local/bin/start.sh
 sed -i "s/listen 80 default_server;/listen ${PORT:-80} default_server;/" /etc/nginx/conf.d/default.conf
 
 if [ "$DOMAIN" = openfront.dev ] && [ "$SUBDOMAIN" != main ]; then
-    exec timeout 25h /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+    exec timeout 200h /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
 else
     exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
 fi
