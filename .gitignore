@@ -34,3 +34,8 @@ __pycache__/
 
 # Syncthing folder markers
 .stfolder/
+
+# Background score. The parts and their manifest are committed; these are what
+# scripts/assemble-music.mjs rebuilds from them, so they are never checked in.
+resources/sounds/music/*.mp3
+!resources/sounds/music/*.mp3.part*

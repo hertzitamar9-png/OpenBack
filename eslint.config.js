@@ -32,6 +32,7 @@ export default [
           allowDefaultProject: [
             "__mocks__/fileMock.js",
             "eslint.config.js",
+            "scripts/assemble-music.mjs",
             "scripts/generate-icon-atlas.mjs",
             "scripts/generate-openback-music.mjs",
             "scripts/generate-twin-thumbnails.mjs",
@@ -41,7 +42,7 @@ export default [
             "scripts/sync-assets.mjs",
             "tests/matchmaking/*.mjs",
           ],
-          maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 13,
+          maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 14,
         },
         tsconfigRootDir: import.meta.dirname,
       },

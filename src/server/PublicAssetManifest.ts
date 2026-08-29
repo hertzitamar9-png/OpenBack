@@ -21,7 +21,11 @@ const HASHED_PUBLIC_ASSET_GLOBS = [
   "images/**/*",
   "lang/**/*",
   "maps/**/*",
-  "sounds/**/*",
+  // Only the audio itself. The music is stored split into pieces because a
+  // three-hour track is past the size a push allows, and those pieces plus
+  // their manifest are inputs to the build -- publishing them would put the
+  // same 350 MB on the CDN twice.
+  "sounds/**/*.mp3",
   "sprites/**/*",
 ] as const;
 

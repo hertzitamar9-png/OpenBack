@@ -1,3 +1,9 @@
+## OpenBack v0.36.260 - The Score Ships With the Game
+
+- The music now travels with the game itself instead of being kept on the server. Nothing about the recordings changed: they are stored split into pieces, because a three-hour track at full quality is larger than a single file is allowed to be, and are joined back into exactly the original bytes when the game is built.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.259 - The Score, Uncompressed
 
 - The music now plays at the quality it was made in, untouched. Both tracks are served straight from the game server rather than bundled into the app, because three hours of full-quality audio is far past the size a code repository accepts. Nothing about the recordings was changed.

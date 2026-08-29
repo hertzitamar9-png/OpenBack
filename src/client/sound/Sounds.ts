@@ -30,15 +30,16 @@ export type SoundEffect =
 /**
  * The background score, one track per experience.
  *
- * Served straight off the server's disk rather than bundled: each track is
- * three hours at full quality, well past the size a git repository accepts,
- * and keeping them out of the image means a deploy does not rebuild 350 MB of
- * audio. They are streamed rather than decoded up front -- see the html5 flag
- * in SoundManager -- so a player only downloads the part they hear.
+ * Each track is three hours at the quality it was recorded in, kept in the
+ * repository split into pieces because a single file that size cannot be
+ * pushed -- scripts/assemble-music.mjs joins them back into exactly the
+ * original bytes before a build or a dev server starts. They are streamed
+ * rather than decoded up front (see the html5 flag in SoundManager), so a
+ * player only ever downloads the part they hear.
  */
 export const backgroundMusicUrls: Readonly<Record<"2d" | "3d", string>> = {
-  "2d": "/music/openback-theme-2d.mp3",
-  "3d": "/music/openback-theme-3d.mp3",
+  "2d": assetUrl("sounds/music/openback-theme-2d.mp3"),
+  "3d": assetUrl("sounds/music/openback-theme-3d.mp3"),
 };
 
 export const soundEffectUrls: ReadonlyMap<SoundEffect, string> = new Map([
