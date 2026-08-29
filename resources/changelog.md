@@ -1,3 +1,11 @@
+## OpenBack v0.36.263 - Credit Where It Is Due
+
+- The background music is now credited to the person who made it. The asset licence claimed everything in the game's resources as OpenFront's work under Creative Commons, which meant OpenBack's own music was being offered to the world in OpenFront's name.
+- The Overpass typeface is now credited to Red Hat under the Open Font Licence, as that licence asks of anyone who passes the files on.
+- OpenBack states its licence, AGPL-3.0-or-later, in its package description as well as its licence file.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.262 - One Address for the Whole Game
 
 - OpenBack now answers at a single address. The tutorials and the blog were pages inside the app already, but their articles still had addresses of their own, so a search for the game came back with several entries for it. Those addresses now lead to the game itself, and opening an article changes what is on screen rather than where you are. Old links still work and still open the article they named.

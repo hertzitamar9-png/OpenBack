@@ -12,6 +12,20 @@ Assets in the `/resources` directory are licensed under Creative Commons BY-SA 4
 
 Attribution required: "OpenFront" or "OpenFront Inc."
 
+### Exceptions — not OpenFront's work
+
+Some files under `/resources` did not come from OpenFront and are not
+attributable to OpenFront Inc.:
+
+- `resources/sounds/music/` — background music generated with Treblo for
+  OpenBack by frootz jhklphy. See CREDITS.md.
+- `resources/fonts/overpass*.woff` — copyright Red Hat, Inc., under the SIL
+  Open Font License 1.1 and the GNU LGPL 2.1, not CC BY-SA.
+
+Anything else OpenBack adds under `/resources` is credited in CREDITS.md, which
+names the actual author. Where CREDITS.md and this file disagree about who made
+a file, CREDITS.md is the accurate one.
+
 To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/4.0/
 or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 

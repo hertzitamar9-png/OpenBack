@@ -1,5 +1,6 @@
 {
   "name": "openback-client",
+  "license": "AGPL-3.0-or-later",
   "scripts": {
     "build-dev": "concurrently \"tsc --noEmit\" \"vite build --mode development\"",
     "music": "node scripts/assemble-music.mjs",

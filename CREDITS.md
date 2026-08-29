@@ -31,6 +31,29 @@ are licensed under
 **OpenFront Inc.** OpenBack's modifications to those assets are shared under the
 same CC BY-SA 4.0 terms.
 
+### OpenBack Background Music
+
+The two background tracks, "The War Machine" (2D) and "Tile by Tile" (3D), were
+generated with [Treblo](https://treblo.com) for OpenBack by **frootz jhklphy**.
+They did not come from OpenFront and are not attributed to OpenFront Inc. Under
+Treblo's terms the rights in a generated track, to whatever extent they exist,
+belong to the person who generated it, and commercial use is permitted; note
+that a generator may produce similar output for other people, so nothing here
+claims the tracks are unique or exclusive.
+
+### Fonts
+
+**Overpass** (`resources/fonts/overpass.woff`, `overpass-bold.woff`) — copyright
+© Red Hat, Inc., dual licensed under the
+[SIL Open Font License 1.1](https://openfontlicense.org/) and the GNU LGPL 2.1.
+Inherited from OpenFront and redistributed here under those terms; the fonts are
+bundled with the game and are not sold on their own.
+
+**round_6x6_modified** (`resources/fonts/round_6x6_modified.png`, `.xml`) — a
+bitmap digit atlas inherited from OpenFront with the rest of `resources/`. Its
+origin upstream of OpenFront is not recorded; it is redistributed under the
+inherited-asset terms above.
+
 Upstream proprietary assets — anything in OpenFront's `proprietary/` folder, and
 premium skins, models, textures, sound effects, and music served from OpenFront's
 CDN, database, or API — are All Rights Reserved by OpenFront Inc., are **not**
