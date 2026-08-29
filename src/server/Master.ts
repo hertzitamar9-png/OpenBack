@@ -12,13 +12,7 @@ import { MapPlaylist } from "./MapPlaylist";
 import { MasterLobbyService } from "./MasterLobbyService";
 import { MatchmakingService } from "./MatchmakingService";
 import { setNoStoreHeaders } from "./NoStoreHeaders";
-import {
-  getOpenBackContentSeo,
-  handleLegacyOpenBackContent,
-  handleOpenBackContentApi,
-  LEGACY_GUIDE_PATHS,
-  OPENBACK_CONTENT_PATHS,
-} from "./OpenBackContent";
+import { handleOpenBackContentApi } from "./OpenBackContent";
 import { renderAppShell } from "./RenderHtml";
 import { ServerEnv } from "./ServerEnv";
 import { SocialService } from "./SocialService";
@@ -105,7 +99,28 @@ app.get("/sitemap.xml", (_req, res) => {
     );
 });
 
-app.get(LEGACY_GUIDE_PATHS, handleLegacyOpenBackContent);
+// Everything the game has lives at one address.
+//
+// The tutorials and the blog are pages inside the app, reached without leaving
+// "/" -- their text comes from /api/openback/content, not from the address. So
+// /tutorials, /blog, every article beneath them, and the old /guides names are
+// not addresses of their own; they are earlier spellings of the home page, and
+// they are sent there permanently. A permanent redirect also tells a search
+// engine to fold whatever those pages had earned into the home page rather
+// than keep listing them beside it.
+app.get(
+  [
+    "/guides",
+    "/guides/{*rest}",
+    "/tutorials",
+    "/tutorials/{*rest}",
+    "/blog",
+    "/blog/{*rest}",
+  ],
+  (_req, res) => {
+    res.redirect(301, "/");
+  },
+);
 
 // The legal pages are served at /terms and /privacy, but their old names are
 // what is linked from elsewhere and what search engines went looking for. The
@@ -123,40 +138,6 @@ app.get(Object.keys(RENAMED_LEGAL_PAGES), (req, res) => {
     return;
   }
   res.redirect(301, destination);
-});
-
-// An article address that does not exist must say so. Anything under /blog or
-// /tutorials that is not a real page fell through to the SPA handler, which
-// answered 200 with the home page's title and a canonical pointing at "/" --
-// so every mistyped or stale article URL became another page claiming to be a
-// copy of the home page.
-app.get(["/blog/{*rest}", "/tutorials/{*rest}"], (req, res, next) => {
-  if (OPENBACK_CONTENT_PATHS.includes(req.path)) {
-    next();
-    return;
-  }
-  res.status(404).type("text/plain").send("Not Found");
-});
-
-// Tutorials and Blog use the same interactive shell as every other OpenBack
-// page while retaining route-specific crawlable content and metadata.
-app.get(OPENBACK_CONTENT_PATHS, async (req, res) => {
-  try {
-    const origin = ServerEnv.authOrigin().replace(/\/+$/, "");
-    const seo = getOpenBackContentSeo(req.path, origin);
-    if (!seo) {
-      res.status(404).type("text").send("Page not found");
-      return;
-    }
-    await renderAppShell(
-      res,
-      path.join(__dirname, "../../static/index.html"),
-      seo,
-    );
-  } catch (error) {
-    log.error("Error rendering OpenBack content route:", error);
-    res.status(500).send("Internal Server Error");
-  }
 });
 
 // Serve the shared app shell for the root document.

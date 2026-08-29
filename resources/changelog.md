@@ -1,3 +1,9 @@
+## OpenBack v0.36.262 - One Address for the Whole Game
+
+- OpenBack now answers at a single address. The tutorials and the blog were pages inside the app already, but their articles still had addresses of their own, so a search for the game came back with several entries for it. Those addresses now lead to the game itself, and opening an article changes what is on screen rather than where you are. Old links still work and still open the article they named.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.261 - One Result for the Game
 
 - A search for OpenBack now answers with the game, once. The tutorial and blog pages were each offered as their own result, so a search came back with several entries for the same game stacked together. They are still there to read and still followed for their links; they are no longer separate answers, and the sitemap no longer asks for them to be.

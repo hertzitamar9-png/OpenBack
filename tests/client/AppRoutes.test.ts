@@ -63,14 +63,6 @@ describe("AppRoutes", () => {
   it.each<[string, AppRouteTarget]>([
     ["/analytics", { pageId: "page-analytics" }],
     [
-      "/tutorials/getting-started",
-      { pageId: "page-tutorials", article: "getting-started" },
-    ],
-    [
-      "/blog/living-game-updates",
-      { pageId: "page-blog", article: "living-game-updates" },
-    ],
-    [
       "/profile/a%2Bb/games",
       { pageId: "page-profile", publicID: "a+b", tab: "games" },
     ],
@@ -116,11 +108,20 @@ describe("AppRoutes", () => {
     ).toBe("/?join=AbCd1234");
   });
 
+  // A tutorial or a post is opened inside the page rather than being somewhere
+  // else to go, so it has no address of its own -- the game answers at one.
+  it.each<AppRouteTarget>([
+    { pageId: "page-tutorials" },
+    { pageId: "page-tutorials", article: "getting-started" },
+    { pageId: "page-blog" },
+    { pageId: "page-blog", article: "living-game-updates" },
+  ])("gives an article no address of its own %#", (target) => {
+    expect(pathForTarget(target)).toBe("/");
+  });
+
   it.each<AppRouteTarget>([
     { pageId: "page-profile", publicID: "a+b", tab: "clans" },
     { pageId: "page-clan", clan: "T&T", tab: "game-history" },
-    { pageId: "page-blog", article: "dynamic-world-mechanics" },
-    { pageId: "page-tutorials", article: "getting-started" },
     { pageId: "page-stats", gameID: "game-1" },
     { pageId: "page-analytics" },
   ])("round-trips the shareable target %#", (target) => {

@@ -52,7 +52,10 @@ describe("OpenBack content routes", () => {
     history.replaceState(null, "", "/");
   });
 
-  it("restores a tutorial article from a direct clean path", async () => {
+  // An old article link still opens the article -- the server sends it to "/"
+  // and the app takes it from there -- but the address it leaves behind is the
+  // one address the game has.
+  it("opens a tutorial article and leaves the address at the base URL", async () => {
     history.replaceState(null, "", "/tutorials/getting-started");
 
     expect(await appRouter.start()).toBe(true);
@@ -63,7 +66,7 @@ describe("OpenBack content routes", () => {
       expect(modal.textContent).toContain("Choose land.");
       expect(modal.selectedArticlePath()).toBe("/tutorials/getting-started");
     });
-    expect(location.pathname).toBe("/tutorials/getting-started");
+    expect(location.pathname).toBe("/");
   });
 
   it("routes article cards and their Back button without reloads", async () => {
@@ -78,9 +81,12 @@ describe("OpenBack content routes", () => {
       (button) => button.textContent?.includes("Getting Started"),
     )!;
     card.click();
-    await vi.waitFor(() =>
-      expect(location.pathname).toBe("/tutorials/getting-started"),
-    );
+    // Opening the article changes what is on screen, not where you are.
+    await vi.waitFor(async () => {
+      await modal.updateComplete;
+      expect(modal.querySelector("article")).not.toBeNull();
+    });
+    expect(location.pathname).toBe("/");
 
     const back = modal.querySelector<HTMLButtonElement>("[data-modal-back]")!;
     back.click();

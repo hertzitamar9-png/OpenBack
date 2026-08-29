@@ -345,14 +345,13 @@ export function pathForTarget(target: AppRouteTarget): string {
       return `/${suffix}`;
     case "page-troubleshooting":
       return `/${suffix}`;
+    // Articles have no address of their own either: the whole game answers at
+    // one, and opening a tutorial or a post is something that happens inside
+    // the page rather than somewhere else to go.
     case "page-tutorials":
-      return target.article
-        ? `/tutorials/${encodeURIComponent(target.article)}${suffix}`
-        : `/${suffix}`;
+      return `/${suffix}`;
     case "page-blog":
-      return target.article
-        ? `/blog/${encodeURIComponent(target.article)}${suffix}`
-        : `/${suffix}`;
+      return `/${suffix}`;
     case "page-terms":
       return `/${suffix}`;
     case "page-privacy":

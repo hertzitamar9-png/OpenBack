@@ -1,53 +1,70 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { getOpenBackContentSeo } from "../../src/server/OpenBackContent";
+import { pathForTarget } from "../../src/client/AppRoutes";
 
 /**
- * A search for OpenBack should answer with OpenBack, once.
+ * The whole game answers at one address.
  *
- * The tutorial and blog pages are all about the same game as the home page, so
- * a search was coming back with several of them stacked together instead of
- * the game itself. They stay readable and stay crawled -- "follow" keeps their
- * links counting -- but they no longer stand as separate answers, and the
- * sitemap no longer asks for them to be.
+ * The tutorials and the blog are pages inside the app, reached without leaving
+ * "/" -- their text comes from /api/openback/content, not from the address.
+ * They used to have addresses of their own anyway, so a search for OpenBack
+ * came back with a stack of entries for the same game. Those addresses are now
+ * earlier spellings of the home page and redirect to it permanently, which
+ * also tells a search engine to fold what they earned into the home page
+ * rather than list them beside it.
  */
-describe("one result for the game", () => {
-  const origin = "https://openback.dedyn.io";
+describe("one address for the game", () => {
+  const master = readFileSync("src/server/Master.ts", "utf8");
 
-  it.each([
-    "/tutorials",
-    "/blog",
-    "/tutorials/getting-started",
-    "/blog/world-map-conquest-games",
-  ])("keeps %s out of search results", (path) => {
-    const seo = getOpenBackContentSeo(path, origin);
-    expect(seo).not.toBeNull();
-    expect(seo!.noindex).toBe(true);
+  it("redirects every article address to the home page", () => {
+    const block = master.slice(
+      master.indexOf("// Everything the game has lives at one address."),
+      master.indexOf("RENAMED_LEGAL_PAGES"),
+    );
+    for (const path of [
+      '"/guides"',
+      '"/guides/{*rest}"',
+      '"/tutorials"',
+      '"/tutorials/{*rest}"',
+      '"/blog"',
+      '"/blog/{*rest}"',
+    ]) {
+      expect(block).toContain(path);
+    }
+    expect(block).toMatch(/res\.redirect\(301, "\/"\)/);
   });
 
-  it("still gives those pages their own subject and canonical", () => {
-    // noindex is not an excuse to serve them as copies of each other.
-    const a = getOpenBackContentSeo("/tutorials/getting-started", origin)!;
-    const b = getOpenBackContentSeo("/blog/world-map-conquest-games", origin)!;
-    expect(a.description).not.toBe(b.description);
-    expect(a.headline).not.toBe(b.headline);
-    expect(a.path).not.toBe(b.path);
+  it("no longer serves those addresses as pages of their own", () => {
+    expect(master).not.toContain("app.get(OPENBACK_CONTENT_PATHS");
+    expect(master).not.toContain("getOpenBackContentSeo");
+  });
+
+  it("keeps the in-app content API, which is where the text comes from", () => {
+    expect(master).toContain('app.get("/api/openback/content"');
   });
 
   it("lists only the home page in the sitemap", () => {
-    const master = readFileSync("src/server/Master.ts", "utf8");
     expect(master).toMatch(/const urls = \["\/"\]/);
-    expect(master).not.toMatch(
-      /const urls = \["\/", \.\.\.OPENBACK_CONTENT_PATHS\]/,
-    );
   });
 
-  it("leaves the app shell indexable by default", () => {
-    const html = readFileSync("index.html", "utf8");
-    expect(html).toContain('<meta name="robots" content="<%= seoRobots %>" />');
-    const render = readFileSync("src/server/RenderHtml.ts", "utf8");
-    // A route that says nothing about indexing stays indexable.
-    expect(render).toMatch(/noindex: seo\?\.noindex \?\? false/);
-    expect(render).toMatch(/"noindex, follow" : "index, follow"/);
+  it("never puts an article address in the address bar", () => {
+    expect(pathForTarget({ pageId: "page-tutorials" })).toBe("/");
+    expect(
+      pathForTarget({ pageId: "page-tutorials", article: "getting-started" }),
+    ).toBe("/");
+    expect(pathForTarget({ pageId: "page-blog" })).toBe("/");
+    expect(
+      pathForTarget({
+        pageId: "page-blog",
+        article: "world-map-conquest-games",
+      }),
+    ).toBe("/");
+  });
+
+  it("still keeps the legal pages at their own addresses", () => {
+    // Those are real pages people are sent to on purpose, not duplicates of
+    // the game, so flattening does not apply to them.
+    expect(pathForTarget({ pageId: "page-terms" })).toBe("/");
+    expect(master).toContain('"/terms-of-service": "/terms"');
   });
 });
