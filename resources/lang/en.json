@@ -101,6 +101,7 @@
   },
   "analytics": {
     "account_email": "Account email",
+    "account_id": "Account {id}",
     "active_24h": "Active 24h",
     "active_30d": "Active 30d",
     "active_7d": "Active 7d",
@@ -121,6 +122,7 @@
     "game_modes": "Game modes",
     "game_types": "Game types",
     "games": "Games",
+    "guest_id": "Guest {id}",
     "heading": "Know how players use OpenBack",
     "last_24h": "Last 24 hours",
     "last_30d": "Last 30 days",
@@ -130,6 +132,7 @@
     "live": "Live updates",
     "maps": "Maps",
     "new_players": "New players",
+    "no_name_yet": "No name yet",
     "no_players": "No players match this search.",
     "online": "Online now",
     "owner_excluded": "Your account is excluded",

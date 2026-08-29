@@ -354,11 +354,22 @@ export class OwnerAnalyticsModal extends BaseModal {
                         }}
                       >
                         <td class="px-4 py-3">
-                          <div class="font-bold text-white">
-                            ${player.username}
+                          <div
+                            class=${player.username
+                              ? "font-bold text-white"
+                              : "font-bold italic text-white/40"}
+                          >
+                            ${player.username ||
+                            translateText("analytics.no_name_yet")}
                           </div>
                           <div class="text-[10px] text-white/30">
-                            ${player.publicId}
+                            ${player.email
+                              ? translateText("analytics.account_id", {
+                                  id: player.publicId,
+                                })
+                              : translateText("analytics.guest_id", {
+                                  id: player.publicId,
+                                })}
                           </div>
                         </td>
                         <td

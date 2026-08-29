@@ -1,3 +1,10 @@
+## OpenBack v0.36.256 - Players Listed by Name
+
+- The owner dashboard lists players by the name they play under instead of an internal code. It was showing the account's rename-flow name, which almost nobody sets, and falling back to a random id -- so the list read as though it were full of strangers. The name typed on the main menu is now used, taken from the most recent game it was recorded in.
+- A player the server has no name for is now said to have none, rather than having an internal id presented as though it were their name. The id is shown separately and says whether the entry is a signed-up account or a guest.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.255 - No Advertising, and Tables You Can Reach
 
 - Removed the advertising code inherited from upstream: the gutter and rail units, the in-game break, the ad gatekeeper, and the third-party SDK hooks that went with them. None of it was ever loaded, and none of it is coming back.

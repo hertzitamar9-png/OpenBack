@@ -530,6 +530,29 @@ function usernameFor(user: StoredUser): string {
   return user.displayName ?? user.publicId;
 }
 
+/**
+ * What to call a player on the owner dashboard.
+ *
+ * usernameFor falls back to the publicId, which is a random code -- so every
+ * player who never used the account-rename flow was listed under one, and the
+ * dashboard read as though it were full of strangers. The name a player
+ * actually uses is typed on the main menu and kept in their browser; it only
+ * reaches the server inside a finished game, where it is recorded against the
+ * account. Use the most recent of those, and say plainly when there is no name
+ * on record rather than presenting an internal id as one.
+ */
+function analyticsNameFor(
+  user: StoredUser,
+  gamesOldestFirst: StoredPlayerGame[],
+): string {
+  if (user.displayName) return user.displayName;
+  for (let i = gamesOldestFirst.length - 1; i >= 0; i--) {
+    const played = gamesOldestFirst[i].username?.trim();
+    if (played) return played;
+  }
+  return "";
+}
+
 function clanTagFor(user: StoredUser): string | null {
   for (const clan of clansByTag.values()) {
     if (clan.members.some((m) => m.publicId === user.publicId)) {
@@ -3620,7 +3643,7 @@ export function authRouter(): express.Router {
           .map((clan) => ({ tag: clan.tag, name: clan.name }));
         return {
           publicId: user.publicId,
-          username: usernameFor(user),
+          username: analyticsNameFor(user, orderedGames),
           email: user.email,
           createdAt: new Date(user.createdAt).toISOString(),
           lastSeenAt: user.lastSeenAt ?? new Date(user.createdAt).toISOString(),
