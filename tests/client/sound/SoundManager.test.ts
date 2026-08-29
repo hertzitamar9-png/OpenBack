@@ -54,7 +54,10 @@ vi.mock("../../../src/client/sound/Sounds", async (importOriginal) => {
     await importOriginal<typeof import("../../../src/client/sound/Sounds")>();
   return {
     ...actual,
-    backgroundMusicUrls: ["mock/openback-command.ogg"],
+    backgroundMusicUrls: {
+      "2d": "mock/openback-theme-2d.webm",
+      "3d": "mock/openback-theme-3d.webm",
+    },
     soundEffectUrls: new Map([
       ["click", "mock/click.mp3"],
       ["atom-hit", "mock/atom-hit.mp3"],
@@ -92,6 +95,9 @@ let managers: SoundManager[] = [];
 function createManager(eventBus: EventBus, settings: UserSettings) {
   const manager = new SoundManager(eventBus, settings);
   managers.push(manager);
+  // A track is only loaded once the experience is known, so that no player
+  // downloads a three-hour recording they are never going to hear.
+  manager.useExperienceMusic("2d");
   return manager;
 }
 
@@ -128,7 +134,7 @@ describe("SoundManager", () => {
     expect(effectHowl.play).toHaveBeenCalledTimes(1);
   });
 
-  it("loads one local original background track", () => {
+  it("loads one background track, and only for the chosen experience", () => {
     soundManager.dispose();
     const settings = createUserSettings(0.5, 1);
     const bus = new EventBus();
@@ -138,10 +144,45 @@ describe("SoundManager", () => {
     expect(howlCtor).toHaveBeenCalledTimes(1);
     expect(howlCtor).toHaveBeenCalledWith(
       expect.objectContaining({
-        src: ["mock/openback-command.ogg"],
+        src: ["mock/openback-theme-2d.webm"],
         loop: true,
+        // Three hours long: streamed through an audio element rather than
+        // decoded into memory as raw samples before a note plays.
+        html5: true,
       }),
     );
+  });
+
+  it("loads nothing until the experience is known", () => {
+    soundManager.dispose();
+    howlCtor.mockClear();
+    howlInstances.length = 0;
+    const manager = new SoundManager(
+      new EventBus(),
+      createUserSettings(0.5, 1),
+    );
+    managers.push(manager);
+    expect(howlCtor).not.toHaveBeenCalled();
+  });
+
+  it("swaps the track when the experience changes, and keeps just one", () => {
+    soundManager.dispose();
+    const manager = new SoundManager(
+      new EventBus(),
+      createUserSettings(0.5, 1),
+    );
+    managers.push(manager);
+    manager.useExperienceMusic("2d");
+    howlCtor.mockClear();
+    manager.useExperienceMusic("3d");
+    expect(howlCtor).toHaveBeenCalledTimes(1);
+    expect(howlCtor).toHaveBeenCalledWith(
+      expect.objectContaining({ src: ["mock/openback-theme-3d.webm"] }),
+    );
+    // Asking for the same one again must not build a second player.
+    howlCtor.mockClear();
+    manager.useExperienceMusic("3d");
+    expect(howlCtor).not.toHaveBeenCalled();
   });
 
   it("unlocks audio and starts music on the first pointer interaction", async () => {

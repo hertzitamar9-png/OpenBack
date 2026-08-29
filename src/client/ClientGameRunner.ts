@@ -956,6 +956,9 @@ export class ClientGameRunner {
   }
 
   public start() {
+    this.soundManager.useExperienceMusic(
+      this.gameView.config().experienceMode() === "3d" ? "3d" : "2d",
+    );
     this.soundManager.playBackgroundMusic();
     console.log("starting client game");
 

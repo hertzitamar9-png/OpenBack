@@ -20,7 +20,7 @@ import {
   UserSettings,
 } from "../core/game/UserSettings";
 import { PlayerPattern } from "../core/Schemas";
-import { getUserMe } from "./Api";
+import { getUserMe, updateMyIdentityPreferences } from "./Api";
 import { appRouter } from "./AppRouter";
 import { userAuth } from "./Auth";
 import "./components/baseComponents/Button";
@@ -683,14 +683,19 @@ export class InventoryModal extends BaseModal {
   }
 
   private selectCrown(resolved: ResolvedCosmetic) {
-    this.userSettings.setSelectedCrownName(
-      resolved.cosmetic?.name ?? undefined,
-    );
+    const name = resolved.cosmetic?.name ?? undefined;
+    this.userSettings.setSelectedCrownName(name);
+    void updateMyIdentityPreferences({ selectedCosmetic: name ?? null });
     this.showSelectedPopup(resolved);
   }
 
   private selectFlag(resolved: ResolvedCosmetic) {
     this.userSettings.setFlag(resolved.key);
+    // The choice used to be kept in this browser and nowhere else, so the
+    // account never carried a flag and nothing outside this device knew about
+    // it. Tell the server as well; failing to reach it is not worth
+    // interrupting the player over, so the local choice still stands.
+    void updateMyIdentityPreferences({ selectedFlag: resolved.key });
     this.showSelectedPopup(resolved);
   }
 

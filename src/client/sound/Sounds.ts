@@ -27,7 +27,17 @@ export type SoundEffect =
  * carried here. The sound effects under `resources/sounds/effects` are the
  * open ones and are used unchanged.
  */
-export const backgroundMusicUrls: readonly string[] = [];
+/**
+ * The background score, one track per experience.
+ *
+ * Each is three hours long, so they are streamed rather than decoded up front
+ * -- see the html5 flag in SoundManager. A player only ever downloads the part
+ * they hear.
+ */
+export const backgroundMusicUrls: Readonly<Record<"2d" | "3d", string>> = {
+  "2d": assetUrl("sounds/music/openback-theme-2d.webm"),
+  "3d": assetUrl("sounds/music/openback-theme-3d.webm"),
+};
 
 export const soundEffectUrls: ReadonlyMap<SoundEffect, string> = new Map([
   ["ka-ching", assetUrl("sounds/effects/ka-ching.mp3")],

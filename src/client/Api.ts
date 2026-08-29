@@ -348,6 +348,7 @@ export async function markDeathTutorialSeen(): Promise<boolean> {
 export async function updateMyIdentityPreferences(preferences: {
   selectedFlag?: string | null;
   selectedCosmetic?: string | null;
+  lastKnownName?: string;
 }): Promise<boolean> {
   try {
     const auth = await userAuth();

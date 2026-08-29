@@ -306,34 +306,41 @@ export class OwnerAnalyticsModal extends BaseModal {
             <div
               class="table-scroll"
               @wheel=${(event: WheelEvent) => this.scrollTableSideways(event)}
+              @pointerdown=${(event: PointerEvent) =>
+                this.startTableDrag(event)}
+              @pointermove=${(event: PointerEvent) =>
+                this.continueTableDrag(event)}
+              @pointerup=${(event: PointerEvent) => this.endTableDrag(event)}
+              @pointercancel=${(event: PointerEvent) =>
+                this.endTableDrag(event)}
             >
-              <table class="w-full min-w-[960px] text-left text-sm">
+              <table class="w-full min-w-[720px] text-left text-xs lg:text-sm">
                 <thead
                   class="bg-black/20 text-[10px] uppercase tracking-wider text-white/35"
                 >
                   <tr>
-                    <th class="px-4 py-3">
+                    <th class="px-2 py-2 lg:px-4 lg:py-3">
                       ${translateText("analytics.player")}
                     </th>
-                    <th class="px-4 py-3">
+                    <th class="px-2 py-2 lg:px-4 lg:py-3">
                       ${translateText("analytics.last_online")}
                     </th>
-                    <th class="px-4 py-3 text-right">
+                    <th class="px-2 py-2 text-right lg:px-4 lg:py-3">
                       ${translateText("analytics.games")}
                     </th>
-                    <th class="px-4 py-3 text-right">
+                    <th class="px-2 py-2 text-right lg:px-4 lg:py-3">
                       ${translateText("analytics.playtime")}
                     </th>
-                    <th class="px-4 py-3 text-right">
+                    <th class="px-2 py-2 text-right lg:px-4 lg:py-3">
                       ${translateText("analytics.wins")}
                     </th>
-                    <th class="px-4 py-3">
+                    <th class="px-2 py-2 lg:px-4 lg:py-3">
                       ${translateText("analytics.favorite_mode")}
                     </th>
-                    <th class="px-4 py-3">
+                    <th class="px-2 py-2 lg:px-4 lg:py-3">
                       ${translateText("analytics.selected_flag")}
                     </th>
-                    <th class="px-4 py-3">
+                    <th class="px-2 py-2 lg:px-4 lg:py-3">
                       ${translateText("analytics.approximate_country")}
                     </th>
                   </tr>
@@ -353,7 +360,7 @@ export class OwnerAnalyticsModal extends BaseModal {
                           }
                         }}
                       >
-                        <td class="px-4 py-3">
+                        <td class="px-2 py-2 lg:px-4 lg:py-3">
                           <div
                             class=${player.username
                               ? "font-bold text-white"
@@ -625,6 +632,53 @@ export class OwnerAnalyticsModal extends BaseModal {
         ></div>
       </div>
     </div>`;
+  }
+
+  /** Where a drag across the table began, or null when none is in progress. */
+  private tableDrag: {
+    pointerId: number;
+    startX: number;
+    from: number;
+  } | null = null;
+
+  /**
+   * Drag the player table sideways with a finger or the mouse.
+   *
+   * The columns past the right edge could only be reached with a scrollbar,
+   * which is no use on a phone and easy to miss on a desktop. Dragging the
+   * table itself is what people try first.
+   */
+  private startTableDrag(event: PointerEvent) {
+    const strip = event.currentTarget as HTMLElement;
+    if (strip.scrollWidth <= strip.clientWidth) return;
+    // Leave the search box and any other control to do its own job.
+    if ((event.target as HTMLElement).closest("input, button, a")) return;
+    this.tableDrag = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      from: strip.scrollLeft,
+    };
+  }
+
+  private continueTableDrag(event: PointerEvent) {
+    const drag = this.tableDrag;
+    if (drag === null || drag.pointerId !== event.pointerId) return;
+    const strip = event.currentTarget as HTMLElement;
+    const moved = event.clientX - drag.startX;
+    strip.scrollLeft = drag.from - moved;
+    if (Math.abs(moved) > 4) {
+      // Past a few pixels this is a drag, not a tap: stop the row underneath
+      // from treating the release as a click that expands a player.
+      strip.setPointerCapture?.(event.pointerId);
+      event.preventDefault();
+    }
+  }
+
+  private endTableDrag(event: PointerEvent) {
+    if (this.tableDrag?.pointerId !== event.pointerId) return;
+    const strip = event.currentTarget as HTMLElement;
+    strip.releasePointerCapture?.(event.pointerId);
+    this.tableDrag = null;
   }
 
   /**

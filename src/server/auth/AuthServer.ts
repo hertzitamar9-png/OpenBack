@@ -84,6 +84,10 @@ interface StoredUser {
   createdAt: number;
   googleSub?: string;
   displayName?: string;
+  // The name typed on the main menu. Distinct from displayName, which is the
+  // claimed, unique account name almost nobody sets -- this is simply what the
+  // player calls themselves, so they can be recognised without one.
+  lastKnownName?: string;
   bio?: string;
   bannerColor?: string;
   selectedFlag?: string;
@@ -546,6 +550,7 @@ function analyticsNameFor(
   gamesOldestFirst: StoredPlayerGame[],
 ): string {
   if (user.displayName) return user.displayName;
+  if (user.lastKnownName) return user.lastKnownName;
   for (let i = gamesOldestFirst.length - 1; i >= 0; i--) {
     const played = gamesOldestFirst[i].username?.trim();
     if (played) return played;
@@ -1943,7 +1948,10 @@ export function authRouter(): express.Router {
     }
     const parsed = z
       .object({
-        displayName: z.string().trim().min(3).max(27),
+        // Optional: a client updating only its flag or cosmetic sends no name,
+        // and requiring one here rejected those updates outright.
+        displayName: z.string().trim().min(3).max(27).optional(),
+        lastKnownName: z.string().trim().min(1).max(27).optional(),
         bio: z.string().trim().max(160).optional(),
         bannerColor: z
           .string()
@@ -1957,8 +1965,25 @@ export function authRouter(): express.Router {
       res.status(400).json({ error: "invalid_profile" });
       return;
     }
-    const { selectedFlag, selectedCosmetic, ...profile } = parsed.data;
+    // Editing the profile still requires a name: a half-filled profile with a
+    // bio and no one attached to it is not a thing worth storing. What is now
+    // allowed is an update that touches none of the profile -- a player who
+    // has just picked a flag, a crown, or typed a name on the main menu -- and
+    // requiring a display name there rejected those outright.
+    const editsProfile =
+      parsed.data.bio !== undefined || parsed.data.bannerColor !== undefined;
+    if (editsProfile && parsed.data.displayName === undefined) {
+      res.status(400).json({ error: "invalid_profile" });
+      return;
+    }
+    const { selectedFlag, selectedCosmetic, lastKnownName, ...profile } =
+      parsed.data;
     Object.assign(user, profile);
+    if (lastKnownName !== undefined) {
+      user.lastKnownName = profanityMatcher.hasMatch(lastKnownName)
+        ? undefined
+        : lastKnownName;
+    }
     if (selectedFlag !== undefined) {
       user.selectedFlag = selectedFlag ?? undefined;
     }

@@ -12,7 +12,11 @@ import {
   validateClanTag,
   validateUsername,
 } from "../core/validations/username";
-import { getUserMe, invalidateUserMe } from "./Api";
+import {
+  getUserMe,
+  invalidateUserMe,
+  updateMyIdentityPreferences,
+} from "./Api";
 import { appRouter } from "./AppRouter";
 import { checkClanTagOwnership } from "./ClanApi";
 import { verifiedBadge } from "./components/ui/VerifiedBadge";
@@ -923,6 +927,7 @@ export class UsernameInput extends LitElement {
         localStorage.setItem(usernameKey, trimmedBase);
         localStorage.setItem(clanTagKey, this.getClanTag() ?? "");
       }
+      this.rememberNameOnAccount(trimmedBase);
       this.validationError = "";
     } else {
       this.validationError = result.error ?? "";
@@ -931,6 +936,29 @@ export class UsernameInput extends LitElement {
   }
 
   // Broadcast play-eligibility so action buttons can disable themselves.
+  /** The last name sent, so typing does not fire a request per keystroke. */
+  private nameSentToAccount: string | null = null;
+  private nameSendTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /**
+   * Record on the account the name the player is actually using.
+   *
+   * The name typed here lived only in this browser. The account kept no name
+   * at all unless the player went through the separate claim-a-username flow,
+   * which almost nobody does -- so anywhere the server had to name a player it
+   * fell back to their internal id, and they appeared as a random code.
+   */
+  private rememberNameOnAccount(name: string) {
+    if (this.onCrazyGames || name === this.nameSentToAccount) return;
+    if (this.nameSendTimer !== null) clearTimeout(this.nameSendTimer);
+    this.nameSendTimer = setTimeout(() => {
+      this.nameSendTimer = null;
+      this.nameSentToAccount = name;
+      // Best effort: a signed-out or offline player keeps their local name.
+      void updateMyIdentityPreferences({ lastKnownName: name });
+    }, 800);
+  }
+
   private emitValidity() {
     window.dispatchEvent(
       new CustomEvent("username-validity-change", {

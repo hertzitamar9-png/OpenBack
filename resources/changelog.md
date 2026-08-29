@@ -1,3 +1,13 @@
+## OpenBack v0.36.258 - Music, and a Dashboard That Tells the Truth
+
+- OpenBack has its own music. "The War Machine" plays in 2D and "Tile by Tile" in 3D, three hours each, and neither stops when you die -- the score runs until the game itself is over. The tracks stream, so only the part you actually hear is downloaded.
+- Your flag and crown now reach your account. Choosing one saved it in your browser and nowhere else, and the server was never told, so nothing outside that one device knew what you had picked. The dashboard showed no flag for anybody because nobody had ever sent one.
+- The name you play under is now remembered on your account, so you are listed by it instead of by an internal code.
+- The dashboard's player table fits an ordinary window on a desktop, and can be dragged sideways with a finger or the mouse instead of needing a scrollbar.
+- Every page is titled OpenBack. The page's own subject moved into the description underneath, where a search result still shows it.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.257 - Article Addresses That Exist
 
 - A blog or tutorial address that does not exist is now refused instead of answered with the home page. Any mistyped or stale article link came back as a working page that claimed to be a copy of the home page, which invites search engines to index addresses the site does not have.

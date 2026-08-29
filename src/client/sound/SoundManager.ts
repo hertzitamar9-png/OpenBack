@@ -21,6 +21,7 @@ export const MAX_CONCURRENT_SOUNDS = 8;
 
 export class SoundManager {
   private backgroundMusic: Howl[] = [];
+  private experienceMode: "2d" | "3d" | null = null;
   private currentTrack: number = 0;
   private soundEffects: Map<SoundEffect, Howl> = new Map();
   private soundEffectsVolume: number = 1;
@@ -39,19 +40,11 @@ export class SoundManager {
 
   constructor(eventBus: EventBus, userSettings: UserSettings) {
     this.eventBus = eventBus;
-    // The upstream music files live in the restricted proprietary asset set.
-    // OpenBack keeps the open sound effects and intentionally starts without
-    // background tracks rather than requesting missing or unlicensed files.
     this.setBackgroundMusicVolume(userSettings.backgroundMusicVolume());
     this.setSoundEffectsVolume(userSettings.soundEffectsVolume());
-    this.backgroundMusic = backgroundMusicUrls.map(
-      (src) =>
-        new Howl({
-          src: [src],
-          loop: true,
-          volume: this.backgroundMusicVolume,
-        }),
-    );
+    // No track is loaded until the experience is known, so only the one that
+    // will actually be heard is ever requested. Each is three hours long.
+    this.backgroundMusic = [];
     this.onPlaySoundEffect = (e) => this.playSoundEffect(e.effect, e.origin);
     this.onSetBackgroundMusicVolume = (e) =>
       this.setBackgroundMusicVolume(e.volume);
@@ -97,6 +90,33 @@ export class SoundManager {
     } catch (err) {
       console.error(`SoundManager: failed to ${action}`, err);
     }
+  }
+
+  /**
+   * Load the score for the experience about to be played.
+   *
+   * 2D and 3D have their own track. Streaming rather than decoding matters
+   * here: these are three-hour recordings, and Howler's default Web Audio
+   * path would pull the whole file down and hold it in memory as raw samples
+   * before a note played. html5 hands it to an audio element instead, which
+   * starts within seconds and fetches only as far as it has played.
+   */
+  public useExperienceMusic(experienceMode: "2d" | "3d"): void {
+    if (this.experienceMode === experienceMode) return;
+    this.experienceMode = experienceMode;
+    this.backgroundMusic.forEach((track) => {
+      this.safely("stop background track", () => track.stop());
+      this.safely("unload background track", () => track.unload());
+    });
+    this.currentTrack = 0;
+    this.backgroundMusic = [
+      new Howl({
+        src: [backgroundMusicUrls[experienceMode]],
+        html5: true,
+        loop: true,
+        volume: this.backgroundMusicVolume,
+      }),
+    ];
   }
 
   public playBackgroundMusic(): void {

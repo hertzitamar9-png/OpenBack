@@ -727,6 +727,12 @@ export const LEGACY_GUIDE_PATHS = [
 export interface OpenBackContentSeo {
   path: string;
   title: string;
+  /**
+   * The article's own headline. Every page is titled "OpenBack" so the game's
+   * name is what search results carry, but the headline is still what the
+   * page is about, so structured data and the page's own <h1> keep it.
+   */
+  headline: string;
   description: string;
   schemaJson: string;
   crawlableHtml: string;
@@ -762,8 +768,11 @@ function hub(
     : "Read OpenBack articles about multiplayer, matchmaking, aircraft, tanks, military railways, and browser game design.";
   return {
     path,
-    title: `${title} | OpenBack`,
-    description,
+    title: "OpenBack",
+    headline: title,
+    // The headline leads the description so it is still what a search result
+    // shows underneath the game's name.
+    description: `${title}. ${description}`,
     crawlableHtml: `<div class="hero"><small>${isGuide ? "Learn the game" : "Behind the game"}</small><h1>${title}</h1><p class="lead">${description}</p></div><div class="grid">${cards(items)}</div>`,
   };
 }
@@ -783,8 +792,9 @@ function article(
     .slice(0, 3);
   return {
     path: page.path,
-    title: `${page.title} | OpenBack`,
-    description: page.description,
+    title: "OpenBack",
+    headline: page.title,
+    description: `${page.title}. ${page.description}`,
     crawlableHtml: `<a class="back" href="${hubPath}">&larr; All ${page.type === "Tutorial" ? "tutorials" : "posts"}</a><article class="content"><div class="hero"><small>${page.type}</small><h1>${esc(page.title)}</h1><p class="lead">${esc(page.description)}</p></div>${sections}</article><aside class="related"><h2>Keep reading</h2><div class="grid">${cards(related)}</div></aside>`,
   };
 }
@@ -813,8 +823,8 @@ export function getOpenBackContentSeo(
     schemaJson: JSON.stringify({
       "@context": "https://schema.org",
       "@type": schemaType,
-      name: base.title.replace(/ \| OpenBack$/, ""),
-      headline: base.title.replace(/ \| OpenBack$/, ""),
+      name: base.headline,
+      headline: base.headline,
       description: base.description,
       url: canonical,
       author: { "@type": "Organization", name: "OpenBack" },
