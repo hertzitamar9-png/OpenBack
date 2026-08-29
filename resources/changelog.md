@@ -1,3 +1,9 @@
+## OpenBack v0.36.257 - Article Addresses That Exist
+
+- A blog or tutorial address that does not exist is now refused instead of answered with the home page. Any mistyped or stale article link came back as a working page that claimed to be a copy of the home page, which invites search engines to index addresses the site does not have.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.256 - Players Listed by Name
 
 - The owner dashboard lists players by the name they play under instead of an internal code. It was showing the account's rename-flow name, which almost nobody sets, and falling back to a random id -- so the list read as though it were full of strangers. The name typed on the main menu is now used, taken from the most recent game it was recorded in.

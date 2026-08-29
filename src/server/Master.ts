@@ -122,6 +122,19 @@ app.get(Object.keys(RENAMED_LEGAL_PAGES), (req, res) => {
   res.redirect(301, destination);
 });
 
+// An article address that does not exist must say so. Anything under /blog or
+// /tutorials that is not a real page fell through to the SPA handler, which
+// answered 200 with the home page's title and a canonical pointing at "/" --
+// so every mistyped or stale article URL became another page claiming to be a
+// copy of the home page.
+app.get(["/blog/{*rest}", "/tutorials/{*rest}"], (req, res, next) => {
+  if (OPENBACK_CONTENT_PATHS.includes(req.path)) {
+    next();
+    return;
+  }
+  res.status(404).type("text/plain").send("Not Found");
+});
+
 // Tutorials and Blog use the same interactive shell as every other OpenBack
 // page while retaining route-specific crawlable content and metadata.
 app.get(OPENBACK_CONTENT_PATHS, async (req, res) => {
