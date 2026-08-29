@@ -123,47 +123,47 @@
     },
     "fictional_600px_black_and_yellow": {
       "name": "fictional_600px_black_and_yellow",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/600px_Black_and_yellow_Ball.png/330px-600px_Black_and_yellow_Ball.png",
-      "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
-      "artist": "MarcoDV11"
-    },
-    "fictional_600px_blue_and_white_k": {
-      "name": "fictional_600px_blue_and_white_k",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/600px_Blue_and_White_KTO.png/330px-600px_Blue_and_White_KTO.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/600px_Black_and_yellow_Ball.png/330px-600px_Black_and_yellow_Ball.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
       "priceSoft": 250,
       "rarity": "common",
       "artist": "MarcoDV11"
     },
+    "fictional_600px_blue_and_white_k": {
+      "name": "fictional_600px_blue_and_white_k",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/600px_Blue_and_White_KTO.png/330px-600px_Blue_and_White_KTO.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "product": null,
+      "priceSoft": 400,
+      "rarity": "uncommon",
+      "artist": "MarcoDV11"
+    },
     "fictional_600px_blue_and_yellow_": {
       "name": "fictional_600px_blue_and_yellow_",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/600px_Blue_and_Yellow_Star.png/330px-600px_Blue_and_Yellow_Star.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/600px_Blue_and_Yellow_Star.png/330px-600px_Blue_and_Yellow_Star.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 650,
+      "priceSoft": 600,
       "rarity": "rare",
       "artist": "MarcoDV11"
     },
     "fictional_600px_cinci_dungi_negr": {
       "name": "fictional_600px_cinci_dungi_negr",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/600px_Cinci_dungi_negru_cu_galben_%282%29.png/330px-600px_Cinci_dungi_negru_cu_galben_%282%29.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/600px_Cinci_dungi_negru_cu_galben_%282%29.png/330px-600px_Cinci_dungi_negru_cu_galben_%282%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
+      "priceSoft": 850,
+      "rarity": "epic",
       "artist": "Lascorpion"
     },
     "fictional_600px_flag_club_aso_ch": {
       "name": "fictional_600px_flag_club_aso_ch",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/600px_Flag_club_ASO_Chlef.png/330px-600px_Flag_club_ASO_Chlef.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/600px_Flag_club_ASO_Chlef.png/330px-600px_Flag_club_ASO_Chlef.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
+      "priceSoft": 1200,
+      "rarity": "legendary",
       "artist": "Lascorpion"
     },
     "fictional_600px_flag_defensor": {
       "name": "fictional_600px_flag_defensor",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/600px_Flag_Defensor.png/330px-600px_Flag_Defensor.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/600px_Flag_Defensor.png/330px-600px_Flag_Defensor.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
       "priceSoft": 250,
       "rarity": "common",
@@ -171,351 +171,247 @@
     },
     "fictional_600px_trisection_hex_f": {
       "name": "fictional_600px_trisection_hex_f",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/600px_Trisection_HEX-FE0000_HEX-339967_%C8%99i_o_stea.png/330px-600px_Trisection_HEX-FE0000_HEX-339967_%C8%99i_o_stea.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/600px_Trisection_HEX-FE0000_HEX-339967_%C8%99i_o_stea.png/330px-600px_Trisection_HEX-FE0000_HEX-339967_%C8%99i_o_stea.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 650,
-      "rarity": "rare",
+      "priceSoft": 400,
+      "rarity": "uncommon",
       "artist": "Lascorpion"
     },
     "fictional_600px_trisection_48daf": {
       "name": "fictional_600px_trisection_48daf",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/600px_Trisection_HEX-FE0000_HEX-339967_si_trei_stele.png/330px-600px_Trisection_HEX-FE0000_HEX-339967_si_trei_stele.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/600px_Trisection_HEX-FE0000_HEX-339967_si_trei_stele.png/330px-600px_Trisection_HEX-FE0000_HEX-339967_si_trei_stele.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
+      "priceSoft": 600,
+      "rarity": "rare",
       "artist": "Lascorpion"
     },
     "fictional_ainu_flag_alternative": {
       "name": "fictional_ainu_flag_alternative",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Ainu_flag_%28alternative%29.png/330px-Ainu_flag_%28alternative%29.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Ainu_flag_%28alternative%29.png/330px-Ainu_flag_%28alternative%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
+      "priceSoft": 850,
+      "rarity": "epic",
       "artist": "Anonykitten"
-    },
-    "fictional_airforce_flag_of_the_g": {
-      "name": "fictional_airforce_flag_of_the_g",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/AirForce_Flag_of_The_Grand_Duchy_of_L%C3%A8oveld.png/330px-AirForce_Flag_of_The_Grand_Duchy_of_L%C3%A8oveld.png",
-      "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
-      "artist": "MrMenefotte"
     },
     "fictional_alianza_sullana": {
       "name": "fictional_alianza_sullana",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Alianza_Sullana.svg/330px-Alianza_Sullana.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Alianza_Sullana.svg/330px-Alianza_Sullana.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
+      "priceSoft": 1200,
+      "rarity": "legendary",
       "artist": "JOSGATE19"
     },
     "fictional_alstudism_flag": {
       "name": "fictional_alstudism_flag",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Alst%C5%ABdism_Flag.png/330px-Alst%C5%ABdism_Flag.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Alst%C5%ABdism_Flag.png/330px-Alst%C5%ABdism_Flag.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 650,
-      "rarity": "rare",
+      "priceSoft": 250,
+      "rarity": "common",
       "artist": "Iefan Alstūd"
     },
     "fictional_anarcho_islamist_flag": {
       "name": "fictional_anarcho_islamist_flag",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/b/b4/Anarcho-Islamist_flag.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/b/b4/Anarcho-Islamist_flag.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
       "product": null,
-      "priceSoft": 650,
-      "rarity": "rare",
+      "priceSoft": 400,
+      "rarity": "uncommon",
       "artist": "FPSTurkey"
     },
     "fictional_anarcho_islamist_f2137": {
       "name": "fictional_anarcho_islamist_f2137",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Anarcho-Islamist_flag.svg/330px-Anarcho-Islamist_flag.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Anarcho-Islamist_flag.svg/330px-Anarcho-Islamist_flag.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 950,
-      "rarity": "epic",
-      "artist": "Wheatley2"
-    },
-    "fictional_andaman_and_nicobar_is": {
-      "name": "fictional_andaman_and_nicobar_is",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Andaman_And_Nicobar_Islands.png/330px-Andaman_And_Nicobar_Islands.png",
-      "product": null,
-      "priceSoft": 650,
+      "priceSoft": 600,
       "rarity": "rare",
-      "artist": "Harrazisthecoolone"
+      "artist": "Wheatley2"
     },
     "fictional_arcadia_bandeira": {
       "name": "fictional_arcadia_bandeira",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Arc%C3%A1dia_%28Bandeira%29.png/330px-Arc%C3%A1dia_%28Bandeira%29.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Arc%C3%A1dia_%28Bandeira%29.png/330px-Arc%C3%A1dia_%28Bandeira%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 950,
+      "priceSoft": 850,
       "rarity": "epic",
       "artist": "Athirson Clemer"
     },
+    "fictional_arcadian_empire": {
+      "name": "fictional_arcadian_empire",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Arcadian_Empire.svg/330px-Arcadian_Empire.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "product": null,
+      "priceSoft": 1200,
+      "rarity": "legendary",
+      "artist": "Dextroth"
+    },
     "fictional_asa_fc": {
       "name": "fictional_asa_fc",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/ASA_FC.svg/330px-ASA_FC.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/ASA_FC.svg/330px-ASA_FC.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
       "priceSoft": 250,
       "rarity": "common",
       "artist": "JOSGATE19"
     },
-    "fictional_ashmore_and_cartier_is": {
-      "name": "fictional_ashmore_and_cartier_is",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/f/ff/Ashmore_and_Cartier_Islands_Flag.webp",
+    "fictional_ayacucho_fictional_fla": {
+      "name": "fictional_ayacucho_fictional_fla",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Ayacucho_fictional_flag.svg/330px-Ayacucho_fictional_flag.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
       "priceSoft": 400,
       "rarity": "uncommon",
-      "artist": "Blahblahblah123333"
-    },
-    "fictional_autistic_communist_fla": {
-      "name": "fictional_autistic_communist_fla",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Autistic_Communist_flag.svg/330px-Autistic_Communist_flag.svg.png",
-      "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
-      "artist": "Autistic Secessionist"
-    },
-    "fictional_autistic_heptacolor": {
-      "name": "fictional_autistic_heptacolor",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Autistic_heptacolor.svg/330px-Autistic_heptacolor.svg.png",
-      "product": null,
-      "priceSoft": 650,
-      "rarity": "rare",
-      "artist": "Rogue Aspie"
-    },
-    "fictional_autistic_nationalist_f": {
-      "name": "fictional_autistic_nationalist_f",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Autistic_nationalist_flag.svg/330px-Autistic_nationalist_flag.svg.png",
-      "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
-      "artist": "Rogue Aspie"
-    },
-    "fictional_autistic_pride_flag_ii": {
-      "name": "fictional_autistic_pride_flag_ii",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Autistic_Pride_Flag_II.svg/330px-Autistic_Pride_Flag_II.svg.png",
-      "product": null,
-      "priceSoft": 650,
-      "rarity": "rare",
-      "artist": "Disable Archer"
-    },
-    "fictional_ayacucho_fictional_fla": {
-      "name": "fictional_ayacucho_fictional_fla",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Ayacucho_fictional_flag.svg/330px-Ayacucho_fictional_flag.svg.png",
-      "product": null,
-      "priceSoft": 950,
-      "rarity": "epic",
       "artist": "JOSGATE19"
     },
     "fictional_bandera_de_hispania": {
       "name": "fictional_bandera_de_hispania",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Bandera_de_Hispania.png/330px-Bandera_de_Hispania.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Bandera_de_Hispania.png/330px-Bandera_de_Hispania.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 650,
+      "priceSoft": 600,
       "rarity": "rare",
       "artist": "Osmolero"
     },
     "fictional_bandera_de_la_confeder": {
       "name": "fictional_bandera_de_la_confeder",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Bandera_de_la_Confederaci%C3%B3n_Republicana_de_Norteamerica.png/330px-Bandera_de_la_Confederaci%C3%B3n_Republicana_de_Norteamerica.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Bandera_de_la_Confederaci%C3%B3n_Republicana_de_Norteamerica.png/330px-Bandera_de_la_Confederaci%C3%B3n_Republicana_de_Norteamerica.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 950,
+      "priceSoft": 850,
       "rarity": "epic",
       "artist": "Aleks JIm07"
     },
     "fictional_bandera_del_estudianti": {
       "name": "fictional_bandera_del_estudianti",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Bandera_del_Estudiantil_CNI.svg/330px-Bandera_del_Estudiantil_CNI.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Bandera_del_Estudiantil_CNI.svg/330px-Bandera_del_Estudiantil_CNI.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
+      "priceSoft": 1200,
+      "rarity": "legendary",
       "artist": "JOSGATE19"
     },
     "fictional_bandera_hispania": {
       "name": "fictional_bandera_hispania",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Bandera_Hispania.png/330px-Bandera_Hispania.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Bandera_Hispania.png/330px-Bandera_Hispania.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 650,
-      "rarity": "rare",
+      "priceSoft": 250,
+      "rarity": "common",
       "artist": "Osmolero"
     },
     "fictional_bandera_muntanyola_ori": {
       "name": "fictional_bandera_muntanyola_ori",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Bandera_Muntanyola_Oriental.jpg/330px-Bandera_Muntanyola_Oriental.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Bandera_Muntanyola_Oriental.jpg/330px-Bandera_Muntanyola_Oriental.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 950,
-      "rarity": "epic",
+      "priceSoft": 400,
+      "rarity": "uncommon",
       "artist": "DidaCAT"
     },
     "fictional_bandera_oficial_del_fu": {
       "name": "fictional_bandera_oficial_del_fu",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Bandera_oficial_del_Futbol_Club_Cajamarca.svg/330px-Bandera_oficial_del_Futbol_Club_Cajamarca.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Bandera_oficial_del_Futbol_Club_Cajamarca.svg/330px-Bandera_oficial_del_Futbol_Club_Cajamarca.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 1400,
-      "rarity": "legendary",
+      "priceSoft": 600,
+      "rarity": "rare",
       "artist": "Fútbol Club Cajamarca"
+    },
+    "fictional_bangu_ac": {
+      "name": "fictional_bangu_ac",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Bangu_AC.svg/330px-Bangu_AC.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "product": null,
+      "priceSoft": 850,
+      "rarity": "epic",
+      "artist": "LonEMedia"
     },
     "fictional_bendera_kalimantan_mer": {
       "name": "fictional_bendera_kalimantan_mer",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Bendera_Kalimantan_Merdeka_%28Borneo_Merdeka%29.png/330px-Bendera_Kalimantan_Merdeka_%28Borneo_Merdeka%29.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Bendera_Kalimantan_Merdeka_%28Borneo_Merdeka%29.png/330px-Bendera_Kalimantan_Merdeka_%28Borneo_Merdeka%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
-      "artist": "Berdzor"
-    },
-    "fictional_bendera_republik_sosia": {
-      "name": "fictional_bendera_republik_sosia",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/3/3d/Bendera_Republik_Sosialis_Soviet_Austria_1945.jpg",
-      "product": null,
-      "priceSoft": 1400,
+      "priceSoft": 1200,
       "rarity": "legendary",
-      "artist": "Lyardman"
-    },
-    "fictional_bendera_republik_b35cd": {
-      "name": "fictional_bendera_republik_b35cd",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/1/1d/Bendera_Republik_Sosialis_Soviet_Austria.jpg",
-      "product": null,
-      "priceSoft": 650,
-      "rarity": "rare",
-      "artist": "Lyardman"
+      "artist": "Berdzor"
     },
     "fictional_benu_kanz_fictional": {
       "name": "fictional_benu_kanz_fictional",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Benu_Kanz_%28fictional%29.svg/330px-Benu_Kanz_%28fictional%29.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Benu_Kanz_%28fictional%29.svg/330px-Benu_Kanz_%28fictional%29.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
       "priceSoft": 250,
       "rarity": "common",
       "artist": "SultanBros"
     },
-    "fictional_borneokrieg_united_fla": {
-      "name": "fictional_borneokrieg_united_fla",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Borneokrieg_United_Flag_D2.svg/330px-Borneokrieg_United_Flag_D2.svg.png",
-      "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
-      "artist": "ThatOneAustronesian"
-    },
-    "fictional_bulgania_flag_1980_200": {
-      "name": "fictional_bulgania_flag_1980_200",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Bulgania_Flag_%281980-2002%29.jpg/330px-Bulgania_Flag_%281980-2002%29.jpg",
-      "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
-      "artist": "Tehnon"
-    },
-    "fictional_camummu_symbol": {
-      "name": "fictional_camummu_symbol",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Camummu_symbol.jpg/330px-Camummu_symbol.jpg",
-      "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
-      "artist": "Iddo elam"
-    },
     "fictional_chankas_new_flag": {
       "name": "fictional_chankas_new_flag",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/CHANKAS_new_flag.png/330px-CHANKAS_new_flag.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/CHANKAS_new_flag.png/330px-CHANKAS_new_flag.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 650,
-      "rarity": "rare",
+      "priceSoft": 400,
+      "rarity": "uncommon",
       "artist": "JOSGATE19"
     },
     "fictional_deportivo_maldonado": {
       "name": "fictional_deportivo_maldonado",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Deportivo_maldonado.svg/330px-Deportivo_maldonado.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Deportivo_maldonado.svg/330px-Deportivo_maldonado.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 650,
+      "priceSoft": 600,
       "rarity": "rare",
       "artist": "JOSGATE19"
     },
     "fictional_drapeau_de_la_delegati": {
       "name": "fictional_drapeau_de_la_delegati",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Drapeau_de_la_d%C3%A9l%C3%A9gation_d%27Action_L%C3%A9gitimiste_du_Japon_mod%C3%A8le_2.svg/330px-Drapeau_de_la_d%C3%A9l%C3%A9gation_d%27Action_L%C3%A9gitimiste_du_Japon_mod%C3%A8le_2.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Drapeau_de_la_d%C3%A9l%C3%A9gation_d%27Action_L%C3%A9gitimiste_du_Japon_mod%C3%A8le_2.svg/330px-Drapeau_de_la_d%C3%A9l%C3%A9gation_d%27Action_L%C3%A9gitimiste_du_Japon_mod%C3%A8le_2.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 950,
+      "priceSoft": 850,
       "rarity": "epic",
       "artist": "Louis de Lauban"
     },
     "fictional_drapeau_de_la_de_63054": {
       "name": "fictional_drapeau_de_la_de_63054",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Drapeau_de_la_d%C3%A9l%C3%A9gation_d%27Action_L%C3%A9gitimiste_du_Japon.svg/330px-Drapeau_de_la_d%C3%A9l%C3%A9gation_d%27Action_L%C3%A9gitimiste_du_Japon.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Drapeau_de_la_d%C3%A9l%C3%A9gation_d%27Action_L%C3%A9gitimiste_du_Japon.svg/330px-Drapeau_de_la_d%C3%A9l%C3%A9gation_d%27Action_L%C3%A9gitimiste_du_Japon.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
+      "priceSoft": 1200,
+      "rarity": "legendary",
       "artist": "Louis de Lauban"
-    },
-    "fictional_durdzuki_flag": {
-      "name": "fictional_durdzuki_flag",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Durdzuki_flag.jpg/330px-Durdzuki_flag.jpg",
-      "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
-      "artist": "NakhBoy"
     },
     "fictional_elfska_vlajka_1": {
       "name": "fictional_elfska_vlajka_1",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Elfsk%C3%A1_vlajka_1.png/330px-Elfsk%C3%A1_vlajka_1.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Elfsk%C3%A1_vlajka_1.png/330px-Elfsk%C3%A1_vlajka_1.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
+      "priceSoft": 250,
+      "rarity": "common",
       "artist": "Aratan Isildurion"
     },
     "fictional_escudo_diablos_rojos_h": {
       "name": "fictional_escudo_diablos_rojos_h",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Escudo_Diablos_rojos_huancavelica.svg/330px-Escudo_Diablos_rojos_huancavelica.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Escudo_Diablos_rojos_huancavelica.svg/330px-Escudo_Diablos_rojos_huancavelica.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
+      "priceSoft": 400,
+      "rarity": "uncommon",
       "artist": "JOSGATE19"
     },
     "fictional_escudo_uda": {
       "name": "fictional_escudo_uda",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Escudo_UDA.svg/330px-Escudo_UDA.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Escudo_UDA.svg/330px-Escudo_UDA.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 650,
+      "priceSoft": 600,
       "rarity": "rare",
       "artist": "JOSGATE19"
     },
     "fictional_escut_no_oficial_del_c": {
       "name": "fictional_escut_no_oficial_del_c",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Escut_no_oficial_del_club_Jos%C3%A9_G%C3%A1lvez_FBC_%28Chimbote%2C_Per%C3%BA%29%2C_realitzat_de_forma_lliure_per_un_aficionat_per_a_fins_representatius_a_Wikimedia._Aquest_disseny_no_%C3%A9s_oficial%2C_i_va_ser_creat_amb_fins_il%C2%B7lustratius.svg/330px-thumbnail.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Escut_no_oficial_del_club_Jos%C3%A9_G%C3%A1lvez_FBC_%28Chimbote%2C_Per%C3%BA%29%2C_realitzat_de_forma_lliure_per_un_aficionat_per_a_fins_representatius_a_Wikimedia._Aquest_disseny_no_%C3%A9s_oficial%2C_i_va_ser_creat_amb_fins_il%C2%B7lustratius.svg/330px-thumbnail.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 650,
-      "rarity": "rare",
+      "priceSoft": 850,
+      "rarity": "epic",
       "artist": "JOSGATE19"
-    },
-    "fictional_fakeistan": {
-      "name": "fictional_fakeistan",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Fakeistan.png/330px-Fakeistan.png",
-      "product": null,
-      "priceSoft": 1400,
-      "rarity": "legendary",
-      "artist": "Piciw31216"
     },
     "fictional_fictional_flag_wavy": {
       "name": "fictional_fictional_flag_wavy",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Fictional_flag_%28wavy%29.svg/330px-Fictional_flag_%28wavy%29.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Fictional_flag_%28wavy%29.svg/330px-Fictional_flag_%28wavy%29.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 650,
-      "rarity": "rare",
+      "priceSoft": 1200,
+      "rarity": "legendary",
       "artist": "Watchduck"
     },
     "fictional_fictional_flag_miguel_": {
       "name": "fictional_fictional_flag_miguel_",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Fictional_flag_Miguel_grau_flag.png/330px-Fictional_flag_Miguel_grau_flag.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Fictional_flag_Miguel_grau_flag.png/330px-Fictional_flag_Miguel_grau_flag.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 650,
-      "rarity": "rare",
+      "priceSoft": 250,
+      "rarity": "common",
       "artist": "JOSGATE19"
-    },
-    "fictional_fictional_flag_of_sims": {
-      "name": "fictional_fictional_flag_of_sims",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Fictional_flag_of_Simsir.jpg/330px-Fictional_flag_of_Simsir.jpg",
-      "product": null,
-      "priceSoft": 650,
-      "rarity": "rare",
-      "artist": "Mohamadsouls"
     },
     "fictional_fictional_flag": {
       "name": "fictional_fictional_flag",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Fictional_flag.svg/330px-Fictional_flag.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Fictional_flag.svg/330px-Fictional_flag.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
       "priceSoft": 400,
       "rarity": "uncommon",
@@ -523,39 +419,31 @@
     },
     "fictional_fictitious_flag_with_t": {
       "name": "fictional_fictitious_flag_with_t",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Fictitious_flag_with_tricolor_and_three_stars.png/330px-Fictitious_flag_with_tricolor_and_three_stars.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Fictitious_flag_with_tricolor_and_three_stars.png/330px-Fictitious_flag_with_tricolor_and_three_stars.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
+      "priceSoft": 600,
+      "rarity": "rare",
       "artist": "Great achievement"
-    },
-    "fictional_finnish_soviet_republi": {
-      "name": "fictional_finnish_soviet_republi",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Finnish_soviet_republic-2025-present.png/330px-Finnish_soviet_republic-2025-present.png",
-      "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
-      "artist": "Xccqr123"
     },
     "fictional_flag_alfonso_ugarte_de": {
       "name": "fictional_flag_alfonso_ugarte_de",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Flag_Alfonso_Ugarte_de_Chiclin.svg/330px-Flag_Alfonso_Ugarte_de_Chiclin.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Flag_Alfonso_Ugarte_de_Chiclin.svg/330px-Flag_Alfonso_Ugarte_de_Chiclin.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
+      "priceSoft": 850,
+      "rarity": "epic",
       "artist": "JOSGATE19"
     },
     "fictional_flag_atletico_chalaco": {
       "name": "fictional_flag_atletico_chalaco",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Flag_Atletico_Chalaco.svg/330px-Flag_Atletico_Chalaco.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Flag_Atletico_Chalaco.svg/330px-Flag_Atletico_Chalaco.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
+      "priceSoft": 1200,
+      "rarity": "legendary",
       "artist": "JOSGATE19"
     },
     "fictional_flag_comerciantes_fc": {
       "name": "fictional_flag_comerciantes_fc",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Flag_Comerciantes_FC.svg/330px-Flag_Comerciantes_FC.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Flag_Comerciantes_FC.svg/330px-Flag_Comerciantes_FC.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
       "priceSoft": 250,
       "rarity": "common",
@@ -563,95 +451,79 @@
     },
     "fictional_flag_comerciante_870c9": {
       "name": "fictional_flag_comerciante_870c9",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/FLAG_COMERCIANTES_FC.svg/330px-FLAG_COMERCIANTES_FC.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/FLAG_COMERCIANTES_FC.svg/330px-FLAG_COMERCIANTES_FC.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
+      "priceSoft": 400,
+      "rarity": "uncommon",
       "artist": "JOSGATE19"
     },
     "fictional_flag_diablos_rojos_jul": {
       "name": "fictional_flag_diablos_rojos_jul",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Flag_Diablos_rojos_juliaca.svg/330px-Flag_Diablos_rojos_juliaca.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Flag_Diablos_rojos_juliaca.svg/330px-Flag_Diablos_rojos_juliaca.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
+      "priceSoft": 600,
+      "rarity": "rare",
       "artist": "JOSGATE19"
     },
     "fictional_flag_for_british_green": {
       "name": "fictional_flag_for_british_green",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Flag_for_British_Greenland.svg/330px-Flag_for_British_Greenland.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Flag_for_British_Greenland.svg/330px-Flag_for_British_Greenland.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 650,
-      "rarity": "rare",
+      "priceSoft": 850,
+      "rarity": "epic",
       "artist": "Hogweard"
-    },
-    "fictional_flag_for_mesopotamian_": {
-      "name": "fictional_flag_for_mesopotamian_",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Flag_for_Mesopotamian_Arabs_%28Secular%29.png/330px-Flag_for_Mesopotamian_Arabs_%28Secular%29.png",
-      "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
-      "artist": "Najafite"
-    },
-    "fictional_flag_for_mesopot_55c65": {
-      "name": "fictional_flag_for_mesopot_55c65",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Flag_for_Mesopotamian_Arabs.png/330px-Flag_for_Mesopotamian_Arabs.png",
-      "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
-      "artist": "Najafite"
     },
     "fictional_flag_form_deportivo_ju": {
       "name": "fictional_flag_form_deportivo_ju",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Flag_form_Deportivo_Junin.svg/330px-Flag_form_Deportivo_Junin.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Flag_form_Deportivo_Junin.svg/330px-Flag_form_Deportivo_Junin.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 650,
-      "rarity": "rare",
+      "priceSoft": 1200,
+      "rarity": "legendary",
       "artist": "JOSGATE19"
     },
     "fictional_flag_form_fbc_pierola": {
       "name": "fictional_flag_form_fbc_pierola",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Flag_form_FBC_Pierola.svg/330px-Flag_form_FBC_Pierola.svg.png",
-      "product": null,
-      "priceSoft": 650,
-      "rarity": "rare",
-      "artist": "JOSGATE19"
-    },
-    "fictional_flag_form_sportivo_hur": {
-      "name": "fictional_flag_form_sportivo_hur",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Flag_form_Sportivo_Huracan.svg/330px-Flag_form_Sportivo_Huracan.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Flag_form_FBC_Pierola.svg/330px-Flag_form_FBC_Pierola.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
       "priceSoft": 250,
       "rarity": "common",
       "artist": "JOSGATE19"
     },
-    "fictional_flag_from_ada_jaen_sgv": {
-      "name": "fictional_flag_from_ada_jaen_sgv",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Flag_from_ADA_JAEN.sgv.svg/330px-Flag_from_ADA_JAEN.sgv.svg.png",
+    "fictional_flag_form_sportivo_hur": {
+      "name": "fictional_flag_form_sportivo_hur",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Flag_form_Sportivo_Huracan.svg/330px-Flag_form_Sportivo_Huracan.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
       "priceSoft": 400,
       "rarity": "uncommon",
       "artist": "JOSGATE19"
     },
+    "fictional_flag_from_ada_jaen_sgv": {
+      "name": "fictional_flag_from_ada_jaen_sgv",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Flag_from_ADA_JAEN.sgv.svg/330px-Flag_from_ADA_JAEN.sgv.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "product": null,
+      "priceSoft": 600,
+      "rarity": "rare",
+      "artist": "JOSGATE19"
+    },
     "fictional_flag_from_de_deportivo": {
       "name": "fictional_flag_from_de_deportivo",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Flag_from_de_Deportivo_Bancos.svg/330px-Flag_from_de_Deportivo_Bancos.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Flag_from_de_Deportivo_Bancos.svg/330px-Flag_from_de_Deportivo_Bancos.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
+      "priceSoft": 850,
+      "rarity": "epic",
       "artist": "JOSGATE19"
     },
     "fictional_flag_from_fc_cajamarca": {
       "name": "fictional_flag_from_fc_cajamarca",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Flag_from_fc_Cajamarca.svg/330px-Flag_from_fc_Cajamarca.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Flag_from_fc_Cajamarca.svg/330px-Flag_from_fc_Cajamarca.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
+      "priceSoft": 1200,
+      "rarity": "legendary",
       "artist": "JOSGATE19"
     },
     "fictional_flag_miguel_grau_de_ap": {
       "name": "fictional_flag_miguel_grau_de_ap",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Flag_Miguel_Grau_de_Apurimac.svg/330px-Flag_Miguel_Grau_de_Apurimac.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Flag_Miguel_Grau_de_Apurimac.svg/330px-Flag_Miguel_Grau_de_Apurimac.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
       "priceSoft": 250,
       "rarity": "common",
@@ -659,7 +531,7 @@
     },
     "fictional_flag_of_altoshire_orig": {
       "name": "fictional_flag_of_altoshire_orig",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Flag_of_Altoshire_%28original_file%29.png/330px-Flag_of_Altoshire_%28original_file%29.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Flag_of_Altoshire_%28original_file%29.png/330px-Flag_of_Altoshire_%28original_file%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
       "priceSoft": 400,
       "rarity": "uncommon",
@@ -667,183 +539,71 @@
     },
     "fictional_flag_of_altoshire": {
       "name": "fictional_flag_of_altoshire",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Flag_of_Altoshire.svg/330px-Flag_of_Altoshire.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Flag_of_Altoshire.svg/330px-Flag_of_Altoshire.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
+      "priceSoft": 600,
+      "rarity": "rare",
       "artist": "AltoHampton ; Extraction by Star walker"
     },
     "fictional_flag_of_andratx": {
       "name": "fictional_flag_of_andratx",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/1/12/Flag_of_Andratx.gif",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/1/12/Flag_of_Andratx.gif?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
       "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
+      "priceSoft": 850,
+      "rarity": "epic",
       "artist": "Klaus-Michael Schneider"
-    },
-    "fictional_flag_of_arcilia": {
-      "name": "fictional_flag_of_arcilia",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Flag_of_Arcilia.png/330px-Flag_of_Arcilia.png",
-      "product": null,
-      "priceSoft": 650,
-      "rarity": "rare",
-      "artist": "JustJoeSmith"
     },
     "fictional_flag_of_aurora": {
       "name": "fictional_flag_of_aurora",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Flag_of_Aurora.svg/330px-Flag_of_Aurora.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Flag_of_Aurora.svg/330px-Flag_of_Aurora.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 950,
-      "rarity": "epic",
+      "priceSoft": 1200,
+      "rarity": "legendary",
       "artist": "JOSGATE19"
-    },
-    "fictional_flag_of_autistia_2": {
-      "name": "fictional_flag_of_autistia_2",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Flag_of_Autistia_%282%29.svg/330px-Flag_of_Autistia_%282%29.svg.png",
-      "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
-      "artist": "Rogue Aspie"
-    },
-    "fictional_flag_of_autistia_propo": {
-      "name": "fictional_flag_of_autistia_propo",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Flag_of_Autistia_%28proposal%29.svg/330px-Flag_of_Autistia_%28proposal%29.svg.png",
-      "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
-      "artist": "Disable Archer"
-    },
-    "fictional_flag_of_b_onie_distric": {
-      "name": "fictional_flag_of_b_onie_distric",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Flag_of_B%C5%82onie_district.gif/330px-Flag_of_B%C5%82onie_district.gif",
-      "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
-      "artist": "Chrystian Kretowicz"
-    },
-    "fictional_flag_of_captaincy_gene": {
-      "name": "fictional_flag_of_captaincy_gene",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Flag_of_Captaincy_General_of_the_Philippines_%28Fictional%29.png/330px-Flag_of_Captaincy_General_of_the_Philippines_%28Fictional%29.png",
-      "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
-      "artist": "Idk373738367"
     },
     "fictional_flag_of_club_octavio_e": {
       "name": "fictional_flag_of_club_octavio_e",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Flag_of_Club_Octavio_Espinoza.svg/330px-Flag_of_Club_Octavio_Espinoza.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Flag_of_Club_Octavio_Espinoza.svg/330px-Flag_of_Club_Octavio_Espinoza.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 650,
-      "rarity": "rare",
+      "priceSoft": 250,
+      "rarity": "common",
       "artist": "JOSGATE19"
     },
     "fictional_flag_of_cusco_fc": {
       "name": "fictional_flag_of_cusco_fc",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Flag_of_cusco_fc.png/330px-Flag_of_cusco_fc.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Flag_of_cusco_fc.png/330px-Flag_of_cusco_fc.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 1400,
-      "rarity": "legendary",
+      "priceSoft": 400,
+      "rarity": "uncommon",
       "artist": "JOSGATE19"
-    },
-    "fictional_flag_of_geron_empire": {
-      "name": "fictional_flag_of_geron_empire",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Flag_of_Geron_Empire.png/330px-Flag_of_Geron_Empire.png",
-      "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
-      "artist": "Geronpa123"
-    },
-    "fictional_flag_of_grand_duchy_of": {
-      "name": "fictional_flag_of_grand_duchy_of",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Flag_of_Grand_Duchy_of_Krak%C3%B3w.jpg/330px-Flag_of_Grand_Duchy_of_Krak%C3%B3w.jpg",
-      "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
-      "artist": "Iowsiam"
     },
     "fictional_flag_of_hungaritos_agu": {
       "name": "fictional_flag_of_hungaritos_agu",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Flag_of_Hungaritos_Agustinos.svg/330px-Flag_of_Hungaritos_Agustinos.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Flag_of_Hungaritos_Agustinos.svg/330px-Flag_of_Hungaritos_Agustinos.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
+      "priceSoft": 600,
+      "rarity": "rare",
       "artist": "JOSGATE19"
-    },
-    "fictional_flag_of_italian_cyrena": {
-      "name": "fictional_flag_of_italian_cyrena",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Flag_of_Italian_Cyrenaica_%28fictional%29.png/330px-Flag_of_Italian_Cyrenaica_%28fictional%29.png",
-      "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
-      "artist": "Idk373738367"
-    },
-    "fictional_flag_of_italian_eritre": {
-      "name": "fictional_flag_of_italian_eritre",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Flag_of_Italian_Eritrea_%28Fictional%29.png/330px-Flag_of_Italian_Eritrea_%28Fictional%29.png",
-      "product": null,
-      "priceSoft": 650,
-      "rarity": "rare",
-      "artist": "Idk373738367"
-    },
-    "fictional_flag_of_italian_ethiop": {
-      "name": "fictional_flag_of_italian_ethiop",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Flag_of_Italian_Ethiopia_%28Fictional%29.png/330px-Flag_of_Italian_Ethiopia_%28Fictional%29.png",
-      "product": null,
-      "priceSoft": 650,
-      "rarity": "rare",
-      "artist": "Idk373738367"
-    },
-    "fictional_flag_of_italian_libya_": {
-      "name": "fictional_flag_of_italian_libya_",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Flag_of_Italian_Libya_%28Fictional%29.png/330px-Flag_of_Italian_Libya_%28Fictional%29.png",
-      "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
-      "artist": "Idk373738367"
-    },
-    "fictional_flag_of_italian_somali": {
-      "name": "fictional_flag_of_italian_somali",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Flag_of_Italian_Somaliland_%28Fictional%29.png/330px-Flag_of_Italian_Somaliland_%28Fictional%29.png",
-      "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
-      "artist": "Idk373738367"
-    },
-    "fictional_flag_of_italian_tripol": {
-      "name": "fictional_flag_of_italian_tripol",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Flag_of_Italian_Tripolitania_%28fictional%29.png/330px-Flag_of_Italian_Tripolitania_%28fictional%29.png",
-      "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
-      "artist": "Idk373738367"
     },
     "fictional_flag_of_juventus_huama": {
       "name": "fictional_flag_of_juventus_huama",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Flag_of_Juventus_Huamachuco.svg/330px-Flag_of_Juventus_Huamachuco.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Flag_of_Juventus_Huamachuco.svg/330px-Flag_of_Juventus_Huamachuco.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
+      "priceSoft": 850,
+      "rarity": "epic",
       "artist": "JOSGATE19"
     },
     "fictional_flag_of_martinique_wfb": {
       "name": "fictional_flag_of_martinique_wfb",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Flag_of_Martinique_%28WFB_2000%29.jpg/330px-Flag_of_Martinique_%28WFB_2000%29.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Flag_of_Martinique_%28WFB_2000%29.jpg/330px-Flag_of_Martinique_%28WFB_2000%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 650,
-      "rarity": "rare",
+      "priceSoft": 1200,
+      "rarity": "legendary",
       "artist": "CIA World Factbook"
-    },
-    "fictional_flag_of_pax_autistica": {
-      "name": "fictional_flag_of_pax_autistica",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Flag_of_Pax_Autistica.svg/330px-Flag_of_Pax_Autistica.svg.png",
-      "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
-      "artist": "Rogue Aspie"
     },
     "fictional_flag_of_republic_of_li": {
       "name": "fictional_flag_of_republic_of_li",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Flag_of_Republic_of_Likes.png/330px-Flag_of_Republic_of_Likes.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Flag_of_Republic_of_Likes.png/330px-Flag_of_Republic_of_Likes.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
       "priceSoft": 250,
       "rarity": "common",
@@ -851,431 +611,239 @@
     },
     "fictional_flag_of_rosario_fc": {
       "name": "fictional_flag_of_rosario_fc",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Flag_of_Rosario_FC.svg/330px-Flag_of_Rosario_FC.svg.png",
-      "product": null,
-      "priceSoft": 1400,
-      "rarity": "legendary",
-      "artist": "JOSGATE19"
-    },
-    "fictional_flag_of_rwanda_urundi_": {
-      "name": "fictional_flag_of_rwanda_urundi_",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Flag_of_Rwanda-Urundi_%28Fictional%29.png/330px-Flag_of_Rwanda-Urundi_%28Fictional%29.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Flag_of_Rosario_FC.svg/330px-Flag_of_Rosario_FC.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
       "priceSoft": 400,
       "rarity": "uncommon",
-      "artist": "Idk373738367"
+      "artist": "JOSGATE19"
     },
     "fictional_flag_of_santos_fc": {
       "name": "fictional_flag_of_santos_fc",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Flag_of_Santos_FC.svg/330px-Flag_of_Santos_FC.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Flag_of_Santos_FC.svg/330px-Flag_of_Santos_FC.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
+      "priceSoft": 600,
+      "rarity": "rare",
       "artist": "JOSGATE19"
     },
     "fictional_flag_of_sport_caceres": {
       "name": "fictional_flag_of_sport_caceres",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/FLag_of_Sport_Caceres.svg/330px-FLag_of_Sport_Caceres.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/FLag_of_Sport_Caceres.svg/330px-FLag_of_Sport_Caceres.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
+      "priceSoft": 850,
+      "rarity": "epic",
       "artist": "JOSGATE19"
     },
-    "fictional_flag_of_the_arcilian_f": {
-      "name": "fictional_flag_of_the_arcilian_f",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Flag_of_the_Arcilian_Free_Armed_Forces.png/330px-Flag_of_the_Arcilian_Free_Armed_Forces.png",
+    "fictional_flag_of_tambadweep_kin": {
+      "name": "fictional_flag_of_tambadweep_kin",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Flag_of_Tambadweep_Kingdom.jpg/330px-Flag_of_Tambadweep_Kingdom.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
-      "artist": "JustJoeSmith"
-    },
-    "fictional_flag_of_the_county_of_": {
-      "name": "fictional_flag_of_the_county_of_",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Flag_of_the_county_of_Bacau.png/330px-Flag_of_the_county_of_Bacau.png",
-      "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
-      "artist": "C-0956"
+      "priceSoft": 1200,
+      "rarity": "legendary",
+      "artist": "https://www.flickr.com/photos/193550014@N07/ ?"
     },
     "fictional_flag_of_the_governor_o": {
       "name": "fictional_flag_of_the_governor_o",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Flag_of_the_Governor_of_Nevada.svg/330px-Flag_of_the_Governor_of_Nevada.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Flag_of_the_Governor_of_Nevada.svg/330px-Flag_of_the_Governor_of_Nevada.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 950,
-      "rarity": "epic",
+      "priceSoft": 250,
+      "rarity": "common",
       "artist": "Flag_of_Nevada.svg : Caleb Moore derivative work: Wine Guy ( talk )"
     },
     "fictional_flag_of_the_kingdom_of": {
       "name": "fictional_flag_of_the_kingdom_of",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Flag_of_the_Kingdom_of_Ansach.png/330px-Flag_of_the_Kingdom_of_Ansach.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Flag_of_the_Kingdom_of_Ansach.png/330px-Flag_of_the_Kingdom_of_Ansach.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 1400,
-      "rarity": "legendary",
+      "priceSoft": 400,
+      "rarity": "uncommon",
       "artist": "Guest2026"
     },
     "fictional_flag_of_the_pennsylvan": {
       "name": "fictional_flag_of_the_pennsylvan",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Flag_of_the_Pennsylvanian_Republic.png/330px-Flag_of_the_Pennsylvanian_Republic.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Flag_of_the_Pennsylvanian_Republic.png/330px-Flag_of_the_Pennsylvanian_Republic.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
+      "priceSoft": 600,
+      "rarity": "rare",
       "artist": "EditorShane3456"
     },
     "fictional_flag_of_the_republic_o": {
       "name": "fictional_flag_of_the_republic_o",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Flag_of_the_Republic_of_Valoria.png/330px-Flag_of_the_Republic_of_Valoria.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Flag_of_the_Republic_of_Valoria.png/330px-Flag_of_the_Republic_of_Valoria.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 950,
+      "priceSoft": 850,
       "rarity": "epic",
       "artist": "Nev2013"
     },
     "fictional_flag_of_the_rhodes_isl": {
       "name": "fictional_flag_of_the_rhodes_isl",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/Flag_of_the_Rhodes_Isle_Federation.png/330px-Flag_of_the_Rhodes_Isle_Federation.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/Flag_of_the_Rhodes_Isle_Federation.png/330px-Flag_of_the_Rhodes_Isle_Federation.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
-      "artist": "Whitestarchaps6879"
-    },
-    "fictional_flag_of_the_spanish_we": {
-      "name": "fictional_flag_of_the_spanish_we",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Flag_of_the_Spanish_West_Indies_%28Fictional%29.png/330px-Flag_of_the_Spanish_West_Indies_%28Fictional%29.png",
-      "product": null,
-      "priceSoft": 1400,
+      "priceSoft": 1200,
       "rarity": "legendary",
-      "artist": "Idk373738367"
+      "artist": "Whitestarchaps6879"
     },
     "fictional_flag_of_the_sybyr_peop": {
       "name": "fictional_flag_of_the_sybyr_peop",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Flag_of_the_Sybyr_people_with_tamga.svg/330px-Flag_of_the_Sybyr_people_with_tamga.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Flag_of_the_Sybyr_people_with_tamga.svg/330px-Flag_of_the_Sybyr_people_with_tamga.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 1400,
-      "rarity": "legendary",
+      "priceSoft": 250,
+      "rarity": "common",
       "artist": "Тыуа"
     },
     "fictional_flag_of_union_comercio": {
       "name": "fictional_flag_of_union_comercio",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Flag_of_union_comercio.svg/330px-Flag_of_union_comercio.svg.png",
-      "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
-      "artist": "JOSGATE19"
-    },
-    "fictional_flag_of_volante_fc": {
-      "name": "fictional_flag_of_volante_fc",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Flag_of_Volante_FC.svg/330px-Flag_of_Volante_FC.svg.png",
-      "product": null,
-      "priceSoft": 3600,
-      "rarity": "ultra",
-      "artist": "JOSGATE19"
-    },
-    "fictional_flag_of_western_macedo": {
-      "name": "fictional_flag_of_western_macedo",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Flag_of_Western_Macedonia.jpg/330px-Flag_of_Western_Macedonia.jpg",
-      "product": null,
-      "priceSoft": 2300,
-      "rarity": "mythic",
-      "artist": "Jgc00"
-    },
-    "fictional_flag_of_white_star": {
-      "name": "fictional_flag_of_white_star",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Flag_of_White_star.svg/330px-Flag_of_White_star.svg.png",
-      "product": null,
-      "priceSoft": 650,
-      "rarity": "rare",
-      "artist": "JOSGATE19"
-    },
-    "fictional_flag_of_zlavoyarb_svg": {
-      "name": "fictional_flag_of_zlavoyarb_svg",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Flag_of_Zlavoyarb_svg.png/330px-Flag_of_Zlavoyarb_svg.png",
-      "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
-      "artist": "MMFeducation"
-    },
-    "fictional_flag_of_hernovtsz_peop": {
-      "name": "fictional_flag_of_hernovtsz_peop",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Flag_of_%D0%A1hernovtsz_People%27s_Republic.svg/330px-Flag_of_%D0%A1hernovtsz_People%27s_Republic.svg.png",
-      "product": null,
-      "priceSoft": 650,
-      "rarity": "rare",
-      "artist": "DmitroCzegovets"
-    },
-    "fictional_flag_sport_bolognesi": {
-      "name": "fictional_flag_sport_bolognesi",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Flag_Sport_bolognesi.svg/330px-Flag_Sport_bolognesi.svg.png",
-      "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
-      "artist": "JOSGATE19"
-    },
-    "fictional_flag_sporting_pizarro": {
-      "name": "fictional_flag_sporting_pizarro",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Flag_Sporting_pizarro.svg/330px-Flag_Sporting_pizarro.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Flag_of_union_comercio.svg/330px-Flag_of_union_comercio.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
       "priceSoft": 400,
       "rarity": "uncommon",
       "artist": "JOSGATE19"
     },
-    "fictional_flagofthechechenprinci": {
-      "name": "fictional_flagofthechechenprinci",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/FlagoftheChechenPrincipality.png/330px-FlagoftheChechenPrincipality.png",
+    "fictional_flag_of_volante_fc": {
+      "name": "fictional_flag_of_volante_fc",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Flag_of_Volante_FC.svg/330px-Flag_of_Volante_FC.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "product": null,
+      "priceSoft": 600,
+      "rarity": "rare",
+      "artist": "JOSGATE19"
+    },
+    "fictional_flag_of_white_star": {
+      "name": "fictional_flag_of_white_star",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Flag_of_White_star.svg/330px-Flag_of_White_star.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "product": null,
+      "priceSoft": 850,
+      "rarity": "epic",
+      "artist": "JOSGATE19"
+    },
+    "fictional_flag_sport_bolognesi": {
+      "name": "fictional_flag_sport_bolognesi",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Flag_Sport_bolognesi.svg/330px-Flag_Sport_bolognesi.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "product": null,
+      "priceSoft": 1200,
+      "rarity": "legendary",
+      "artist": "JOSGATE19"
+    },
+    "fictional_flag_sporting_pizarro": {
+      "name": "fictional_flag_sporting_pizarro",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Flag_Sporting_pizarro.svg/330px-Flag_Sporting_pizarro.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
       "priceSoft": 250,
       "rarity": "common",
-      "artist": "Moltenn9"
+      "artist": "JOSGATE19"
     },
     "fictional_icon_aurora_fc_2": {
       "name": "fictional_icon_aurora_fc_2",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Icon_Aurora_fc-2.svg/330px-Icon_Aurora_fc-2.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Icon_Aurora_fc-2.svg/330px-Icon_Aurora_fc-2.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 650,
-      "rarity": "rare",
+      "priceSoft": 400,
+      "rarity": "uncommon",
       "artist": "JOSGATE19"
     },
     "fictional_isratine_flag_s": {
       "name": "fictional_isratine_flag_s",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/f/f4/Isratine-flag-s.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/f/f4/Isratine-flag-s.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
       "product": null,
-      "priceSoft": 650,
+      "priceSoft": 600,
       "rarity": "rare",
       "artist": "Monosig ( talk )"
     },
     "fictional_kadzi": {
       "name": "fictional_kadzi",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Kadzi.png/330px-Kadzi.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Kadzi.png/330px-Kadzi.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 650,
-      "rarity": "rare",
+      "priceSoft": 850,
+      "rarity": "epic",
       "artist": "Sonna Aliyeva"
+    },
+    "fictional_la_co_quoc_dan_ang": {
+      "name": "fictional_la_co_quoc_dan_ang",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/L%C3%A1_c%E1%BB%9D_Qu%E1%BB%91c_D%C3%A2n_%C4%90%E1%BA%A3ng.png/330px-L%C3%A1_c%E1%BB%9D_Qu%E1%BB%91c_D%C3%A2n_%C4%90%E1%BA%A3ng.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "product": null,
+      "priceSoft": 1200,
+      "rarity": "legendary",
+      "artist": "Phạm Huỳnh Giáp Thìn"
     },
     "fictional_manmade_flag_for_gurde": {
       "name": "fictional_manmade_flag_for_gurde",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Manmade_flag_for_Gurdensey_Libertion.png/330px-Manmade_flag_for_Gurdensey_Libertion.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Manmade_flag_for_Gurdensey_Libertion.png/330px-Manmade_flag_for_Gurdensey_Libertion.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 650,
-      "rarity": "rare",
+      "priceSoft": 250,
+      "rarity": "common",
       "artist": "Thsharkeslayor8058"
     },
     "fictional_melenavenia_flag": {
       "name": "fictional_melenavenia_flag",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Melenavenia_Flag.png/330px-Melenavenia_Flag.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Melenavenia_Flag.png/330px-Melenavenia_Flag.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
+      "priceSoft": 400,
+      "rarity": "uncommon",
       "artist": "Raskuly"
-    },
-    "fictional_meunchland_2023": {
-      "name": "fictional_meunchland_2023",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Meunchland-2023.jpg/330px-Meunchland-2023.jpg",
-      "product": null,
-      "priceSoft": 650,
-      "rarity": "rare",
-      "artist": "Kovalsci"
     },
     "fictional_my_proposal_for_a_flag": {
       "name": "fictional_my_proposal_for_a_flag",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/My_proposal_for_a_flag_for_Israeli_Muslims.svg/330px-My_proposal_for_a_flag_for_Israeli_Muslims.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/My_proposal_for_a_flag_for_Israeli_Muslims.svg/330px-My_proposal_for_a_flag_for_Israeli_Muslims.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
+      "priceSoft": 600,
+      "rarity": "rare",
       "artist": "Own work"
-    },
-    "fictional_normel_flag": {
-      "name": "fictional_normel_flag",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Normel_flag.png/330px-Normel_flag.png",
-      "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
-      "artist": "Just a boring guyy"
-    },
-    "fictional_ordem_e_bacalhau": {
-      "name": "fictional_ordem_e_bacalhau",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Ordem_e_Bacalhau.jpg/330px-Ordem_e_Bacalhau.jpg",
-      "product": null,
-      "priceSoft": 950,
-      "rarity": "epic",
-      "artist": "RolinhoBrasileiro"
-    },
-    "fictional_palumbia_flag": {
-      "name": "fictional_palumbia_flag",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Palumbia_flag.png/330px-Palumbia_flag.png",
-      "product": null,
-      "priceSoft": 1400,
-      "rarity": "legendary",
-      "artist": "Pacri"
-    },
-    "fictional_palumbia_priceps": {
-      "name": "fictional_palumbia_priceps",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Palumbia_PRICEPS.png/330px-Palumbia_PRICEPS.png",
-      "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
-      "artist": "Pacri"
-    },
-    "fictional_palumbia_regant_flag": {
-      "name": "fictional_palumbia_regant_flag",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Palumbia_Regant_Flag.png/330px-Palumbia_Regant_Flag.png",
-      "product": null,
-      "priceSoft": 950,
-      "rarity": "epic",
-      "artist": "Pacri"
     },
     "fictional_panji_partai_komunis_g": {
       "name": "fictional_panji_partai_komunis_g",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Panji_Partai_Komunis_Glagahsari_-Fiksi-.jpg/330px-Panji_Partai_Komunis_Glagahsari_-Fiksi-.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Panji_Partai_Komunis_Glagahsari_-Fiksi-.jpg/330px-Panji_Partai_Komunis_Glagahsari_-Fiksi-.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
+      "priceSoft": 850,
+      "rarity": "epic",
       "artist": "Dani Safa Adi Nugraha"
-    },
-    "fictional_puerto_rico": {
-      "name": "fictional_puerto_rico",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Puerto_Rico.png/330px-Puerto_Rico.png",
-      "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
-      "artist": "Whoareyou123444"
     },
     "fictional_rakastan_flag": {
       "name": "fictional_rakastan_flag",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Rakastan_flag.png/330px-Rakastan_flag.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Rakastan_flag.png/330px-Rakastan_flag.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
+      "priceSoft": 1200,
+      "rarity": "legendary",
       "artist": "Wikiman2230"
-    },
-    "fictional_republic_of_turkmenist": {
-      "name": "fictional_republic_of_turkmenist",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Republic_of_Turkmenistan-_Alternate.png/330px-Republic_of_Turkmenistan-_Alternate.png",
-      "product": null,
-      "priceSoft": 650,
-      "rarity": "rare",
-      "artist": "Rebelball321"
     },
     "fictional_san_antonio": {
       "name": "fictional_san_antonio",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/San_antonio.svg/330px-San_antonio.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/San_antonio.svg/330px-San_antonio.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
       "priceSoft": 250,
       "rarity": "common",
       "artist": "JOSGATE19"
     },
-    "fictional_second_republic_of_dyl": {
-      "name": "fictional_second_republic_of_dyl",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Second_Republic_of_Dyland.png/330px-Second_Republic_of_Dyland.png",
-      "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
-      "artist": "Dwi11iams"
-    },
-    "fictional_socialistus_imperium_v": {
-      "name": "fictional_socialistus_imperium_v",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Socialistus_Imperium_Varchesumus_flag.jpg/330px-Socialistus_Imperium_Varchesumus_flag.jpg",
-      "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
-      "artist": "Imperator Varchesumus"
-    },
     "fictional_springfield_state_flag": {
       "name": "fictional_springfield_state_flag",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Springfield_State_Flag_%28The_Simpsons%29.svg/330px-Springfield_State_Flag_%28The_Simpsons%29.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Springfield_State_Flag_%28The_Simpsons%29.svg/330px-Springfield_State_Flag_%28The_Simpsons%29.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
       "priceSoft": 400,
       "rarity": "uncommon",
       "artist": "Davidbt2000"
     },
-    "fictional_stars_and_sickle": {
-      "name": "fictional_stars_and_sickle",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Stars_and_Sickle.svg/330px-Stars_and_Sickle.svg.png",
-      "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
-      "artist": "Crying2theocean"
-    },
     "fictional_state_of_leonida_flag": {
       "name": "fictional_state_of_leonida_flag",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/State_of_Leonida_flag.png/330px-State_of_Leonida_flag.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/State_of_Leonida_flag.png/330px-State_of_Leonida_flag.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
+      "priceSoft": 600,
+      "rarity": "rare",
       "artist": "DeadlyRampage26"
     },
     "fictional_stinadla": {
       "name": "fictional_stinadla",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/ST%C3%8DNADLA.png/330px-ST%C3%8DNADLA.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/ST%C3%8DNADLA.png/330px-ST%C3%8DNADLA.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
-      "artist": "Niusereset"
-    },
-    "fictional_students_for_a_democra": {
-      "name": "fictional_students_for_a_democra",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Students_for_a_Democratic_Society-Wilson_Flag.png/330px-Students_for_a_Democratic_Society-Wilson_Flag.png",
-      "product": null,
-      "priceSoft": 950,
+      "priceSoft": 850,
       "rarity": "epic",
-      "artist": "SDS Wilson"
-    },
-    "fictional_sublime_state_of_persi": {
-      "name": "fictional_sublime_state_of_persi",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/5/5c/Sublime_State_of_Persia_-_Agadir_%28by_Brazilian_Mapping%29.png",
-      "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
-      "artist": "Brazilian Mapping"
-    },
-    "fictional_tdr_flag": {
-      "name": "fictional_tdr_flag",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/TDR_FLAG.png/330px-TDR_FLAG.png",
-      "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
-      "artist": "Tyrebopchik228"
+      "artist": "Niusereset"
     },
     "fictional_tibetan_snow_leopard": {
       "name": "fictional_tibetan_snow_leopard",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Tibetan_snow_leopard.svg/330px-Tibetan_snow_leopard.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Tibetan_snow_leopard.svg/330px-Tibetan_snow_leopard.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
+      "priceSoft": 1200,
+      "rarity": "legendary",
       "artist": "Jkwchui"
-    },
-    "fictional_totenkopf_team_flag": {
-      "name": "fictional_totenkopf_team_flag",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Totenkopf_Team_Flag.png/330px-Totenkopf_Team_Flag.png",
-      "product": null,
-      "priceSoft": 1400,
-      "rarity": "legendary",
-      "artist": "Shino Gin"
-    },
-    "fictional_triband_red_white_red_": {
-      "name": "fictional_triband_red_white_red_",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Triband_red-white-red_flag_with_cross_in_middle.png/330px-Triband_red-white-red_flag_with_cross_in_middle.png",
-      "product": null,
-      "priceSoft": 1400,
-      "rarity": "legendary",
-      "artist": "Ayaeyobruhya"
-    },
-    "fictional_turkmen_sahra_falg_by_": {
-      "name": "fictional_turkmen_sahra_falg_by_",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Turkmen_sahra_falg_by_sst_aboo.jpg/330px-Turkmen_sahra_falg_by_sst_aboo.jpg",
-      "product": null,
-      "priceSoft": 400,
-      "rarity": "uncommon",
-      "artist": "Sst aboo"
-    },
-    "fictional_unflag": {
-      "name": "fictional_unflag",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/UNFLAG.png/330px-UNFLAG.png",
-      "product": null,
-      "priceSoft": 250,
-      "rarity": "common",
-      "artist": "PenguinArchivist"
     },
     "fictional_union_minas": {
       "name": "fictional_union_minas",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Union_Minas.svg/330px-Union_Minas.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Union_Minas.svg/330px-Union_Minas.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
       "priceSoft": 250,
       "rarity": "common",
@@ -1283,42 +851,26 @@
     },
     "fictional_union_santo_domingo_fl": {
       "name": "fictional_union_santo_domingo_fl",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Union_Santo_Domingo_flag.svg/330px-Union_Santo_Domingo_flag.svg.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Union_Santo_Domingo_flag.svg/330px-Union_Santo_Domingo_flag.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 950,
-      "rarity": "epic",
+      "priceSoft": 400,
+      "rarity": "uncommon",
       "artist": "JOSGATE19"
-    },
-    "fictional_united_continents_of_t": {
-      "name": "fictional_united_continents_of_t",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/United_Continents_of_the_Earth.jpg/330px-United_Continents_of_the_Earth.jpg",
-      "product": null,
-      "priceSoft": 650,
-      "rarity": "rare",
-      "artist": "Mako-s12"
     },
     "fictional_vostok_federation_flag": {
       "name": "fictional_vostok_federation_flag",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Vostok_Federation_Flag.png/330px-Vostok_Federation_Flag.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Vostok_Federation_Flag.png/330px-Vostok_Federation_Flag.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 1400,
-      "rarity": "legendary",
+      "priceSoft": 600,
+      "rarity": "rare",
       "artist": "ThatAustralianBall"
-    },
-    "fictional_wappen_der_republik_ro": {
-      "name": "fictional_wappen_der_republik_ro",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Wappen_der_Republik_Romen.png/330px-Wappen_der_Republik_Romen.png",
-      "product": null,
-      "priceSoft": 1400,
-      "rarity": "legendary",
-      "artist": "EliVog"
     },
     "fictional_zaolziefleg_01": {
       "name": "fictional_zaolziefleg_01",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Zaolziefleg-01.png/330px-Zaolziefleg-01.png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Zaolziefleg-01.png/330px-Zaolziefleg-01.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "product": null,
-      "priceSoft": 1400,
-      "rarity": "legendary",
+      "priceSoft": 850,
+      "rarity": "epic",
       "artist": "CMS Green"
     }
   },

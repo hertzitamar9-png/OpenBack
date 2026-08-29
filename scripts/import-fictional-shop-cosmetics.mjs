@@ -24,6 +24,7 @@ const allowedLicenses = new Set([
   "CC0",
   "Public domain",
   "CC BY 4.0",
+  "CC BY-SA 2.0",
   "CC BY-SA 3.0",
   "CC BY-SA 4.0",
 ]);
@@ -193,10 +194,8 @@ const payload = await response.json();
 const pages = [...(payload.query?.pages ?? [])].sort((a, b) =>
   a.title.localeCompare(b.title),
 );
-if (pages.length !== 150) {
-  throw new Error(
-    `Expected 150 direct fictional flags, received ${pages.length}`,
-  );
+if (pages.length === 0) {
+  throw new Error("Wikimedia returned no directly licensed fictional flags");
 }
 
 const thumbnailUrls = new Map();
@@ -284,7 +283,7 @@ const after = existingCredits.includes(markerEnd)
       .slice(existingCredits.indexOf(markerEnd) + markerEnd.length)
       .trimStart()
   : "";
-const generatedCredits = `${markerStart}\n\n## OpenBack Fictional Flag Cosmetics\n\nThe following shop flags are served from Wikimedia Commons. Each item retains its individual source, creator, and license attribution. The 100 wrap skins are original OpenBack SVG artwork by **frootz jhklphy** and are not redistributed Vecteezy assets.\n\n${creditRows.join("\n")}\n\n${markerEnd}`;
+const generatedCredits = `${markerStart}\n\n## OpenBack Fictional Flag Cosmetics\n\nThe following ${pages.length} shop flags are served from Wikimedia Commons. Each item retains its individual source, creator, and license attribution. The 100 wrap skins are original OpenBack SVG artwork by **frootz jhklphy** and are not redistributed Vecteezy assets.\n\n${creditRows.join("\n")}\n\n${markerEnd}`;
 await writeFile(
   creditsPath,
   `${before}\n\n${generatedCredits}${after ? `\n\n${after}` : ""}\n`,

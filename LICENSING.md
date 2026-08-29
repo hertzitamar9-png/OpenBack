@@ -88,9 +88,18 @@ modifications must preserve the reasonable author-attribution notice stated in
 
 ## Repository Assets
 
-All assets included in this repository (graphics, sounds, music, models) are licensed under Creative Commons BY-SA 4.0, with the exceptions below.
+Assets inherited from OpenFront under its open-resource grant are licensed
+under Creative Commons BY-SA 4.0. New OpenBack and third-party assets retain
+the specific licences and attribution recorded in CREDITS.md; being placed in
+the same directory does not change their authorship or licence.
 
-**Exceptions.** The background music under `resources/sounds/music/` was generated with Treblo for OpenBack and is not OpenFront's work; the Overpass fonts are Red Hat's under the SIL Open Font License 1.1 and the LGPL 2.1. Both are credited in CREDITS.md, which is authoritative on who made a file.
+**Exceptions.** The background music under `resources/sounds/music/` was
+generated with Treblo for OpenBack and is not OpenFront's work; the Overpass
+fonts are Red Hat's under the SIL Open Font License 1.1 and the LGPL 2.1;
+Wikimedia flags and bundled 3D models use their individual licences. All are
+credited in CREDITS.md, which is authoritative on who made a file. CREDITS.md
+also identifies reference-derived fictional maps whose original source licence
+has not been recovered; no blanket statement in this file clears that gap.
 
 ## External/Proprietary Assets
 

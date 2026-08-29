@@ -1,3 +1,13 @@
+## OpenBack v0.36.265 - Credits That Match the Evidence
+
+- Corrected the fictional-map credits: fifteen terrain silhouettes were extracted from temporary reference pictures, not generated from nothing, and their original source pages and licences were never recorded. They are now marked unverified instead of falsely described as wholly procedural.
+- Separated inherited OpenFront assets, OpenBack's original shop artwork, individually licensed Wikimedia flags and 3D models, music, fonts, and map data so one blanket licence no longer misattributes everything in the resources folder.
+- Documented that all 100 wrap skins and the other shop items marked as OpenBack artwork are original SVG work by OpenBack, while every imported Wikimedia flag keeps its own creator, source page, and licence.
+- Removed fictional shop flags whose Wikimedia file pages no longer provide verifiable licence metadata. The importer now follows the currently licensed catalog instead of preserving a stale requirement that exactly 150 files must exist forever.
+- Added automated credit checks so future shop imports and 3D-model changes cannot silently remove required attribution.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.264 - Where the Maps Came From
 
 - The credits now say plainly that OpenBack's fictional maps have procedurally generated coastlines rather than traced ones. The wording before suggested pictures had been copied from somewhere, which was not what happened and was unfair to the game.

@@ -1,11 +1,13 @@
 # Asset License
 
-## Open Assets (/resources) - Creative Commons BY-SA 4.0
+## Inherited Open Assets (/resources) - Creative Commons BY-SA 4.0
 
-Assets in the `/resources` directory are licensed under Creative Commons BY-SA 4.0, including but not limited to:
-- Graphics, sprites, and images (*.png, *.jpg, *.svg, etc.)
-- 3D models and textures (*.obj, *.fbx, *.blend, etc.)
-- Audio files (*.mp3, *.ogg, *.wav, etc.)
+Assets inherited unchanged from OpenFront in the `/resources` directory are
+licensed under Creative Commons BY-SA 4.0, including but not limited to:
+
+- Graphics, sprites, and images (`*.png`, `*.jpg`, `*.svg`, etc.)
+- 3D models and textures (`*.obj`, `*.fbx`, `*.blend`, etc.)
+- Audio files (`*.mp3`, `*.ogg`, `*.wav`, etc.)
 - Animation files
 - Font files
 - Level/map data files
@@ -22,9 +24,17 @@ attributable to OpenFront Inc.:
 - `resources/fonts/overpass*.woff` — copyright Red Hat, Inc., under the SIL
   Open Font License 1.1 and the GNU LGPL 2.1, not CC BY-SA.
 
-Anything else OpenBack adds under `/resources` is credited in CREDITS.md, which
-names the actual author. Where CREDITS.md and this file disagree about who made
-a file, CREDITS.md is the accurate one.
+OpenBack additions and other third-party files do not become OpenFront assets
+merely because they are stored under `/resources`. Their individual licence and
+author are stated in CREDITS.md, which is authoritative for asset provenance.
+OpenBack-authored shop artwork is published under CC BY-SA 4.0. Wikimedia
+flags, 3D models, fonts, music, and map data remain governed by the individual
+terms identified in CREDITS.md and the 3D asset manifest.
+
+The fifteen reference-derived fictional maps marked **unverified** in CREDITS.md
+do not have a recorded source licence. This file does not grant rights that
+OpenBack has not established and must not be read as legal clearance for those
+source silhouettes.
 
 To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/4.0/
 or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
@@ -32,6 +42,7 @@ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 ## Proprietary Assets (/proprietary) - All Rights Reserved
 
 Assets in the `/proprietary` directory are:
+
 - Copyright © 2024-2026 OpenFront Inc. and Contributors
 - All Rights Reserved
 - NOT licensed for use, modification, or redistribution outside of OpenFront
@@ -42,6 +53,7 @@ See `/proprietary/LICENSE` for full terms.
 ## External/Proprietary Assets (Not in Repository)
 
 The following assets are NOT included in this repository and are NOT covered by any open source license:
+
 - Assets hosted on our CDN/servers
 - Assets stored in our database
 - Premium skins, models, and textures accessed via API
@@ -52,7 +64,8 @@ These external assets are proprietary property of OpenFront Inc.
 
 ## Important Legal Notice
 
-- The CC BY-SA 4.0 license applies ONLY to assets in the `/resources` directory
+- The inherited CC BY-SA 4.0 grant applies only to assets OpenFront actually
+  released under it; path location alone is not proof of provenance
 - Assets in `/proprietary` are restricted use - see their specific LICENSE
 - External assets not in this repository remain fully proprietary
 - Accessing, downloading, extracting, or using proprietary assets without permission is prohibited
