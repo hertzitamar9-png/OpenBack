@@ -26,7 +26,7 @@ const { clearLocalSession, userAuth } = await import("../src/client/Auth");
 const { ClientEnv } = await import("../src/client/ClientEnv");
 
 // Deliberately not userMeResponse: account state lives partly outside that
-// event (the nav button's cached profile, window.adsEnabled), so Main answers
+// event (the nav button's cached profile), so Main answers
 // this by running its no-session path, which broadcasts userMeResponse itself.
 function listen(): { seen: unknown[]; stop: () => void } {
   const seen: unknown[] = [];

@@ -90,7 +90,6 @@ describe("featured-stream panel", () => {
     // feed arrives, or leave polling stopped.
     streamsFeed.reset();
     delete (window as unknown as { Twitch?: unknown }).Twitch;
-    delete (window as unknown as { adsEnabled?: boolean }).adsEnabled;
     vi.useRealTimers();
     vi.clearAllMocks();
   });
@@ -212,26 +211,24 @@ describe("featured-stream panel", () => {
       btn!.click();
     };
 
-    const open = async (adFree: boolean) => {
-      (window as unknown as { adsEnabled?: boolean }).adsEnabled = !adFree;
+    const open = async () => {
       const el = await mount(stream("openfrontmasters"));
       FakePlayer.last!.fire(FakePlayer.READY);
       await el.updateComplete;
       return el;
     };
 
-    // The point of this change: closing no longer requires minimising first, and is no
-    // longer reserved for people who have paid.
-    it("offers close to an ad-supported user without minimising first", async () => {
-      const el = await open(false);
+    // Closing no longer requires minimising first. Hide-for-today used to be
+    // reserved for players whose purchases had turned ads off; OpenBack shows
+    // no advertising to anyone, so there is no longer anyone to withhold it
+    // from and every viewer gets the full set.
+    it("offers close without minimising first", async () => {
+      const el = await open();
       expect(el.querySelector('[aria-label="common.close"]')).not.toBeNull();
-      expect(
-        el.querySelector('[aria-label="featured_stream.hide_today"]'),
-      ).toBeNull(); // hide-for-today stays ad-free only
     });
 
-    it("offers all three controls to an ad-free user", async () => {
-      const el = await open(true);
+    it("offers all three controls to every viewer", async () => {
+      const el = await open();
       expect(
         el.querySelector('[aria-label="featured_stream.minimize"]'),
       ).not.toBeNull();
@@ -242,7 +239,7 @@ describe("featured-stream panel", () => {
     });
 
     it("removes the panel and stops polling entirely", async () => {
-      const el = await open(false);
+      const el = await open();
       clickByLabel(el, "common.close");
       await el.updateComplete;
       expect(card()).toBeNull();
@@ -262,7 +259,7 @@ describe("featured-stream panel", () => {
     });
 
     it("does not come back when a game ends", async () => {
-      const el = await open(false);
+      const el = await open();
       clickByLabel(el, "common.close");
       await el.updateComplete;
       document.dispatchEvent(new CustomEvent("leave-lobby"));
@@ -273,15 +270,15 @@ describe("featured-stream panel", () => {
     });
 
     // A plain close is for this visit only, whoever you are.
-    it("does not persist an ordinary close, even for an ad-free user", async () => {
-      const el = await open(true);
+    it("does not persist an ordinary close", async () => {
+      const el = await open();
       clickByLabel(el, "common.close");
       await el.updateComplete;
       expect(localStorage.getItem("featured-stream-closed")).toBeNull();
     });
 
     it("persists hide-for-today and suppresses the panel on the next visit", async () => {
-      const el = await open(true);
+      const el = await open();
       clickByLabel(el, "featured_stream.hide_today");
       await el.updateComplete;
       expect(localStorage.getItem("featured-stream-closed")).not.toBeNull();

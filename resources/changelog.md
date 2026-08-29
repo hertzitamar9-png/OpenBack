@@ -1,3 +1,11 @@
+## OpenBack v0.36.255 - No Advertising, and Tables You Can Reach
+
+- Removed the advertising code inherited from upstream: the gutter and rail units, the in-game break, the ad gatekeeper, and the third-party SDK hooks that went with them. None of it was ever loaded, and none of it is coming back.
+- Wide tables can be scrolled sideways again. Styling the scrollbar set its width but never its height, and leaving one of the two out collapses every horizontal scrollbar to nothing, so on the owner dashboard the last columns of the player table could not be reached. The bar is drawn again, and the wheel now moves that table sideways for anyone on a mouse without a tilt wheel.
+- Old addresses for the legal pages now lead to the current ones. /terms-of-service and /privacy-policy answered with the home page, which search engines read as the page not existing.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.254 - Aim, Type, Hold
 
 - Sending a boat no longer depends on how far the map is zoomed in. A tap now finds land within a fingertip of where it landed, so a distant or narrow coast can be invaded at any zoom, the way it always worked with a mouse. A boat still only ever goes to land you aimed at.

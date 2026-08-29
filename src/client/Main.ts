@@ -31,7 +31,6 @@ import { GameModeSelector } from "./GameModeSelector";
 import { GameStartingModal } from "./GameStartingModal";
 import "./GameStatsModal";
 import { HelpModal } from "./HelpModal";
-import "./HomepagePromos";
 import { HostLobbyModal as HostPrivateLobbyModal } from "./HostLobbyModal";
 import { showInGameAlert, showInGameConfirm } from "./InGameModal";
 import "./InventoryModal";
@@ -100,46 +99,7 @@ import "./styles/openback.css";
 declare global {
   interface Window {
     turnstile: any;
-    adsEnabled: boolean;
     gtag?: (...args: any[]) => void;
-    PageOS: {
-      session: {
-        newPageView: () => void;
-      };
-    };
-    ramp: {
-      que: Array<() => void>;
-      passiveMode: boolean;
-      spaAddAds: (ads: Array<{ type: string; selectorId?: string }>) => void;
-      destroyUnits: (adType: string | string[]) => Promise<void>;
-      settings?: {
-        slots?: any;
-      };
-      spaNewPage: (url?: string) => void;
-      spaAds: (config?: {
-        ads?: Array<{ type: string; selectorId?: string }>;
-        countPageview?: boolean;
-        path?: string;
-      }) => void;
-      // Video ad methods
-      onPlayerReady: (() => void) | null;
-      addUnits: (units: Array<{ type: string }>) => Promise<void>;
-      displayUnits: () => void;
-    };
-    Bolt: {
-      on: (unitType: string, event: string, callback: () => void) => void;
-      BOLT_AD_REQUEST_START: string;
-      BOLT_AD_IMPRESSION: string;
-      BOLT_AD_STARTED: string;
-      BOLT_FIRST_QUARTILE: string;
-      BOLT_MIDPOINT: string;
-      BOLT_THIRD_QUARTILE: string;
-      BOLT_AD_COMPLETE: string;
-      BOLT_AD_ERROR: string;
-      BOLT_AD_PAUSED: string;
-      BOLT_AD_CLICKED: string;
-      SHOW_HIDDEN_CONTAINER: string;
-    };
     currentPageId?: string;
     showPage?: (pageId: string, args?: Record<string, unknown>) => void;
   }
@@ -435,8 +395,6 @@ class Client {
       } else {
         updateAccountNavButton(userMeResponse);
       }
-      // OpenBack does not bundle the upstream advertising service.
-      window.adsEnabled = false;
       setLastUserMe(userMeResponse);
       document.dispatchEvent(
         new CustomEvent("userMeResponse", {
@@ -967,7 +925,6 @@ class Client {
         "change-username-modal",
         "subscription-modal",
         "lang-selector",
-        "homepage-promos",
       ].forEach((tag) => {
         const modal = document.querySelector(tag) as HTMLElement & {
           close?: () => void;
@@ -980,9 +937,6 @@ class Client {
         }
       });
       this.gameModeSelector.stop();
-      document.querySelectorAll(".ad").forEach((ad) => {
-        (ad as HTMLElement).style.display = "none";
-      });
 
       crazyGamesSDK.loadingStart();
 
@@ -1000,13 +954,6 @@ class Client {
       this.gameModeSelector.stop();
       incrementGamesPlayed();
 
-      document.querySelectorAll(".ad").forEach((ad) => {
-        (ad as HTMLElement).style.display = "none";
-      });
-
-      if (window.PageOS?.session?.newPageView) {
-        window.PageOS.session.newPageView();
-      }
       crazyGamesSDK.loadingStop();
       crazyGamesSDK.gameplayStart();
       document.body.classList.add("in-game");

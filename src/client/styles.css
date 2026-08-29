@@ -127,14 +127,21 @@ body.page-open {
   }
 }
 
-/* Add custom scrollbar styles */
+/* Add custom scrollbar styles.
+   Both dimensions have to be given: width is the thickness of a vertical bar
+   and height the thickness of a horizontal one, and styling this pseudo-element
+   at all while leaving one of them out collapses that bar to nothing. Only the
+   width was set, so every horizontal scrollbar in the app was invisible and
+   there was no way to drag anything sideways. */
 ::-webkit-scrollbar {
   width: 12px;
+  height: 12px;
 }
 
 @media (min-width: 1024px) {
   ::-webkit-scrollbar {
     width: 12px;
+    height: 12px;
     display: block;
   }
 }
@@ -147,6 +154,26 @@ body.page-open {
 ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.2);
   border-radius: 4px;
+}
+
+/* A table too wide for its panel. The horizontal bar is always drawn rather
+   than left to fade out, and the wheel is redirected sideways, so the columns
+   past the edge can be reached on a plain mouse with no tilt wheel. */
+.table-scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+}
+.table-scroll::-webkit-scrollbar {
+  height: 10px;
+}
+.table-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 5px;
+}
+.table-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.55);
 }
 
 .hide-scrollbar {

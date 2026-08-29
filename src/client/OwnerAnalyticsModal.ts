@@ -303,7 +303,10 @@ export class OwnerAnalyticsModal extends BaseModal {
                 placeholder=${translateText("analytics.search_players")}
               />
             </div>
-            <div class="overflow-x-auto">
+            <div
+              class="table-scroll"
+              @wheel=${(event: WheelEvent) => this.scrollTableSideways(event)}
+            >
               <table class="w-full min-w-[960px] text-left text-sm">
                 <thead
                   class="bg-black/20 text-[10px] uppercase tracking-wider text-white/35"
@@ -611,6 +614,28 @@ export class OwnerAnalyticsModal extends BaseModal {
         ></div>
       </div>
     </div>`;
+  }
+
+  /**
+   * Turn a plain vertical wheel into sideways movement over the player table.
+   *
+   * The table is wider than the panel, and a mouse without a tilt wheel had no
+   * way to reach the columns past the right edge -- the wheel scrolled the page
+   * behind it instead. The page keeps the gesture once the table has run out of
+   * room to move, so reaching the end does not trap the wheel.
+   */
+  private scrollTableSideways(event: WheelEvent) {
+    if (event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+      return; // already a sideways gesture; leave it to the browser
+    }
+    const strip = event.currentTarget as HTMLElement;
+    const furthest = strip.scrollWidth - strip.clientWidth;
+    if (furthest <= 0) return;
+    const wanted = strip.scrollLeft + event.deltaY;
+    const next = Math.min(furthest, Math.max(0, wanted));
+    if (next === strip.scrollLeft) return; // at an end -- let the page have it
+    strip.scrollLeft = next;
+    event.preventDefault();
   }
 
   private breakdownCard(title: string, entries: Breakdown[]): TemplateResult {

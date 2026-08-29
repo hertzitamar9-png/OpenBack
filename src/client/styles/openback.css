@@ -18,7 +18,6 @@ body.account-flow-open #main-menu-shell {
 
 body.account-flow-open desktop-nav-bar,
 body.account-flow-open mobile-nav-bar,
-body.account-flow-open homepage-promos,
 body.account-flow-open page-footer {
   display: none !important;
 }

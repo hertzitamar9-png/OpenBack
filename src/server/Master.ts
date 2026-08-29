@@ -104,6 +104,24 @@ app.get("/sitemap.xml", (_req, res) => {
 
 app.get(LEGACY_GUIDE_PATHS, handleLegacyOpenBackContent);
 
+// The legal pages are served at /terms and /privacy, but their old names are
+// what is linked from elsewhere and what search engines went looking for. The
+// SPA fallback answered those with the home page, which reads to a crawler as
+// the page simply not existing. Send them to the real address instead.
+const RENAMED_LEGAL_PAGES: Record<string, string> = {
+  "/terms-of-service": "/terms",
+  "/privacy-policy": "/privacy",
+  "/tos": "/terms",
+};
+app.get(Object.keys(RENAMED_LEGAL_PAGES), (req, res) => {
+  const destination = RENAMED_LEGAL_PAGES[req.path];
+  if (destination === undefined) {
+    res.status(404).type("text/plain").send("Not Found");
+    return;
+  }
+  res.redirect(301, destination);
+});
+
 // Tutorials and Blog use the same interactive shell as every other OpenBack
 // page while retaining route-specific crawlable content and metadata.
 app.get(OPENBACK_CONTENT_PATHS, async (req, res) => {

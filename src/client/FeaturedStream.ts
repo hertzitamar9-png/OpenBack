@@ -451,12 +451,11 @@ export class FeaturedStream extends LitElement {
     this.kickPlay(); // resume playback after the resize either way
   };
 
-  // Everyone can minimize and close; ad-free users additionally get "hide for today"
-  // (any shop purchase makes a user adfree for life, which zeroes window.adsEnabled).
-  // Checked with `=== false` so the extra button doesn't flash before /user/me resolves
-  // the entitlement — a click landing before then simply closes for the visit instead.
+  // Everyone can minimize and close, and everyone gets "hide for today" as
+  // well: that used to be reserved for players whose purchases had turned ads
+  // off, and OpenBack carries no advertising for it to tell them apart by.
   private get adFree(): boolean {
-    return window.adsEnabled === false;
+    return true;
   }
 
   // Everyone can close. ✕ is always just for this page visit; only the ad-free ⊘ makes it
