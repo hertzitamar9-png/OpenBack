@@ -1,3 +1,10 @@
+## OpenBack v0.36.259 - The Score, Uncompressed
+
+- The music now plays at the quality it was made in, untouched. Both tracks are served straight from the game server rather than bundled into the app, because three hours of full-quality audio is far past the size a code repository accepts. Nothing about the recordings was changed.
+- The updating screen shown while OpenBack is being deployed now tells search engines it is temporary. It used to answer as though it were the page itself, so a crawler arriving mid-update recorded a blank, nameless site in place of the real pages.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.258 - Music, and a Dashboard That Tells the Truth
 
 - OpenBack has its own music. "The War Machine" plays in 2D and "Tile by Tile" in 3D, three hours each, and neither stops when you die -- the score runs until the game itself is over. The tracks stream, so only the part you actually hear is downloaded.

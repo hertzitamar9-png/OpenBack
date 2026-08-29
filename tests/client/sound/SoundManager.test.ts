@@ -55,8 +55,8 @@ vi.mock("../../../src/client/sound/Sounds", async (importOriginal) => {
   return {
     ...actual,
     backgroundMusicUrls: {
-      "2d": "mock/openback-theme-2d.webm",
-      "3d": "mock/openback-theme-3d.webm",
+      "2d": "mock/openback-theme-2d.mp3",
+      "3d": "mock/openback-theme-3d.mp3",
     },
     soundEffectUrls: new Map([
       ["click", "mock/click.mp3"],
@@ -144,7 +144,7 @@ describe("SoundManager", () => {
     expect(howlCtor).toHaveBeenCalledTimes(1);
     expect(howlCtor).toHaveBeenCalledWith(
       expect.objectContaining({
-        src: ["mock/openback-theme-2d.webm"],
+        src: ["mock/openback-theme-2d.mp3"],
         loop: true,
         // Three hours long: streamed through an audio element rather than
         // decoded into memory as raw samples before a note plays.
@@ -177,7 +177,7 @@ describe("SoundManager", () => {
     manager.useExperienceMusic("3d");
     expect(howlCtor).toHaveBeenCalledTimes(1);
     expect(howlCtor).toHaveBeenCalledWith(
-      expect.objectContaining({ src: ["mock/openback-theme-3d.webm"] }),
+      expect.objectContaining({ src: ["mock/openback-theme-3d.mp3"] }),
     );
     // Asking for the same one again must not build a second player.
     howlCtor.mockClear();
