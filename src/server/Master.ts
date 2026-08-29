@@ -81,7 +81,10 @@ app.get("/robots.txt", (_req, res) => {
 app.get("/sitemap.xml", (_req, res) => {
   const origin = ServerEnv.authOrigin().replace(/\/+$/, "");
   const lastmod = new Date().toISOString().slice(0, 10);
-  const urls = ["/", ...OPENBACK_CONTENT_PATHS]
+  // Only the home page. The tutorial and blog pages carry noindex: they exist
+  // for readers who arrive at them, not as separate answers to a search for
+  // the game, and listing them here would keep asking for exactly that.
+  const urls = ["/"]
     .map(
       (contentPath, index) =>
         `  <url>\n` +

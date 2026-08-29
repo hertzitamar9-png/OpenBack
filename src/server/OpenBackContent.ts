@@ -736,6 +736,7 @@ export interface OpenBackContentSeo {
   description: string;
   schemaJson: string;
   crawlableHtml: string;
+  noindex: boolean;
 }
 
 function esc(value: string): string {
@@ -757,7 +758,7 @@ function cards(items: OpenBackContentPage[]): string {
 
 function hub(
   path: "/tutorials" | "/blog",
-): Omit<OpenBackContentSeo, "schemaJson"> {
+): Omit<OpenBackContentSeo, "schemaJson" | "noindex"> {
   const isGuide = path === "/tutorials";
   const items = isGuide ? canonicalTutorials : blogs;
   const title = isGuide
@@ -779,7 +780,7 @@ function hub(
 
 function article(
   page: OpenBackContentPage,
-): Omit<OpenBackContentSeo, "schemaJson"> {
+): Omit<OpenBackContentSeo, "schemaJson" | "noindex"> {
   const hubPath = page.type === "Tutorial" ? "/tutorials" : "/blog";
   const sections = page.sections
     .map(
@@ -820,6 +821,11 @@ export function getOpenBackContentSeo(
   const canonical = `${origin.replace(/\/+$/, "")}${path}`;
   return {
     ...base,
+    // Readable, linked, and crawled -- but not offered as its own search
+    // result. Every one of these pages is about the same game as the home
+    // page, and a search for OpenBack was answering with a handful of them at
+    // once instead of the game. "follow" keeps their links counting.
+    noindex: true,
     schemaJson: JSON.stringify({
       "@context": "https://schema.org",
       "@type": schemaType,

@@ -1,3 +1,9 @@
+## OpenBack v0.36.261 - One Result for the Game
+
+- A search for OpenBack now answers with the game, once. The tutorial and blog pages were each offered as their own result, so a search came back with several entries for the same game stacked together. They are still there to read and still followed for their links; they are no longer separate answers, and the sitemap no longer asks for them to be.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.260 - The Score Ships With the Game
 
 - The music now travels with the game itself instead of being kept on the server. Nothing about the recordings changed: they are stored split into pieces, because a three-hour track at full quality is larger than a single file is allowed to be, and are joined back into exactly the original bytes when the game is built.

@@ -17,6 +17,11 @@ export interface AppShellSeo {
   description: string;
   schemaJson?: string;
   crawlableHtml?: string;
+  /**
+   * Keep this page out of search results while leaving it open to readers and
+   * to crawlers following its links.
+   */
+  noindex?: boolean;
 }
 
 export async function renderHtmlContent(
@@ -35,6 +40,7 @@ export async function renderHtmlContent(
       "Play OpenBack, an online territorial war RTS. Expand nations, command armies, build an economy, form alliances, and conquer a world map.",
     schemaJson: seo?.schemaJson ?? "{}",
     crawlableHtml: seo?.crawlableHtml ?? "",
+    noindex: seo?.noindex ?? false,
   };
   return ejs.render(htmlContent, {
     gitCommit: JSON.stringify(ServerEnv.gitCommit()),
@@ -59,6 +65,7 @@ export async function renderHtmlContent(
     seoTitle: routeSeo.title,
     seoDescription: routeSeo.description,
     seoCanonical: `${siteOrigin}${routeSeo.path}`,
+    seoRobots: routeSeo.noindex ? "noindex, follow" : "index, follow",
     seoSchemaJson: routeSeo.schemaJson,
     seoCrawlableHtml: routeSeo.crawlableHtml,
     manifestHref: buildAssetUrl("manifest.json", assetManifest, cdnBase),
