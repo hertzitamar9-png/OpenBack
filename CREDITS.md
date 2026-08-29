@@ -63,7 +63,21 @@ covered by the open licences, and are not redistributed by OpenBack.
 
 ### OpenBack Fictional Maps
 
-The OpenBack fictional-map terrain masks, playable conversions, nation layouts, and Shattered Expanse design were created by **frootz jhklphy**. The supplied visual references were used only to recover broad land and water silhouettes; their labels, legends, political styling, and original artwork are not distributed with the game.
+The OpenBack fictional maps — Avidir, Calistis, Dasserian Realms, Maion,
+Mettersind, Therynian Realms, and World of Lur — have procedurally generated
+coastlines. Nothing was traced from anyone's artwork: each terrain mask is
+algorithm output, which is why all seven share one generated elevation palette
+and carry only about forty distinct colours between sea level and peak. Their
+playable conversions, nation layouts, and gameplay data were created by
+**frootz jhklphy**.
+
+Their names are invented and carry no claim over any existing fictional
+setting; where a name happens to coincide with one used elsewhere, nothing but
+the word is shared.
+
+Maps of real places are traced from the licensed geographic datasets credited
+below, not from artwork. A coastline is a fact rather than an act of authorship,
+so no rights attach to its shape.
 
 Shattered Expanse uses the coastline and land/water layout from [Open Map One](https://opengameart.org/content/open-map-one) by **Darklighter Designs (2017)**, licensed under [CC-BY 3.0](https://creativecommons.org/licenses/by/3.0/). OpenBack's terrain conversion, scaling, spawn layout, and gameplay data are modifications of that source.
 

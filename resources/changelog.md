@@ -1,3 +1,9 @@
+## OpenBack v0.36.264 - Where the Maps Came From
+
+- The credits now say plainly that OpenBack's fictional maps have procedurally generated coastlines rather than traced ones. The wording before suggested pictures had been copied from somewhere, which was not what happened and was unfair to the game.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.263 - Credit Where It Is Due
 
 - The background music is now credited to the person who made it. The asset licence claimed everything in the game's resources as OpenFront's work under Creative Commons, which meant OpenBack's own music was being offered to the world in OpenFront's name.
