@@ -6,82 +6,82 @@
   "multiplayer_frequency": 1,
   "nations": [
     {
-      "coordinates": [1140, 552],
+      "coordinates": [1112, 552],
       "name": "North Aimaelur",
       "flag": ""
     },
     {
-      "coordinates": [1924, 1084],
+      "coordinates": [48, 244],
       "name": "South Aimaelur",
       "flag": ""
     },
     {
-      "coordinates": [300, 748],
+      "coordinates": [1756, 132],
       "name": "North Shefrat",
       "flag": ""
     },
     {
-      "coordinates": [1868, 188],
+      "coordinates": [1756, 832],
       "name": "South Shefrat",
       "flag": ""
     },
     {
-      "coordinates": [664, 104],
+      "coordinates": [664, 76],
       "name": "Dnogoztov",
       "flag": ""
     },
     {
-      "coordinates": [1308, 20],
+      "coordinates": [804, 1056],
       "name": "Kylant",
       "flag": ""
     },
     {
-      "coordinates": [1644, 664],
+      "coordinates": [1280, 1000],
       "name": "RMU",
       "flag": ""
     },
     {
-      "coordinates": [776, 916],
+      "coordinates": [1140, 76],
       "name": "Aleyant",
       "flag": ""
     },
     {
-      "coordinates": [664, 524],
+      "coordinates": [440, 412],
       "name": "Lalulu Utkan",
       "flag": ""
     },
     {
-      "coordinates": [328, 356],
+      "coordinates": [1532, 468],
       "name": "Sulhnni",
       "flag": ""
     },
     {
-      "coordinates": [1504, 328],
+      "coordinates": [776, 692],
       "name": "Selaylant",
       "flag": ""
     },
     {
-      "coordinates": [1336, 832],
+      "coordinates": [1448, 160],
       "name": "Lura",
       "flag": ""
     },
     {
-      "coordinates": [1616, 20],
+      "coordinates": [860, 384],
       "name": "Gaphrisia",
       "flag": ""
     },
     {
-      "coordinates": [1168, 272],
+      "coordinates": [328, 132],
       "name": "Koxzalpo",
       "flag": ""
     },
     {
-      "coordinates": [1756, 440],
+      "coordinates": [1364, 720],
       "name": "Untium Syn Aimaelur",
       "flag": ""
     },
     {
-      "coordinates": [1420, 580],
+      "coordinates": [1028, 832],
       "name": "Chud-Vegzag",
       "flag": ""
     }

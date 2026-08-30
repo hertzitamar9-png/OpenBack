@@ -85,13 +85,15 @@ describe("asset credits", () => {
     }
   });
 
-  it("does not describe reference-derived maps as wholly procedural", () => {
-    expect(credits).toContain("source status remains **unverified**");
-    expect(credits).toContain("images supplied to Codex on July 15, 2026");
+  it("credits the independently generated fictional-map replacements", () => {
+    expect(credits).toContain("original,\ndeterministic coastlines");
+    expect(credits).toContain("The generator reads no\nreference artwork");
     expect(credits).toContain("Atlas 2026, Avidir, Calistis, Canid Continents");
     expect(credits).toContain(
       "Patchwork Earth, Therynian Realms, and World of Lur",
     );
+    expect(credits).toContain("docs/map-provenance-audit.md");
+    expect(credits).not.toContain("source status remains **unverified**");
     expect(credits).not.toContain("Nothing was traced from anyone's artwork");
   });
 });

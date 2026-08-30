@@ -90,33 +90,32 @@ covered by the open licences, and are not redistributed by OpenBack.
 
 ### OpenBack Fictional Maps
 
-The terrain masks for Atlas 2026, Avidir, Calistis, Canid Continents, Dasserian
-Realms, Fifteenth Age, Fractured Eurasia, Heroic Seas, Inverted Earth, Maion,
-Mandala Nations, Mettersind, Patchwork Earth, Therynian Realms, and World of Lur
-were produced by
-`map-generator/tools/create_openback_fictional_maps.py`. That program extracted
-broad land/water silhouettes from images supplied to Codex on July 15, 2026,
-then discarded labels, borders, legends, and visual styling and generated a new
-OpenBack elevation palette, nation layout, and gameplay data. Those references
-were temporary clipboard files; their original webpages, creators, and licences
-were not recorded in the repository or the import transcript.
+Atlas 2026, Avidir, Calistis, Canid Continents, Dasserian Realms, Fifteenth Age,
+Fractured Eurasia, Heroic Seas, Inverted Earth, Maion, Mandala Nations,
+Mettersind, Patchwork Earth, Therynian Realms, and World of Lur now use original,
+deterministic coastlines produced by
+`map-generator/tools/create_openback_fictional_maps.py`. The generator reads no
+reference artwork. Each map is derived only from its committed dimensions,
+metadata, nation names, and stable map-id seed. Terrain, nation spawn layouts,
+map binaries, and thumbnails were created for OpenBack by **frootz jhklphy** and
+are published under
+[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
 
-The previous credit incorrectly called the coastlines wholly procedural and
-said nothing had been traced. The committed generator and its original command
-show that statement was false. Because the source evidence is missing, OpenBack
-cannot honestly claim that these fifteen silhouettes are independently created
-or fully cleared merely by crediting **frootz jhklphy** for the conversion. A
-credit cannot replace permission. Their source status remains **unverified**
-until the original source pages and licences are recovered or the silhouettes
-are replaced with independently generated terrain.
+Earlier versions used land/water silhouettes extracted from fifteen supplied
+pictures whose reuse rights had not been recorded. A complete image-level audit
+identified Reddit, DeviantArt, commercial, and game-franchise sources without
+reusable licences, so every affected silhouette was replaced rather than merely
+credited. The historical findings and replacement evidence are recorded in
+`docs/map-provenance-audit.md`; none of those reference pictures is distributed
+with OpenBack.
 
 Their names are invented and carry no claim over any existing fictional
 setting; where a name happens to coincide with one used elsewhere, nothing but
 the word is shared.
 
-Maps of real places use the geographic datasets credited below. Their source
-and licence must be evaluated per dataset; OpenBack does not rely on a blanket
-claim that every coastline or map depiction is automatically unprotected.
+Maps of real places use the geographic datasets credited below. Every shipped
+map also has a machine-readable origin, licence, and file hashes in
+`resources/maps/provenance.json`.
 
 Shattered Expanse uses the coastline and land/water layout from [Open Map One](https://opengameart.org/content/open-map-one) by **Darklighter Designs (2017)**, licensed under [CC-BY 3.0](https://creativecommons.org/licenses/by/3.0/). OpenBack's terrain conversion, scaling, spawn layout, and gameplay data are modifications of that source.
 

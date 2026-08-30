@@ -3,89 +3,89 @@
   "id": "PatchworkEarth",
   "map": {
     "height": 1312,
-    "num_land_tiles": 663647,
+    "num_land_tiles": 960267,
     "width": 1900
   },
   "map16x": {
     "height": 328,
-    "num_land_tiles": 38076,
+    "num_land_tiles": 59069,
     "width": 475
   },
   "map4x": {
     "height": 656,
-    "num_land_tiles": 160949,
+    "num_land_tiles": 238759,
     "width": 950
   },
   "multiplayer_frequency": 1,
   "name": "Patchwork Earth",
   "nations": [
     {
-      "coordinates": [972, 664],
+      "coordinates": [944, 636],
       "flag": "",
       "name": "Mosaic Crown"
     },
     {
-      "coordinates": [1840, 216],
+      "coordinates": [1840, 76],
       "flag": "",
       "name": "Banner Coast"
     },
     {
-      "coordinates": [76, 776],
+      "coordinates": [48, 244],
       "flag": "",
       "name": "Patchwork Reach"
     },
     {
-      "coordinates": [1700, 1056],
+      "coordinates": [1588, 1084],
       "flag": "",
       "name": "Emblem Isles"
     },
     {
-      "coordinates": [412, 244],
+      "coordinates": [552, 1084],
       "flag": "",
       "name": "Painted North"
     },
     {
-      "coordinates": [580, 1140],
+      "coordinates": [636, 132],
       "flag": "",
       "name": "Stitched South"
     },
     {
-      "coordinates": [1140, 1168],
+      "coordinates": [1504, 524],
       "flag": "",
       "name": "Crestfall"
     },
     {
-      "coordinates": [1476, 580],
+      "coordinates": [1336, 48],
       "flag": "",
       "name": "Ribbon Sea"
     },
     {
-      "coordinates": [860, 132],
+      "coordinates": [412, 608],
       "flag": "",
       "name": "Heraldic Union"
     },
     {
-      "coordinates": [524, 692],
+      "coordinates": [1252, 888],
       "flag": "",
       "name": "Tapestry Bay"
     },
     {
-      "coordinates": [1392, 216],
+      "coordinates": [1056, 272],
       "flag": "",
       "name": "Sigil March"
     },
     {
-      "coordinates": [1812, 720],
+      "coordinates": [356, 300],
       "flag": "",
       "name": "Quilted Cape"
     },
     {
-      "coordinates": [1112, 384],
+      "coordinates": [692, 440],
       "flag": "",
       "name": "Chromatic League"
     },
     {
-      "coordinates": [216, 496],
+      "coordinates": [664, 776],
       "flag": "",
       "name": "Pennant Islands"
     }

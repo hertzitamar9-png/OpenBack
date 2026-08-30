@@ -3,89 +3,89 @@
   "id": "InvertedEarth",
   "map": {
     "height": 1116,
-    "num_land_tiles": 1945077,
+    "num_land_tiles": 943518,
     "width": 2236
   },
   "map16x": {
     "height": 279,
-    "num_land_tiles": 118164,
+    "num_land_tiles": 57345,
     "width": 559
   },
   "map4x": {
     "height": 558,
-    "num_land_tiles": 481716,
+    "num_land_tiles": 233639,
     "width": 1118
   },
   "multiplayer_frequency": 1,
   "name": "Inverted Earth",
   "nations": [
     {
-      "coordinates": [1140, 552],
+      "coordinates": [1112, 496],
       "flag": "",
       "name": "Inverted Africa"
     },
     {
-      "coordinates": [20, 1084],
+      "coordinates": [48, 860],
       "flag": "",
       "name": "Inner Asia"
     },
     {
-      "coordinates": [2204, 1084],
+      "coordinates": [2148, 860],
       "flag": "",
       "name": "Western Basin"
     },
     {
-      "coordinates": [2008, 20],
+      "coordinates": [1756, 188],
       "flag": "",
       "name": "Eastern Basin"
     },
     {
-      "coordinates": [104, 76],
+      "coordinates": [1504, 1056],
       "flag": "",
       "name": "Polar Crown"
     },
     {
-      "coordinates": [720, 1084],
+      "coordinates": [468, 328],
       "flag": "",
       "name": "South Rim"
     },
     {
-      "coordinates": [1532, 1084],
+      "coordinates": [664, 804],
       "flag": "",
       "name": "Mediterranean Reach"
     },
     {
-      "coordinates": [748, 20],
+      "coordinates": [1280, 48],
       "flag": "",
       "name": "Great Inland Sea"
     },
     {
-      "coordinates": [412, 580],
+      "coordinates": [1700, 636],
       "flag": "",
       "name": "Boreal Peninsula"
     },
     {
-      "coordinates": [1840, 580],
+      "coordinates": [832, 76],
       "flag": "",
       "name": "Austral Highlands"
     },
     {
-      "coordinates": [1448, 76],
+      "coordinates": [384, 1084],
       "flag": "",
       "name": "Equatorial Gulf"
     },
     {
-      "coordinates": [20, 664],
+      "coordinates": [1084, 888],
       "flag": "",
       "name": "Sunken Atlantic"
     },
     {
-      "coordinates": [1112, 1056],
+      "coordinates": [1448, 384],
       "flag": "",
       "name": "Mirror Pacific"
     },
     {
-      "coordinates": [2204, 440],
+      "coordinates": [356, 692],
       "flag": "",
       "name": "Old Tethys"
     }

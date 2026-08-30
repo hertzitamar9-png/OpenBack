@@ -3,99 +3,99 @@
   "id": "WorldOfLur",
   "map": {
     "height": 1120,
-    "num_land_tiles": 667515,
+    "num_land_tiles": 1030102,
     "width": 2220
   },
   "map16x": {
     "height": 280,
-    "num_land_tiles": 39790,
+    "num_land_tiles": 63513,
     "width": 555
   },
   "map4x": {
     "height": 560,
-    "num_land_tiles": 164284,
+    "num_land_tiles": 256431,
     "width": 1110
   },
   "multiplayer_frequency": 1,
   "name": "World of Lur",
   "nations": [
     {
-      "coordinates": [1140, 552],
+      "coordinates": [1112, 552],
       "flag": "",
       "name": "North Aimaelur"
     },
     {
-      "coordinates": [1924, 1084],
+      "coordinates": [48, 244],
       "flag": "",
       "name": "South Aimaelur"
     },
     {
-      "coordinates": [300, 748],
+      "coordinates": [1756, 132],
       "flag": "",
       "name": "North Shefrat"
     },
     {
-      "coordinates": [1868, 188],
+      "coordinates": [1756, 832],
       "flag": "",
       "name": "South Shefrat"
     },
     {
-      "coordinates": [664, 104],
+      "coordinates": [664, 76],
       "flag": "",
       "name": "Dnogoztov"
     },
     {
-      "coordinates": [1308, 20],
+      "coordinates": [804, 1056],
       "flag": "",
       "name": "Kylant"
     },
     {
-      "coordinates": [1644, 664],
+      "coordinates": [1280, 1000],
       "flag": "",
       "name": "RMU"
     },
     {
-      "coordinates": [776, 916],
+      "coordinates": [1140, 76],
       "flag": "",
       "name": "Aleyant"
     },
     {
-      "coordinates": [664, 524],
+      "coordinates": [440, 412],
       "flag": "",
       "name": "Lalulu Utkan"
     },
     {
-      "coordinates": [328, 356],
+      "coordinates": [1532, 468],
       "flag": "",
       "name": "Sulhnni"
     },
     {
-      "coordinates": [1504, 328],
+      "coordinates": [776, 692],
       "flag": "",
       "name": "Selaylant"
     },
     {
-      "coordinates": [1336, 832],
+      "coordinates": [1448, 160],
       "flag": "",
       "name": "Lura"
     },
     {
-      "coordinates": [1616, 20],
+      "coordinates": [860, 384],
       "flag": "",
       "name": "Gaphrisia"
     },
     {
-      "coordinates": [1168, 272],
+      "coordinates": [328, 132],
       "flag": "",
       "name": "Koxzalpo"
     },
     {
-      "coordinates": [1756, 440],
+      "coordinates": [1364, 720],
       "flag": "",
       "name": "Untium Syn Aimaelur"
     },
     {
-      "coordinates": [1420, 580],
+      "coordinates": [1028, 832],
       "flag": "",
       "name": "Chud-Vegzag"
     }

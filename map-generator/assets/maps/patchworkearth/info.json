@@ -6,72 +6,72 @@
   "multiplayer_frequency": 1,
   "nations": [
     {
-      "coordinates": [972, 664],
+      "coordinates": [944, 636],
       "name": "Mosaic Crown",
       "flag": ""
     },
     {
-      "coordinates": [1840, 216],
+      "coordinates": [1840, 76],
       "name": "Banner Coast",
       "flag": ""
     },
     {
-      "coordinates": [76, 776],
+      "coordinates": [48, 244],
       "name": "Patchwork Reach",
       "flag": ""
     },
     {
-      "coordinates": [1700, 1056],
+      "coordinates": [1588, 1084],
       "name": "Emblem Isles",
       "flag": ""
     },
     {
-      "coordinates": [412, 244],
+      "coordinates": [552, 1084],
       "name": "Painted North",
       "flag": ""
     },
     {
-      "coordinates": [580, 1140],
+      "coordinates": [636, 132],
       "name": "Stitched South",
       "flag": ""
     },
     {
-      "coordinates": [1140, 1168],
+      "coordinates": [1504, 524],
       "name": "Crestfall",
       "flag": ""
     },
     {
-      "coordinates": [1476, 580],
+      "coordinates": [1336, 48],
       "name": "Ribbon Sea",
       "flag": ""
     },
     {
-      "coordinates": [860, 132],
+      "coordinates": [412, 608],
       "name": "Heraldic Union",
       "flag": ""
     },
     {
-      "coordinates": [524, 692],
+      "coordinates": [1252, 888],
       "name": "Tapestry Bay",
       "flag": ""
     },
     {
-      "coordinates": [1392, 216],
+      "coordinates": [1056, 272],
       "name": "Sigil March",
       "flag": ""
     },
     {
-      "coordinates": [1812, 720],
+      "coordinates": [356, 300],
       "name": "Quilted Cape",
       "flag": ""
     },
     {
-      "coordinates": [1112, 384],
+      "coordinates": [692, 440],
       "name": "Chromatic League",
       "flag": ""
     },
     {
-      "coordinates": [216, 496],
+      "coordinates": [664, 776],
       "name": "Pennant Islands",
       "flag": ""
     }

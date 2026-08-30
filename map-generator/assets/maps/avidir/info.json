@@ -6,62 +6,62 @@
   "multiplayer_frequency": 1,
   "nations": [
     {
-      "coordinates": [1084, 496],
+      "coordinates": [1168, 440],
       "name": "Driftwood",
       "flag": ""
     },
     {
-      "coordinates": [104, 552],
+      "coordinates": [160, 1084],
       "name": "Veltrune",
       "flag": ""
     },
     {
-      "coordinates": [1924, 188],
+      "coordinates": [244, 76],
       "name": "Westsea",
       "flag": ""
     },
     {
-      "coordinates": [1728, 916],
+      "coordinates": [2064, 580],
       "name": "Shredded Ice",
       "flag": ""
     },
     {
-      "coordinates": [608, 860],
+      "coordinates": [860, 1028],
       "name": "Eyrionsea",
       "flag": ""
     },
     {
-      "coordinates": [636, 160],
+      "coordinates": [1672, 104],
       "name": "Moores End",
       "flag": ""
     },
     {
-      "coordinates": [1448, 160],
+      "coordinates": [776, 104],
       "name": "The Lagoon",
       "flag": ""
     },
     {
-      "coordinates": [1476, 580],
+      "coordinates": [1588, 636],
       "name": "Worlds End",
       "flag": ""
     },
     {
-      "coordinates": [1896, 580],
+      "coordinates": [496, 776],
       "name": "Azure Gap",
       "flag": ""
     },
     {
-      "coordinates": [468, 496],
+      "coordinates": [1280, 76],
       "name": "Great Ocean",
       "flag": ""
     },
     {
-      "coordinates": [972, 160],
+      "coordinates": [496, 328],
       "name": "Blue Expanse",
       "flag": ""
     },
     {
-      "coordinates": [776, 580],
+      "coordinates": [1812, 384],
       "name": "Avidir Crown",
       "flag": ""
     }

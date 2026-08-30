@@ -6,82 +6,82 @@
   "multiplayer_frequency": 1,
   "nations": [
     {
-      "coordinates": [944, 664],
+      "coordinates": [1000, 692],
       "name": "Verengera",
       "flag": ""
     },
     {
-      "coordinates": [1644, 160],
+      "coordinates": [48, 496],
       "name": "Norogea",
       "flag": ""
     },
     {
-      "coordinates": [1700, 1000],
+      "coordinates": [356, 1280],
       "name": "Ostrogea",
       "flag": ""
     },
     {
-      "coordinates": [132, 580],
+      "coordinates": [1756, 1000],
       "name": "Selengea",
       "flag": ""
     },
     {
-      "coordinates": [412, 1196],
+      "coordinates": [1392, 48],
       "name": "Parangea",
       "flag": ""
     },
     {
-      "coordinates": [972, 1252],
+      "coordinates": [1140, 1252],
       "name": "Mithronesia",
       "flag": ""
     },
     {
-      "coordinates": [580, 272],
+      "coordinates": [1560, 524],
       "name": "Tyronesia",
       "flag": ""
     },
     {
-      "coordinates": [1140, 216],
+      "coordinates": [468, 776],
       "name": "Sudanessa",
       "flag": ""
     },
     {
-      "coordinates": [1364, 580],
+      "coordinates": [916, 244],
       "name": "Targanessa",
       "flag": ""
     },
     {
-      "coordinates": [524, 748],
+      "coordinates": [468, 356],
       "name": "Goronessa",
       "flag": ""
     },
     {
-      "coordinates": [1280, 972],
+      "coordinates": [1364, 916],
       "name": "Valdenessa",
       "flag": ""
     },
     {
-      "coordinates": [244, 916],
+      "coordinates": [804, 1028],
       "name": "Karanessa",
       "flag": ""
     },
     {
-      "coordinates": [1784, 692],
+      "coordinates": [1252, 356],
       "name": "Myronessa",
       "flag": ""
     },
     {
-      "coordinates": [860, 356],
+      "coordinates": [160, 804],
       "name": "Pyronessa",
       "flag": ""
     },
     {
-      "coordinates": [804, 916],
+      "coordinates": [1084, 972],
       "name": "Zamonessa",
       "flag": ""
     },
     {
-      "coordinates": [328, 384],
+      "coordinates": [524, 1056],
       "name": "Solonessa",
       "flag": ""
     }

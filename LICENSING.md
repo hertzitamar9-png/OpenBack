@@ -97,9 +97,9 @@ the same directory does not change their authorship or licence.
 generated with Treblo for OpenBack and is not OpenFront's work; the Overpass
 fonts are Red Hat's under the SIL Open Font License 1.1 and the LGPL 2.1;
 Wikimedia flags and bundled 3D models use their individual licences. All are
-credited in CREDITS.md, which is authoritative on who made a file. CREDITS.md
-also identifies reference-derived fictional maps whose original source licence
-has not been recovered; no blanket statement in this file clears that gap.
+credited in CREDITS.md, which is authoritative on who made a file. Map-level
+origin, licence, generator, seed, and file-hash evidence is recorded in
+`resources/maps/provenance.json`.
 
 ## External/Proprietary Assets
 

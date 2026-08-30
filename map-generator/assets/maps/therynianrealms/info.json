@@ -6,62 +6,62 @@
   "multiplayer_frequency": 1,
   "nations": [
     {
-      "coordinates": [1000, 636],
+      "coordinates": [972, 608],
       "name": "Miskawatookh",
       "flag": ""
     },
     {
-      "coordinates": [1868, 104],
+      "coordinates": [1924, 188],
       "name": "Evrosula",
       "flag": ""
     },
     {
-      "coordinates": [48, 552],
+      "coordinates": [48, 272],
       "name": "Gend'Luru",
       "flag": ""
     },
     {
-      "coordinates": [1784, 1112],
+      "coordinates": [1728, 1000],
       "name": "Sulgarat",
       "flag": ""
     },
     {
-      "coordinates": [440, 1028],
+      "coordinates": [328, 1084],
       "name": "Fjordowaer",
       "flag": ""
     },
     {
-      "coordinates": [552, 272],
+      "coordinates": [1280, 48],
       "name": "Xir-Shaih-Janwa",
       "flag": ""
     },
     {
-      "coordinates": [1504, 496],
+      "coordinates": [580, 216],
       "name": "Calocorre",
       "flag": ""
     },
     {
-      "coordinates": [1308, 1028],
+      "coordinates": [1504, 524],
       "name": "Dzi-Chom-Kmur",
       "flag": ""
     },
     {
-      "coordinates": [1056, 160],
+      "coordinates": [1224, 1000],
       "name": "Ux'Apzoal",
       "flag": ""
     },
     {
-      "coordinates": [1840, 720],
+      "coordinates": [300, 636],
       "name": "Stormwaters",
       "flag": ""
     },
     {
-      "coordinates": [608, 664],
+      "coordinates": [720, 944],
       "name": "Northern Ice Fields",
       "flag": ""
     },
     {
-      "coordinates": [804, 944],
+      "coordinates": [944, 244],
       "name": "Therynian Isles",
       "flag": ""
     }

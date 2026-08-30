@@ -6,82 +6,82 @@
   "multiplayer_frequency": 1,
   "nations": [
     {
-      "coordinates": [1112, 580],
+      "coordinates": [1112, 468],
       "name": "Maion",
       "flag": ""
     },
     {
-      "coordinates": [20, 160],
+      "coordinates": [76, 1084],
       "name": "Clann",
       "flag": ""
     },
     {
-      "coordinates": [2204, 160],
+      "coordinates": [2204, 244],
       "name": "Anthur",
       "flag": ""
     },
     {
-      "coordinates": [1784, 664],
+      "coordinates": [188, 76],
       "name": "Frutfield",
       "flag": ""
     },
     {
-      "coordinates": [132, 804],
+      "coordinates": [1812, 1028],
       "name": "Marian Coast",
       "flag": ""
     },
     {
-      "coordinates": [608, 244],
+      "coordinates": [1588, 48],
       "name": "Hirin Islands",
       "flag": ""
     },
     {
-      "coordinates": [1616, 132],
+      "coordinates": [776, 1000],
       "name": "Aldrakage Islands",
       "flag": ""
     },
     {
-      "coordinates": [1056, 104],
+      "coordinates": [552, 496],
       "name": "Atla Katt",
       "flag": ""
     },
     {
-      "coordinates": [580, 720],
+      "coordinates": [1756, 524],
       "name": "Ochmet",
       "flag": ""
     },
     {
-      "coordinates": [2176, 748],
+      "coordinates": [804, 76],
       "name": "Sagen",
       "flag": ""
     },
     {
-      "coordinates": [1896, 328],
+      "coordinates": [1224, 1000],
       "name": "Raria",
       "flag": ""
     },
     {
-      "coordinates": [1336, 328],
+      "coordinates": [48, 468],
       "name": "Sinai",
       "flag": ""
     },
     {
-      "coordinates": [1504, 692],
+      "coordinates": [1420, 692],
       "name": "Panhur",
       "flag": ""
     },
     {
-      "coordinates": [440, 468],
+      "coordinates": [1224, 132],
       "name": "Thalning",
       "flag": ""
     },
     {
-      "coordinates": [888, 748],
+      "coordinates": [244, 776],
       "name": "Celesacy",
       "flag": ""
     },
     {
-      "coordinates": [160, 552],
+      "coordinates": [2120, 888],
       "name": "Reo Usti",
       "flag": ""
     }

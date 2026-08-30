@@ -3,99 +3,99 @@
   "id": "Maion",
   "map": {
     "height": 1116,
-    "num_land_tiles": 584157,
+    "num_land_tiles": 1008231,
     "width": 2236
   },
   "map16x": {
     "height": 279,
-    "num_land_tiles": 34358,
+    "num_land_tiles": 61139,
     "width": 559
   },
   "map4x": {
     "height": 558,
-    "num_land_tiles": 143199,
+    "num_land_tiles": 249372,
     "width": 1118
   },
   "multiplayer_frequency": 1,
   "name": "Maion",
   "nations": [
     {
-      "coordinates": [1112, 580],
+      "coordinates": [1112, 468],
       "flag": "",
       "name": "Maion"
     },
     {
-      "coordinates": [20, 160],
+      "coordinates": [76, 1084],
       "flag": "",
       "name": "Clann"
     },
     {
-      "coordinates": [2204, 160],
+      "coordinates": [2204, 244],
       "flag": "",
       "name": "Anthur"
     },
     {
-      "coordinates": [1784, 664],
+      "coordinates": [188, 76],
       "flag": "",
       "name": "Frutfield"
     },
     {
-      "coordinates": [132, 804],
+      "coordinates": [1812, 1028],
       "flag": "",
       "name": "Marian Coast"
     },
     {
-      "coordinates": [608, 244],
+      "coordinates": [1588, 48],
       "flag": "",
       "name": "Hirin Islands"
     },
     {
-      "coordinates": [1616, 132],
+      "coordinates": [776, 1000],
       "flag": "",
       "name": "Aldrakage Islands"
     },
     {
-      "coordinates": [1056, 104],
+      "coordinates": [552, 496],
       "flag": "",
       "name": "Atla Katt"
     },
     {
-      "coordinates": [580, 720],
+      "coordinates": [1756, 524],
       "flag": "",
       "name": "Ochmet"
     },
     {
-      "coordinates": [2176, 748],
+      "coordinates": [804, 76],
       "flag": "",
       "name": "Sagen"
     },
     {
-      "coordinates": [1896, 328],
+      "coordinates": [1224, 1000],
       "flag": "",
       "name": "Raria"
     },
     {
-      "coordinates": [1336, 328],
+      "coordinates": [48, 468],
       "flag": "",
       "name": "Sinai"
     },
     {
-      "coordinates": [1504, 692],
+      "coordinates": [1420, 692],
       "flag": "",
       "name": "Panhur"
     },
     {
-      "coordinates": [440, 468],
+      "coordinates": [1224, 132],
       "flag": "",
       "name": "Thalning"
     },
     {
-      "coordinates": [888, 748],
+      "coordinates": [244, 776],
       "flag": "",
       "name": "Celesacy"
     },
     {
-      "coordinates": [160, 552],
+      "coordinates": [2120, 888],
       "flag": "",
       "name": "Reo Usti"
     }

@@ -3,99 +3,99 @@
   "id": "Mettersind",
   "map": {
     "height": 1328,
-    "num_land_tiles": 799797,
+    "num_land_tiles": 907995,
     "width": 1876
   },
   "map16x": {
     "height": 332,
-    "num_land_tiles": 47017,
+    "num_land_tiles": 54980,
     "width": 469
   },
   "map4x": {
     "height": 664,
-    "num_land_tiles": 195974,
+    "num_land_tiles": 224609,
     "width": 938
   },
   "multiplayer_frequency": 1,
   "name": "Mettersind",
   "nations": [
     {
-      "coordinates": [944, 664],
+      "coordinates": [1000, 692],
       "flag": "",
       "name": "Verengera"
     },
     {
-      "coordinates": [1644, 160],
+      "coordinates": [48, 496],
       "flag": "",
       "name": "Norogea"
     },
     {
-      "coordinates": [1700, 1000],
+      "coordinates": [356, 1280],
       "flag": "",
       "name": "Ostrogea"
     },
     {
-      "coordinates": [132, 580],
+      "coordinates": [1756, 1000],
       "flag": "",
       "name": "Selengea"
     },
     {
-      "coordinates": [412, 1196],
+      "coordinates": [1392, 48],
       "flag": "",
       "name": "Parangea"
     },
     {
-      "coordinates": [972, 1252],
+      "coordinates": [1140, 1252],
       "flag": "",
       "name": "Mithronesia"
     },
     {
-      "coordinates": [580, 272],
+      "coordinates": [1560, 524],
       "flag": "",
       "name": "Tyronesia"
     },
     {
-      "coordinates": [1140, 216],
+      "coordinates": [468, 776],
       "flag": "",
       "name": "Sudanessa"
     },
     {
-      "coordinates": [1364, 580],
+      "coordinates": [916, 244],
       "flag": "",
       "name": "Targanessa"
     },
     {
-      "coordinates": [524, 748],
+      "coordinates": [468, 356],
       "flag": "",
       "name": "Goronessa"
     },
     {
-      "coordinates": [1280, 972],
+      "coordinates": [1364, 916],
       "flag": "",
       "name": "Valdenessa"
     },
     {
-      "coordinates": [244, 916],
+      "coordinates": [804, 1028],
       "flag": "",
       "name": "Karanessa"
     },
     {
-      "coordinates": [1784, 692],
+      "coordinates": [1252, 356],
       "flag": "",
       "name": "Myronessa"
     },
     {
-      "coordinates": [860, 356],
+      "coordinates": [160, 804],
       "flag": "",
       "name": "Pyronessa"
     },
     {
-      "coordinates": [804, 916],
+      "coordinates": [1084, 972],
       "flag": "",
       "name": "Zamonessa"
     },
     {
-      "coordinates": [328, 384],
+      "coordinates": [524, 1056],
       "flag": "",
       "name": "Solonessa"
     }

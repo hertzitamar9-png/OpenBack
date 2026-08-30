@@ -6,72 +6,72 @@
   "multiplayer_frequency": 1,
   "nations": [
     {
-      "coordinates": [1140, 552],
+      "coordinates": [1112, 496],
       "name": "Inverted Africa",
       "flag": ""
     },
     {
-      "coordinates": [20, 1084],
+      "coordinates": [48, 860],
       "name": "Inner Asia",
       "flag": ""
     },
     {
-      "coordinates": [2204, 1084],
+      "coordinates": [2148, 860],
       "name": "Western Basin",
       "flag": ""
     },
     {
-      "coordinates": [2008, 20],
+      "coordinates": [1756, 188],
       "name": "Eastern Basin",
       "flag": ""
     },
     {
-      "coordinates": [104, 76],
+      "coordinates": [1504, 1056],
       "name": "Polar Crown",
       "flag": ""
     },
     {
-      "coordinates": [720, 1084],
+      "coordinates": [468, 328],
       "name": "South Rim",
       "flag": ""
     },
     {
-      "coordinates": [1532, 1084],
+      "coordinates": [664, 804],
       "name": "Mediterranean Reach",
       "flag": ""
     },
     {
-      "coordinates": [748, 20],
+      "coordinates": [1280, 48],
       "name": "Great Inland Sea",
       "flag": ""
     },
     {
-      "coordinates": [412, 580],
+      "coordinates": [1700, 636],
       "name": "Boreal Peninsula",
       "flag": ""
     },
     {
-      "coordinates": [1840, 580],
+      "coordinates": [832, 76],
       "name": "Austral Highlands",
       "flag": ""
     },
     {
-      "coordinates": [1448, 76],
+      "coordinates": [384, 1084],
       "name": "Equatorial Gulf",
       "flag": ""
     },
     {
-      "coordinates": [20, 664],
+      "coordinates": [1084, 888],
       "name": "Sunken Atlantic",
       "flag": ""
     },
     {
-      "coordinates": [1112, 1056],
+      "coordinates": [1448, 384],
       "name": "Mirror Pacific",
       "flag": ""
     },
     {
-      "coordinates": [2204, 440],
+      "coordinates": [356, 692],
       "name": "Old Tethys",
       "flag": ""
     }

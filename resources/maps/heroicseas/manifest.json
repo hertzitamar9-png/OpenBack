@@ -3,17 +3,17 @@
   "id": "HeroicSeas",
   "map": {
     "height": 1580,
-    "num_land_tiles": 1281676,
+    "num_land_tiles": 1042223,
     "width": 1580
   },
   "map16x": {
     "height": 395,
-    "num_land_tiles": 78082,
+    "num_land_tiles": 63653,
     "width": 395
   },
   "map4x": {
     "height": 790,
-    "num_land_tiles": 317733,
+    "num_land_tiles": 258694,
     "width": 790
   },
   "multiplayer_frequency": 1,
@@ -25,57 +25,57 @@
       "name": "Great Continent"
     },
     {
-      "coordinates": [20, 1532],
+      "coordinates": [1224, 48],
       "flag": "",
       "name": "Eastern Tribes"
     },
     {
-      "coordinates": [1504, 1476],
+      "coordinates": [1364, 1364],
       "flag": "",
       "name": "Southern Kingdom"
     },
     {
-      "coordinates": [1532, 356],
+      "coordinates": [48, 1000],
       "flag": "",
       "name": "Stormy Straits"
     },
     {
-      "coordinates": [48, 468],
+      "coordinates": [1420, 692],
       "flag": "",
       "name": "Great Canyon"
     },
     {
-      "coordinates": [748, 1504],
+      "coordinates": [412, 272],
       "flag": "",
       "name": "Forest Realm"
     },
     {
-      "coordinates": [636, 48],
+      "coordinates": [944, 1196],
       "flag": "",
       "name": "Snow Realm"
     },
     {
-      "coordinates": [1336, 916],
+      "coordinates": [860, 328],
       "flag": "",
       "name": "Sand Realm"
     },
     {
-      "coordinates": [244, 1000],
+      "coordinates": [468, 1084],
       "flag": "",
       "name": "Volcanic March"
     },
     {
-      "coordinates": [1028, 356],
+      "coordinates": [132, 580],
       "flag": "",
       "name": "Emerald Reach"
     },
     {
-      "coordinates": [1112, 1280],
+      "coordinates": [1252, 1000],
       "flag": "",
       "name": "Hyron Sea"
     },
     {
-      "coordinates": [468, 496],
+      "coordinates": [1196, 412],
       "flag": "",
       "name": "Southern Continent"
     }

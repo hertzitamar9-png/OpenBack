@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
-"""Create clean OpenBack terrain sources from user-supplied map references.
+"""Create deterministic, original OpenBack fictional terrain.
 
-The references are used only to recover broad land/water silhouettes. Labels,
-political borders, legends, and the original visual styling are discarded. The
-output is a native OpenBack terrain PNG plus info.json for each map.
+The generator does not read external reference artwork. Each map is produced
+from its committed dimensions, metadata, nation names, and a stable seed based
+on the OpenBack map id.
 """
 
 from __future__ import annotations
 
 import argparse
-import colorsys
 from collections import deque
 import json
 import math
@@ -17,7 +16,7 @@ import random
 from dataclasses import dataclass
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 
 TARGET_AREA = 2_500_000
@@ -33,6 +32,7 @@ class MapSpec:
     names: tuple[str, ...]
     crop: tuple[float, float, float, float] = (0, 0, 1, 1)
     frequency: int = 1
+    size: tuple[int, int] = (2048, 1280)
 
 
 SPECS = (
@@ -40,232 +40,205 @@ SPECS = (
         "Miskawatookh", "Evrosula", "Gend'Luru", "Sulgarat", "Fjordowaer",
         "Xir-Shaih-Janwa", "Calocorre", "Dzi-Chom-Kmur", "Ux'Apzoal",
         "Stormwaters", "Northern Ice Fields", "Therynian Isles",
-    )),
+    ), size=(1976, 1264)),
     MapSpec("fracturedeurasia", "FracturedEurasia", "Fractured Eurasia", "pale_blue", (
         "Krasnoyarsk Clique", "Yakutsk Clique", "Chukotka Republic", "Anastasias Realm",
         "British Raj", "Great Ming", "Ashkenaziya", "Novosibirsk Clique", "Tibet",
         "Persian Mandate", "Empire of Japan", "Arabian Federation", "Kingdom of Hawaii",
         "Chita Clique", "Russian State", "Mongol Republic",
-    )),
+    ), size=(2344, 1064)),
     MapSpec("canid", "CanidContinents", "Canid Continents", "light_land", (
         "Vulpenai", "Cerdocyonina", "Caninae", "Vulpes", "Lycalopex", "Urocyon",
         "Otocyon", "Cuon", "Nyctereutes", "Chrysocyon", "Atelocynus", "Dusicyon",
-    ), (0.18, 0.06, 0.82, 0.83)),
+    ), (0.18, 0.06, 0.82, 0.83), size=(1440, 1732)),
     MapSpec("heroicseas", "HeroicSeas", "Heroic Seas", "deep_blue", (
         "Great Continent", "Eastern Tribes", "Southern Kingdom", "Stormy Straits",
         "Great Canyon", "Forest Realm", "Snow Realm", "Sand Realm", "Volcanic March",
         "Emerald Reach", "Hyron Sea", "Southern Continent",
-    )),
+    ), size=(1580, 1580)),
     MapSpec("atlas2026", "Atlas2026", "Atlas 2026", "light_land", (
         "Boreal Union", "Verdant West", "Saharan Crown", "Equatorial League", "Indigo Coast",
         "Eastern Range", "Southern Commonwealth", "Island Confederacy", "Polar Republic",
         "Golden Steppe", "Rainforest Pact", "Austral Federation", "Northern Archipelago",
         "Central Plateau", "Western Isles", "Sunrise Dominion",
-    ), (0.02, 0.03, 0.98, 0.61)),
+    ), (0.02, 0.03, 0.98, 0.61), size=(2188, 1140)),
     MapSpec("worldoflur", "WorldOfLur", "World of Lur", "pale_blue", (
         "North Aimaelur", "South Aimaelur", "North Shefrat", "South Shefrat", "Dnogoztov",
         "Kylant", "RMU", "Aleyant", "Lalulu Utkan", "Sulhnni", "Selaylant", "Lura",
         "Gaphrisia", "Koxzalpo", "Untium Syn Aimaelur", "Chud-Vegzag",
-    )),
+    ), size=(2220, 1120)),
     MapSpec("dasseria", "DasserianRealms", "Dasserian Realms", "muted_land", (
         "Dasseria", "Fairen Forest", "Orrakas Badlands", "Drakemaw", "Razalia", "Costula",
         "Komohan Islands", "Carangian Necrocracy", "Solaria", "Amalte", "Madrigal", "Cape Crown",
-    )),
+    ), size=(2108, 1184)),
     MapSpec("fifteenthage", "FifteenthAge", "Fifteenth Age", "dark_ocean", (
         "Gimsonia", "Ebastania", "Holaspione", "Norweyn", "Soliya", "Siltensia",
         "Stavongrade", "Archeovia", "Lunaskia", "Astanar", "Carvonia", "Karurmbi",
         "Tenimar", "Jakatas", "Jilhiria", "Kamarcash",
-    )),
+    ), size=(1612, 1548)),
     MapSpec("mandalanations", "MandalaNations", "Mandala Nations", "light_land", (
         "Mandala State", "Republic of Belapan", "Byalan Republic", "Integral Republic",
         "Tusolan Republic", "Ding Republic", "Northern Water Tribe", "Southern Water Tribe",
         "Zin State", "Cyn Republic", "Guma Free State", "Yin Republic", "Sakego Republic",
         "Gong Republic", "Kahhy Republic", "Zhalo-Kansao Republic",
-    ), (0.01, 0.02, 0.99, 0.69)),
+    ), (0.01, 0.02, 0.99, 0.69), size=(2160, 1152)),
     MapSpec("calistis", "Calistis", "Calistis", "dark_ocean", (
         "Calistis", "Millennia", "Guren", "Dragon Coast", "Inner Sea", "Warm Deserts",
         "White Sea", "North Sea", "Eastern Sea", "Gray Mark", "Great Savanna", "Ethereal Prairie",
-    )),
+    ), size=(1960, 1272)),
     MapSpec("mettersind", "Mettersind", "Mettersind", "dark_ocean", (
         "Verengera", "Norogea", "Ostrogea", "Selengea", "Parangea", "Mithronesia",
         "Tyronesia", "Sudanessa", "Targanessa", "Goronessa", "Valdenessa", "Karanessa",
         "Myronessa", "Pyronessa", "Zamonessa", "Solonessa",
-    )),
+    ), size=(1876, 1328)),
     MapSpec("avidir", "Avidir", "Avidir", "dark_ocean", (
         "Driftwood", "Veltrune", "Westsea", "Shredded Ice", "Eyrionsea", "Moores End",
         "The Lagoon", "Worlds End", "Azure Gap", "Great Ocean", "Blue Expanse", "Avidir Crown",
-    )),
+    ), size=(2108, 1184)),
     MapSpec("patchworkearth", "PatchworkEarth", "Patchwork Earth", "dark_ocean", (
         "Mosaic Crown", "Banner Coast", "Patchwork Reach", "Emblem Isles", "Painted North",
         "Stitched South", "Crestfall", "Ribbon Sea", "Heraldic Union", "Tapestry Bay",
         "Sigil March", "Quilted Cape", "Chromatic League", "Pennant Islands",
-    )),
+    ), size=(1900, 1312)),
     MapSpec("invertedearth", "InvertedEarth", "Inverted Earth", "deep_blue", (
         "Inverted Africa", "Inner Asia", "Western Basin", "Eastern Basin", "Polar Crown",
         "South Rim", "Mediterranean Reach", "Great Inland Sea", "Boreal Peninsula",
         "Austral Highlands", "Equatorial Gulf", "Sunken Atlantic", "Mirror Pacific", "Old Tethys",
-    )),
+    ), size=(2236, 1116)),
     MapSpec("maion", "Maion", "Maion", "dark_ocean", (
         "Maion", "Clann", "Anthur", "Frutfield", "Marian Coast", "Hirin Islands",
         "Aldrakage Islands", "Atla Katt", "Ochmet", "Sagen", "Raria", "Sinai",
         "Panhur", "Thalning", "Celesacy", "Reo Usti",
-    )),
+    ), size=(2236, 1116)),
 )
 
 
-def target_size(source: Image.Image) -> tuple[int, int]:
-    aspect = source.width / source.height
-    width = int(math.sqrt(TARGET_AREA * aspect))
-    height = int(width / aspect)
-    return max(512, width - width % 4), max(512, height - height % 4)
+def stable_seed(map_id: str) -> int:
+    seed = 0x811C9DC5
+    for byte in map_id.encode("utf8"):
+        seed = ((seed ^ byte) * 0x01000193) & 0xFFFFFFFF
+    return seed
 
 
-def is_land(rgb: tuple[int, int, int], mode: str) -> bool:
-    r, g, b = (channel / 255 for channel in rgb)
-    h, s, v = colorsys.rgb_to_hsv(r, g, b)
-    hue = h * 360
-    blue_hue = 175 <= hue <= 255
-
-    if mode == "deep_blue":
-        return not ((blue_hue and b > r + 0.06) or v < 0.10)
-    if mode == "pale_blue":
-        return s > 0.11 and not (blue_hue and b > r + 0.035)
-    if mode == "light_land":
-        return s > 0.12 and not (blue_hue and b > r + 0.08 and b > g + 0.015)
-    if mode == "muted_land":
-        return s > 0.16 and not (blue_hue and b > r + 0.035)
-    if mode == "dark_ocean":
-        return s > 0.12 and v > 0.22 and not (blue_hue and b > r + 0.05 and v < 0.72)
-    raise ValueError(f"unknown mode: {mode}")
+def noise_field(size: tuple[int, int], rng: random.Random) -> Image.Image:
+    """Build deterministic multi-scale value noise using Pillow only."""
+    width, height = size
+    field = Image.new("L", size, 128)
+    for grid, weight in ((4, 0.20), (8, 0.24), (16, 0.28), (32, 0.28)):
+        layer = Image.frombytes(
+            "L",
+            (grid, grid),
+            bytes(rng.randrange(256) for _ in range(grid * grid)),
+        ).resize(size, Image.Resampling.BICUBIC)
+        field = Image.blend(field, layer, weight)
+    return field
 
 
-def remove_small_land(mask: Image.Image, minimum: int) -> Image.Image:
-    """Remove detached labels, grid fragments, and other tiny false islands."""
-    width, height = mask.size
-    pixels = bytearray(mask.tobytes())
-    seen = bytearray(width * height)
-    for start in range(width * height):
-        if seen[start] or pixels[start] < 128:
-            continue
-        seen[start] = 1
-        queue = deque([start])
-        component = []
-        while queue:
-            index = queue.popleft()
-            component.append(index)
-            x = index % width
-            for neighbor in (index - width, index + width, index - 1, index + 1):
-                if neighbor < 0 or neighbor >= len(pixels) or seen[neighbor]:
-                    continue
-                if neighbor == index - 1 and x == 0:
-                    continue
-                if neighbor == index + 1 and x == width - 1:
-                    continue
-                if pixels[neighbor] >= 128:
-                    seen[neighbor] = 1
-                    queue.append(neighbor)
-        if len(component) < minimum:
-            for index in component:
-                pixels[index] = 0
-    return Image.frombytes("L", mask.size, bytes(pixels))
+def irregular_polygon(
+    center: tuple[float, float],
+    radius: tuple[float, float],
+    rng: random.Random,
+    points: int = 56,
+) -> list[tuple[float, float]]:
+    phase_a = rng.random() * math.tau
+    phase_b = rng.random() * math.tau
+    phase_c = rng.random() * math.tau
+    result = []
+    for index in range(points):
+        angle = math.tau * index / points
+        edge = (
+            1
+            + 0.19 * math.sin(3 * angle + phase_a)
+            + 0.11 * math.sin(7 * angle + phase_b)
+            + 0.06 * math.sin(13 * angle + phase_c)
+            + rng.uniform(-0.045, 0.045)
+        )
+        result.append(
+            (
+                center[0] + math.cos(angle) * radius[0] * edge,
+                center[1] + math.sin(angle) * radius[1] * edge,
+            )
+        )
+    return result
 
 
-def fill_small_water_holes(mask: Image.Image, maximum: int) -> Image.Image:
-    """Fill label and border cuts while preserving real seas and large lakes."""
-    width, height = mask.size
-    pixels = bytearray(mask.tobytes())
-    seen = bytearray(width * height)
-    for start in range(width * height):
-        if seen[start] or pixels[start] >= 128:
-            continue
-        seen[start] = 1
-        queue = deque([start])
-        component = []
-        touches_edge = False
-        while queue:
-            index = queue.popleft()
-            component.append(index)
-            x, y = index % width, index // width
-            touches_edge = touches_edge or x == 0 or x == width - 1 or y == 0 or y == height - 1
-            for neighbor in (index - width, index + width, index - 1, index + 1):
-                if neighbor < 0 or neighbor >= len(pixels) or seen[neighbor]:
-                    continue
-                if neighbor == index - 1 and x == 0:
-                    continue
-                if neighbor == index + 1 and x == width - 1:
-                    continue
-                if pixels[neighbor] < 128:
-                    seen[neighbor] = 1
-                    queue.append(neighbor)
-        if not touches_edge and len(component) < maximum:
-            for index in component:
-                pixels[index] = 255
-    return Image.frombytes("L", mask.size, bytes(pixels))
+def procedural_mask(spec: MapSpec) -> Image.Image:
+    """Create an original coastline without reading any source image."""
+    rng = random.Random(stable_seed(spec.map_id))
+    preview_width = 360
+    preview_height = max(180, round(preview_width * spec.size[1] / spec.size[0]))
+    preview_size = (preview_width, preview_height)
+    shape = Image.new("L", preview_size, 0)
+    draw = ImageDraw.Draw(shape)
 
+    continent_count = 4 + rng.randrange(4)
+    for _ in range(continent_count):
+        center = (
+            rng.uniform(preview_width * 0.12, preview_width * 0.88),
+            rng.uniform(preview_height * 0.16, preview_height * 0.84),
+        )
+        radius = (
+            rng.uniform(preview_width * 0.10, preview_width * 0.24),
+            rng.uniform(preview_height * 0.12, preview_height * 0.29),
+        )
+        draw.polygon(irregular_polygon(center, radius, rng), fill=218)
 
-def erase_reference_decorations(mask: Image.Image, spec: MapSpec) -> None:
-    """Remove the few large legends that cannot be rejected as small text."""
-    draw = ImageDraw.Draw(mask)
-    width, height = mask.size
-    if spec.key == "therynian":
-        draw.rectangle((0, height * 0.91, width * 0.36, height), fill=0)
-    elif spec.key == "canid":
-        draw.rectangle((0, height * 0.72, width * 0.15, height), fill=0)
-    elif spec.key == "worldoflur":
-        draw.rectangle((width * 0.875, height * 0.72, width, height), fill=0)
-    elif spec.key == "dasseria":
-        draw.rectangle((0, height * 0.84, width * 0.26, height), fill=0)
-    elif spec.key == "fifteenthage":
-        draw.rectangle((0, 0, width, height * 0.055), fill=0)
-        draw.rectangle((0, height * 0.94, width, height), fill=0)
-    elif spec.key == "mettersind":
-        draw.rectangle((0, height * 0.77, width * 0.16, height), fill=0)
-    elif spec.key == "avidir":
-        draw.rectangle((width * 0.41, height * 0.78, width * 0.68, height), fill=0)
-    elif spec.key == "patchworkearth":
-        draw.rectangle((0, 0, width, height * 0.075), fill=0)
-        draw.rectangle((0, height * 0.91, width, height), fill=0)
-    elif spec.key == "maion":
-        draw.rectangle((width * 0.68, height * 0.69, width * 0.93, height * 0.91), fill=0)
+    for _ in range(10 + rng.randrange(13)):
+        x = rng.uniform(preview_width * 0.04, preview_width * 0.96)
+        y = rng.uniform(preview_height * 0.06, preview_height * 0.94)
+        rx = rng.uniform(preview_width * 0.008, preview_width * 0.035)
+        ry = rng.uniform(preview_height * 0.012, preview_height * 0.050)
+        draw.ellipse((x - rx, y - ry, x + rx, y + ry), fill=205)
 
+    # Large interior cuts make natural seas and prevent a single boxy landmass.
+    for _ in range(2 + rng.randrange(3)):
+        x = rng.uniform(preview_width * 0.20, preview_width * 0.80)
+        y = rng.uniform(preview_height * 0.20, preview_height * 0.80)
+        rx = rng.uniform(preview_width * 0.025, preview_width * 0.075)
+        ry = rng.uniform(preview_height * 0.035, preview_height * 0.10)
+        draw.ellipse((x - rx, y - ry, x + rx, y + ry), fill=25)
 
-def clean_mask(source: Image.Image, spec: MapSpec) -> Image.Image:
-    left, top, right, bottom = spec.crop
-    cropped = source.crop((
-        int(source.width * left), int(source.height * top),
-        int(source.width * right), int(source.height * bottom),
-    )).convert("RGB")
-    cropped = cropped.resize(target_size(cropped), Image.Resampling.LANCZOS)
-    mask = Image.new("L", cropped.size)
-    mask.putdata([255 if is_land(pixel, spec.mode) else 0 for pixel in cropped.get_flattened_data()])
-    # Remove labels/grid lines and reconnect coastlines broken by map borders.
-    opening = 7 if spec.key == "canid" else 3
-    mask = mask.filter(ImageFilter.MinFilter(opening)).filter(ImageFilter.MaxFilter(opening))
-    mask = mask.filter(ImageFilter.MaxFilter(5)).filter(ImageFilter.MinFilter(5))
-    erase_reference_decorations(mask, spec)
-    mask = remove_small_land(mask, max(900, mask.width * mask.height // 2000))
-    return fill_small_water_holes(mask, max(1200, mask.width * mask.height // 1600))
+    shape = shape.filter(ImageFilter.GaussianBlur(3.1))
+    combined = ImageChops.add(
+        shape,
+        noise_field(preview_size, rng),
+        scale=1.0,
+        offset=-112,
+    )
+    desired_land = 0.40 + rng.uniform(-0.035, 0.055)
+    histogram = combined.histogram()
+    target_water = int(preview_width * preview_height * (1 - desired_land))
+    cumulative = 0
+    threshold = 128
+    for value, count in enumerate(histogram):
+        cumulative += count
+        if cumulative >= target_water:
+            threshold = value
+            break
+    mask = combined.point(lambda value: 255 if value > threshold else 0)
+    mask = mask.filter(ImageFilter.MinFilter(3)).filter(ImageFilter.MaxFilter(3))
+    border = ImageDraw.Draw(mask)
+    border.rectangle((0, 0, preview_width - 1, preview_height - 1), outline=0, width=3)
+    return mask.resize(spec.size, Image.Resampling.LANCZOS).point(
+        lambda value: 255 if value >= 128 else 0
+    )
 
 
 def terrain_from_mask(mask: Image.Image, seed: int) -> Image.Image:
-    width, height = mask.size
-    mask_data = mask.load()
+    rng = random.Random(seed ^ 0xA5A55A5A)
     terrain = Image.new("RGBA", mask.size, WATER)
-    pixels = terrain.load()
-    rng = random.Random(seed)
-    phases = [rng.random() * math.tau for _ in range(4)]
-    for y in range(height):
-        for x in range(width):
-            if mask_data[x, y] < 128:
-                continue
-            waves = (
-                math.sin(x / 71 + phases[0])
-                + math.cos(y / 59 + phases[1])
-                + math.sin((x + y) / 113 + phases[2])
-                + math.cos((x - y) / 151 + phases[3])
-            ) / 4
-            blue = max(144, min(190, int(160 + waves * 24)))
-            pixels[x, y] = (132, 158, blue, 255)
+    elevation = noise_field((320, 200), rng).resize(mask.size, Image.Resampling.BICUBIC)
+    blue = elevation.point(lambda value: 144 + value * 46 // 255)
+    land = Image.merge(
+        "RGBA",
+        (
+            Image.new("L", mask.size, 132),
+            Image.new("L", mask.size, 158),
+            blue,
+            Image.new("L", mask.size, 255),
+        ),
+    )
+    terrain.paste(land, (0, 0), mask)
     return terrain
 
 
@@ -332,17 +305,25 @@ def land_component_areas(mask: Image.Image) -> list[int]:
 def write_map(output_root: Path, spec: MapSpec, mask: Image.Image) -> None:
     folder = output_root / spec.map_id.lower()
     folder.mkdir(parents=True, exist_ok=True)
-    terrain_from_mask(mask, sum(ord(c) for c in spec.map_id)).save(folder / "image.png", optimize=True)
+    terrain_from_mask(mask, stable_seed(spec.map_id)).save(folder / "image.png", optimize=True)
     points = spawn_points(mask, len(spec.names))
+    canonical_info = (
+        Path(__file__).resolve().parents[1]
+        / "assets"
+        / "maps"
+        / spec.map_id.lower()
+        / "info.json"
+    )
+    existing = json.loads(canonical_info.read_text(encoding="utf8"))
     info = {
-        "id": spec.map_id,
-        "name": spec.display_name,
-        "translation_key": f"map.{spec.map_id.lower()}",
-        "categories": ["fictional"],
-        "multiplayer_frequency": spec.frequency,
+        **existing,
         "nations": [
-            {"coordinates": [x, y], "name": name, "flag": ""}
-            for (x, y), name in zip(points, spec.names)
+            {
+                **existing["nations"][index],
+                "coordinates": [x, y],
+                "name": name,
+            }
+            for index, ((x, y), name) in enumerate(zip(points, spec.names))
         ],
     }
     (folder / "info.json").write_text(json.dumps(info, indent=2) + "\n", encoding="utf-8")
@@ -417,20 +398,17 @@ def create_shattered_expanse(output_root: Path) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-root", type=Path, required=True)
-    parser.add_argument("--reference", action="append", default=[], metavar="KEY=PNG")
+    parser.add_argument("--only", choices=[spec.key for spec in SPECS])
     parser.add_argument("--skip-archipelago", action="store_true")
     args = parser.parse_args()
-    references = {key: Path(path) for key, path in (item.split("=", 1) for item in args.reference)}
 
     for spec in SPECS:
-        source_path = references.get(spec.key)
-        if source_path is None:
-            raise SystemExit(f"missing --reference {spec.key}=PNG")
-        with Image.open(source_path) as source:
-            write_map(args.output_root, spec, clean_mask(source, spec))
+        if args.only is not None and spec.key != args.only:
+            continue
+        write_map(args.output_root, spec, procedural_mask(spec))
         print(f"created {spec.display_name}")
 
-    if not args.skip_archipelago:
+    if not args.skip_archipelago and args.only is None:
         create_shattered_expanse(args.output_root)
         print("created Shattered Expanse")
 

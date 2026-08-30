@@ -1,3 +1,12 @@
+## OpenBack v0.36.266 - Every Map Accounted For
+
+- Audited all 135 shipped maps and added a machine-readable provenance record with origin, creator, licence, generator, stable seed where applicable, and hashes tied to the shipped files.
+- Recovered and reverse-searched the fifteen pictures used by the old fictional-map converter. They matched Reddit and DeviantArt artwork, a commercial Mappa Animalia print, Anima: Beyond Fantasy, Nintendo/Hyrule material, and other sources that did not grant OpenBack reuse rights.
+- Replaced all fifteen affected coastlines with deterministic original OpenBack terrain while preserving map names, dimensions, categories, nation names, nation counts, and gameplay availability.
+- Added tests that reject unverified maps, verify all map records and hashes, reproduce the procedural generator, and ensure committed terrain matches deterministic output.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.265 - Credits That Match the Evidence
 
 - Corrected the fictional-map credits: fifteen terrain silhouettes were extracted from temporary reference pictures, not generated from nothing, and their original source pages and licences were never recorded. They are now marked unverified instead of falsely described as wholly procedural.

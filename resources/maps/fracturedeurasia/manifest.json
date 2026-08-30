@@ -3,17 +3,17 @@
   "id": "FracturedEurasia",
   "map": {
     "height": 1064,
-    "num_land_tiles": 933866,
+    "num_land_tiles": 1050850,
     "width": 2344
   },
   "map16x": {
     "height": 266,
-    "num_land_tiles": 56707,
+    "num_land_tiles": 64417,
     "width": 586
   },
   "map4x": {
     "height": 532,
-    "num_land_tiles": 231199,
+    "num_land_tiles": 261070,
     "width": 1172
   },
   "multiplayer_frequency": 1,
@@ -25,77 +25,77 @@
       "name": "Krasnoyarsk Clique"
     },
     {
-      "coordinates": [2316, 300],
+      "coordinates": [2288, 1000],
       "flag": "",
       "name": "Yakutsk Clique"
     },
     {
-      "coordinates": [20, 552],
+      "coordinates": [132, 104],
       "flag": "",
       "name": "Chukotka Republic"
     },
     {
-      "coordinates": [608, 48],
+      "coordinates": [1952, 216],
       "flag": "",
       "name": "Anastasias Realm"
     },
     {
-      "coordinates": [692, 1000],
+      "coordinates": [1616, 1028],
       "flag": "",
       "name": "British Raj"
     },
     {
-      "coordinates": [1532, 48],
+      "coordinates": [552, 580],
       "flag": "",
       "name": "Great Ming"
     },
     {
-      "coordinates": [524, 524],
+      "coordinates": [1644, 552],
       "flag": "",
       "name": "Ashkenaziya"
     },
     {
-      "coordinates": [1056, 20],
+      "coordinates": [2204, 580],
       "flag": "",
       "name": "Novosibirsk Clique"
     },
     {
-      "coordinates": [216, 188],
+      "coordinates": [1420, 216],
       "flag": "",
       "name": "Tibet"
     },
     {
-      "coordinates": [1980, 76],
+      "coordinates": [496, 216],
       "flag": "",
       "name": "Persian Mandate"
     },
     {
-      "coordinates": [860, 328],
+      "coordinates": [1924, 832],
       "flag": "",
       "name": "Empire of Japan"
     },
     {
-      "coordinates": [356, 832],
+      "coordinates": [832, 356],
       "flag": "",
       "name": "Arabian Federation"
     },
     {
-      "coordinates": [972, 804],
+      "coordinates": [944, 804],
       "flag": "",
       "name": "Kingdom of Hawaii"
     },
     {
-      "coordinates": [1280, 244],
+      "coordinates": [1336, 832],
       "flag": "",
       "name": "Chita Clique"
     },
     {
-      "coordinates": [776, 608],
+      "coordinates": [1112, 188],
       "flag": "",
       "name": "Russian State"
     },
     {
-      "coordinates": [468, 272],
+      "coordinates": [1924, 496],
       "flag": "",
       "name": "Mongol Republic"
     }

@@ -31,10 +31,9 @@ OpenBack-authored shop artwork is published under CC BY-SA 4.0. Wikimedia
 flags, 3D models, fonts, music, and map data remain governed by the individual
 terms identified in CREDITS.md and the 3D asset manifest.
 
-The fifteen reference-derived fictional maps marked **unverified** in CREDITS.md
-do not have a recorded source licence. This file does not grant rights that
-OpenBack has not established and must not be read as legal clearance for those
-source silhouettes.
+The fifteen OpenBack fictional maps named in CREDITS.md use replacement
+coastlines from the committed deterministic generator and are published under
+CC BY-SA 4.0. The earlier reference-derived silhouettes are not shipped.
 
 To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/4.0/
 or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.

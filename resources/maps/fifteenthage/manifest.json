@@ -3,17 +3,17 @@
   "id": "FifteenthAge",
   "map": {
     "height": 1548,
-    "num_land_tiles": 835652,
+    "num_land_tiles": 984435,
     "width": 1612
   },
   "map16x": {
     "height": 387,
-    "num_land_tiles": 49745,
+    "num_land_tiles": 60670,
     "width": 403
   },
   "map4x": {
     "height": 774,
-    "num_land_tiles": 205705,
+    "num_land_tiles": 244942,
     "width": 806
   },
   "multiplayer_frequency": 1,
@@ -25,77 +25,77 @@
       "name": "Gimsonia"
     },
     {
-      "coordinates": [1420, 104],
+      "coordinates": [1336, 48],
       "flag": "",
       "name": "Ebastania"
     },
     {
-      "coordinates": [664, 104],
+      "coordinates": [524, 1504],
       "flag": "",
       "name": "Holaspione"
     },
     {
-      "coordinates": [188, 1056],
+      "coordinates": [104, 524],
       "flag": "",
       "name": "Norweyn"
     },
     {
-      "coordinates": [748, 1420],
+      "coordinates": [636, 104],
       "flag": "",
       "name": "Soliya"
     },
     {
-      "coordinates": [1336, 888],
+      "coordinates": [1560, 524],
       "flag": "",
       "name": "Siltensia"
     },
     {
-      "coordinates": [356, 524],
+      "coordinates": [328, 1000],
       "flag": "",
       "name": "Stavongrade"
     },
     {
-      "coordinates": [1056, 384],
+      "coordinates": [1028, 384],
       "flag": "",
       "name": "Archeovia"
     },
     {
-      "coordinates": [1140, 1280],
+      "coordinates": [1056, 1140],
       "flag": "",
       "name": "Lunaskia"
     },
     {
-      "coordinates": [1448, 496],
+      "coordinates": [1224, 748],
       "flag": "",
       "name": "Astanar"
     },
     {
-      "coordinates": [552, 1056],
+      "coordinates": [524, 496],
       "flag": "",
       "name": "Carvonia"
     },
     {
-      "coordinates": [720, 440],
+      "coordinates": [692, 1168],
       "flag": "",
       "name": "Karurmbi"
     },
     {
-      "coordinates": [888, 1084],
+      "coordinates": [972, 48],
       "flag": "",
       "name": "Tenimar"
     },
     {
-      "coordinates": [972, 104],
+      "coordinates": [1308, 328],
       "flag": "",
       "name": "Jakatas"
     },
     {
-      "coordinates": [328, 804],
+      "coordinates": [104, 804],
       "flag": "",
       "name": "Jilhiria"
     },
     {
-      "coordinates": [1196, 664],
+      "coordinates": [440, 1252],
       "flag": "",
       "name": "Kamarcash"
     }

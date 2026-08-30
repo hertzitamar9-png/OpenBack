@@ -3,17 +3,17 @@
   "id": "DasserianRealms",
   "map": {
     "height": 1184,
-    "num_land_tiles": 1225615,
+    "num_land_tiles": 920610,
     "width": 2108
   },
   "map16x": {
     "height": 296,
-    "num_land_tiles": 74216,
+    "num_land_tiles": 56665,
     "width": 527
   },
   "map4x": {
     "height": 592,
-    "num_land_tiles": 303130,
+    "num_land_tiles": 229060,
     "width": 1054
   },
   "multiplayer_frequency": 1,
@@ -25,57 +25,57 @@
       "name": "Dasseria"
     },
     {
-      "coordinates": [20, 20],
+      "coordinates": [76, 468],
       "flag": "",
       "name": "Fairen Forest"
     },
     {
-      "coordinates": [2064, 20],
+      "coordinates": [1952, 328],
       "flag": "",
       "name": "Orrakas Badlands"
     },
     {
-      "coordinates": [2036, 1140],
+      "coordinates": [496, 1056],
       "flag": "",
       "name": "Drakemaw"
     },
     {
-      "coordinates": [244, 944],
+      "coordinates": [1392, 48],
       "flag": "",
       "name": "Razalia"
     },
     {
-      "coordinates": [664, 48],
+      "coordinates": [720, 76],
       "flag": "",
       "name": "Costula"
     },
     {
-      "coordinates": [1392, 48],
+      "coordinates": [1252, 1140],
       "flag": "",
       "name": "Komohan Islands"
     },
     {
-      "coordinates": [1672, 636],
+      "coordinates": [1532, 552],
       "flag": "",
       "name": "Carangian Necrocracy"
     },
     {
-      "coordinates": [1224, 1140],
+      "coordinates": [636, 664],
       "flag": "",
       "name": "Solaria"
     },
     {
-      "coordinates": [776, 944],
+      "coordinates": [888, 972],
       "flag": "",
       "name": "Amalte"
     },
     {
-      "coordinates": [412, 412],
+      "coordinates": [412, 328],
       "flag": "",
       "name": "Madrigal"
     },
     {
-      "coordinates": [2036, 440],
+      "coordinates": [1700, 132],
       "flag": "",
       "name": "Cape Crown"
     }
