@@ -405,13 +405,13 @@ export class OwnerAnalyticsModal extends BaseModal {
                           </div>
                           <div class="text-[10px] text-white/30">
                             ${
-                              player.email
-                                ? translateText("analytics.account_id", {
-                                    id: player.publicId,
-                                  })
-                                : translateText("analytics.guest_id", {
-                                    id: player.publicId,
-                                  })
+                              // The owner's own console: whoever signed up is
+                              // shown by the address they signed up with, and
+                              // a guest by the id that is all we know them by.
+                              player.email ??
+                              translateText("analytics.guest_id", {
+                                id: player.publicId,
+                              })
                             }
                           </div>
                         </td>

@@ -27,7 +27,13 @@ export function bottomHudLayout(input: {
       usableWidth,
     };
   }
-  const columns = usableWidth >= 360 ? 8 : usableWidth >= 324 ? 6 : 4;
+  // How narrow a build button may get before its icon and cost stop being
+  // readable. Columns are chosen to fit this rather than from fixed widths, so
+  // a wider phone fills the row instead of stopping at the same breakpoint a
+  // narrow one does, and a narrow one drops a column instead of overflowing.
+  const minItem = 44;
+  const columns =
+    usableWidth >= minItem * 8 ? 8 : usableWidth >= minItem * 6 ? 6 : 4;
   return {
     columns,
     rows: Math.ceil(input.units / columns),

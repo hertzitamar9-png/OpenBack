@@ -1,3 +1,11 @@
+## OpenBack v0.36.267 - A Bar That Fits, and a Guest List That Ends
+
+- The build bar now measures the part of the screen you can actually see. Android hides its navigation bar for a fullscreen game and slides it back over the page on a swipe, which the game was not told about, so the bottom row of buttons sat underneath it. On a narrow phone the buttons also spread into one fewer row than before, which leaves more of the map visible.
+- Accounts given to people who only opened the site are now forgotten after an hour. Everyone gets one so the game has someone to talk to, and they were kept forever; the owner dashboard listed dozens of them beside real players. Anything a person actually did -- a game, a name, a flag, a sign-up -- keeps their account.
+- Sign-ups are shown on the owner dashboard by the address they signed up with.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.266 - Who Actually Played
 
 - The owner dashboard no longer lists everyone who merely opened the site as a player. Every visitor is given an account so the game can talk to them, so a search engine, a private window, or a second browser each added a row; of the accounts on the server, three had signed up and six had ever played. The rest are still counted, behind a button, because how many people looked is worth knowing.

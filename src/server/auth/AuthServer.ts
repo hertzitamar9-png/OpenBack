@@ -402,6 +402,57 @@ async function persistImmediately(): Promise<void> {
 }
 const persistenceReady = loadPersisted();
 
+/**
+ * How long an account that has done nothing is kept.
+ *
+ * Every visitor without a session cookie is given an account so the game has
+ * someone to talk to, and a crawler, a private window or a cleared cookie each
+ * asks for a fresh one. Those never play and never sign up, and they piled up
+ * until the owner's dashboard listed 74 "players" of whom 3 had signed up and
+ * 7 had ever played. An hour is long enough for anyone who is going to start a
+ * game to have started one.
+ */
+const EMPTY_GUEST_TTL_MS = 60 * 60 * 1000;
+const GUEST_SWEEP_INTERVAL_MS = 15 * 60 * 1000;
+
+/**
+ * Forget guest accounts that never became anyone.
+ *
+ * Deliberately conservative: an account is only dropped when it has no email,
+ * no name of any kind, has never appeared in a game, holds nothing bought or
+ * joined, and has not been seen for an hour. Anything a person did keeps their
+ * account alive, so a returning player is never deleted out from under their
+ * own session.
+ */
+function sweepEmptyGuests(): void {
+  const now = Date.now();
+  const played = new Set(playerGames.map((game) => game.publicId));
+  const doomed: StoredUser[] = [];
+  for (const user of usersByPid.values()) {
+    if (user.email) continue;
+    if (user.displayName || user.lastKnownName) continue;
+    if (played.has(user.publicId)) continue;
+    if (user.selectedFlag || user.selectedCosmetic) continue;
+    if ((user.currencySoft ?? 0) > 0) continue;
+    if (user.profilePictureRevision !== undefined) continue;
+    if (clanTagFor(user) !== null) continue;
+    const seen = user.lastSeenAt ? Date.parse(user.lastSeenAt) : user.createdAt;
+    if (!Number.isFinite(seen) || now - seen < EMPTY_GUEST_TTL_MS) continue;
+    doomed.push(user);
+  }
+  if (doomed.length === 0) return;
+  for (const user of doomed) deleteUser(user);
+  console.info(
+    `[auth] forgot ${doomed.length} guest accounts that never played`,
+  );
+  persist();
+}
+
+void persistenceReady.then(() => {
+  sweepEmptyGuests();
+  setInterval(sweepEmptyGuests, GUEST_SWEEP_INTERVAL_MS).unref?.();
+});
+
 export async function closeAuthPersistence(): Promise<void> {
   await persistenceReady;
   await persistImmediately();

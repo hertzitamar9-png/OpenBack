@@ -5,8 +5,14 @@ import {
 } from "../../src/client/hud/layout/HudCapacity";
 
 describe("bottomHudLayout", () => {
+  // Portrait columns are chosen to fit a readable 44px button rather than from
+  // fixed widths. That trades a little button width for fewer rows, which is
+  // what a phone needs: the bar sits at the bottom, where Android slides its
+  // navigation over the page, so height is the scarce dimension. 320px now
+  // gets 6 columns of 53px over 3 rows instead of 4 columns of 80px over 4,
+  // and 53px is wider than the 49px this table already accepts at 393px.
   test.each([
-    [320, 568, 4, 4],
+    [320, 568, 6, 3],
     [360, 800, 6, 3],
     [393, 852, 8, 2],
     [430, 932, 8, 2],

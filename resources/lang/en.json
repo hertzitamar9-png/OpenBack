@@ -101,7 +101,6 @@
   },
   "analytics": {
     "account_email": "Account email",
-    "account_id": "Account {id}",
     "active_24h": "Active 24h",
     "active_30d": "Active 30d",
     "active_7d": "Active 7d",
@@ -143,7 +142,7 @@
     "player_sessions": "Player game sessions",
     "player_time": "Combined player time",
     "players": "Player activity",
-    "players_help": "Public identity and engagement only. Emails and authentication data are never shown.",
+    "players_help": "Everyone who played or signed up. Sign-ups show the address they used.",
     "players_lower": "players",
     "players_with_games": "Players with games",
     "playtime": "Playtime",
