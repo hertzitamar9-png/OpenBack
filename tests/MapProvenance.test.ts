@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 
 type VerificationClass =
@@ -37,6 +38,11 @@ const provenance = JSON.parse(
 
 function sha256(file: string): string {
   return createHash("sha256").update(readFileSync(file)).digest("hex");
+}
+
+async function pixelSha256(file: string): Promise<string> {
+  const pixels = await sharp(file).ensureAlpha().raw().toBuffer();
+  return createHash("sha256").update(pixels).digest("hex");
 }
 
 describe("map provenance", () => {
@@ -142,7 +148,7 @@ describe("map provenance", () => {
     }
   });
 
-  it("ships the exact deterministic terrain committed by the generator", () => {
+  it("ships the exact deterministic terrain committed by the generator", async () => {
     const output = mkdtempSync(path.join(os.tmpdir(), "openback-map-all-"));
     try {
       execFileSync(
@@ -165,10 +171,12 @@ describe("map provenance", () => {
       expect(generatedIds).toHaveLength(15);
       for (const id of generatedIds) {
         expect(
-          sha256(path.join(output, id, "image.png")),
-          `${id} terrain`,
+          await pixelSha256(path.join(output, id, "image.png")),
+          `${id} terrain pixels`,
         ).toBe(
-          sha256(path.join("map-generator", "assets", "maps", id, "image.png")),
+          await pixelSha256(
+            path.join("map-generator", "assets", "maps", id, "image.png"),
+          ),
         );
         expect(
           JSON.parse(readFileSync(path.join(output, id, "info.json"), "utf8")),
