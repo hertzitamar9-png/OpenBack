@@ -11,6 +11,7 @@ import {
   PlayerGameModeFilter,
   PlayerGameTypeFilter,
   PlayerProfileSchema,
+  PlayerStatsGameModes,
   PublicPlayerGame,
   PutUsernameResponseSchema,
   RankedLeaderboardResponseSchema,
@@ -23,9 +24,12 @@ import { base64urlToUuid, uuidToBase64url } from "../../core/Base64";
 import { GameEnv } from "../../core/configuration/Config";
 import { CosmeticsSchema } from "../../core/CosmeticSchemas";
 import {
+  Difficulty,
   GameMapSize,
   GameMode,
   HumansVsNations,
+  isDifficulty,
+  isGameType,
   RankedType,
 } from "../../core/game/Game";
 import {
@@ -207,6 +211,12 @@ interface StoredPurchase {
 interface StoredPlayerGame extends PublicPlayerGame {
   publicId: string;
   experienceMode?: ExperienceMode;
+  /**
+   * Absent on games archived before this was recorded. The stats tree is keyed
+   * by difficulty, so those fall into the default bucket rather than being
+   * dropped -- a game someone played should still be counted.
+   */
+  difficulty?: string;
 }
 interface StoredFriendship {
   a: string;
@@ -607,6 +617,67 @@ function analyticsNameFor(
     if (played) return played;
   }
   return "";
+}
+
+/**
+ * The unranked half of a player's record, which nothing was building.
+ *
+ * The profile only ever returned ranked rankings, so the "All" view of the
+ * stats panel had no source at all and read zero however much someone had
+ * played -- thirteen recorded games on the live server showed as none. Every
+ * archived game already carries who played it, its type, mode, difficulty and
+ * outcome; this turns those into the tree the panel reads.
+ *
+ * Per-game averages (buildings, naval, combat, gold) come from a separate blob
+ * that is not aggregated here yet, so those still read as blank. The counts,
+ * and the win rate drawn from them, are now real.
+ */
+function unrankedStatsFor(publicId: string): Record<string, unknown> {
+  const tree: Record<string, Record<string, Record<string, unknown>>> = {};
+  for (const game of playerGames) {
+    if (game.publicId !== publicId) continue;
+    if (game.rankedType && game.rankedType !== "unranked") continue;
+    if (!isGameType(game.type)) continue;
+    const mode = PlayerStatsGameModes.find((known) => known === game.mode);
+    if (mode === undefined) continue;
+    const difficulty = isDifficulty(game.difficulty)
+      ? game.difficulty
+      : Difficulty.Medium;
+    const byMode = (tree[game.type] ??= {});
+    const bucket = (byMode[mode] ??= {});
+    const leaf = (bucket[difficulty] ??= { wins: 0, losses: 0, total: 0 }) as {
+      wins: number;
+      losses: number;
+      total: number;
+    };
+    leaf.total += 1;
+    if (game.result === "victory") leaf.wins += 1;
+    else if (game.result === "defeat") leaf.losses += 1;
+  }
+  // The wire format carries these counters as strings.
+  const out: Record<string, unknown> = {};
+  for (const [type, byMode] of Object.entries(tree)) {
+    const modes: Record<string, unknown> = {};
+    for (const [mode, byDifficulty] of Object.entries(byMode)) {
+      const difficulties: Record<string, unknown> = {};
+      for (const [difficulty, leaf] of Object.entries(byDifficulty)) {
+        const counts = leaf as { wins: number; losses: number; total: number };
+        difficulties[difficulty] = {
+          wins: String(counts.wins),
+          losses: String(counts.losses),
+          total: String(counts.total),
+          stats: undefined,
+          recent: {
+            games: Math.min(100, counts.total),
+            wins: Math.min(100, counts.wins),
+          },
+        };
+      }
+      modes[mode] = difficulties;
+    }
+    out[type] = modes;
+  }
+  return out;
 }
 
 function clanTagFor(user: StoredUser): string | null {
@@ -1316,6 +1387,7 @@ function summariesForGame(record: GameRecord): StoredPlayerGame[] {
           config.playerTeams === undefined ? null : String(config.playerTeams),
         rankedType: config.rankedType ?? "unranked",
         experienceMode: normalizeExperienceMode(config),
+        difficulty: config.difficulty,
         result: gameResultFor(record, player.clientID),
         totalPlayers: record.info.players.length,
         username: player.username,
@@ -2676,10 +2748,12 @@ export function authRouter(): express.Router {
       rank: rankedPosition >= 0 ? rankedPosition + 1 : undefined,
       clanTag: clanTagFor(target) ?? undefined,
       clans: targetClans,
-      stats:
-        rankedStats.length > 0
+      stats: {
+        ...unrankedStatsFor(target.publicId),
+        ...(rankedStats.length > 0
           ? { Ranked: Object.fromEntries(rankedStats) }
-          : {},
+          : {}),
+      },
     };
     // Validate without returning Zod's bigint-transformed result: the public
     // JSON wire format intentionally carries aggregate counters as strings.

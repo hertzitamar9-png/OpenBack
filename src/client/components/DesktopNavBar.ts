@@ -1,6 +1,7 @@
 import { LitElement, html } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { socialAttention, type SocialAttentionStage } from "../SocialAttention";
+import { openOwnProfile } from "../utilities/OpenOwnProfile";
 import "./NavAccountMenu";
 import { NavNotificationsController } from "./NavNotificationsController";
 import "./NavUtilityIcons";
@@ -80,37 +81,39 @@ export class DesktopNavBar extends LitElement {
           </div>
         </div>
         <button
-          class="nav-menu-item ${currentPage === "page-play"
-            ? "active"
-            : ""} text-white/70 hover:text-malibu-blue  font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue "
+          class="nav-menu-item ${
+            currentPage === "page-play" ? "active" : ""
+          } text-white/70 hover:text-malibu-blue  font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue "
           data-page="page-play"
           data-i18n="main.play"
         ></button>
         <!-- Desktop Navigation Menu Items -->
         <div class="relative no-crazygames">
           <button
-            class="nav-menu-item ${currentPage === "page-item-store"
-              ? "active"
-              : ""} text-white/70 hover:text-malibu-blue  font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue "
+            class="nav-menu-item ${
+              currentPage === "page-item-store" ? "active" : ""
+            } text-white/70 hover:text-malibu-blue  font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue "
             data-page="page-item-store"
             data-i18n="main.store"
             @click=${this._notifications.onStoreClick}
           ></button>
-          ${this._notifications.showStoreDot()
-            ? html`
-                <span
-                  class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-ping"
-                ></span>
-                <span
-                  class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"
-                ></span>
-              `
-            : ""}
+          ${
+            this._notifications.showStoreDot()
+              ? html`
+                  <span
+                    class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-ping"
+                  ></span>
+                  <span
+                    class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"
+                  ></span>
+                `
+              : ""
+          }
         </div>
         <button
-          class="nav-menu-item ${currentPage === "page-inventory"
-            ? "active"
-            : ""} text-white/70 hover:text-malibu-blue font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue"
+          class="nav-menu-item ${
+            currentPage === "page-inventory" ? "active" : ""
+          } text-white/70 hover:text-malibu-blue font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue"
           data-page="page-inventory"
           data-i18n="main.inventory"
         ></button>
@@ -123,6 +126,15 @@ export class DesktopNavBar extends LitElement {
           class="no-crazygames nav-menu-item text-white/70 hover:text-blue-500 font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-blue-500"
           data-page="page-clan"
           data-i18n="main.clans"
+        ></button>
+        <!-- Not a data-page item: the profile route needs a publicId, which is
+             why there was no way to reach your own profile from here. -->
+        <button
+          class="no-crazygames nav-menu-item ${
+            currentPage === "page-profile" ? "active" : ""
+          } text-white/70 hover:text-malibu-blue font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue"
+          data-i18n="main.profile"
+          @click=${() => void openOwnProfile()}
         ></button>
         <!-- Utility cluster: news, settings, help and the profile control are account
              /notification affordances, not page links, so they sit tight

@@ -1,3 +1,11 @@
+## OpenBack v0.36.268 - Your Record, and a Way to See It
+
+- Your stats now count the games you played. Only ranked games ever reached the stats panel, so the All view had nothing to read and showed no games, no victories and no losses however much you had played. Every game you finish is counted now, and the win rate with it. The per-game averages underneath still need their own work.
+- There is a Profile button in the menu bar, next to Clans, and pressing your picture opens your profile. The picture only opened the account menu before, and there was no way to reach your own profile at all. The little arrow beside your picture still opens the menu.
+- Games now record the difficulty they were played at, so the stats can be broken down by it.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.267 - A Bar That Fits, and a Guest List That Ends
 
 - The build bar now measures the part of the screen you can actually see. Android hides its navigation bar for a fullscreen game and slides it back over the page on a swipe, which the game was not told about, so the bottom row of buttons sat underneath it. On a narrow phone the buttons also spread into one fewer row than before, which leaves more of the map visible.
