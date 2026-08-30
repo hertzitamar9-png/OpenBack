@@ -1,3 +1,10 @@
+## OpenBack v0.36.265 - A Calm Sea on a Phone
+
+- The sea no longer crawls with square specks on a phone. Zoomed out to the whole map, a single screen pixel covers about twenty tiles, and the map was being drawn by picking one of those twenty at random; which one changed as the view drifted, so the water shimmered in blocks. Those tiles are now averaged together. A desktop, where a pixel covers less than one tile, is untouched and stays as sharp as before.
+- Fixed the development server failing to start a page after the previous release.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.266 - Every Map Accounted For
 
 - Audited all 135 shipped maps and added a machine-readable provenance record with origin, creator, licence, generator, stable seed where applicable, and hashes tied to the shipped files.

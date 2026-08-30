@@ -193,6 +193,9 @@ export default defineConfig(({ mode }) => {
     seoDescription:
       "Play OpenBack, an online territorial war RTS. Expand nations, command armies, build an economy, form alliances, and conquer a world map.",
     seoCanonical: `${siteOrigin}/`,
+    // The server picks this per route; the build only ever emits the shell,
+    // which is the home page, and that one is indexable.
+    seoRobots: "index, follow",
     seoSchemaJson: "{}",
     seoCrawlableHtml: "",
     manifestHref: buildAssetUrl("manifest.json", assetManifest, cdnBase),

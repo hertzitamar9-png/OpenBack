@@ -44,6 +44,15 @@ export class TerrainPass {
   // Scratch buffer for 1×1 sub-uploads; reused across applyTerrainDelta calls.
   private pixelScratch = new Uint8Array(4);
 
+  /**
+   * The colour texture changed, so its mip chain is stale.
+   *
+   * Rebuilt once per frame rather than per edit: a nuke rewrites tiles one 1x1
+   * upload at a time, and rebuilding the whole chain for each of those would
+   * cost far more than the burst itself.
+   */
+  private mipsDirty = false;
+
   constructor(
     private gl: WebGL2RenderingContext,
     // Regenerates current per-tile terrain bytes (reflecting water-nuke
@@ -79,7 +88,19 @@ export class TerrainPass {
       format: gl.RGBA,
       type: gl.UNSIGNED_BYTE,
       data: buildTerrainRGBA(terrainBytes, mapW, mapH, terrainColors),
-      filter: gl.NEAREST, // pixel-crisp at all zoom levels
+      // Crisp when magnified, averaged when minified.
+      //
+      // uZoom is device pixels per tile: a desktop showing a whole map sits
+      // near 1.7, so a pixel covers well under one tile and NEAREST is exactly
+      // right -- sharp, no blur. A phone sits near 0.22, where a single pixel
+      // covers about 4.6 tiles across, twenty of them in area, and NEAREST
+      // picks one of those twenty at random. That point sample changes as the
+      // camera drifts, so the sea crawled with square specks on a handset
+      // while a desktop looked clean. Minification now reads the mip chain,
+      // which averages those twenty properly.
+      filter: gl.NEAREST,
+      minFilter: gl.LINEAR_MIPMAP_LINEAR,
+      mipmap: true,
     });
     this.terrainByteTex = createTexture2D(gl, {
       width: mapW,
@@ -104,6 +125,7 @@ export class TerrainPass {
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.tex);
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    this.mipsDirty = true;
     gl.texSubImage2D(
       gl.TEXTURE_2D,
       0,
@@ -148,6 +170,7 @@ export class TerrainPass {
           this.terrainColors,
         );
       }
+      this.mipsDirty = true;
       gl.texSubImage2D(
         gl.TEXTURE_2D,
         0,
@@ -171,6 +194,7 @@ export class TerrainPass {
       const gl = this.gl;
       gl.activeTexture(gl.TEXTURE1);
       gl.bindTexture(gl.TEXTURE_2D, this.terrainByteTex);
+      this.mipsDirty = true;
       gl.texSubImage2D(
         gl.TEXTURE_2D,
         0,
@@ -190,7 +214,7 @@ export class TerrainPass {
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.tex);
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-    for (let i = 0; i < refs.length; ) {
+    for (let i = 0; i < refs.length;) {
       const ref = refs[i];
       const x = ref % this.mapW;
       const y = (ref - x) / this.mapW;
@@ -205,6 +229,7 @@ export class TerrainPass {
       const runLength = end - i;
       gl.activeTexture(gl.TEXTURE1);
       gl.bindTexture(gl.TEXTURE_2D, this.terrainByteTex);
+      this.mipsDirty = true;
       gl.texSubImage2D(
         gl.TEXTURE_2D,
         0,
@@ -232,6 +257,7 @@ export class TerrainPass {
           this.terrainColors,
         );
       }
+      this.mipsDirty = true;
       gl.texSubImage2D(
         gl.TEXTURE_2D,
         0,
@@ -257,6 +283,13 @@ export class TerrainPass {
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.tex);
+    if (this.mipsDirty) {
+      // Coalesced to once a frame: the smaller mips are what a zoomed-out
+      // phone actually reads, so leaving them stale would show it the terrain
+      // as it was before the edit.
+      gl.generateMipmap(gl.TEXTURE_2D);
+      this.mipsDirty = false;
+    }
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, this.terrainByteTex);
     gl.activeTexture(gl.TEXTURE0);

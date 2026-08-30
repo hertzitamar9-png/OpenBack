@@ -47,6 +47,15 @@ export interface TextureOpts {
   type: number;
   data: ArrayBufferView | null;
   filter?: number;
+  /**
+   * Filter used when the texture is drawn smaller than it is -- more than one
+   * texel per screen pixel. Defaults to `filter`. Separate because the right
+   * answer differs by direction: NEAREST magnified is crisp, NEAREST minified
+   * is a point sample of one texel out of many, which aliases.
+   */
+  minFilter?: number;
+  /** Build the mip chain after upload. Required by any *_MIPMAP_* minFilter. */
+  mipmap?: boolean;
   wrap?: number;
 }
 
@@ -59,7 +68,7 @@ export function createTexture2D(
   gl.texParameteri(
     gl.TEXTURE_2D,
     gl.TEXTURE_MIN_FILTER,
-    opts.filter ?? gl.NEAREST,
+    opts.minFilter ?? opts.filter ?? gl.NEAREST,
   );
   gl.texParameteri(
     gl.TEXTURE_2D,
@@ -87,6 +96,7 @@ export function createTexture2D(
     opts.type,
     opts.data,
   );
+  if (opts.mipmap) gl.generateMipmap(gl.TEXTURE_2D);
   return tex;
 }
 
