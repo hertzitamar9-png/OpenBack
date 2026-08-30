@@ -121,7 +121,7 @@
     "game_modes": "Game modes",
     "game_types": "Game types",
     "games": "Games",
-    "guest_id": "Guest {id}",
+    "guest_no_email": "Guest",
     "heading": "Know how players use OpenBack",
     "hide_visitors": "Hide visitors",
     "last_24h": "Last 24 hours",

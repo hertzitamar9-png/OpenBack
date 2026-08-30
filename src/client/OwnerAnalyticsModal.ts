@@ -344,7 +344,7 @@ export class OwnerAnalyticsModal extends BaseModal {
               @pointercancel=${(event: PointerEvent) =>
                 this.endTableDrag(event)}
             >
-              <table class="w-full min-w-[720px] text-left text-xs lg:text-sm">
+              <table class="w-full min-w-[860px] text-left text-xs lg:text-sm">
                 <thead
                   class="bg-black/20 text-[10px] uppercase tracking-wider text-white/35"
                 >
@@ -404,16 +404,18 @@ export class OwnerAnalyticsModal extends BaseModal {
                             }
                           </div>
                           <div class="text-[10px] text-white/30">
-                            ${
-                              // The owner's own console: whoever signed up is
-                              // shown by the address they signed up with, and
-                              // a guest by the id that is all we know them by.
-                              player.email ??
-                              translateText("analytics.guest_id", {
-                                id: player.publicId,
-                              })
-                            }
+                            ${player.publicId}
                           </div>
+                        </td>
+                        <td
+                          class="px-4 py-3 ${
+                            player.email ? "text-white/75" : "text-white/25"
+                          }"
+                        >
+                          ${
+                            player.email ??
+                            translateText("analytics.guest_no_email")
+                          }
                         </td>
                         <td
                           class="px-4 py-3 ${
@@ -453,7 +455,7 @@ export class OwnerAnalyticsModal extends BaseModal {
                       ${
                         this.expandedPlayerId === player.publicId
                           ? html`<tr>
-                              <td colspan="8" class="bg-black/20 p-0">
+                              <td colspan="9" class="bg-black/20 p-0">
                                 ${this.renderPlayerDetail(player)}
                               </td>
                             </tr>`

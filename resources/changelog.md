@@ -1,3 +1,9 @@
+## OpenBack v0.36.269 - An Email Column
+
+- The owner dashboard gives the email address its own column in the player table, beside the name rather than tucked underneath it. Players who never signed up read as Guest there, and every row still shows its id under the name.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.268 - Your Record, and a Way to See It
 
 - Your stats now count the games you played. Only ranked games ever reached the stats panel, so the All view had nothing to read and showed no games, no victories and no losses however much you had played. Every game you finish is counted now, and the win rate with it. The per-game averages underneath still need their own work.
