@@ -23,6 +23,8 @@ export class OwnerAnalyticsModal extends BaseModal {
   @state() private search = "";
   @state() private refreshing = false;
   @state() private expandedPlayerId: string | null = null;
+  /** Include accounts that have never played and never signed up. */
+  @state() private showVisitors = false;
   private refreshTimer: ReturnType<typeof setInterval> | null = null;
   private requestGeneration = 0;
 
@@ -117,7 +119,19 @@ export class OwnerAnalyticsModal extends BaseModal {
     }
 
     const data = this.analytics;
+    // Someone who opened the site once is not a player. Every visitor without
+    // a session is handed an account so the game can talk to them at all, so
+    // crawlers, private windows and a second browser each add a row. Listing
+    // those beside the people who actually played made the table read as if it
+    // were full of strangers or bots. They are still here, behind the toggle,
+    // because the count itself is worth knowing.
+    const hasArrived = (player: (typeof data.players)[number]) =>
+      player.gamesPlayed > 0 || player.email !== null;
+    const visitors = data.players.filter(
+      (player) => !hasArrived(player),
+    ).length;
     const players = data.players.filter((player) => {
+      if (!this.showVisitors && !hasArrived(player)) return false;
       const needle = this.search.trim().toLowerCase();
       return (
         !needle ||
@@ -294,6 +308,22 @@ export class OwnerAnalyticsModal extends BaseModal {
                   ${translateText("analytics.players_help")}
                 </p>
               </div>
+              ${
+                visitors > 0
+                  ? html`<button
+                      class="h-10 shrink-0 rounded-xl border border-white/10 bg-black/20 px-3 text-xs text-white/60 hover:text-white"
+                      @click=${() => (this.showVisitors = !this.showVisitors)}
+                    >
+                      ${
+                        this.showVisitors
+                          ? translateText("analytics.hide_visitors")
+                          : translateText("analytics.show_visitors", {
+                              count: String(visitors),
+                            })
+                      }
+                    </button>`
+                  : ""
+              }
               <input
                 class="h-10 w-full rounded-xl border border-white/10 bg-black/20 px-4 text-sm text-white outline-none placeholder:text-white/25 focus:border-malibu-blue/50 sm:w-72"
                 type="search"
@@ -362,27 +392,33 @@ export class OwnerAnalyticsModal extends BaseModal {
                       >
                         <td class="px-2 py-2 lg:px-4 lg:py-3">
                           <div
-                            class=${player.username
-                              ? "font-bold text-white"
-                              : "font-bold italic text-white/40"}
+                            class=${
+                              player.username
+                                ? "font-bold text-white"
+                                : "font-bold italic text-white/40"
+                            }
                           >
-                            ${player.username ||
-                            translateText("analytics.no_name_yet")}
+                            ${
+                              player.username ||
+                              translateText("analytics.no_name_yet")
+                            }
                           </div>
                           <div class="text-[10px] text-white/30">
-                            ${player.email
-                              ? translateText("analytics.account_id", {
-                                  id: player.publicId,
-                                })
-                              : translateText("analytics.guest_id", {
-                                  id: player.publicId,
-                                })}
+                            ${
+                              player.email
+                                ? translateText("analytics.account_id", {
+                                    id: player.publicId,
+                                  })
+                                : translateText("analytics.guest_id", {
+                                    id: player.publicId,
+                                  })
+                            }
                           </div>
                         </td>
                         <td
-                          class="px-4 py-3 ${player.online
-                            ? "text-emerald-300"
-                            : "text-white/55"}"
+                          class="px-4 py-3 ${
+                            player.online ? "text-emerald-300" : "text-white/55"
+                          }"
                         >
                           ${formatLastOnline(player.lastSeenAt, player.online)}
                         </td>
@@ -414,22 +450,26 @@ export class OwnerAnalyticsModal extends BaseModal {
                           ${player.approximateCountry ?? "Unknown"}
                         </td>
                       </tr>
-                      ${this.expandedPlayerId === player.publicId
-                        ? html`<tr>
-                            <td colspan="8" class="bg-black/20 p-0">
-                              ${this.renderPlayerDetail(player)}
-                            </td>
-                          </tr>`
-                        : nothing}
+                      ${
+                        this.expandedPlayerId === player.publicId
+                          ? html`<tr>
+                              <td colspan="8" class="bg-black/20 p-0">
+                                ${this.renderPlayerDetail(player)}
+                              </td>
+                            </tr>`
+                          : nothing
+                      }
                     `,
                   )}
                 </tbody>
               </table>
-              ${players.length === 0
-                ? html`<div class="p-10 text-center text-sm text-white/35">
-                    ${translateText("analytics.no_players")}
-                  </div>`
-                : nothing}
+              ${
+                players.length === 0
+                  ? html`<div class="p-10 text-center text-sm text-white/35">
+                      ${translateText("analytics.no_players")}
+                    </div>`
+                  : nothing
+              }
             </div>
           </section>
         </div>
@@ -572,19 +612,22 @@ export class OwnerAnalyticsModal extends BaseModal {
           ${title}
         </h4>
         <div class="mt-2 space-y-1.5">
-          ${entries.length
-            ? entries.slice(0, 8).map(
-                (entry) =>
-                  html`<div
-                    class="flex items-center justify-between gap-2 text-[11px]"
-                  >
-                    <span class="truncate text-white/55">${entry.key}</span>
-                    <span class="shrink-0 tabular-nums text-white/75">
-                      ${entry.games} · ${this.formatDuration(entry.playSeconds)}
-                    </span>
-                  </div>`,
-              )
-            : html`<div class="text-[11px] text-white/25">—</div>`}
+          ${
+            entries.length
+              ? entries.slice(0, 8).map(
+                  (entry) =>
+                    html`<div
+                      class="flex items-center justify-between gap-2 text-[11px]"
+                    >
+                      <span class="truncate text-white/55">${entry.key}</span>
+                      <span class="shrink-0 tabular-nums text-white/75">
+                        ${entry.games} ·
+                        ${this.formatDuration(entry.playSeconds)}
+                      </span>
+                    </div>`,
+                )
+              : html`<div class="text-[11px] text-white/25">—</div>`
+          }
         </div>
       </section>
     `;
@@ -714,34 +757,39 @@ export class OwnerAnalyticsModal extends BaseModal {
         ${title}
       </h3>
       <div class="space-y-3">
-        ${entries.length === 0
-          ? html`<p class="py-6 text-center text-xs text-white/30">—</p>`
-          : entries.slice(0, 8).map(
-              (entry) =>
-                html`<div>
-                  <div
-                    class="mb-1 flex items-center justify-between gap-2 text-xs"
-                  >
-                    <span class="truncate text-white/60">${entry.key}</span>
-                    <span class="shrink-0 font-bold tabular-nums text-white/80">
-                      ${entry.games}
-                    </span>
-                  </div>
-                  <div class="h-1.5 overflow-hidden rounded-full bg-white/5">
+        ${
+          entries.length === 0
+            ? html`<p class="py-6 text-center text-xs text-white/30">—</p>`
+            : entries.slice(0, 8).map(
+                (entry) =>
+                  html`<div>
                     <div
-                      class="h-full rounded-full bg-gradient-to-r from-malibu-blue/70 to-cyan-300"
-                      style="width:${Math.max(
-                        3,
-                        (entry.games / maximum) * 100,
-                      )}%"
-                    ></div>
-                  </div>
-                  <div class="mt-1 text-[9px] text-white/25">
-                    ${entry.players} ${translateText("analytics.players_lower")}
-                    · ${this.formatDuration(entry.playSeconds)}
-                  </div>
-                </div>`,
-            )}
+                      class="mb-1 flex items-center justify-between gap-2 text-xs"
+                    >
+                      <span class="truncate text-white/60">${entry.key}</span>
+                      <span
+                        class="shrink-0 font-bold tabular-nums text-white/80"
+                      >
+                        ${entry.games}
+                      </span>
+                    </div>
+                    <div class="h-1.5 overflow-hidden rounded-full bg-white/5">
+                      <div
+                        class="h-full rounded-full bg-gradient-to-r from-malibu-blue/70 to-cyan-300"
+                        style="width:${Math.max(
+                          3,
+                          (entry.games / maximum) * 100,
+                        )}%"
+                      ></div>
+                    </div>
+                    <div class="mt-1 text-[9px] text-white/25">
+                      ${entry.players}
+                      ${translateText("analytics.players_lower")} ·
+                      ${this.formatDuration(entry.playSeconds)}
+                    </div>
+                  </div>`,
+              )
+        }
       </div>
     </section>`;
   }

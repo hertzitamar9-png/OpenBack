@@ -218,9 +218,9 @@ export class UsernameInput extends LitElement {
     void appRouter.navigate({ pageId: "page-clan", tab: "my-clans" });
     void customElements.whenDefined("clan-modal").then(() => {
       document
-        .querySelector<
-          HTMLElement & { open: (args: { tab: string }) => void }
-        >("clan-modal")
+        .querySelector<HTMLElement & { open: (args: { tab: string }) => void }>(
+          "clan-modal",
+        )
         ?.open({ tab: "browse" });
     });
   };
@@ -520,6 +520,7 @@ export class UsernameInput extends LitElement {
       this.startClanCheck();
     } else {
       this.baseUsername = genAnonUsername();
+      this.nameIsPlaceholder = true;
       this.validateAndStore();
     }
   }
@@ -531,16 +532,18 @@ export class UsernameInput extends LitElement {
       <div class="flex items-center w-full h-full gap-1.5 sm:gap-2">
         ${this.renderClanControl()} ${this.renderNameControl()}
       </div>
-      ${this.validationError
-        ? html`<div
-            id="username-validation-error"
-            class="absolute top-full left-0 z-50 w-full mt-1 px-3 py-2 text-sm font-medium border border-red-500/50 rounded-lg bg-red-900/90 text-red-200 backdrop-blur-md shadow-lg"
-          >
-            ${this.validationError}
-          </div>`
-        : this.clanTagOwnershipError
-          ? this.renderClanTagOwnershipError()
-          : null}
+      ${
+        this.validationError
+          ? html`<div
+              id="username-validation-error"
+              class="absolute top-full left-0 z-50 w-full mt-1 px-3 py-2 text-sm font-medium border border-red-500/50 rounded-lg bg-red-900/90 text-red-200 backdrop-blur-md shadow-lg"
+            >
+              ${this.validationError}
+            </div>`
+          : this.clanTagOwnershipError
+            ? this.renderClanTagOwnershipError()
+            : null
+      }
     `;
   }
 
@@ -559,11 +562,13 @@ export class UsernameInput extends LitElement {
         <button
           type="button"
           id="clan-tag-button"
-          class="flex h-full w-[7.25rem] items-center justify-between gap-0.5 rounded-lg bg-transparent px-1.5 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-malibu-blue/60 ${invalid
-            ? "ring-2 ring-red-400/70"
-            : this.clanMenuOpen
-              ? "bg-white/10"
-              : "hover:bg-white/5"}"
+          class="flex h-full w-[7.25rem] items-center justify-between gap-0.5 rounded-lg bg-transparent px-1.5 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-malibu-blue/60 ${
+            invalid
+              ? "ring-2 ring-red-400/70"
+              : this.clanMenuOpen
+                ? "bg-white/10"
+                : "hover:bg-white/5"
+          }"
           aria-haspopup="dialog"
           aria-expanded=${this.clanMenuOpen ? "true" : "false"}
           aria-busy=${this.clanCheckPending ? "true" : "false"}
@@ -573,31 +578,33 @@ export class UsernameInput extends LitElement {
           @click=${this.toggleClanMenu}
         >
           <span
-            class="min-w-0 flex-1 truncate text-base font-semibold uppercase text-left ${tag
-              ? "text-white"
-              : "text-white/45"}"
+            class="min-w-0 flex-1 truncate text-base font-semibold uppercase text-left ${
+              tag ? "text-white" : "text-white/45"
+            }"
             >${tag || translateText("username.tag")}</span
           >
-          ${this.clanCheckPending
-            ? html`<span
-                class="w-3 h-3 shrink-0 border-2 border-white/30 border-t-white/80 rounded-full animate-spin"
-                aria-hidden="true"
-              ></span>`
-            : html`<svg
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                class="w-3 h-3 shrink-0 text-white/45"
-                aria-hidden="true"
-              >
-                <path
-                  d="M5.5 7.5 10 12l4.5-4.5"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  fill="none"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                ></path>
-              </svg>`}
+          ${
+            this.clanCheckPending
+              ? html`<span
+                  class="w-3 h-3 shrink-0 border-2 border-white/30 border-t-white/80 rounded-full animate-spin"
+                  aria-hidden="true"
+                ></span>`
+              : html`<svg
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  class="w-3 h-3 shrink-0 text-white/45"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M5.5 7.5 10 12l4.5-4.5"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  ></path>
+                </svg>`
+          }
         </button>
         ${this.clanMenuOpen ? this.renderClanMenu() : null}
       </div>
@@ -614,22 +621,24 @@ export class UsernameInput extends LitElement {
         aria-labelledby="clan-tag-button"
         class="absolute left-0 top-full z-50 mt-1.5 w-[17rem] max-w-[80vw] rounded-xl border border-white/15 bg-surface/95 p-1.5 shadow-xl backdrop-blur-md"
       >
-        ${clans.length > 0
-          ? html`
-              <div
-                class="px-2 pt-1 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-white/40"
-              >
-                ${translateText("username.clan_your_clans")}
-              </div>
-              <div class="max-h-56 overflow-y-auto">
-                ${clans.map(
+        ${
+          clans.length > 0
+            ? html`
+                <div
+                  class="px-2 pt-1 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-white/40"
+                >
+                  ${translateText("username.clan_your_clans")}
+                </div>
+                <div class="max-h-56 overflow-y-auto">
+                  ${clans.map(
                   (clan) => html`
                     <button
                       type="button"
-                      class="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors cursor-pointer ${clan.tag.toUpperCase() ===
-                      active
-                        ? "bg-malibu-blue/25"
-                        : "hover:bg-white/10"}"
+                      class="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors cursor-pointer ${
+                        clan.tag.toUpperCase() === active
+                          ? "bg-malibu-blue/25"
+                          : "hover:bg-white/10"
+                      }"
                       @click=${() => this.selectClan(clan.tag)}
                     >
                       <span
@@ -640,30 +649,33 @@ export class UsernameInput extends LitElement {
                         class="min-w-0 flex-1 truncate text-sm text-white/80"
                         >${clan.name}</span
                       >
-                      ${clan.tag.toUpperCase() === active
-                        ? html`<svg
-                            viewBox="0 0 24 24"
-                            class="w-4 h-4 shrink-0 text-malibu-blue"
-                            aria-hidden="true"
-                          >
-                            <path
-                              d="M5 12.5l4.5 4.5L19 7"
-                              stroke="currentColor"
-                              stroke-width="2.5"
-                              fill="none"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                            ></path>
-                          </svg>`
-                        : null}
+                      ${
+                        clan.tag.toUpperCase() === active
+                          ? html`<svg
+                              viewBox="0 0 24 24"
+                              class="w-4 h-4 shrink-0 text-malibu-blue"
+                              aria-hidden="true"
+                            >
+                              <path
+                                d="M5 12.5l4.5 4.5L19 7"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                fill="none"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              ></path>
+                            </svg>`
+                          : null
+                      }
                     </button>
                   `,
                 )}
-              </div>
-            `
-          : html`<div class="px-2 pt-1.5 pb-1 text-sm text-white/50">
-              ${translateText("username.clan_none_joined")}
-            </div>`}
+                </div>
+              `
+            : html`<div class="px-2 pt-1.5 pb-1 text-sm text-white/50">
+                ${translateText("username.clan_none_joined")}
+              </div>`
+        }
         <div class="mt-1.5 border-t border-white/10 pt-1.5">
           <label
             class="block px-2 pb-1 text-[11px] font-bold uppercase tracking-wider text-white/40"
@@ -684,15 +696,17 @@ export class UsernameInput extends LitElement {
         <div
           class="mt-1.5 flex items-center gap-2 border-t border-white/10 pt-1.5"
         >
-          ${this.clanTag
-            ? html`<button
-                type="button"
-                class="rounded-lg px-2 py-1 text-sm text-white/60 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
-                @click=${() => this.selectClan(null)}
-              >
-                ${translateText("username.clan_clear")}
-              </button>`
-            : null}
+          ${
+            this.clanTag
+              ? html`<button
+                  type="button"
+                  class="rounded-lg px-2 py-1 text-sm text-white/60 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+                  @click=${() => this.selectClan(null)}
+                >
+                  ${translateText("username.clan_clear")}
+                </button>`
+              : null
+          }
           <button
             type="button"
             class="ml-auto rounded-lg px-2 py-1 text-sm text-malibu-blue hover:bg-malibu-blue/15 transition-colors cursor-pointer"
@@ -709,16 +723,18 @@ export class UsernameInput extends LitElement {
   // the state reads as "this is my account name", not "the input broke".
   private renderNameControl() {
     return html`
-      ${this.verifiedActive
-        ? this.renderVerifiedChip()
-        : this.renderNameInput()}
+      ${
+        this.verifiedActive ? this.renderVerifiedChip() : this.renderNameInput()
+      }
       <!-- The buttons differ in width, so this resizes the name field — which
            is transparent and left-aligned, so only its invisible right edge
            moves. -->
       <div class="no-crazygames shrink-0 h-full max-h-[44px]">
-        ${this.verifiedActive
-          ? this.renderUseCustomButton()
-          : this.renderUseVerifiedButton()}
+        ${
+          this.verifiedActive
+            ? this.renderUseCustomButton()
+            : this.renderUseVerifiedButton()
+        }
       </div>
     `;
   }
@@ -787,9 +803,11 @@ export class UsernameInput extends LitElement {
     return html`
       <button
         type="button"
-        class="group flex h-full w-full items-center justify-center gap-1.5 rounded-lg border px-2 transition-colors cursor-pointer select-none ${eligible
-          ? "border-malibu-blue/50 bg-malibu-blue/10 hover:border-malibu-blue/80 hover:bg-malibu-blue/20"
-          : "border-white/10 bg-black/20 hover:border-white/25 hover:bg-black/35"}"
+        class="group flex h-full w-full items-center justify-center gap-1.5 rounded-lg border px-2 transition-colors cursor-pointer select-none ${
+          eligible
+            ? "border-malibu-blue/50 bg-malibu-blue/10 hover:border-malibu-blue/80 hover:bg-malibu-blue/20"
+            : "border-white/10 bg-black/20 hover:border-white/25 hover:bg-black/35"
+        }"
         title=${translateText("username.verified_use_hint")}
         aria-pressed="false"
         @click=${this.handleVerifiedToggle}
@@ -802,9 +820,9 @@ export class UsernameInput extends LitElement {
           null,
         )}
         <span
-          class="hidden sm:inline text-sm font-medium whitespace-nowrap transition-colors ${eligible
-            ? "text-white"
-            : "text-white/60 group-hover:text-white/90"}"
+          class="hidden sm:inline text-sm font-medium whitespace-nowrap transition-colors ${
+            eligible ? "text-white" : "text-white/60 group-hover:text-white/90"
+          }"
           >${translateText("username.verified_use")}</span
         >
       </button>
@@ -839,9 +857,9 @@ export class UsernameInput extends LitElement {
     void appRouter.navigate({ pageId: "page-clan", tab: "my-clans" });
     void customElements.whenDefined("clan-modal").then(() => {
       document
-        .querySelector<
-          HTMLElement & { open: (args: { tag: string }) => void }
-        >("clan-modal")
+        .querySelector<HTMLElement & { open: (args: { tag: string }) => void }>(
+          "clan-modal",
+        )
         ?.open({ tag });
     });
   }
@@ -891,6 +909,8 @@ export class UsernameInput extends LitElement {
       );
     }
     this.baseUsername = val;
+    // Typed, so it is theirs now and worth recording.
+    this.nameIsPlaceholder = false;
     this.validateAndStore();
   }
 
@@ -936,6 +956,17 @@ export class UsernameInput extends LitElement {
   }
 
   // Broadcast play-eligibility so action buttons can disable themselves.
+  /**
+   * The current name was generated for a player who has none, not chosen.
+   *
+   * A placeholder must never be recorded on the account. It is drawn at random
+   * once and then kept in this browser, so a person who visits without a
+   * session more than once hands the same made-up name to every account they
+   * are given -- which is how five separate accounts came to be called
+   * AnonPulley5 on the owner dashboard.
+   */
+  private nameIsPlaceholder = false;
+
   /** The last name sent, so typing does not fire a request per keystroke. */
   private nameSentToAccount: string | null = null;
   private nameSendTimer: ReturnType<typeof setTimeout> | null = null;
@@ -949,6 +980,7 @@ export class UsernameInput extends LitElement {
    * fell back to their internal id, and they appeared as a random code.
    */
   private rememberNameOnAccount(name: string) {
+    if (this.nameIsPlaceholder) return;
     if (this.onCrazyGames || name === this.nameSentToAccount) return;
     if (this.nameSendTimer !== null) clearTimeout(this.nameSendTimer);
     this.nameSendTimer = setTimeout(() => {

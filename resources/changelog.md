@@ -1,3 +1,10 @@
+## OpenBack v0.36.266 - Who Actually Played
+
+- The owner dashboard no longer lists everyone who merely opened the site as a player. Every visitor is given an account so the game can talk to them, so a search engine, a private window, or a second browser each added a row; of the accounts on the server, three had signed up and six had ever played. The rest are still counted, behind a button, because how many people looked is worth knowing.
+- A name the game invents for a player who has none is no longer filed on their account as if they had chosen it. The invented name is kept in the browser, so several accounts ended up sharing one.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.265 - A Calm Sea on a Phone
 
 - The sea no longer crawls with square specks on a phone. Zoomed out to the whole map, a single screen pixel covers about twenty tiles, and the map was being drawn by picking one of those twenty at random; which one changed as the view drifted, so the water shimmered in blocks. Those tiles are now averaged together. A desktop, where a pixel covers less than one tile, is untouched and stays as sharp as before.
