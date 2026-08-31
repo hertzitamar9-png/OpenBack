@@ -1,11 +1,11 @@
-## OpenBack v0.36.270 - Profile Opens Your Account
+## OpenBack v0.36.274 - Profile Opens Your Account
 
 - Pressing your name and picture opens your account page, with the account, stats, games and friends tabs. It opened the small shortcut menu before, and the last release sent it to the public profile view instead, which is not what the button means. The little arrow beside your picture still opens the shortcut menu.
 - The Profile button in the menu bar, next to Clans, opens the same page.
 
 Created by **frootz jhklphy**.
 
-## OpenBack v0.36.271 - One Marker, Clean Water
+## OpenBack v0.36.273 - One Marker, Clean Water
 
 - Stacked structures in Immersive 3D keep their level number attached to the same raised-terrain marker, matching the single icon-and-count presentation players already see in Classic 2D.
 - Tapping an already selected build unit now clears its battlefield highlight together with placement mode. The matching structures stay highlighted only while that unit remains selected.
@@ -13,20 +13,20 @@ Created by **frootz jhklphy**.
 
 Created by **frootz jhklphy**.
 
-## OpenBack v0.36.270 - Field Training at Hand
+## OpenBack v0.36.272 - Field Training at Hand
 
 - Tutorial now has a permanent place in the upper navigation and a matching question-mark control during a match, so 2D and 3D guidance stays within reach before and during play.
 - A player's first visit now pauses at one clear choice: open Tutorial or skip it. Opening it offers separate Classic 2D and Immersive 3D field training, with five short steps for each view and Skip available throughout. Completing or skipping remembers the choice on that device, while the Tutorial button remains available whenever it is needed again.
 
 Created by **frootz jhklphy**.
 
-## OpenBack v0.36.269 - An Email Column
+## OpenBack v0.36.271 - An Email Column
 
 - The owner dashboard gives the email address its own column in the player table, beside the name rather than tucked underneath it. Players who never signed up read as Guest there, and every row still shows its id under the name.
 
 Created by **frootz jhklphy**.
 
-## OpenBack v0.36.268 - Your Record, and a Way to See It
+## OpenBack v0.36.270 - Your Record, and a Way to See It
 
 - Your stats now count the games you played. Only ranked games ever reached the stats panel, so the All view had nothing to read and showed no games, no victories and no losses however much you had played. Every game you finish is counted now, and the win rate with it. The per-game averages underneath still need their own work.
 - There is a Profile button in the menu bar, next to Clans, and pressing your picture opens your profile. The picture only opened the account menu before, and there was no way to reach your own profile at all. The little arrow beside your picture still opens the menu.
@@ -34,7 +34,7 @@ Created by **frootz jhklphy**.
 
 Created by **frootz jhklphy**.
 
-## OpenBack v0.36.267 - A Bar That Fits, and a Guest List That Ends
+## OpenBack v0.36.269 - A Bar That Fits, and a Guest List That Ends
 
 - The build bar now measures the part of the screen you can actually see. Android hides its navigation bar for a fullscreen game and slides it back over the page on a swipe, which the game was not told about, so the bottom row of buttons sat underneath it. On a narrow phone the buttons also spread into one fewer row than before, which leaves more of the map visible.
 - Accounts given to people who only opened the site are now forgotten after an hour. Everyone gets one so the game has someone to talk to, and they were kept forever; the owner dashboard listed dozens of them beside real players. Anything a person actually did -- a game, a name, a flag, a sign-up -- keeps their account.
@@ -42,14 +42,14 @@ Created by **frootz jhklphy**.
 
 Created by **frootz jhklphy**.
 
-## OpenBack v0.36.266 - Who Actually Played
+## OpenBack v0.36.268 - Who Actually Played
 
 - The owner dashboard no longer lists everyone who merely opened the site as a player. Every visitor is given an account so the game can talk to them, so a search engine, a private window, or a second browser each added a row; of the accounts on the server, three had signed up and six had ever played. The rest are still counted, behind a button, because how many people looked is worth knowing.
 - A name the game invents for a player who has none is no longer filed on their account as if they had chosen it. The invented name is kept in the browser, so several accounts ended up sharing one.
 
 Created by **frootz jhklphy**.
 
-## OpenBack v0.36.265 - A Calm Sea on a Phone
+## OpenBack v0.36.267 - A Calm Sea on a Phone
 
 - The sea no longer crawls with square specks on a phone. Zoomed out to the whole map, a single screen pixel covers about twenty tiles, and the map was being drawn by picking one of those twenty at random; which one changed as the view drifted, so the water shimmered in blocks. Those tiles are now averaged together. A desktop, where a pixel covers less than one tile, is untouched and stays as sharp as before.
 - Fixed the development server failing to start a page after the previous release.
