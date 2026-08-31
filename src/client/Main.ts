@@ -81,6 +81,7 @@ import "./components/MainLayout";
 import "./components/MobileNavBar";
 import "./components/MobileTopBar";
 import "./components/PlayPage";
+import "./components/PlayerTutorial";
 import "./components/RankedModal";
 import "./components/SocialInvitePopup";
 import "./components/baseComponents/Button";
@@ -135,12 +136,7 @@ export interface JoinLobbyEvent {
   // GameRecord exists when replaying an archived game.
   gameRecord?: GameRecord;
   source?:
-    | "public"
-    | "private"
-    | "host"
-    | "invite"
-    | "matchmaking"
-    | "singleplayer";
+    "public" | "private" | "host" | "invite" | "matchmaking" | "singleplayer";
   publicLobbyInfo?: GameInfo | PublicGameInfo;
   expectedExperienceMode?: "2d" | "3d";
   // Watch without playing.
@@ -270,8 +266,7 @@ class Client {
     ]);
     for (const tagName of ["play-page", "page-footer"]) {
       const host = document.querySelector(tagName) as
-        | (HTMLElement & { updateComplete?: Promise<unknown> })
-        | null;
+        (HTMLElement & { updateComplete?: Promise<unknown> }) | null;
       await host?.updateComplete;
     }
 

@@ -121,4 +121,20 @@ describe("3D water cycle shader", () => {
     expect(terrain).not.toContain("float patch");
     expect(threeD).not.toContain("float patch");
   });
+
+  it("warps the moving water field instead of sliding square grid cells across mobile views", () => {
+    const terrain = readFileSync(
+      "src/client/render/gl/shaders/terrain/war-table-terrain.frag.glsl",
+      "utf8",
+    );
+    const threeD = readFileSync(
+      "src/client/render/gl/passes/ThreeDCompositePass.ts",
+      "utf8",
+    );
+
+    expect(terrain).toContain("domainWarpedWaterNoise");
+    expect(threeD).toContain("domainWarpedWaterNoise");
+    expect(terrain).not.toContain("valueNoise(\n    world * 0.005");
+    expect(threeD).not.toContain("waterNoise(world*0.005");
+  });
 });

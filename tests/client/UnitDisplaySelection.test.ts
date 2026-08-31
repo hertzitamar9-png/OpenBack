@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { UnitDisplay } from "../../src/client/hud/layers/UnitDisplay";
-import { ActivePlacementChangedEvent } from "../../src/client/InputHandler";
+import {
+  ActivePlacementChangedEvent,
+  ToggleStructureEvent,
+} from "../../src/client/InputHandler";
 import type { UIState } from "../../src/client/UIState";
 import type { GameView } from "../../src/client/view";
 import { EventBus } from "../../src/core/EventBus";
@@ -41,6 +44,37 @@ describe("UnitDisplay selection cleanup", () => {
 
     expect(uiState.ghostStructure).toBeNull();
     expect(display.querySelector(".game-unit-mobile-info")).toBeNull();
+  });
+
+  it("clears the structure-type highlight when the selected unit is tapped again", async () => {
+    const uiState = { ghostStructure: UnitType.City } as UIState;
+    const display = new UnitDisplay();
+    display.game = {
+      inSpawnPhase: () => false,
+      myPlayer: () => ({
+        gold: () => 1_000_000n,
+        isAlive: () => true,
+        totalUnitLevels: () => 2,
+        units: () => [],
+      }),
+      config: () => ({
+        isUnitDisabled: (type: UnitType) => type !== UnitType.City,
+      }),
+    } as unknown as GameView;
+    display.uiState = uiState;
+    display.eventBus = new EventBus();
+    const highlights: Array<UnitType[] | null> = [];
+    display.eventBus.on(ToggleStructureEvent, (event) =>
+      highlights.push(event.structureTypes),
+    );
+    document.body.appendChild(display);
+    await display.updateComplete;
+
+    display
+      .querySelector<HTMLElement>(".game-unit-item > div:last-child")!
+      .click();
+
+    expect(highlights[highlights.length - 1]).toBeNull();
   });
 
   it("can hide build descriptions without hiding the build bar", async () => {

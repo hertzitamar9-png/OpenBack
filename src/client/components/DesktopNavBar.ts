@@ -1,7 +1,7 @@
 import { LitElement, html } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { socialAttention, type SocialAttentionStage } from "../SocialAttention";
-import { openOwnProfile } from "../utilities/OpenOwnProfile";
+import { openAccountSettings } from "../utilities/OpenOwnProfile";
 import "./NavAccountMenu";
 import { NavNotificationsController } from "./NavNotificationsController";
 import "./NavUtilityIcons";
@@ -64,6 +64,10 @@ export class DesktopNavBar extends LitElement {
     });
   }
 
+  private openTutorial = () => {
+    document.dispatchEvent(new CustomEvent("open-player-tutorial"));
+  };
+
   render() {
     window.currentPageId ??= "page-play";
     const currentPage = window.currentPageId;
@@ -86,6 +90,12 @@ export class DesktopNavBar extends LitElement {
           } text-white/70 hover:text-malibu-blue  font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue "
           data-page="page-play"
           data-i18n="main.play"
+        ></button>
+        <button
+          class="nav-menu-item text-white/70 hover:text-malibu-blue font-medium tracking-wider uppercase cursor-pointer transition-colors"
+          data-tutorial-entry="desktop-nav"
+          data-i18n="main.tutorials"
+          @click=${this.openTutorial}
         ></button>
         <!-- Desktop Navigation Menu Items -->
         <div class="relative no-crazygames">
@@ -127,14 +137,14 @@ export class DesktopNavBar extends LitElement {
           data-page="page-clan"
           data-i18n="main.clans"
         ></button>
-        <!-- Not a data-page item: the profile route needs a publicId, which is
-             why there was no way to reach your own profile from here. -->
+        <!-- Not a data-page item: page-account is reached through the router
+             directly so the pill and this button behave identically. -->
         <button
           class="no-crazygames nav-menu-item ${
-            currentPage === "page-profile" ? "active" : ""
+            currentPage === "page-account" ? "active" : ""
           } text-white/70 hover:text-malibu-blue font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue"
           data-i18n="main.profile"
-          @click=${() => void openOwnProfile()}
+          @click=${() => openAccountSettings()}
         ></button>
         <!-- Utility cluster: news, settings, help and the profile control are account
              /notification affordances, not page links, so they sit tight

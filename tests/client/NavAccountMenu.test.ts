@@ -74,7 +74,11 @@ describe("nav-account-menu", () => {
     window.showPage = undefined;
   });
 
+  // The chevron is what opens the menu. Pressing the pill itself goes to the
+  // account page -- account, stats, games and friends -- which is what a
+  // player means by their profile, and what the pill is labelled.
   const trigger = () =>
+    el.querySelector<HTMLElement>("[data-account-chevron]") ??
     el.querySelector<HTMLButtonElement>("[data-account-trigger]")!;
   // The panel is portalled to document.body (see NavAccountMenu.updated).
   const menu = () => document.querySelector('[role="menu"]');
@@ -138,10 +142,12 @@ describe("nav-account-menu", () => {
   it("toggles the menu for a signed-in user", async () => {
     fireUserMe(userMe());
     await el.updateComplete;
+    const pill = () =>
+      el.querySelector<HTMLButtonElement>("[data-account-trigger]")!;
+    expect(pill().querySelector("[data-account-chevron]")).not.toBeNull();
     await click(trigger());
-    expect(trigger().querySelector("[data-account-chevron]")).not.toBeNull();
     expect(menu()).not.toBeNull();
-    expect(trigger().getAttribute("aria-expanded")).toBe("true");
+    expect(pill().getAttribute("aria-expanded")).toBe("true");
     await click(trigger());
     expect(menu()).toBeNull();
   });
@@ -235,9 +241,10 @@ describe("nav-account-menu", () => {
     await late.updateComplete;
     await late.updateComplete;
 
-    late
-      .querySelector("[data-account-trigger]")!
-      .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    (
+      late.querySelector("[data-account-chevron]") ??
+      late.querySelector("[data-account-trigger]")!
+    ).dispatchEvent(new MouseEvent("click", { bubbles: true }));
     await late.updateComplete;
     expect(menu()).not.toBeNull();
     late.remove();

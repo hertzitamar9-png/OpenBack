@@ -223,6 +223,7 @@ export class LangSelector extends LitElement {
       "player-panel",
       "replay-panel",
       "help-modal",
+      "player-tutorial",
       "settings-modal",
       "username-input",
       "game-mode-selector",

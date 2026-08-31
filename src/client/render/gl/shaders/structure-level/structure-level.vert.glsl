@@ -1,5 +1,6 @@
 #version 300 es
 precision highp float;
+precision highp usampler2D;
 
 layout(location = 0) in vec2 aPos;
 
@@ -12,6 +13,10 @@ uniform sampler2D uGlyphMetrics;  // CHAR_RANGE x 2, RGBA32F
 uniform mat3  uCamera;
 uniform int uScreenFacing;
 uniform vec2 uScreenFacingScale;
+uniform int uThreeD;
+uniform mat4 uThreeDViewProjection;
+uniform usampler2D uThreeDTerrain;
+uniform vec2 uThreeDMapSize;
 uniform float uZoom;
 
 // Structure icon sizing (mirrors structure.vert.glsl)
@@ -31,6 +36,39 @@ const float MAX_SCREEN_SIZE = 0.045;
 out vec2 vUV;
 flat out float vAlive;
 flat out float vAtlasIdx;
+
+float terrainHeightAt(ivec2 p) {
+  p = clamp(p, ivec2(0), ivec2(uThreeDMapSize) - 1);
+  uint terrainByte = texelFetch(uThreeDTerrain, p, 0).r;
+  bool land = (terrainByte & 128u) != 0u;
+  float magnitude = float(terrainByte & 31u);
+  if (land && magnitude > 30.5) return 57.0;
+  if (land) return (0.15 + pow(magnitude / 30.0, 2.0) * 31.0) * 1.5;
+  return -min(magnitude, 10.0) * 0.02;
+}
+
+float smoothTerrainHeight(vec2 world) {
+  vec2 samplePos = world - vec2(0.5);
+  ivec2 p = ivec2(floor(samplePos));
+  vec2 f = smoothstep(vec2(0.0), vec2(1.0), fract(samplePos));
+  float center = mix(
+    mix(terrainHeightAt(p), terrainHeightAt(p + ivec2(1, 0)), f.x),
+    mix(terrainHeightAt(p + ivec2(0, 1)), terrainHeightAt(p + ivec2(1, 1)), f.x),
+    f.y
+  );
+  float r = 1.5;
+  float cardinals =
+    terrainHeightAt(ivec2(floor(samplePos + vec2(r, 0.0)))) +
+    terrainHeightAt(ivec2(floor(samplePos - vec2(r, 0.0)))) +
+    terrainHeightAt(ivec2(floor(samplePos + vec2(0.0, r)))) +
+    terrainHeightAt(ivec2(floor(samplePos - vec2(0.0, r))));
+  float diagonals =
+    terrainHeightAt(ivec2(floor(samplePos + vec2(r, r)))) +
+    terrainHeightAt(ivec2(floor(samplePos + vec2(r, -r)))) +
+    terrainHeightAt(ivec2(floor(samplePos + vec2(-r, r)))) +
+    terrainHeightAt(ivec2(floor(samplePos - vec2(r, r))));
+  return (center * 8.0 + cardinals * 2.0 + diagonals) / 20.0;
+}
 
 void main() {
   float worldX  = aInst.x;
@@ -108,8 +146,24 @@ void main() {
 
   vec3 clip;
   if (uScreenFacing == 1) {
-    vec3 anchorH = uCamera * vec3(center, 1.0);
-    vec2 anchor = anchorH.xy / max(0.0001, anchorH.z);
+    vec2 anchor;
+    if (uThreeD == 1) {
+      float terrainHeight = smoothTerrainHeight(center);
+      vec4 anchorH = uThreeDViewProjection * vec4(
+        center.x,
+        terrainHeight + 0.14,
+        center.y,
+        1.0
+      );
+      if (anchorH.w <= 0.0001) {
+        gl_Position = vec4(2.0, 2.0, 0.0, 1.0);
+        return;
+      }
+      anchor = anchorH.xy / anchorH.w;
+    } else {
+      vec3 anchorH = uCamera * vec3(center, 1.0);
+      anchor = anchorH.xy / max(0.0001, anchorH.z);
+    }
     clip = vec3(anchor + (worldPos - center) * uScreenFacingScale, 1.0);
   } else {
     clip = uCamera * vec3(worldPos, 1.0);

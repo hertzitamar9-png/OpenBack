@@ -1,3 +1,25 @@
+## OpenBack v0.36.270 - Profile Opens Your Account
+
+- Pressing your name and picture opens your account page, with the account, stats, games and friends tabs. It opened the small shortcut menu before, and the last release sent it to the public profile view instead, which is not what the button means. The little arrow beside your picture still opens the shortcut menu.
+- The Profile button in the menu bar, next to Clans, opens the same page.
+
+Created by **frootz jhklphy**.
+
+## OpenBack v0.36.271 - One Marker, Clean Water
+
+- Stacked structures in Immersive 3D keep their level number attached to the same raised-terrain marker, matching the single icon-and-count presentation players already see in Classic 2D.
+- Tapping an already selected build unit now clears its battlefield highlight together with placement mode. The matching structures stay highlighted only while that unit remains selected.
+- Mobile water no longer carries large moving square patches. Classic 2D and Immersive 3D now bend and rotate the moving shine field into smooth organic water without adding another expensive noise layer.
+
+Created by **frootz jhklphy**.
+
+## OpenBack v0.36.270 - Field Training at Hand
+
+- Tutorial now has a permanent place in the upper navigation and a matching question-mark control during a match, so 2D and 3D guidance stays within reach before and during play.
+- A player's first visit now pauses at one clear choice: open Tutorial or skip it. Opening it offers separate Classic 2D and Immersive 3D field training, with five short steps for each view and Skip available throughout. Completing or skipping remembers the choice on that device, while the Tutorial button remains available whenever it is needed again.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.269 - An Email Column
 
 - The owner dashboard gives the email address its own column in the player table, beside the name rather than tucked underneath it. Players who never signed up read as Guest there, and every row still shows its id under the name.

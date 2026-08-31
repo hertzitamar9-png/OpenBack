@@ -28,6 +28,19 @@ float valueNoise(vec2 p) {
   return mix(mix(a, b, w.x), mix(c, d, w.x), w.y);
 }
 
+float domainWarpedWaterNoise(vec2 p, float phase) {
+  // Value noise is smooth inside each cell, but moving its axis-aligned cells
+  // directly across a zoomed-out phone view exposes them as travelling
+  // squares. Curve the domain and rotate it before sampling so the same cheap
+  // four-corner field produces organic patches without a second noise octave.
+  vec2 warp = vec2(
+    sin(p.y * 1.73 + phase * 0.31),
+    sin(p.x * 1.37 - phase * 0.27)
+  ) * 0.44;
+  mat2 rotateGrid = mat2(0.80, -0.60, 0.60, 0.80);
+  return valueNoise(rotateGrid * (p + warp));
+}
+
 float shineLayer(
   vec2 world,
   vec2 direction,
@@ -48,9 +61,11 @@ float shineLayer(
   // places forever. Gate each layer behind a slow noise field drifting along
   // its own heading, so its shine turns up in different parts of the sea as
   // time passes and fades again, rather than sitting where it always was.
-  float gate = valueNoise(
-    world * 0.005 + travel * time * speed * 0.6 + vec2(phase * 3.7, phase * 1.9)
-  );
+  vec2 gatePosition =
+    world * 0.005 +
+    travel * time * speed * 0.6 +
+    vec2(phase * 3.7, phase * 1.9);
+  float gate = domainWarpedWaterNoise(gatePosition, phase);
   return smoothstep(0.16, 0.94, wave) * smoothstep(0.26, 0.74, gate);
 }
 

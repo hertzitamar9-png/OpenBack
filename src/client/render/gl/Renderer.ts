@@ -1527,6 +1527,10 @@ export class GPURenderer {
           threeDCamera,
           this.terrainBytesTex,
         );
+        this.structureLevelPass.setThreeDProjection(
+          threeDCamera,
+          this.terrainBytesTex,
+        );
         this.threeDPass!.draw(
           cw,
           ch,
@@ -1643,6 +1647,7 @@ export class GPURenderer {
     // clearing only the camera, otherwise WebGL rejects every sprite draw.
     this.unitPass.setThreeDProjection(null, this.terrainBytesTex);
     this.structurePass.setThreeDProjection(null, this.terrainBytesTex);
+    this.structureLevelPass.setThreeDProjection(null, this.terrainBytesTex);
     this.renderOverlays(cam, zoom);
   }
 

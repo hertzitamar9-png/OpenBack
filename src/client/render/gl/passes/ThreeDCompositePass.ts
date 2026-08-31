@@ -377,6 +377,17 @@ float waterNoise(vec2 p){
   float c=waterHash(cell+vec2(0.0,1.0)),d=waterHash(cell+vec2(1.0,1.0));
   return mix(mix(a,b,w.x),mix(c,d,w.x),w.y);
 }
+float domainWarpedWaterNoise(vec2 p,float phase){
+  // A direct low-frequency value-noise grid becomes a set of moving squares
+  // on a phone showing most of the map. Bend and rotate that domain before the
+  // same four-corner lookup, keeping the shader cheap while removing the grid.
+  vec2 warp=vec2(
+    sin(p.y*1.73+phase*0.31),
+    sin(p.x*1.37-phase*0.27)
+  )*0.44;
+  mat2 rotateGrid=mat2(0.80,-0.60,0.60,0.80);
+  return waterNoise(rotateGrid*(p+warp));
+}
 float worldWave(vec2 p,float time){
   float broad=sin(dot(p,vec2(0.031,0.017))+time*0.55);
   float cross=sin(dot(p,vec2(-0.021,0.039))-time*0.42);
@@ -389,7 +400,8 @@ float shineLayer(vec2 world,vec2 direction,float frequency,float speed,float pha
   float wave=sin(dot(world,travel)*frequency+time*speed+phase+bend)*0.5+0.5;
   // Same drifting gate as the 2D sea, so crests appear in moving patches
   // instead of fixed parallel bands.
-  float gate=waterNoise(world*0.005+travel*time*speed*0.6+vec2(phase*3.7,phase*1.9));
+  vec2 gatePosition=world*0.005+travel*time*speed*0.6+vec2(phase*3.7,phase*1.9);
+  float gate=domainWarpedWaterNoise(gatePosition,phase);
   return smoothstep(0.16,0.94,wave)*smoothstep(0.26,0.74,gate);
 }
 void main(){

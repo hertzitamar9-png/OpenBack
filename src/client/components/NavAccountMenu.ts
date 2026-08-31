@@ -12,7 +12,7 @@ import {
   updateAccountNavButton,
 } from "../NavAccountButton";
 import { closeMobileSidebar } from "../Navigation";
-import { openOwnProfile } from "../utilities/OpenOwnProfile";
+import { openAccountSettings } from "../utilities/OpenOwnProfile";
 import { playerProfileUrl } from "../utilities/PlayerProfileUrl";
 import { copyToClipboard, showToast, translateText } from "../Utils";
 
@@ -178,14 +178,16 @@ export class NavAccountMenu extends LitElement {
       this.signIn();
       return;
     }
-    // Your picture is the thing that looks like "you", so it opens you. The
-    // chevron beside it is what opens the account menu -- pressing the picture
-    // used to give the menu and there was no way to reach the profile at all.
+    // The pill says PROFILE, so pressing it opens the account page -- account,
+    // stats, games and friends. Only the little chevron beside it opens the
+    // shortcut menu; pressing the pill used to give that menu and there was no
+    // way to reach the account page from the bar at all.
     const onChevron = (e.target as HTMLElement | null)?.closest(
       "[data-account-chevron]",
     );
-    if (!onChevron && openOwnProfile()) {
+    if (!onChevron) {
       this.menuOpen = false;
+      openAccountSettings();
       return;
     }
     this.menuOpen = !this.menuOpen;

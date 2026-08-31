@@ -352,6 +352,10 @@ export class GameRightSidebar extends LitElement implements Controller {
     );
   }
 
+  private onTutorialButtonClick() {
+    document.dispatchEvent(new CustomEvent("open-player-tutorial"));
+  }
+
   private async requestLandscapeMode(): Promise<boolean> {
     try {
       if (!document.fullscreenElement && document.fullscreenEnabled) {
@@ -468,32 +472,64 @@ export class GameRightSidebar extends LitElement implements Controller {
           <img src=${settingsIcon} alt="settings" width="20" height="20" />
         </div>
 
-        ${this.showLandscapeControl
-          ? html`<button
-              type="button"
-              class="cursor-pointer border-0 bg-transparent p-0"
-              aria-label=${translateText("mobile_orientation.enter_landscape")}
-              title=${translateText("mobile_orientation.enter_landscape")}
-              @click=${this.requestLandscapeMode}
-            >
-              <img src=${landscapeIcon} alt="" width="20" height="20" />
-            </button>`
-          : ""}
-        ${document.fullscreenEnabled && !this.onCrazyGames
-          ? html`<div
-              class="cursor-pointer"
-              @click=${this.onFullscreenButtonClick}
-            >
-              <img
-                src=${this.isFullscreen ? exitFullscreenIcon : fullscreenIcon}
-                alt=${this.isFullscreen
-                  ? translateText("fullscreen.exit")
-                  : translateText("fullscreen.enter")}
-                width="20"
-                height="20"
-              />
-            </div>`
-          : ""}
+        <button
+          type="button"
+          data-tutorial-entry="in-game"
+          class="cursor-pointer border-0 bg-transparent p-0 text-white"
+          aria-label=${translateText("main.tutorials")}
+          title=${translateText("main.tutorials")}
+          @click=${this.onTutorialButtonClick}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            width="20"
+            height="20"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M9.2 9.2a2.9 2.9 0 0 1 5.6 1c0 1.9-2.8 2.4-2.8 4"></path>
+            <line x1="12" y1="17.5" x2="12.01" y2="17.5"></line>
+          </svg>
+        </button>
+
+        ${
+          this.showLandscapeControl
+            ? html`<button
+                type="button"
+                class="cursor-pointer border-0 bg-transparent p-0"
+                aria-label=${translateText("mobile_orientation.enter_landscape")}
+                title=${translateText("mobile_orientation.enter_landscape")}
+                @click=${this.requestLandscapeMode}
+              >
+                <img src=${landscapeIcon} alt="" width="20" height="20" />
+              </button>`
+            : ""
+        }
+        ${
+          document.fullscreenEnabled && !this.onCrazyGames
+            ? html`<div
+                class="cursor-pointer"
+                @click=${this.onFullscreenButtonClick}
+              >
+                <img
+                  src=${this.isFullscreen ? exitFullscreenIcon : fullscreenIcon}
+                  alt=${
+                  this.isFullscreen
+                    ? translateText("fullscreen.exit")
+                    : translateText("fullscreen.enter")
+                }
+                  width="20"
+                  height="20"
+                />
+              </div>`
+            : ""
+        }
 
         <div class="cursor-pointer" @click=${this.onExitButtonClick}>
           <img src=${exitIcon} alt="exit" width="20" height="20" />
@@ -523,48 +559,54 @@ export class GameRightSidebar extends LitElement implements Controller {
     const showNewLobbyButton = this.isLobbyCreator && this.isPrivateLobby;
 
     return html`
-      ${isReplayOrSingleplayer
-        ? html`
-            <div class="cursor-pointer" @click=${this.toggleReplayPanel}>
-              <img
-                src=${FastForwardIconSolid}
-                alt="replay"
-                width="20"
-                height="20"
-              />
-            </div>
-          `
-        : ""}
-      ${showPauseButton
-        ? html`
-            <div class="cursor-pointer" @click=${this.onPauseButtonClick}>
-              <img
-                src=${this.isPaused ? playIcon : pauseIcon}
-                alt="play/pause"
-                width="20"
-                height="20"
-              />
-            </div>
-          `
-        : ""}
-      ${showNewLobbyButton
-        ? html`
-            <div
-              class="cursor-pointer ${this.newLobbyRequested
-                ? "opacity-50 pointer-events-none"
-                : ""}"
-              @click=${this.onNewLobbyButtonClick}
-              title=${translateText("win_modal.new_lobby")}
-            >
-              <img
-                src=${newLobbyIcon}
-                alt=${translateText("win_modal.new_lobby")}
-                width="20"
-                height="20"
-              />
-            </div>
-          `
-        : ""}
+      ${
+        isReplayOrSingleplayer
+          ? html`
+              <div class="cursor-pointer" @click=${this.toggleReplayPanel}>
+                <img
+                  src=${FastForwardIconSolid}
+                  alt="replay"
+                  width="20"
+                  height="20"
+                />
+              </div>
+            `
+          : ""
+      }
+      ${
+        showPauseButton
+          ? html`
+              <div class="cursor-pointer" @click=${this.onPauseButtonClick}>
+                <img
+                  src=${this.isPaused ? playIcon : pauseIcon}
+                  alt="play/pause"
+                  width="20"
+                  height="20"
+                />
+              </div>
+            `
+          : ""
+      }
+      ${
+        showNewLobbyButton
+          ? html`
+              <div
+                class="cursor-pointer ${
+                this.newLobbyRequested ? "opacity-50 pointer-events-none" : ""
+              }"
+                @click=${this.onNewLobbyButtonClick}
+                title=${translateText("win_modal.new_lobby")}
+              >
+                <img
+                  src=${newLobbyIcon}
+                  alt=${translateText("win_modal.new_lobby")}
+                  width="20"
+                  height="20"
+                />
+              </div>
+            `
+          : ""
+      }
     `;
   }
 }

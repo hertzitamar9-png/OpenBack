@@ -1,22 +1,15 @@
-import { getLastUserMe } from "../Api";
 import { appRouter } from "../AppRouter";
 
 /**
- * Open the signed-in player's own profile.
+ * Open the signed-in player's own account page.
  *
- * The profile route needs a publicId, so it cannot be reached through the
- * plain `data-page` navigation every other nav item uses -- which is why there
- * was no way to see your own profile from the desktop nav at all, and why the
- * avatar could only open the account menu.
+ * This is the page with the account, stats, games and friends tabs -- what a
+ * player means by "my profile". It is distinct from the public profile route,
+ * which is the read-only view of somebody else and needs their publicId.
  *
- * Returns false when nobody is signed in or the session predates publicIds, so
- * a caller can fall back to whatever it did before rather than navigating to a
- * profile that does not exist.
+ * The account pill used to open neither: it only toggled the dropdown, so
+ * there was no way to reach this from the desktop bar at all.
  */
-export function openOwnProfile(): boolean {
-  const me = getLastUserMe();
-  const publicID = me === false ? undefined : me.player?.publicId;
-  if (!publicID) return false;
-  void appRouter.navigate({ pageId: "page-profile", publicID, tab: "stats" });
-  return true;
+export function openAccountSettings(): void {
+  void appRouter.navigate({ pageId: "page-account" });
 }

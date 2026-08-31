@@ -446,6 +446,7 @@ export class UnitDisplay extends LitElement implements Controller {
             if (selected) {
               this.uiState.ghostStructure = null;
               this._hoveredUnit = null;
+              this.eventBus?.emit(new ToggleStructureEvent(null));
             } else if (this.canBuild(unitType)) {
               this.uiState.ghostStructure = unitType;
             }

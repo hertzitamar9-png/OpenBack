@@ -56,4 +56,34 @@ describe("3D label shaders", () => {
     expect(levels).toContain("uniform vec2 uScreenFacingScale");
     expect(levels).toContain("MAX_SCREEN_SIZE");
   });
+
+  it("anchors stacked-structure counts to the same raised terrain as their icons", () => {
+    const levels = readFileSync(
+      resolve(
+        process.cwd(),
+        "src/client/render/gl/shaders/structure-level/structure-level.vert.glsl",
+      ),
+      "utf8",
+    );
+    const levelPass = readFileSync(
+      resolve(
+        process.cwd(),
+        "src/client/render/gl/passes/StructureLevelPass.ts",
+      ),
+      "utf8",
+    );
+    const renderer = readFileSync(
+      resolve(process.cwd(), "src/client/render/gl/Renderer.ts"),
+      "utf8",
+    );
+
+    expect(levels).toContain("uniform mat4 uThreeDViewProjection");
+    expect(levels).toContain("uniform usampler2D uThreeDTerrain");
+    expect(levels).toContain("smoothTerrainHeight(center)");
+    expect(levels).toContain("terrainHeight + 0.14");
+    expect(levelPass).toContain("setThreeDProjection(");
+    expect(
+      renderer.match(/structureLevelPass\.setThreeDProjection\(/g),
+    ).toHaveLength(2);
+  });
 });

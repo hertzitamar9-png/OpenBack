@@ -28,6 +28,7 @@ import {
 } from "../../types";
 import { DynamicInstanceBuffer } from "../DynamicBuffer";
 import type { RenderSettings } from "../RenderSettings";
+import type { ThreeDCameraState } from "../three-d/ThreeDCamera";
 import { createProgram } from "../utils/GlUtils";
 import type { GlyphTables } from "./name-pass/AtlasData";
 import { buildGlyphTables, parseAtlasData } from "./name-pass/AtlasData";
@@ -123,6 +124,9 @@ export class StructureLevelPass {
   private uCamera: WebGLUniformLocation;
   private uScreenFacing: WebGLUniformLocation;
   private uScreenFacingScale: WebGLUniformLocation;
+  private uThreeD: WebGLUniformLocation;
+  private uThreeDViewProjection: WebGLUniformLocation;
+  private uThreeDMapSize: WebGLUniformLocation;
   private uZoom: WebGLUniformLocation;
   private uIconSize: WebGLUniformLocation;
   private uDotsThreshold: WebGLUniformLocation;
@@ -148,6 +152,8 @@ export class StructureLevelPass {
   private msdf: FontBundle;
   private kernTable: Int8Array; // shared zero table — digits don't kern
   private mapW: number;
+  private threeDCamera: ThreeDCameraState | null = null;
+  private threeDTerrain: WebGLTexture | null = null;
 
   // Reusable buffers for layoutString
   private charCodes = new Uint8Array(MAX_CHARS);
@@ -224,6 +230,7 @@ export class StructureLevelPass {
     gl.useProgram(this.program);
     gl.uniform1i(gl.getUniformLocation(this.program, "uAtlas"), 0);
     gl.uniform1i(gl.getUniformLocation(this.program, "uGlyphMetrics"), 1);
+    gl.uniform1i(gl.getUniformLocation(this.program, "uThreeDTerrain"), 2);
 
     // Uniform locations
     this.uCamera = gl.getUniformLocation(this.program, "uCamera")!;
@@ -231,6 +238,15 @@ export class StructureLevelPass {
     this.uScreenFacingScale = gl.getUniformLocation(
       this.program,
       "uScreenFacingScale",
+    )!;
+    this.uThreeD = gl.getUniformLocation(this.program, "uThreeD")!;
+    this.uThreeDViewProjection = gl.getUniformLocation(
+      this.program,
+      "uThreeDViewProjection",
+    )!;
+    this.uThreeDMapSize = gl.getUniformLocation(
+      this.program,
+      "uThreeDMapSize",
     )!;
     this.uZoom = gl.getUniformLocation(this.program, "uZoom")!;
     this.uIconSize = gl.getUniformLocation(this.program, "uIconSize")!;
@@ -416,6 +432,22 @@ export class StructureLevelPass {
     gl.uniform1f(this.uHighlightDimAlpha, ss.highlightDimAlpha);
     gl.uniform1i(this.uClassic, classic ? 1 : 0);
 
+    const threeD = this.threeDCamera !== null && this.threeDTerrain !== null;
+    gl.uniform1i(this.uThreeD, threeD ? 1 : 0);
+    if (this.threeDTerrain !== null) {
+      gl.activeTexture(gl.TEXTURE2);
+      gl.bindTexture(gl.TEXTURE_2D, this.threeDTerrain);
+    }
+    if (threeD) {
+      const camera = this.threeDCamera!;
+      gl.uniformMatrix4fv(
+        this.uThreeDViewProjection,
+        false,
+        new Float32Array(camera.viewProjection),
+      );
+      gl.uniform2f(this.uThreeDMapSize, camera.mapWidth, camera.mapHeight);
+    }
+
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, font.atlasTex!);
     gl.activeTexture(gl.TEXTURE1);
@@ -423,6 +455,14 @@ export class StructureLevelPass {
 
     gl.bindVertexArray(this.vao);
     gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, this.instanceCount);
+  }
+
+  setThreeDProjection(
+    camera: ThreeDCameraState | null,
+    terrain: WebGLTexture | null,
+  ): void {
+    this.threeDCamera = camera;
+    this.threeDTerrain = terrain;
   }
 
   /** Highlight structures of the given types (null/empty = off). Dims all other types. */
