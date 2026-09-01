@@ -85,9 +85,9 @@ export class DesktopNavBar extends LitElement {
           </div>
         </div>
         <button
-          class="nav-menu-item ${
-            currentPage === "page-play" ? "active" : ""
-          } text-white/70 hover:text-malibu-blue  font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue "
+          class="nav-menu-item ${currentPage === "page-play"
+            ? "active"
+            : ""} text-white/70 hover:text-malibu-blue  font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue "
           data-page="page-play"
           data-i18n="main.play"
         ></button>
@@ -100,30 +100,28 @@ export class DesktopNavBar extends LitElement {
         <!-- Desktop Navigation Menu Items -->
         <div class="relative no-crazygames">
           <button
-            class="nav-menu-item ${
-              currentPage === "page-item-store" ? "active" : ""
-            } text-white/70 hover:text-malibu-blue  font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue "
+            class="nav-menu-item ${currentPage === "page-item-store"
+              ? "active"
+              : ""} text-white/70 hover:text-malibu-blue  font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue "
             data-page="page-item-store"
             data-i18n="main.store"
             @click=${this._notifications.onStoreClick}
           ></button>
-          ${
-            this._notifications.showStoreDot()
-              ? html`
-                  <span
-                    class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-ping"
-                  ></span>
-                  <span
-                    class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"
-                  ></span>
-                `
-              : ""
-          }
+          ${this._notifications.showStoreDot()
+            ? html`
+                <span
+                  class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-ping"
+                ></span>
+                <span
+                  class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"
+                ></span>
+              `
+            : ""}
         </div>
         <button
-          class="nav-menu-item ${
-            currentPage === "page-inventory" ? "active" : ""
-          } text-white/70 hover:text-malibu-blue font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue"
+          class="nav-menu-item ${currentPage === "page-inventory"
+            ? "active"
+            : ""} text-white/70 hover:text-malibu-blue font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue"
           data-page="page-inventory"
           data-i18n="main.inventory"
         ></button>
@@ -140,9 +138,9 @@ export class DesktopNavBar extends LitElement {
         <!-- Not a data-page item: page-account is reached through the router
              directly so the pill and this button behave identically. -->
         <button
-          class="no-crazygames nav-menu-item ${
-            currentPage === "page-account" ? "active" : ""
-          } text-white/70 hover:text-malibu-blue font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue"
+          class="no-crazygames nav-menu-item ${currentPage === "page-account"
+            ? "active"
+            : ""} text-white/70 hover:text-malibu-blue font-medium tracking-wider uppercase cursor-pointer transition-colors [&.active]:text-malibu-blue"
           data-i18n="main.profile"
           @click=${() => openAccountSettings()}
         ></button>

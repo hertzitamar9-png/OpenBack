@@ -169,11 +169,9 @@ export class SettingsModal extends LitElement implements Controller {
     >
       <span>${translateText(labelKey)}</span>
       <span class="text-slate-400">
-        ${
-          this.userSettings.gameNotificationCategory(category)
-            ? translateText("user_setting.on")
-            : translateText("user_setting.off")
-        }
+        ${this.userSettings.gameNotificationCategory(category)
+          ? translateText("user_setting.on")
+          : translateText("user_setting.off")}
       </span>
     </button>`;
   }
@@ -317,13 +315,11 @@ export class SettingsModal extends LitElement implements Controller {
                   ${translateText("user_setting.fps_limit")}
                 </div>
                 <div class="text-sm text-slate-400">
-                  ${
-                    this.displayHz === null
-                      ? translateText("user_setting.fps_limit_desc")
-                      : translateText("user_setting.fps_limit_detected", {
-                          hz: String(this.displayHz),
-                        })
-                  }
+                  ${this.displayHz === null
+                    ? translateText("user_setting.fps_limit_desc")
+                    : translateText("user_setting.fps_limit_detected", {
+                        hz: String(this.displayHz),
+                      })}
                 </div>
                 <select
                   class="mt-2 w-full bg-slate-700 border border-slate-500 rounded-lg p-2 text-white"
@@ -335,19 +331,13 @@ export class SettingsModal extends LitElement implements Controller {
                         value=${fps}
                         ?selected=${fps === this.userSettings.fpsLimit()}
                       >
-                        ${
-                          fps === 0
-                            ? translateText("user_setting.fps_auto")
-                            : this.displayHz !== null &&
-                                fps > this.displayHz + 5
-                              ? translateText(
-                                  "user_setting.fps_above_display",
-                                  {
-                                    fps: String(fps),
-                                  },
-                                )
-                              : `${fps} FPS`
-                        }
+                        ${fps === 0
+                          ? translateText("user_setting.fps_auto")
+                          : this.displayHz !== null && fps > this.displayHz + 5
+                            ? translateText("user_setting.fps_above_display", {
+                                fps: String(fps),
+                              })
+                            : `${fps} FPS`}
                       </option>
                     `,
                   )}
@@ -418,11 +408,9 @@ export class SettingsModal extends LitElement implements Controller {
                 </div>
               </div>
               <div class="text-sm text-slate-400">
-                ${
-                  this.alternateView
-                    ? translateText("user_setting.on")
-                    : translateText("user_setting.off")
-                }
+                ${this.alternateView
+                  ? translateText("user_setting.on")
+                  : translateText("user_setting.off")}
               </div>
             </button>
 
@@ -440,11 +428,9 @@ export class SettingsModal extends LitElement implements Controller {
                 </div>
               </div>
               <div class="text-sm text-slate-400">
-                ${
-                  this.userSettings.emojis()
-                    ? translateText("user_setting.on")
-                    : translateText("user_setting.off")
-                }
+                ${this.userSettings.emojis()
+                  ? translateText("user_setting.on")
+                  : translateText("user_setting.off")}
               </div>
             </button>
 
@@ -462,11 +448,9 @@ export class SettingsModal extends LitElement implements Controller {
                 </div>
               </div>
               <div class="text-sm text-slate-400">
-                ${
-                  this.userSettings.alertFrame()
-                    ? translateText("user_setting.on")
-                    : translateText("user_setting.off")
-                }
+                ${this.userSettings.alertFrame()
+                  ? translateText("user_setting.on")
+                  : translateText("user_setting.off")}
               </div>
             </button>
 
@@ -505,11 +489,9 @@ export class SettingsModal extends LitElement implements Controller {
                 </div>
               </div>
               <div class="text-sm text-slate-400">
-                ${
-                  this.userSettings.helpMessages()
-                    ? translateText("user_setting.on")
-                    : translateText("user_setting.off")
-                }
+                ${this.userSettings.helpMessages()
+                  ? translateText("user_setting.on")
+                  : translateText("user_setting.off")}
               </div>
             </button>
 
@@ -534,19 +516,15 @@ export class SettingsModal extends LitElement implements Controller {
                   >
                 </span>
                 <span class="text-sm text-slate-400">
-                  ${
-                    this.userSettings.gameNotifications()
-                      ? translateText("user_setting.on")
-                      : translateText("user_setting.off")
-                  }
+                  ${this.userSettings.gameNotifications()
+                    ? translateText("user_setting.on")
+                    : translateText("user_setting.off")}
                 </span>
               </button>
               <div
-                class="mt-1 grid grid-cols-1 gap-1 border-t border-white/10 pt-1 sm:grid-cols-2 ${
-                  this.userSettings.gameNotifications()
-                    ? ""
-                    : "pointer-events-none opacity-45"
-                }"
+                class="mt-1 grid grid-cols-1 gap-1 border-t border-white/10 pt-1 sm:grid-cols-2 ${this.userSettings.gameNotifications()
+                  ? ""
+                  : "pointer-events-none opacity-45"}"
               >
                 ${this.renderNotificationCategory(
                   MessageCategory.COMBAT,
@@ -591,11 +569,9 @@ export class SettingsModal extends LitElement implements Controller {
                 </div>
               </div>
               <div class="text-sm text-slate-400">
-                ${
-                  this.userSettings.attackingTroopsOverlay()
-                    ? translateText("user_setting.on")
-                    : translateText("user_setting.off")
-                }
+                ${this.userSettings.attackingTroopsOverlay()
+                  ? translateText("user_setting.on")
+                  : translateText("user_setting.off")}
               </div>
             </button>
 
@@ -618,11 +594,9 @@ export class SettingsModal extends LitElement implements Controller {
                 </div>
               </div>
               <div class="text-sm text-slate-400">
-                ${
-                  this.userSettings.cursorCostLabel()
-                    ? translateText("user_setting.on")
-                    : translateText("user_setting.off")
-                }
+                ${this.userSettings.cursorCostLabel()
+                  ? translateText("user_setting.on")
+                  : translateText("user_setting.off")}
               </div>
             </button>
 
@@ -648,19 +622,17 @@ export class SettingsModal extends LitElement implements Controller {
                 />
               </div>
               <div class="text-sm text-slate-400">
-                ${
-                  this.userSettings.nukeAllianceSafetyDuration() > 0
-                    ? translateText(
-                        "user_setting.nuke_alliance_safety_duration",
-                        {
-                          count: this.userSettings.nukeAllianceSafetyDuration(),
-                          seconds: (
-                            this.userSettings.nukeAllianceSafetyDuration() / 10
-                          ).toFixed(1),
-                        },
-                      )
-                    : translateText("user_setting.off")
-                }
+                ${this.userSettings.nukeAllianceSafetyDuration() > 0
+                  ? translateText(
+                      "user_setting.nuke_alliance_safety_duration",
+                      {
+                        count: this.userSettings.nukeAllianceSafetyDuration(),
+                        seconds: (
+                          this.userSettings.nukeAllianceSafetyDuration() / 10
+                        ).toFixed(1),
+                      },
+                    )
+                  : translateText("user_setting.off")}
               </div>
             </div>
 
@@ -678,11 +650,9 @@ export class SettingsModal extends LitElement implements Controller {
                 </div>
               </div>
               <div class="text-sm text-slate-400">
-                ${
-                  this.userSettings.anonymousNames()
-                    ? translateText("user_setting.on")
-                    : translateText("user_setting.off")
-                }
+                ${this.userSettings.anonymousNames()
+                  ? translateText("user_setting.on")
+                  : translateText("user_setting.off")}
               </div>
             </button>
 
@@ -700,11 +670,9 @@ export class SettingsModal extends LitElement implements Controller {
                 </div>
               </div>
               <div class="text-sm text-slate-400">
-                ${
-                  this.userSettings.leftClickOpensMenu()
-                    ? translateText("user_setting.on")
-                    : translateText("user_setting.off")
-                }
+                ${this.userSettings.leftClickOpensMenu()
+                  ? translateText("user_setting.on")
+                  : translateText("user_setting.off")}
               </div>
             </button>
 
@@ -734,11 +702,9 @@ export class SettingsModal extends LitElement implements Controller {
                   </div>
                 </div>
                 <div class="text-sm text-slate-400">
-                  ${
-                    this.userSettings.performanceOverlay()
-                      ? translateText("user_setting.on")
-                      : translateText("user_setting.off")
-                  }
+                  ${this.userSettings.performanceOverlay()
+                    ? translateText("user_setting.on")
+                    : translateText("user_setting.off")}
                 </div>
               </button>
 

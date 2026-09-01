@@ -62,11 +62,9 @@ export class WinModal extends LitElement implements Controller {
   render() {
     return html`
       <div
-        class="${
-          this.isVisible
-            ? "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-800/70 p-4 md:p-6 shrink-0 rounded-lg z-[10010] shadow-2xl backdrop-blur-xs text-white w-[min(90vw,700px)] max-w-[90%] max-h-[90dvh] overflow-hidden flex flex-col"
-            : "hidden"
-        }"
+        class="${this.isVisible
+          ? "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-800/70 p-4 md:p-6 shrink-0 rounded-lg z-[10010] shadow-2xl backdrop-blur-xs text-white w-[min(90vw,700px)] max-w-[90%] max-h-[90dvh] overflow-hidden flex flex-col"
+          : "hidden"}"
       >
         <h2 class="m-0 mb-4 text-[26px] text-center text-white shrink-0">
           ${this._title || ""}
@@ -77,11 +75,9 @@ export class WinModal extends LitElement implements Controller {
              this fork does not carry. -->
         ${this.patternContent ? this.renderPatternButton() : nothing}
         <div
-          class="${
-            this.showButtons
-              ? "mt-4 flex justify-between gap-2.5 shrink-0"
-              : "hidden"
-          }"
+          class="${this.showButtons
+            ? "mt-4 flex justify-between gap-2.5 shrink-0"
+            : "hidden"}"
         >
           <o-button
             variant="primary"
@@ -90,28 +86,24 @@ export class WinModal extends LitElement implements Controller {
             translationKey="win_modal.exit"
             @click=${this._handleExit}
           ></o-button>
-          ${
-            this.isRankedGame
-              ? html`
-                  <o-button
-                    variant="primary"
-                    width="block"
-                    class="flex-1"
-                    translationKey="win_modal.requeue"
-                    @click=${this._handleRequeue}
-                  ></o-button>
-                `
-              : null
-          }
+          ${this.isRankedGame
+            ? html`
+                <o-button
+                  variant="primary"
+                  width="block"
+                  class="flex-1"
+                  translationKey="win_modal.requeue"
+                  @click=${this._handleRequeue}
+                ></o-button>
+              `
+            : null}
           <o-button
             variant="primary"
             width="block"
             class="flex-1"
-            .title=${
-              this.game?.myPlayer()?.isAlive()
-                ? translateText("win_modal.keep")
-                : translateText("win_modal.spectate")
-            }
+            .title=${this.game?.myPlayer()?.isAlive()
+              ? translateText("win_modal.keep")
+              : translateText("win_modal.spectate")}
             @click=${this._handleKeepPlaying}
           ></o-button>
         </div>
@@ -125,25 +117,23 @@ export class WinModal extends LitElement implements Controller {
       <div
         class="relative mb-4 aspect-video w-full shrink-0 overflow-hidden rounded-md bg-black"
       >
-        ${
-          this.deathMedia === "tutorial"
-            ? html`
-                <iframe
-                  class="absolute inset-0 h-full w-full border-0"
-                  src=${this.isVisible ? TUTORIAL_VIDEO_URL : ""}
-                  title=${translateText("win_modal.youtube_tutorial")}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowfullscreen
-                ></iframe>
-              `
-            : html`
-                <img
-                  class="absolute inset-0 h-full w-full object-contain"
-                  src=${assetUrl("images/OpenBackSocialPreview.png")}
-                  alt="OpenBack battle"
-                />
-              `
-        }
+        ${this.deathMedia === "tutorial"
+          ? html`
+              <iframe
+                class="absolute inset-0 h-full w-full border-0"
+                src=${this.isVisible ? TUTORIAL_VIDEO_URL : ""}
+                title=${translateText("win_modal.youtube_tutorial")}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+              ></iframe>
+            `
+          : html`
+              <img
+                class="absolute inset-0 h-full w-full object-contain"
+                src=${assetUrl("images/OpenBackSocialPreview.png")}
+                alt="OpenBack battle"
+              />
+            `}
       </div>
     `;
   }

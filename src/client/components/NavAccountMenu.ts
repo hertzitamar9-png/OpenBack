@@ -324,11 +324,9 @@ export class NavAccountMenu extends LitElement {
   render(): TemplateResult {
     return html`
       <div class="relative" data-account-nav>
-        ${
-          this.variant === "mobile"
-            ? this.renderMobileTrigger()
-            : this.renderDesktopTrigger()
-        }
+        ${this.variant === "mobile"
+          ? this.renderMobileTrigger()
+          : this.renderDesktopTrigger()}
       </div>
     `;
   }
@@ -354,11 +352,9 @@ export class NavAccountMenu extends LitElement {
               role="menuitem"
               data-menu-item=${item.key}
               @click=${() => this.selectItem(item)}
-              class="w-full flex items-center gap-3 px-4 py-3 text-left text-sm font-medium normal-case tracking-normal cursor-pointer transition-colors ${
-                item.danger
-                  ? "text-red-400 hover:bg-red-500/10 border-t border-white/10"
-                  : "text-white/80 hover:bg-white/10 hover:text-white"
-              }"
+              class="w-full flex items-center gap-3 px-4 py-3 text-left text-sm font-medium normal-case tracking-normal cursor-pointer transition-colors ${item.danger
+                ? "text-red-400 hover:bg-red-500/10 border-t border-white/10"
+                : "text-white/80 hover:bg-white/10 hover:text-white"}"
             >
               <span class="w-4 h-4 shrink-0">${item.icon}</span>
               <span class="min-w-0 break-words"
@@ -375,9 +371,9 @@ export class NavAccountMenu extends LitElement {
     return html`
       <svg
         data-account-chevron
-        class="w-3 h-3 shrink-0 transition-transform ${
-          this.menuOpen ? "rotate-180" : ""
-        }"
+        class="w-3 h-3 shrink-0 transition-transform ${this.menuOpen
+          ? "rotate-180"
+          : ""}"
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
         fill="none"

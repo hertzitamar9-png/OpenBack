@@ -78,7 +78,8 @@ export class EventsDisplay extends LitElement implements Controller {
   private userSettings = new UserSettings();
   private nextEventId = 1;
   private swipe:
-    { id: number; startX: number; startY: number; offset: number } | undefined;
+    | { id: number; startX: number; startY: number; offset: number }
+    | undefined;
 
   @state() private _isVisible: boolean = false;
 
@@ -651,26 +652,23 @@ export class EventsDisplay extends LitElement implements Controller {
             event.type,
           )}"
         >
-          ${
-            event.focusID
+          ${event.focusID
+            ? this.renderButton({
+                content: this.getEventDescription(event),
+                onClick: () => {
+                  if (event.focusID) this.emitGoToPlayerEvent(event.focusID);
+                },
+                className: "text-left",
+              })
+            : event.unitView
               ? this.renderButton({
                   content: this.getEventDescription(event),
                   onClick: () => {
-                    if (event.focusID) this.emitGoToPlayerEvent(event.focusID);
+                    if (event.unitView) this.emitGoToUnitEvent(event.unitView);
                   },
                   className: "text-left",
                 })
-              : event.unitView
-                ? this.renderButton({
-                    content: this.getEventDescription(event),
-                    onClick: () => {
-                      if (event.unitView)
-                        this.emitGoToUnitEvent(event.unitView);
-                    },
-                    className: "text-left",
-                  })
-                : this.getEventDescription(event)
-          }
+              : this.getEventDescription(event)}
         </td>
       </tr>
     `;
@@ -708,51 +706,45 @@ export class EventsDisplay extends LitElement implements Controller {
 
     return html`
       <div class="flex flex-col gap-1 w-full min-[1200px]:w-96">
-        ${
-          tier2Events.length > 0
-            ? html`
-                <div
-                  class="bg-gray-800/92 backdrop-blur-sm max-h-[12vh] lg:max-h-[22vh] overflow-y-auto rounded-lg opacity-90 events-container"
+        ${tier2Events.length > 0
+          ? html`
+              <div
+                class="bg-gray-800/92 backdrop-blur-sm max-h-[12vh] lg:max-h-[22vh] overflow-y-auto rounded-lg opacity-90 events-container"
+              >
+                <table
+                  class="w-full border-collapse text-white text-xs lg:text-sm pointer-events-auto"
                 >
-                  <table
-                    class="w-full border-collapse text-white text-xs lg:text-sm pointer-events-auto"
-                  >
-                    <tbody>
-                      ${tier2Events.map((event) => this.renderEventRow(event))}
-                    </tbody>
-                  </table>
-                </div>
-              `
-            : ""
-        }
-        ${
-          tier1Events.length > 0 || showBetrayalTimer
-            ? html`
-                <div
-                  class="bg-gray-800 backdrop-blur-sm max-h-[30vh] lg:max-h-[40vh] overflow-y-auto rounded-lg shadow-lg border-l-4 border-red-500 important-events-container"
+                  <tbody>
+                    ${tier2Events.map((event) => this.renderEventRow(event))}
+                  </tbody>
+                </table>
+              </div>
+            `
+          : ""}
+        ${tier1Events.length > 0 || showBetrayalTimer
+          ? html`
+              <div
+                class="bg-gray-800 backdrop-blur-sm max-h-[30vh] lg:max-h-[40vh] overflow-y-auto rounded-lg shadow-lg border-l-4 border-red-500 important-events-container"
+              >
+                <table
+                  class="w-full border-collapse text-white text-base lg:text-lg font-medium pointer-events-auto"
                 >
-                  <table
-                    class="w-full border-collapse text-white text-base lg:text-lg font-medium pointer-events-auto"
-                  >
-                    <tbody>
-                      ${tier1Events.map((event) => this.renderEventRow(event))}
-                      ${
-                        showBetrayalTimer
-                          ? html`
-                              <tr>
-                                <td class="lg:px-2 lg:py-1 p-1 text-left">
-                                  ${this.renderBetrayalDebuffTimer()}
-                                </td>
-                              </tr>
-                            `
-                          : ""
-                      }
-                    </tbody>
-                  </table>
-                </div>
-              `
-            : ""
-        }
+                  <tbody>
+                    ${tier1Events.map((event) => this.renderEventRow(event))}
+                    ${showBetrayalTimer
+                      ? html`
+                          <tr>
+                            <td class="lg:px-2 lg:py-1 p-1 text-left">
+                              ${this.renderBetrayalDebuffTimer()}
+                            </td>
+                          </tr>
+                        `
+                      : ""}
+                  </tbody>
+                </table>
+              </div>
+            `
+          : ""}
       </div>
     `;
   }

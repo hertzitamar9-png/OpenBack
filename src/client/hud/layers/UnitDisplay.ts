@@ -244,9 +244,8 @@ export class UnitDisplay extends LitElement implements Controller {
         <div
           class="game-unit-grid grid gap-px w-full"
           data-label-mode=${this.hudLayout.labelMode}
-          style="--game-unit-columns:${
-            this.hudLayout.columns
-          };--game-unit-rows:${this.hudLayout.rows}"
+          style="--game-unit-columns:${this.hudLayout
+            .columns};--game-unit-rows:${this.hudLayout.rows}"
         >
           ${this.renderUnitItem(
             cityIcon,
@@ -391,15 +390,13 @@ export class UnitDisplay extends LitElement implements Controller {
         <div class="game-unit-info-description px-2 py-1">
           ${translateText("build_menu.desc." + structureKey)}
         </div>
-        ${
-          unitType === UnitType.Warship
-            ? html`<div
-                class="mt-1 px-2 py-1 text-[10px] text-cyan-300 border-t border-white/10"
-              >
-                ⇧ ${translateText("build_menu.warship_shift_hint")}
-              </div>`
-            : null
-        }
+        ${unitType === UnitType.Warship
+          ? html`<div
+              class="mt-1 px-2 py-1 text-[10px] text-cyan-300 border-t border-white/10"
+            >
+              ⇧ ${translateText("build_menu.warship_shift_hint")}
+            </div>`
+          : null}
         <div class="flex items-center justify-center gap-1 pt-1">
           <img src=${goldCoinIcon} width="13" height="13" />
           <span class="text-yellow-300"
@@ -421,25 +418,21 @@ export class UnitDisplay extends LitElement implements Controller {
           this.requestUpdate();
         }}
       >
-        ${
-          hovered && this.userSettings.buildBarDescriptions()
-            ? renderUnitInfo(
-                "game-unit-tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-1 text-gray-200 text-center w-max max-w-[min(22rem,calc(100vw-1rem))] text-xs bg-gray-800/95 backdrop-blur-xs rounded-md p-2 z-[100] shadow-lg pointer-events-none",
-              )
-            : null
-        }
-        ${
-          selected && this.userSettings.buildBarDescriptions()
-            ? renderUnitInfo(
-                "game-unit-mobile-info text-gray-100 text-center text-xs bg-gray-900/97 border border-white/15 rounded-lg p-2 shadow-xl pointer-events-none",
-              )
-            : null
-        }
+        ${hovered && this.userSettings.buildBarDescriptions()
+          ? renderUnitInfo(
+              "game-unit-tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-1 text-gray-200 text-center w-max max-w-[min(22rem,calc(100vw-1rem))] text-xs bg-gray-800/95 backdrop-blur-xs rounded-md p-2 z-[100] shadow-lg pointer-events-none",
+            )
+          : null}
+        ${selected && this.userSettings.buildBarDescriptions()
+          ? renderUnitInfo(
+              "game-unit-mobile-info text-gray-100 text-center text-xs bg-gray-900/97 border border-white/15 rounded-lg p-2 shadow-xl pointer-events-none",
+            )
+          : null}
         <div
           title=${translateText("unit_type." + structureKey)}
-          class="${
-            this.canBuild(unitType) ? "" : "opacity-40"
-          } min-w-0 h-9 border border-slate-500 rounded-sm px-px py-px flex flex-col items-center justify-center cursor-pointer
+          class="${this.canBuild(unitType)
+            ? ""
+            : "opacity-40"} min-w-0 h-9 border border-slate-500 rounded-sm px-px py-px flex flex-col items-center justify-center cursor-pointer
              ${selected ? "hover:bg-gray-400/10" : "hover:bg-gray-800"}
              text-white ${selected ? "bg-slate-400/20" : ""}"
           @click=${() => {
@@ -494,11 +487,9 @@ export class UnitDisplay extends LitElement implements Controller {
           <div class="flex items-center justify-center gap-0.5 h-5">
             <span class="text-[8px] text-gray-400">${displayHotkey}</span>
             <img src=${icon} alt=${structureKey} class="align-middle size-4" />
-            ${
-              number !== null
-                ? html`<span class="text-[9px]">${renderNumber(number)}</span>`
-                : null
-            }
+            ${number !== null
+              ? html`<span class="text-[9px]">${renderNumber(number)}</span>`
+              : null}
           </div>
           <div
             class="game-unit-label w-full truncate text-center text-[8px] leading-3 font-semibold text-white/90"

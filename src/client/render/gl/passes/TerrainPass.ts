@@ -214,7 +214,7 @@ export class TerrainPass {
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.tex);
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-    for (let i = 0; i < refs.length;) {
+    for (let i = 0; i < refs.length; ) {
       const ref = refs[i];
       const x = ref % this.mapW;
       const y = (ref - x) / this.mapW;
