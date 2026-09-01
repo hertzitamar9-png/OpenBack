@@ -1520,9 +1520,9 @@ export class GPURenderer {
         const billboardCamera = threeDGroundHomography(threeDCamera, 0.15);
         const screenFacingScale = threeDScreenFacingScale(threeDCamera);
         this.unitPass.setThreeDProjection(threeDCamera, this.terrainBytesTex);
-        this.unitPass.setThreeDReadyModelTypes(
-          this.threeDUnitPass?.readyModelTypes() ?? new Set(),
-        );
+        const readyModelTypes =
+          this.threeDUnitPass?.readyModelTypes() ?? new Set();
+        this.unitPass.setThreeDReadyModelTypes(readyModelTypes);
         this.structurePass.setThreeDProjection(
           threeDCamera,
           this.terrainBytesTex,

@@ -1,3 +1,14 @@
+## OpenBack v0.36.275 - Clear Edges, Clear Signals
+
+- Mobile water now breaks its moving shine into much smaller, softly connected shapes instead of broad block-like patches.
+- Every gameplay control now clears phone notches and rounded corners with a real safe gutter, even when an Android browser reports no inset. The battlefield still fills the screen; only the upper controls, player panel, floating messages, and bottom build bar move into the usable area.
+- Informational game messages can be swiped away. Game Settings now offers one master notification switch plus Combat and requests, Bombs and missiles, Alliances, Donations, Chat and emojis, and World events. Accept-or-reject prompts always remain visible.
+- Missile Silos and SAM Launchers keep their familiar structure markers. What they fire is now unmistakable: Immersive 3D draws nuclear weapons and intercepting SAM missiles as distinct flying rockets with connected ignition and exhaust, with the SAM smaller than the bombs; Classic 2D keeps its existing projectile sprites.
+- Keeping play open after a win now triggers only the sun detonation animation in Immersive 3D. The plaster banner and explosion text are gone everywhere, and Classic 2D does not run the sky blast.
+- Private invite lobbies now survive a host briefly backgrounding or leaving the app to share the link. Friends can still join during a five-minute reconnection window, the same host cancels cleanup by returning, and only an abandoned lobby is removed after the grace period.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.274 - Profile Opens Your Account
 
 - Pressing your name and picture opens your account page, with the account, stats, games and friends tabs. It opened the small shortcut menu before, and the last release sent it to the public profile view instead, which is not what the button means. The little arrow beside your picture still opens the shortcut menu.

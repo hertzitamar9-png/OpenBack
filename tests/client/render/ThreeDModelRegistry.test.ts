@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import {
   THREE_D_MODELS,
   threeDModel,
@@ -65,5 +66,29 @@ describe("3D assembled model transforms", () => {
   it("preserves the distance of every part from the model center", () => {
     const [x, z] = rotateThreeDModelOffset(1.4, -0.8, 1.237);
     expect(Math.hypot(x, z)).toBeCloseTo(Math.hypot(1.4, -0.8));
+  });
+});
+
+describe("visible 3D fired projectiles", () => {
+  it("keeps Silo and SAM structures on the normal structure-marker path", () => {
+    const renderer = readFileSync("src/client/render/gl/Renderer.ts", "utf8");
+    const structurePass = readFileSync(
+      "src/client/render/gl/passes/StructurePass.ts",
+      "utf8",
+    );
+    expect(renderer).not.toContain("THREE_D_STRUCTURE_MODELS");
+    expect(structurePass).not.toContain("uThreeDModelMask");
+  });
+
+  it("renders fired bombs and SAM missiles with distinct 3D rocket trails", () => {
+    const source = readFileSync(
+      "src/client/render/gl/three-d/ThreeDUnitPass.ts",
+      "utf8",
+    );
+    expect(source).toContain("THREE_D_ROCKET_PROJECTILES");
+    expect(source).toContain("type === UnitType.SAMMissile");
+    expect(source).toContain("ROCKET_TRAIL_SAMPLES");
+    expect(source).toContain("rocketPresentation(");
+    expect(source).toContain("samScale");
   });
 });

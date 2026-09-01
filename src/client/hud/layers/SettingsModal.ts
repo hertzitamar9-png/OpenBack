@@ -4,6 +4,7 @@ import { crazyGamesSDK } from "src/client/CrazyGamesSDK";
 import { PauseGameIntentEvent } from "src/client/Transport";
 import { assetUrl } from "../../../core/AssetUrls";
 import { EventBus } from "../../../core/EventBus";
+import { MessageCategory } from "../../../core/game/Game";
 import {
   FPS_LIMIT_OPTIONS,
   UserSettings,
@@ -148,6 +149,35 @@ export class SettingsModal extends LitElement implements Controller {
     this.requestUpdate();
   }
 
+  private onToggleGameNotifications = () => {
+    this.userSettings.toggleGameNotifications();
+    this.requestUpdate();
+  };
+
+  private toggleNotificationCategory(category: MessageCategory): void {
+    this.userSettings.toggleGameNotificationCategory(category);
+    this.requestUpdate();
+  }
+
+  private renderNotificationCategory(
+    category: MessageCategory,
+    labelKey: string,
+  ) {
+    return html`<button
+      class="flex items-center justify-between gap-3 rounded-sm p-2 text-left text-sm text-white transition-colors hover:bg-slate-700"
+      @click=${() => this.toggleNotificationCategory(category)}
+    >
+      <span>${translateText(labelKey)}</span>
+      <span class="text-slate-400">
+        ${
+          this.userSettings.gameNotificationCategory(category)
+            ? translateText("user_setting.on")
+            : translateText("user_setting.off")
+        }
+      </span>
+    </button>`;
+  }
+
   private onToggleRandomNameModeButtonClick() {
     this.userSettings.toggleRandomName();
     this.requestUpdate();
@@ -287,11 +317,13 @@ export class SettingsModal extends LitElement implements Controller {
                   ${translateText("user_setting.fps_limit")}
                 </div>
                 <div class="text-sm text-slate-400">
-                  ${this.displayHz === null
-                    ? translateText("user_setting.fps_limit_desc")
-                    : translateText("user_setting.fps_limit_detected", {
-                        hz: String(this.displayHz),
-                      })}
+                  ${
+                    this.displayHz === null
+                      ? translateText("user_setting.fps_limit_desc")
+                      : translateText("user_setting.fps_limit_detected", {
+                          hz: String(this.displayHz),
+                        })
+                  }
                 </div>
                 <select
                   class="mt-2 w-full bg-slate-700 border border-slate-500 rounded-lg p-2 text-white"
@@ -303,13 +335,19 @@ export class SettingsModal extends LitElement implements Controller {
                         value=${fps}
                         ?selected=${fps === this.userSettings.fpsLimit()}
                       >
-                        ${fps === 0
-                          ? translateText("user_setting.fps_auto")
-                          : this.displayHz !== null && fps > this.displayHz + 5
-                            ? translateText("user_setting.fps_above_display", {
-                                fps: String(fps),
-                              })
-                            : `${fps} FPS`}
+                        ${
+                          fps === 0
+                            ? translateText("user_setting.fps_auto")
+                            : this.displayHz !== null &&
+                                fps > this.displayHz + 5
+                              ? translateText(
+                                  "user_setting.fps_above_display",
+                                  {
+                                    fps: String(fps),
+                                  },
+                                )
+                              : `${fps} FPS`
+                        }
                       </option>
                     `,
                   )}
@@ -380,9 +418,11 @@ export class SettingsModal extends LitElement implements Controller {
                 </div>
               </div>
               <div class="text-sm text-slate-400">
-                ${this.alternateView
-                  ? translateText("user_setting.on")
-                  : translateText("user_setting.off")}
+                ${
+                  this.alternateView
+                    ? translateText("user_setting.on")
+                    : translateText("user_setting.off")
+                }
               </div>
             </button>
 
@@ -400,9 +440,11 @@ export class SettingsModal extends LitElement implements Controller {
                 </div>
               </div>
               <div class="text-sm text-slate-400">
-                ${this.userSettings.emojis()
-                  ? translateText("user_setting.on")
-                  : translateText("user_setting.off")}
+                ${
+                  this.userSettings.emojis()
+                    ? translateText("user_setting.on")
+                    : translateText("user_setting.off")
+                }
               </div>
             </button>
 
@@ -420,9 +462,11 @@ export class SettingsModal extends LitElement implements Controller {
                 </div>
               </div>
               <div class="text-sm text-slate-400">
-                ${this.userSettings.alertFrame()
-                  ? translateText("user_setting.on")
-                  : translateText("user_setting.off")}
+                ${
+                  this.userSettings.alertFrame()
+                    ? translateText("user_setting.on")
+                    : translateText("user_setting.off")
+                }
               </div>
             </button>
 
@@ -461,11 +505,75 @@ export class SettingsModal extends LitElement implements Controller {
                 </div>
               </div>
               <div class="text-sm text-slate-400">
-                ${this.userSettings.helpMessages()
-                  ? translateText("user_setting.on")
-                  : translateText("user_setting.off")}
+                ${
+                  this.userSettings.helpMessages()
+                    ? translateText("user_setting.on")
+                    : translateText("user_setting.off")
+                }
               </div>
             </button>
+
+            <section
+              class="rounded-lg border border-white/10 bg-black/15 p-2 text-white"
+              data-game-notification-settings
+            >
+              <button
+                class="flex w-full items-center justify-between gap-3 rounded-sm p-2 text-left transition-colors hover:bg-slate-700"
+                @click=${this.onToggleGameNotifications}
+              >
+                <span>
+                  <span class="block font-medium"
+                    >${translateText(
+                      "user_setting.game_notifications_label",
+                    )}</span
+                  >
+                  <span class="block text-sm text-slate-400"
+                    >${translateText(
+                      "user_setting.game_notifications_desc",
+                    )}</span
+                  >
+                </span>
+                <span class="text-sm text-slate-400">
+                  ${
+                    this.userSettings.gameNotifications()
+                      ? translateText("user_setting.on")
+                      : translateText("user_setting.off")
+                  }
+                </span>
+              </button>
+              <div
+                class="mt-1 grid grid-cols-1 gap-1 border-t border-white/10 pt-1 sm:grid-cols-2 ${
+                  this.userSettings.gameNotifications()
+                    ? ""
+                    : "pointer-events-none opacity-45"
+                }"
+              >
+                ${this.renderNotificationCategory(
+                  MessageCategory.COMBAT,
+                  "user_setting.game_notifications_combat",
+                )}
+                ${this.renderNotificationCategory(
+                  MessageCategory.NUKE,
+                  "user_setting.game_notifications_bombs",
+                )}
+                ${this.renderNotificationCategory(
+                  MessageCategory.ALLIANCE,
+                  "user_setting.game_notifications_alliances",
+                )}
+                ${this.renderNotificationCategory(
+                  MessageCategory.TRADE,
+                  "user_setting.game_notifications_donations",
+                )}
+                ${this.renderNotificationCategory(
+                  MessageCategory.CHAT,
+                  "user_setting.game_notifications_chat",
+                )}
+                ${this.renderNotificationCategory(
+                  MessageCategory.WORLD,
+                  "user_setting.game_notifications_world",
+                )}
+              </div>
+            </section>
 
             <button
               class="flex gap-3 items-center w-full text-left p-3 hover:bg-slate-700 rounded-sm text-white transition-colors"
@@ -483,9 +591,11 @@ export class SettingsModal extends LitElement implements Controller {
                 </div>
               </div>
               <div class="text-sm text-slate-400">
-                ${this.userSettings.attackingTroopsOverlay()
-                  ? translateText("user_setting.on")
-                  : translateText("user_setting.off")}
+                ${
+                  this.userSettings.attackingTroopsOverlay()
+                    ? translateText("user_setting.on")
+                    : translateText("user_setting.off")
+                }
               </div>
             </button>
 
@@ -508,9 +618,11 @@ export class SettingsModal extends LitElement implements Controller {
                 </div>
               </div>
               <div class="text-sm text-slate-400">
-                ${this.userSettings.cursorCostLabel()
-                  ? translateText("user_setting.on")
-                  : translateText("user_setting.off")}
+                ${
+                  this.userSettings.cursorCostLabel()
+                    ? translateText("user_setting.on")
+                    : translateText("user_setting.off")
+                }
               </div>
             </button>
 
@@ -536,17 +648,19 @@ export class SettingsModal extends LitElement implements Controller {
                 />
               </div>
               <div class="text-sm text-slate-400">
-                ${this.userSettings.nukeAllianceSafetyDuration() > 0
-                  ? translateText(
-                      "user_setting.nuke_alliance_safety_duration",
-                      {
-                        count: this.userSettings.nukeAllianceSafetyDuration(),
-                        seconds: (
-                          this.userSettings.nukeAllianceSafetyDuration() / 10
-                        ).toFixed(1),
-                      },
-                    )
-                  : translateText("user_setting.off")}
+                ${
+                  this.userSettings.nukeAllianceSafetyDuration() > 0
+                    ? translateText(
+                        "user_setting.nuke_alliance_safety_duration",
+                        {
+                          count: this.userSettings.nukeAllianceSafetyDuration(),
+                          seconds: (
+                            this.userSettings.nukeAllianceSafetyDuration() / 10
+                          ).toFixed(1),
+                        },
+                      )
+                    : translateText("user_setting.off")
+                }
               </div>
             </div>
 
@@ -564,9 +678,11 @@ export class SettingsModal extends LitElement implements Controller {
                 </div>
               </div>
               <div class="text-sm text-slate-400">
-                ${this.userSettings.anonymousNames()
-                  ? translateText("user_setting.on")
-                  : translateText("user_setting.off")}
+                ${
+                  this.userSettings.anonymousNames()
+                    ? translateText("user_setting.on")
+                    : translateText("user_setting.off")
+                }
               </div>
             </button>
 
@@ -584,9 +700,11 @@ export class SettingsModal extends LitElement implements Controller {
                 </div>
               </div>
               <div class="text-sm text-slate-400">
-                ${this.userSettings.leftClickOpensMenu()
-                  ? translateText("user_setting.on")
-                  : translateText("user_setting.off")}
+                ${
+                  this.userSettings.leftClickOpensMenu()
+                    ? translateText("user_setting.on")
+                    : translateText("user_setting.off")
+                }
               </div>
             </button>
 
@@ -616,9 +734,11 @@ export class SettingsModal extends LitElement implements Controller {
                   </div>
                 </div>
                 <div class="text-sm text-slate-400">
-                  ${this.userSettings.performanceOverlay()
-                    ? translateText("user_setting.on")
-                    : translateText("user_setting.off")}
+                  ${
+                    this.userSettings.performanceOverlay()
+                      ? translateText("user_setting.on")
+                      : translateText("user_setting.off")
+                  }
                 </div>
               </button>
 

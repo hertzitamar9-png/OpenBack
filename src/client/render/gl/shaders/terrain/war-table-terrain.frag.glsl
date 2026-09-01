@@ -62,11 +62,11 @@ float shineLayer(
   // its own heading, so its shine turns up in different parts of the sea as
   // time passes and fades again, rather than sitting where it always was.
   vec2 gatePosition =
-    world * 0.005 +
+    world * 0.016 +
     travel * time * speed * 0.6 +
     vec2(phase * 3.7, phase * 1.9);
   float gate = domainWarpedWaterNoise(gatePosition, phase);
-  return smoothstep(0.16, 0.94, wave) * smoothstep(0.26, 0.74, gate);
+  return smoothstep(0.16, 0.94, wave) * smoothstep(0.18, 0.82, gate);
 }
 
 /**

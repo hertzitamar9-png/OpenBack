@@ -292,7 +292,7 @@ describe("host-left lobby teardown", () => {
     vi.useRealTimers();
   });
 
-  it("ends, delists and prunes an unstarted lobby when the host leaves", () => {
+  it("keeps an unstarted lobby joinable while the host briefly backgrounds the app", () => {
     const gm = new GameManager(mockLogger);
     const game = gm.createGame("g-host-leaves", undefined, CREATOR)!;
     game.setListed(true);
@@ -307,8 +307,21 @@ describe("host-left lobby teardown", () => {
 
     hostWs.emit("close");
 
-    // Remaining players are kicked and the ghost leaves the listing...
+    expect(guestWs.close).not.toHaveBeenCalled();
+    expect(game.phase()).not.toBe(GamePhase.Finished);
+    expect(gm.listedLobbies()).toHaveLength(1);
+
+    const lateGuest = fakeWs();
+    expect(
+      game.joinClient(makeClient("late", "late-persistent", lateGuest)),
+    ).toBe("joined");
+
+    vi.advanceTimersByTime(5 * 60 * 1000 - 1);
+    expect(game.phase()).not.toBe(GamePhase.Finished);
+
+    vi.advanceTimersByTime(1);
     expect(guestWs.close).toHaveBeenCalled();
+    expect(lateGuest.close).toHaveBeenCalled();
     expect(game.phase()).toBe(GamePhase.Finished);
     expect(gm.listedLobbies()).toEqual([]);
 
@@ -318,7 +331,7 @@ describe("host-left lobby teardown", () => {
     expect(gm.game("g-host-leaves")).toBeNull();
   });
 
-  it("tears down even when the host socket was already dead on join", () => {
+  it("uses the same grace period when the host socket was already dead on join", () => {
     const gm = new GameManager(mockLogger);
     const game = gm.createGame("g-dead-socket", undefined, CREATOR)!;
     game.setListed(true);
@@ -327,8 +340,27 @@ describe("host-left lobby teardown", () => {
     hostWs.readyState = WebSocket.CLOSED;
     game.joinClient(makeClient("host", CREATOR, hostWs));
 
+    expect(game.phase()).not.toBe(GamePhase.Finished);
+    vi.advanceTimersByTime(5 * 60 * 1000);
     expect(game.phase()).toBe(GamePhase.Finished);
     expect(gm.listedLobbies()).toEqual([]);
+  });
+
+  it("cancels abandoned-lobby cleanup when the same host reconnects", () => {
+    const gm = new GameManager(mockLogger);
+    const game = gm.createGame("g-host-returns", undefined, CREATOR)!;
+    const firstSocket = fakeWs();
+    game.joinClient(makeClient("host-one", CREATOR, firstSocket));
+    firstSocket.emit("close");
+
+    vi.advanceTimersByTime(60_000);
+    const secondSocket = fakeWs();
+    expect(game.joinClient(makeClient("host-two", CREATOR, secondSocket))).toBe(
+      "joined",
+    );
+    vi.advanceTimersByTime(5 * 60 * 1000);
+
+    expect(game.phase()).not.toBe(GamePhase.Finished);
   });
 
   it("rejects joins into an ended lobby before it is pruned", () => {

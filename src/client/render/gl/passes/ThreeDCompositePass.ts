@@ -400,9 +400,9 @@ float shineLayer(vec2 world,vec2 direction,float frequency,float speed,float pha
   float wave=sin(dot(world,travel)*frequency+time*speed+phase+bend)*0.5+0.5;
   // Same drifting gate as the 2D sea, so crests appear in moving patches
   // instead of fixed parallel bands.
-  vec2 gatePosition=world*0.005+travel*time*speed*0.6+vec2(phase*3.7,phase*1.9);
+  vec2 gatePosition=world*0.016+travel*time*speed*0.6+vec2(phase*3.7,phase*1.9);
   float gate=domainWarpedWaterNoise(gatePosition,phase);
-  return smoothstep(0.16,0.94,wave)*smoothstep(0.26,0.74,gate);
+  return smoothstep(0.16,0.94,wave)*smoothstep(0.18,0.82,gate);
 }
 void main(){
   ivec2 p=ivec2(clamp(floor(vWorld),vec2(0.0),uMapSize-1.0));

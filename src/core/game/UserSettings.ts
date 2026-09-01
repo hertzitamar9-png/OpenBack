@@ -336,6 +336,25 @@ export class UserSettings {
     this.setBool("settings.helpMessages", !this.helpMessages());
   }
 
+  gameNotifications() {
+    return this.getBool("settings.gameNotifications", true);
+  }
+
+  toggleGameNotifications() {
+    this.setBool("settings.gameNotifications", !this.gameNotifications());
+  }
+
+  gameNotificationCategory(category: string) {
+    return this.getBool(`settings.gameNotifications.${category}`, true);
+  }
+
+  toggleGameNotificationCategory(category: string) {
+    this.setBool(
+      `settings.gameNotifications.${category}`,
+      !this.gameNotificationCategory(category),
+    );
+  }
+
   toggleRandomName() {
     this.setBool("settings.anonymousNames", !this.anonymousNames());
   }

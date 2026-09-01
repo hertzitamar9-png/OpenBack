@@ -46,6 +46,10 @@ body.account-flow-open main-layout main {
   --ob-motion-fast: 120ms;
   --ob-motion-normal: 200ms;
   --home-stage-max: 78rem;
+  --game-safe-top: max(0.75rem, env(safe-area-inset-top));
+  --game-safe-right: max(0.75rem, env(safe-area-inset-right));
+  --game-safe-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  --game-safe-left: max(0.75rem, env(safe-area-inset-left));
 }
 
 @media (min-width: 1024px) {
@@ -192,10 +196,27 @@ textarea:focus-visible {
 
   .game-safe-area {
     box-sizing: border-box;
-    padding-left: max(0.5rem, env(safe-area-inset-left)) !important;
-    padding-right: max(0.5rem, env(safe-area-inset-right)) !important;
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: var(--game-safe-left) !important;
+    padding-right: var(--game-safe-right) !important;
+    padding-bottom: var(--game-safe-bottom) !important;
     container: game-hud / inline-size;
+  }
+
+  .game-top-right-safe {
+    top: var(--game-safe-top) !important;
+    right: var(--game-safe-right) !important;
+    max-width: calc(100dvw - var(--game-safe-left) - var(--game-safe-right));
+  }
+
+  .game-left-sidebar-surface {
+    top: var(--game-safe-top) !important;
+    left: var(--game-safe-left) !important;
+  }
+
+  .player-info-shell {
+    top: var(--game-safe-top) !important;
+    left: var(--game-safe-left) !important;
+    right: var(--game-safe-right) !important;
   }
 
   page-footer .footer-language-selector #lang-selector {
@@ -320,7 +341,7 @@ textarea:focus-visible {
     z-index: 220;
     display: block;
     width: max-content;
-    max-width: calc(100vw - 1rem);
+    max-width: calc(100dvw - var(--game-safe-left) - var(--game-safe-right));
     max-height: min(32dvh, 13rem);
     overflow-y: auto;
     transform: translateX(-50%);
@@ -460,7 +481,7 @@ textarea:focus-visible {
   }
 
   .player-info-shell {
-    left: max(0px, env(safe-area-inset-left)) !important;
+    left: var(--game-safe-left) !important;
     right: auto !important;
     transform: none !important;
     translate: none !important;
@@ -563,7 +584,7 @@ textarea:focus-visible {
 
   .game-hud-events {
     position: absolute;
-    right: max(0.25rem, env(safe-area-inset-right));
+    right: var(--game-safe-right);
     bottom: calc(4.75rem + env(safe-area-inset-bottom));
     width: min(20rem, 42vw) !important;
     max-height: 45dvh;

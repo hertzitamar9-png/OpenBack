@@ -110,11 +110,11 @@ describe("3D water cycle shader", () => {
     );
 
     expect(terrain).toContain("return ribbonTerm * endFade * life;");
-    expect(threeD).toContain("smoothstep(0.26,0.74,gate)");
+    expect(threeD).toContain("smoothstep(0.18,0.82,gate)");
     // The gate travels with its layer, so a layer running the other way takes
     // its patches the other way too.
     expect(terrain).toContain("float curvedCenter = sin(");
-    expect(threeD).toContain("world*0.005+travel*time*speed*0.6");
+    expect(threeD).toContain("world*0.016+travel*time*speed*0.6");
 
     // "patch" is a reserved word in GLSL ES 3.0 -- naming the variable that
     // fails to compile at runtime, taking the match down with it.
@@ -136,5 +136,9 @@ describe("3D water cycle shader", () => {
     expect(threeD).toContain("domainWarpedWaterNoise");
     expect(terrain).not.toContain("valueNoise(\n    world * 0.005");
     expect(threeD).not.toContain("waterNoise(world*0.005");
+    expect(terrain).toContain("world * 0.016");
+    expect(threeD).toContain("world*0.016");
+    expect(terrain).toContain("smoothstep(0.18, 0.82, gate)");
+    expect(threeD).toContain("smoothstep(0.18,0.82,gate)");
   });
 });

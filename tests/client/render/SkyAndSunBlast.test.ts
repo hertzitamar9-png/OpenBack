@@ -82,37 +82,24 @@ describe("win-time sun detonation", () => {
 });
 
 describe("keep playing after the sun exploded", () => {
-  it("shows the exact message the owner asked for", () => {
-    const overlay = JSON.parse(
-      readFileSync(
-        resolve(process.cwd(), "resources/lang/en.openback.json"),
-        "utf8",
-      ),
-    );
-    expect(overlay.win_modal.sun_already_exploded).toBe(
-      "The game is already done dont be weird even the sun exploded before you left",
-    );
-  });
-
-  it("only appears once the player chose to stay", () => {
+  it("triggers only the 3D sky animation when the player chooses to stay", () => {
     const src = readFileSync(
       resolve(process.cwd(), "src/client/hud/layers/WinModal.ts"),
       "utf8",
     );
-    expect(src).toContain("keptPlayingAfterBlast");
     expect(src).toContain("triggerSunBlast");
-    // The banner itself is an OpenBack component, so upstream's win modal
-    // carries a single tag rather than a block of our markup.
-    expect(src).toContain("<openback-plaster-sun");
+    expect(src).toContain(
+      'experienceModeFromConfigView(this.game.config()) === "3d"',
+    );
+    expect(src).not.toContain("<openback-plaster-sun");
   });
 
-  it("keeps the banner markup in an OpenBack file, not upstream's", () => {
-    const banner = readFileSync(
-      resolve(process.cwd(), "src/client/openback/PlasterSunBanner.ts"),
+  it("removes the post-blast text and plaster banner everywhere", () => {
+    const overlay = readFileSync(
+      resolve(process.cwd(), "resources/lang/en.openback.json"),
       "utf8",
     );
-    expect(banner).toContain("openback-plaster-sun");
-    expect(banner).toContain("win_modal.sun_already_exploded");
+    expect(overlay).not.toContain("sun_already_exploded");
   });
 });
 

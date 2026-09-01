@@ -53,15 +53,29 @@ export const SPRITE_IN_THREE_D: ReadonlySet<UnitType> = new Set([
   UnitType.TradeShip,
   UnitType.Warship,
   UnitType.Train,
-  // Warheads for the same reason, and it matters more here: their built model
-  // is a 0.28-wide cylinder with a cone on top, against a ship's 2.7 footprint
-  // -- a sliver at any normal zoom. Loading it hid the sprite and put almost
-  // nothing in its place, so an incoming strike had no readable marker at all.
+]);
+
+export const THREE_D_ROCKET_PROJECTILES: ReadonlySet<UnitType> = new Set([
   UnitType.AtomBomb,
   UnitType.HydrogenBomb,
   UnitType.MIRV,
   UnitType.MIRVWarhead,
+  UnitType.SAMMissile,
 ]);
+export const ROCKET_TRAIL_SAMPLES = 4;
+
+export function rocketPresentation(type: UnitType): {
+  bodyScale: number;
+  trailScale: number;
+  spacing: number;
+} {
+  const samScale = type === UnitType.SAMMissile ? 0.52 : 1;
+  return {
+    bodyScale: samScale,
+    trailScale: type === UnitType.SAMMissile ? 0.16 : 0.3,
+    spacing: type === UnitType.SAMMissile ? 0.22 : 0.42,
+  };
+}
 
 const SURFACE = {
   ground: 0,
@@ -78,6 +92,7 @@ export function* collectThreeDRenderableUnits(
 
 export function isThreeDSpecialModel(unit: UnitState): boolean {
   const type = unit.unitType as UnitType;
+  if (THREE_D_ROCKET_PROJECTILES.has(type)) return true;
   if (
     type === UnitType.TransportShip ||
     type === UnitType.TradeShip ||
@@ -446,6 +461,38 @@ export class ThreeDUnitPass {
         }
         continue;
       }
+      const rocketType = unit.unitType as UnitType;
+      const rocket = THREE_D_ROCKET_PROJECTILES.has(rocketType)
+        ? rocketPresentation(rocketType)
+        : null;
+      if (rocket && !isGhost) {
+        const altitude = model.altitude ?? 2.5;
+        for (let sample = 0; sample < ROCKET_TRAIL_SAMPLES; sample++) {
+          const distance = (sample + 1) * rocket.spacing;
+          const fade = 1 - sample / ROCKET_TRAIL_SAMPLES;
+          const size = rocket.trailScale * (0.45 + fade * 0.55);
+          this.batches
+            .get("sphere")!
+            .push(
+              x - Math.cos(heading) * distance,
+              altitude,
+              z - Math.sin(heading) * distance,
+              size,
+              size,
+              size,
+              heading,
+              0,
+              0,
+              0,
+              unit.ownerID,
+              sample === 0 ? MATERIAL.emissive : MATERIAL.glass,
+              alpha * fade,
+              ANIMATION.pulse + surface * 10,
+              x,
+              z,
+            );
+        }
+      }
       // A shared flattened cylinder anchors every model to the terrain and
       // makes altitude/motion immediately readable without custom shadow data
       // in each registry entry.
@@ -512,13 +559,14 @@ export class ThreeDUnitPass {
       if (!batch) continue;
       const definition = THREE_D_ASSET_MANIFEST[unit.unitType as UnitType];
       const rotation = definition.rotation;
+      const assetScale = definition.scale * (rocket?.bodyScale ?? 1);
       batch.push(
         x,
         model.altitude ?? 0,
         z,
-        definition.scale,
-        definition.scale,
-        definition.scale,
+        assetScale,
+        assetScale,
+        assetScale,
         heading,
         rotation[0],
         rotation[1] + (model.forwardYaw ?? 0),

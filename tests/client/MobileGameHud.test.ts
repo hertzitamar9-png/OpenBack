@@ -39,8 +39,12 @@ describe("mobile game HUD", () => {
   it("keeps curved-screen safe areas inside the mobile HUD", () => {
     expect(styles).toContain("max(0.25rem, env(safe-area-inset-left))");
     expect(styles).toContain("max(0.25rem, env(safe-area-inset-right))");
-    expect(styles).toContain("max(0.5rem, env(safe-area-inset-left))");
-    expect(styles).toContain("max(0.5rem, env(safe-area-inset-right))");
+    expect(styles).toContain("--game-safe-top");
+    expect(styles).toContain("--game-safe-bottom");
+    expect(styles).toContain("max(0.75rem, env(safe-area-inset-left))");
+    expect(styles).toContain("max(0.75rem, env(safe-area-inset-right))");
+    expect(styles).toContain(".game-top-right-safe");
+    expect(styles).toContain(".game-left-sidebar-surface");
     // The column count comes from the variable the panel sets per render, not
     // a hardcoded number. It carries a fallback now -- an unset custom
     // property with no fallback makes the whole declaration invalid, which
@@ -53,9 +57,8 @@ describe("mobile game HUD", () => {
   it("keeps complete unit information inside the mobile viewport", () => {
     expect(unitDisplay).toContain("game-unit-tooltip");
     expect(unitDisplay).toContain("game-unit-mobile-info");
-    expect(styles).toMatch(
-      /\.game-unit-mobile-info\s*{[^}]*max-width:\s*calc\(100vw - 1rem\)/s,
-    );
+    expect(styles).toContain("100dvw - var(--game-safe-left)");
+    expect(styles).toContain("var(--game-safe-right)");
     expect(styles).toMatch(
       /\.game-unit-mobile-info\s*{[^}]*env\(safe-area-inset-bottom\)/s,
     );

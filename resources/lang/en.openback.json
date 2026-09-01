@@ -437,13 +437,20 @@
     "fps_limit": "Frame rate limit",
     "fps_limit_desc": "Cap how many frames the map draws each second.",
     "fps_limit_detected": "Your screen runs at about {hz} Hz. Higher limits will not go faster.",
+    "game_notifications_alliances": "Alliances",
+    "game_notifications_bombs": "Bombs and missiles",
+    "game_notifications_chat": "Chat and emojis",
+    "game_notifications_combat": "Combat and requests",
+    "game_notifications_desc": "Choose which informational messages appear. Accept or reject prompts always remain visible.",
+    "game_notifications_donations": "Donations",
+    "game_notifications_label": "In-game notifications",
+    "game_notifications_world": "World events",
     "mobile_controls_desc": "Drag one finger to move the map, or move a selected unit preview under your finger. Tap to confirm. Pinch to zoom. In 3D, drag two fingers to rotate the camera. Hold a selected nuclear weapon still to cancel it.",
     "mobile_controls_title": "Mobile Controls",
     "tap_menu_desc": "When ON, tapping your territory opens its action menu and the sword button attacks. When OFF, tapping attacks directly.",
     "tap_menu_label": "Tap to Open Menu"
   },
   "win_modal": {
-    "sun_already_exploded": "The game is already done dont be weird even the sun exploded before you left",
     "support_openfront": "Support OpenFront!",
     "territory_pattern": "Purchase a territory skin to go ad-free!",
     "youtube_tutorial": "Need help? Watch the tutorial"
