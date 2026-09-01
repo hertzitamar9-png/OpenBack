@@ -520,10 +520,10 @@ export class GameRightSidebar extends LitElement implements Controller {
                 <img
                   src=${this.isFullscreen ? exitFullscreenIcon : fullscreenIcon}
                   alt=${
-                  this.isFullscreen
-                    ? translateText("fullscreen.exit")
-                    : translateText("fullscreen.enter")
-                }
+                    this.isFullscreen
+                      ? translateText("fullscreen.exit")
+                      : translateText("fullscreen.enter")
+                  }
                   width="20"
                   height="20"
                 />
@@ -592,8 +592,8 @@ export class GameRightSidebar extends LitElement implements Controller {
           ? html`
               <div
                 class="cursor-pointer ${
-                this.newLobbyRequested ? "opacity-50 pointer-events-none" : ""
-              }"
+                  this.newLobbyRequested ? "opacity-50 pointer-events-none" : ""
+                }"
                 @click=${this.onNewLobbyButtonClick}
                 title=${translateText("win_modal.new_lobby")}
               >

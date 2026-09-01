@@ -631,45 +631,45 @@ export class UsernameInput extends LitElement {
                 </div>
                 <div class="max-h-56 overflow-y-auto">
                   ${clans.map(
-                  (clan) => html`
-                    <button
-                      type="button"
-                      class="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors cursor-pointer ${
-                        clan.tag.toUpperCase() === active
-                          ? "bg-malibu-blue/25"
-                          : "hover:bg-white/10"
-                      }"
-                      @click=${() => this.selectClan(clan.tag)}
-                    >
-                      <span
-                        class="shrink-0 rounded bg-white/10 px-1.5 py-0.5 text-sm font-bold uppercase tracking-wider text-white"
-                        >${clan.tag}</span
+                    (clan) => html`
+                      <button
+                        type="button"
+                        class="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors cursor-pointer ${
+                          clan.tag.toUpperCase() === active
+                            ? "bg-malibu-blue/25"
+                            : "hover:bg-white/10"
+                        }"
+                        @click=${() => this.selectClan(clan.tag)}
                       >
-                      <span
-                        class="min-w-0 flex-1 truncate text-sm text-white/80"
-                        >${clan.name}</span
-                      >
-                      ${
-                        clan.tag.toUpperCase() === active
-                          ? html`<svg
-                              viewBox="0 0 24 24"
-                              class="w-4 h-4 shrink-0 text-malibu-blue"
-                              aria-hidden="true"
-                            >
-                              <path
-                                d="M5 12.5l4.5 4.5L19 7"
-                                stroke="currentColor"
-                                stroke-width="2.5"
-                                fill="none"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                              ></path>
-                            </svg>`
-                          : null
-                      }
-                    </button>
-                  `,
-                )}
+                        <span
+                          class="shrink-0 rounded bg-white/10 px-1.5 py-0.5 text-sm font-bold uppercase tracking-wider text-white"
+                          >${clan.tag}</span
+                        >
+                        <span
+                          class="min-w-0 flex-1 truncate text-sm text-white/80"
+                          >${clan.name}</span
+                        >
+                        ${
+                          clan.tag.toUpperCase() === active
+                            ? html`<svg
+                                viewBox="0 0 24 24"
+                                class="w-4 h-4 shrink-0 text-malibu-blue"
+                                aria-hidden="true"
+                              >
+                                <path
+                                  d="M5 12.5l4.5 4.5L19 7"
+                                  stroke="currentColor"
+                                  stroke-width="2.5"
+                                  fill="none"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                ></path>
+                              </svg>`
+                            : null
+                        }
+                      </button>
+                    `,
+                  )}
                 </div>
               `
             : html`<div class="px-2 pt-1.5 pb-1 text-sm text-white/50">
