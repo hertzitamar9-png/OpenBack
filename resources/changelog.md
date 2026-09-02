@@ -1,3 +1,9 @@
+## OpenBack v0.36.276 - Waves That Stay Waves Up Close
+
+- Zooming in no longer turns the sea into a few slow drifting shapes. The water pattern is drawn in map tiles, so zooming magnified every crest along with the land until a single one filled the screen; a finer set of waves now appears as you close in, sized to what you are actually looking at. The zoomed-out view is untouched.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.275 - A Quiet Sea and an Even Top Bar
 
 - Tapping open water no longer opens the player menu. Brushing the sea while moving the map threw up the menu carrying the alliance actions; it belongs to a press and hold, the same as on land, and holding still opens it.

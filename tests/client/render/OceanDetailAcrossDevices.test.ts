@@ -60,19 +60,51 @@ const PHONE = fitZoom(390, 1.25);
 const DESKTOP = fitZoom(1920, 2);
 const NYQUIST_PIXELS_PER_FEATURE = 2;
 
+/** The source with `//` comments removed, so a claim is about code alone. */
+const NEWLINE = String.fromCharCode(10);
+const codeOnly = (text: string) =>
+  text
+    .split(NEWLINE)
+    .map((line) => {
+      const comment = line.indexOf("//");
+      return comment === -1 ? line : line.slice(0, comment);
+    })
+    .join(NEWLINE);
+
 describe("the sea is identical on every device", () => {
   it("scales the water by nothing at all", () => {
     expect(source).toContain("float seaDetail = 1.0;");
   });
 
-  it("uses zoom only to keep the tiny shimmer pixel-sized", () => {
-    // Base water, waves, shine, and coastline must remain device-identical.
-    // The one exception is the new tiny shimmer's geometry: it divides by
-    // zoom specifically so the same effect stays the same screen size.
-    const water = source.slice(source.indexOf("float seaDetail"));
-    const shimmerCall = "oceanShimmer(world, uMapSize, uTime, uZoom)";
-    expect(water).toContain(shimmerCall);
-    expect(water.replace(shimmerCall, "")).not.toContain("uZoom");
+  it("reads zoom only for geometry, never to dim the water", () => {
+    // The sea must not be scaled down by anything -- that was the device
+    // fade and the quality tier, and both are gone. Zoom may still be read
+    // for how big a thing is drawn, which is not the same question: the tiny
+    // shimmer divides by it to hold one screen size, and the close-up octave
+    // fades in by it so a zoomed-in view has structure at the size being
+    // looked at. Both apply identically to a phone and a desktop at the same
+    // zoom, so the sea stays device-identical.
+    // Comments stripped first: this is a claim about what the code does, and
+    // the comments explain uZoom by name.
+    const water = codeOnly(source.slice(source.indexOf("float seaDetail")));
+    const geometryUses = [
+      "oceanShimmer(world, uMapSize, uTime, uZoom)",
+      "float closeUp = smoothstep(1.2, 5.0, uZoom);",
+    ];
+    let remaining = water;
+    for (const use of geometryUses) {
+      expect(remaining).toContain(use);
+      remaining = remaining.replace(use, "");
+    }
+    expect(remaining).not.toContain("uZoom");
+  });
+
+  it("never multiplies the water's brightness by zoom", () => {
+    // seaDetail is the multiplier, and it is a constant. A zoom-derived term
+    // reaching it would be the device fade coming back by another name.
+    const water = codeOnly(source.slice(source.indexOf("float seaDetail")));
+    expect(water).not.toMatch(/seaDetail\s*[*]?=\s*[^;]*uZoom/);
+    expect(water).not.toMatch(/seaDetail\s*[*]?=\s*[^;]*closeUp/);
   });
 
   it("has no quality dial left to dim it", () => {

@@ -209,6 +209,20 @@ void main() {
     float cross = sin(dot(world, vec2(-0.021, 0.039)) - uTime * 0.42);
     float swell = sin(dot(world, vec2(0.010, -0.018)) + uTime * 0.24);
     float wave = broad * 0.55 + cross * 0.35 + swell * 0.10;
+    // uZoom is device pixels per tile, and every field here is written in
+    // tiles, so zooming in magnifies the whole sea along with the map. The
+    // broad swell spans about 177 tiles: 39 device pixels across a whole-map
+    // view, but roughly 1400 once a tile is eight pixels wide, which reads as
+    // a slow gradient rather than water. Fade in a finer octave as the view
+    // closes so there is still structure at the size being looked at. The base
+    // field is untouched, so the sea stays anchored to the map instead of
+    // sliding under a zoom, and a zoomed-out view is exactly as it was --
+    // closeUp is 0 at the 0.22 a phone showing a whole map sits at.
+    float closeUp = smoothstep(1.2, 5.0, uZoom);
+    float ripple =
+      sin(dot(world, vec2(0.62, 0.33)) + uTime * 1.30) * 0.55 +
+      sin(dot(world, vec2(-0.41, 0.71)) - uTime * 1.05) * 0.45;
+    wave += ripple * 0.45 * closeUp;
     float fine = sin((world.x - world.y) * 0.11 + uTime * 0.75) * 0.5 + 0.5;
     float shimmer = clamp(0.30 + wave * 0.10 + fine * 0.045, 0.14, 0.62);
     vec3 deep = color * 0.90;
@@ -231,6 +245,11 @@ void main() {
     shine *= 1.0 - shineLayer(
       world, vec2(-1.00, -0.37), 0.013, -0.12, 7.4, uTime
     ) * 0.13;
+    // A matching close-up band for the shine, so the pale streaks break up at
+    // the same distance the swell does instead of stretching off-screen.
+    shine *= 1.0 - shineLayer(
+      world, vec2(0.83, -0.55), 0.50, 0.71, 3.3, uTime
+    ) * 0.20 * closeUp;
     shine = 1.0 - shine;
     color = mix(color, shorelineTint, shine * 0.95 * seaDetail);
 
