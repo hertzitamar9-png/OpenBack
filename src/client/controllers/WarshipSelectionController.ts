@@ -5,7 +5,6 @@ import { TileRef } from "../../core/game/GameMap";
 import { Controller } from "../Controller";
 import {
   CloseViewEvent,
-  ContextMenuEvent,
   MouseUpEvent,
   SelectAllWarshipsEvent,
   TouchEvent,
@@ -250,9 +249,12 @@ export class WarshipSelectionController implements Controller {
         clickRef,
         nearbyWarships,
       );
-    } else {
-      this.eventBus.emit(new ContextMenuEvent(event.x, event.y));
     }
+    // Open water with nothing on it is inert on a tap. It used to open the
+    // radial menu -- the one carrying alliance and player actions -- so
+    // brushing the sea while panning threw the menu up. That menu belongs to
+    // the long press, exactly as it does on land a few lines above; the hold
+    // path raises its own ContextMenuEvent.
   }
 
   /**

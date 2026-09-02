@@ -1,3 +1,10 @@
+## OpenBack v0.36.275 - A Quiet Sea and an Even Top Bar
+
+- Tapping open water no longer opens the player menu. Brushing the sea while moving the map threw up the menu carrying the alliance actions; it belongs to a press and hold, the same as on land, and holding still opens it.
+- The bar along the top of the screen now spans the width on a phone and spreads its buttons across it, matching the build bar at the bottom. It hugged its buttons into one corner, which left the top of the screen lopsided against the bar below.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.275 - Clear Edges, Clear Signals
 
 - Mobile water now breaks its moving shine into much smaller, softly connected shapes instead of broad block-like patches.
