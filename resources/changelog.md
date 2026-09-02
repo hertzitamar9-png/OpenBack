@@ -1,3 +1,9 @@
+## OpenBack v0.36.279 - The Tutorial Card Keeps Clear
+
+- The tutorial card no longer sits underneath the leaderboard. Both are drawn at the top of the screen, so on a phone they covered each other; the card now drops below the leaderboard whenever the two would overlap, and stays where it is when they do not. It follows the leaderboard as that grows with the players in it, and moves back up when it is closed.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.278 - A Tutorial You Play
 
 - The tutorial is now a real match on the world map rather than a set of description cards. Thirteen steps take you from choosing where your nation begins through expanding, cities, factories, ports, attacking, fortifying, crossing the sea, warships, silos and a first atom bomb, each one explaining why the thing matters and waiting until you have actually done it. A marker pulses over the button a step is asking for.

@@ -37,6 +37,37 @@ export function clearTutorialMatch(): void {
   }
 }
 
+/** Just the parts of a DOMRect this decision needs. */
+export interface Bounds {
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+  height: number;
+}
+
+/**
+ * Where the card should sit so the leaderboard does not cover it, or null to
+ * leave it where the stylesheet puts it.
+ *
+ * The card is centred at the top of the screen, which is where the leaderboard
+ * lives on a phone, so the two were drawn over each other. Measured rather
+ * than nudged by a constant: the leaderboard grows with the number of players
+ * and can be closed, so any fixed offset is wrong for most matches.
+ */
+export function cardTopAvoiding(
+  card: Bounds,
+  board: Bounds | undefined,
+): number | null {
+  if (board === undefined || board.height === 0) return null;
+  // Only when they actually share horizontal space. On a wide screen the
+  // leaderboard sits off to one side and the card can stay where it is.
+  const sideBySide = board.right <= card.left || board.left >= card.right;
+  if (sideBySide) return null;
+  if (board.bottom <= card.top) return null;
+  return Math.round(board.bottom + 8);
+}
+
 /**
  * The guide that runs alongside a tutorial match.
  *
@@ -152,8 +183,35 @@ export class TutorialGuide extends LitElement implements Controller {
     this.requestUpdate();
   };
 
+  /**
+   * Drop the card below the leaderboard when the two would overlap.
+   *
+   * The card is centred at the top, which is also where the leaderboard sits
+   * on a phone, so the two were drawn on top of each other. Measured rather
+   * than given a fixed offset: the leaderboard grows with the number of
+   * players in it and can be collapsed, so any constant would be wrong for
+   * most matches.
+   */
+  private avoidLeaderboard(): void {
+    const card = this.querySelector<HTMLElement>(".tutorial-card");
+    if (card === null) return;
+
+    // Measure from the stylesheet's own position, which carries the safe-area
+    // inset. Setting an inline top would otherwise become the thing we
+    // measure next time, and the card would creep down the screen.
+    card.style.removeProperty("top");
+    const resting = card.getBoundingClientRect();
+    const board = document
+      .querySelector<HTMLElement>("leader-board")
+      ?.getBoundingClientRect();
+
+    const top = cardTopAvoiding(resting, board);
+    if (top !== null) card.style.top = `${top}px`;
+  }
+
   /** Put the pointer over whatever control the step names, if it is on screen. */
   private placePointer(): void {
+    this.avoidLeaderboard();
     if (!this.active || this.celebrating) {
       if (this.pointer !== null) {
         this.pointer = null;
