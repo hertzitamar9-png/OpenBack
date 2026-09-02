@@ -39,6 +39,7 @@ import { PlayerPanel } from "./layers/PlayerPanel";
 import { ReplayPanel } from "./layers/ReplayPanel";
 import { SettingsModal } from "./layers/SettingsModal";
 import { SpawnTimer } from "./layers/SpawnTimer";
+import { TutorialGuide } from "./layers/TutorialGuide";
 import { UnitDisplay } from "./layers/UnitDisplay";
 import { WinModal } from "./layers/WinModal";
 import { loadAllSprites } from "./SpriteLoader";
@@ -203,6 +204,11 @@ export function createRenderer(
     view.setLayerVisible(layerId, visible);
   };
 
+  const tutorialGuide = document.querySelector(
+    "tutorial-guide",
+  ) as TutorialGuide | null;
+  tutorialGuide?.setGame(game);
+
   const unitDisplay = document.querySelector("unit-display") as UnitDisplay;
   if (!(unitDisplay instanceof UnitDisplay)) {
     console.error("unit display not found");
@@ -326,6 +332,7 @@ export function createRenderer(
     ...(performanceOverlay instanceof PerformanceOverlay
       ? [performanceOverlay]
       : []),
+    ...(tutorialGuide instanceof TutorialGuide ? [tutorialGuide] : []),
   ];
 
   return new GameRenderer(

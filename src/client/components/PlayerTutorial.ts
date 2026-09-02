@@ -1,5 +1,6 @@
 import { LitElement, html } from "lit";
 import { customElement, state } from "lit/decorators.js";
+import { startTutorialMatch } from "../tutorial/StartTutorial";
 import { translateText } from "../Utils";
 
 export const PLAYER_TUTORIAL_STORAGE_KEY =
@@ -114,16 +115,23 @@ export class PlayerTutorial extends LitElement {
     document.body.classList.remove("tutorial-coach-active");
   }
 
+  /**
+   * Begin the tutorial: a real match on the world map, guided as it is played.
+   *
+   * It used to open a slideshow describing the game, and asked first whether
+   * the player wanted the 2D or the 3D version of it -- a question somebody
+   * who has never played has no way to answer. The match teaches by being
+   * played, and it is Classic 2D because that is the game, not the camera.
+   */
   private openTutorial = (): void => {
-    this.mode = null;
-    this.stepIndex = 0;
-    this.screen = "choose";
+    this.markComplete();
+    this.screen = "closed";
     document.body.classList.remove("tutorial-coach-active");
+    void startTutorialMatch();
   };
 
   private startTutorial = (): void => {
-    this.screen = "choose";
-    document.body.classList.remove("tutorial-coach-active");
+    this.openTutorial();
   };
 
   private skipTutorial = (): void => {
@@ -295,41 +303,47 @@ export class PlayerTutorial extends LitElement {
             ${this.stepIndex + 1} / ${steps.length}
           </span>
           <span class="tutorial-mode-label">
-            ${this.mode === "2d"
-              ? translateText("player_tutorial.mode_2d")
-              : translateText("player_tutorial.mode_3d")}
+            ${
+              this.mode === "2d"
+                ? translateText("player_tutorial.mode_2d")
+                : translateText("player_tutorial.mode_3d")
+            }
           </span>
           <h1 id="tutorial-step-title">${translateText(step.titleKey)}</h1>
           <p>${translateText(step.bodyKey)}</p>
         </div>
         <footer class="tutorial-actions">
-          ${this.stepIndex > 0
-            ? html`<button
-                type="button"
-                data-tutorial-previous
-                class="tutorial-button tutorial-button-secondary"
-                @click=${this.previousStep}
-              >
-                ${translateText("player_tutorial.previous")}
-              </button>`
-            : html`<span></span>`}
-          ${isLast
-            ? html`<button
-                type="button"
-                data-tutorial-finish
-                class="tutorial-button tutorial-button-primary"
-                @click=${this.finishTutorial}
-              >
-                ${translateText("player_tutorial.finish")}
-              </button>`
-            : html`<button
-                type="button"
-                data-tutorial-next
-                class="tutorial-button tutorial-button-primary"
-                @click=${this.nextStep}
-              >
-                ${translateText("player_tutorial.next")}
-              </button>`}
+          ${
+            this.stepIndex > 0
+              ? html`<button
+                  type="button"
+                  data-tutorial-previous
+                  class="tutorial-button tutorial-button-secondary"
+                  @click=${this.previousStep}
+                >
+                  ${translateText("player_tutorial.previous")}
+                </button>`
+              : html`<span></span>`
+          }
+          ${
+            isLast
+              ? html`<button
+                  type="button"
+                  data-tutorial-finish
+                  class="tutorial-button tutorial-button-primary"
+                  @click=${this.finishTutorial}
+                >
+                  ${translateText("player_tutorial.finish")}
+                </button>`
+              : html`<button
+                  type="button"
+                  data-tutorial-next
+                  class="tutorial-button tutorial-button-primary"
+                  @click=${this.nextStep}
+                >
+                  ${translateText("player_tutorial.next")}
+                </button>`
+          }
         </footer>
       </section>
     `;
@@ -592,9 +606,11 @@ export class PlayerTutorial extends LitElement {
             linear-gradient(rgb(125 211 252 / 0.35) 1px, transparent 1px),
             linear-gradient(90deg, rgb(125 211 252 / 0.35) 1px, transparent 1px);
           background-size: 2rem 2rem;
-          transform: ${this.mode === "3d"
-            ? "perspective(250px) rotateX(58deg) scale(1.5)"
-            : "none"};
+          transform: ${
+            this.mode === "3d"
+              ? "perspective(250px) rotateX(58deg) scale(1.5)"
+              : "none"
+          };
         }
         .tutorial-progress {
           display: inline-flex;
@@ -654,11 +670,13 @@ export class PlayerTutorial extends LitElement {
         }
       </style>
       <div data-tutorial-overlay class="tutorial-overlay">
-        ${this.screen === "prompt"
-          ? this.renderPrompt()
-          : this.screen === "choose"
-            ? this.renderModeChoice()
-            : this.renderSteps()}
+        ${
+          this.screen === "prompt"
+            ? this.renderPrompt()
+            : this.screen === "choose"
+              ? this.renderModeChoice()
+              : this.renderSteps()
+        }
       </div>
     `;
   }

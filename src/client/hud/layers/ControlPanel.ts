@@ -375,8 +375,9 @@ export class ControlPanel extends LitElement implements Controller {
           ></div>
           <div
             class="absolute inset-y-0 left-0 w-full origin-left bg-aquarius transition-transform duration-200 ease-out"
-            style="transform: translateX(${greenPercent}%) scaleX(${orangePercent /
-            100});"
+            style="transform: translateX(${greenPercent}%) scaleX(${
+              orangePercent / 100
+            });"
           ></div>
         </div>
         <div
@@ -403,10 +404,9 @@ export class ControlPanel extends LitElement implements Controller {
             class="brightness-0 invert drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]"
           />
           <span
-            class="text-[10px] font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] ${this
-              ._troopRateIsIncreasing
-              ? "text-green-400"
-              : "text-orange-400"}"
+            class="text-[10px] font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] ${
+              this._troopRateIsIncreasing ? "text-green-400" : "text-orange-400"
+            }"
             >+${renderTroops(this.troopRate)}/s</span
           >
         </div>
@@ -427,8 +427,9 @@ export class ControlPanel extends LitElement implements Controller {
           ></div>
           <div
             class="absolute inset-y-0 left-0 w-full origin-left bg-aquarius transition-transform duration-200 ease-out"
-            style="transform: translateX(${greenPercent}%) scaleX(${orangePercent /
-            100});"
+            style="transform: translateX(${greenPercent}%) scaleX(${
+              orangePercent / 100
+            });"
           ></div>
         </div>
         <div
@@ -470,9 +471,11 @@ export class ControlPanel extends LitElement implements Controller {
     const isWarning = this._notification.type === "warning";
     return html`
       <div
-        class="flex items-center gap-1.5 px-1.5 py-1 rounded-md border text-xs font-medium mb-1 ${isWarning
-          ? "border-orange-400/60 bg-orange-400/10 text-orange-300"
-          : "border-blue-400/60 bg-blue-400/10 text-blue-300"}"
+        class="flex items-center gap-1.5 px-1.5 py-1 rounded-md border text-xs font-medium mb-1 ${
+          isWarning
+            ? "border-orange-400/60 bg-orange-400/10 text-orange-300"
+            : "border-blue-400/60 bg-blue-400/10 text-blue-300"
+        }"
       >
         <span class="shrink-0">${isWarning ? "⚠" : "ℹ"}</span>
         <span>${translateText(this._notification.message)}</span>
@@ -487,10 +490,11 @@ export class ControlPanel extends LitElement implements Controller {
       <div class="flex gap-1.5 items-center mb-1">
         <!-- Troop rate -->
         <div
-          class="flex items-center gap-1 shrink-0 border rounded-md font-bold text-sm py-0.5 px-1 w-[5.5rem] ${this
-            ._troopRateIsIncreasing
-            ? "border-green-400"
-            : "border-orange-400"}"
+          class="flex items-center gap-1 shrink-0 border rounded-md font-bold text-sm py-0.5 px-1 w-[5.5rem] ${
+            this._troopRateIsIncreasing
+              ? "border-green-400"
+              : "border-orange-400"
+          }"
           translate="no"
         >
           <img
@@ -500,14 +504,16 @@ export class ControlPanel extends LitElement implements Controller {
             width="13"
             height="13"
             class="shrink-0"
-            style="filter: ${this._troopRateIsIncreasing
-              ? "brightness(0) saturate(100%) invert(74%) sepia(44%) saturate(500%) hue-rotate(83deg) brightness(103%)"
-              : "brightness(0) saturate(100%) invert(65%) sepia(60%) saturate(600%) hue-rotate(330deg) brightness(105%)"}"
+            style="filter: ${
+              this._troopRateIsIncreasing
+                ? "brightness(0) saturate(100%) invert(74%) sepia(44%) saturate(500%) hue-rotate(83deg) brightness(103%)"
+                : "brightness(0) saturate(100%) invert(65%) sepia(60%) saturate(600%) hue-rotate(330deg) brightness(105%)"
+            }"
           />
           <span
-            class="text-sm font-bold tabular-nums ${this._troopRateIsIncreasing
-              ? "text-green-400"
-              : "text-orange-400"}"
+            class="text-sm font-bold tabular-nums ${
+              this._troopRateIsIncreasing ? "text-green-400" : "text-orange-400"
+            }"
             >+${renderTroops(this.troopRate)}/s</span
           >
         </div>
@@ -518,15 +524,17 @@ export class ControlPanel extends LitElement implements Controller {
           class="flex items-center gap-1 shrink-0 border rounded-md border-yellow-400 font-bold text-yellow-400 text-sm py-0.5 px-1 min-w-[4.5rem] relative"
           translate="no"
         >
-          ${this._goldGain !== null
-            ? keyed(
-                this._goldGainPulseId,
-                html`<span
-                  class="gold-gain-pop absolute -top-5 right-[5px] min-[1015px]:right-[9px] text-green-400 text-sm font-extrabold tabular-nums whitespace-nowrap pointer-events-none drop-shadow-[0_2px_3px_rgba(0,0,0,0.9)]"
-                  >+${renderNumber(this._goldGain)}</span
-                >`,
-              )
-            : ""}
+          ${
+            this._goldGain !== null
+              ? keyed(
+                  this._goldGainPulseId,
+                  html`<span
+                    class="gold-gain-pop absolute -top-5 right-[5px] min-[1015px]:right-[9px] text-green-400 text-sm font-extrabold tabular-nums whitespace-nowrap pointer-events-none drop-shadow-[0_2px_3px_rgba(0,0,0,0.9)]"
+                    >+${renderNumber(this._goldGain)}</span
+                  >`,
+                )
+              : ""
+          }
           <img src=${goldCoinIcon} width="13" height="13" class="shrink-0" />
           <span class="tabular-nums">${this.renderOwnGold()}</span>
         </div>
@@ -552,6 +560,7 @@ export class ControlPanel extends LitElement implements Controller {
           >
         </div>
         <input
+          data-tutorial="troop-ratio"
           type="range"
           min="1"
           max="100"
@@ -629,15 +638,17 @@ export class ControlPanel extends LitElement implements Controller {
           class="flex items-center justify-center p-1 gap-0.5 border rounded-md border-yellow-400 font-bold text-yellow-400 text-xs w-1/5 shrink-0 relative"
           translate="no"
         >
-          ${this._goldGain !== null
-            ? keyed(
-                this._goldGainPulseId,
-                html`<span
-                  class="gold-gain-pop absolute -top-5 right-[5px] min-[1015px]:right-[9px] text-green-400 text-xs font-extrabold tabular-nums whitespace-nowrap pointer-events-none drop-shadow-[0_2px_3px_rgba(0,0,0,0.9)]"
-                  >+${renderNumber(this._goldGain)}</span
-                >`,
-              )
-            : ""}
+          ${
+            this._goldGain !== null
+              ? keyed(
+                  this._goldGainPulseId,
+                  html`<span
+                    class="gold-gain-pop absolute -top-5 right-[5px] min-[1015px]:right-[9px] text-green-400 text-xs font-extrabold tabular-nums whitespace-nowrap pointer-events-none drop-shadow-[0_2px_3px_rgba(0,0,0,0.9)]"
+                    >+${renderNumber(this._goldGain)}</span
+                  >`,
+                )
+              : ""
+          }
           <img src=${goldCoinIcon} width="13" height="13" />
           <span class="px-0.5">${this.renderOwnGold()}</span>
         </div>
@@ -663,6 +674,7 @@ export class ControlPanel extends LitElement implements Controller {
         <!-- Attack ratio slider -->
         <div class="flex-1" translate="no">
           <input
+            data-tutorial="troop-ratio"
             type="range"
             min="1"
             max="100"
@@ -694,9 +706,9 @@ export class ControlPanel extends LitElement implements Controller {
         }
       </style>
       <div
-        class="game-control-panel relative pointer-events-auto ${this._isVisible
-          ? "relative w-full text-sm px-2 py-1"
-          : "hidden"}"
+        class="game-control-panel relative pointer-events-auto ${
+          this._isVisible ? "relative w-full text-sm px-2 py-1" : "hidden"
+        }"
         @contextmenu=${(e: MouseEvent) => e.preventDefault()}
       >
         <div class="lg:hidden">${this.renderMobile()}</div>

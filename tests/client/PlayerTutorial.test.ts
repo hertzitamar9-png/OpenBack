@@ -46,57 +46,37 @@ describe("player tutorial", () => {
     expect(nextVisit.querySelector("[data-tutorial-overlay]")).toBeNull();
   });
 
-  it("offers separate Classic 2D and Immersive 3D tutorials", async () => {
+  it("starts the guided match instead of a slideshow", async () => {
+    // Opening the tutorial now joins a real game. The old flow showed a
+    // handful of description cards and asked, before the player had seen the
+    // game at all, whether they wanted the 2D or the 3D version of it.
     const tutorial = await mount();
+    const joins: Array<Record<string, unknown>> = [];
+    const spy = (e: Event) => {
+      joins.push(((e as CustomEvent).detail ?? {}) as Record<string, unknown>);
+    };
+    document.addEventListener("join-lobby", spy);
+
     tutorial.querySelector<HTMLButtonElement>("[data-tutorial-start]")!.click();
+    // The launcher awaits the username seed and the cosmetics fetch first.
+    await new Promise((resolve) => setTimeout(resolve, 0));
     await tutorial.updateComplete;
-
-    expect(tutorial.querySelector('[data-tutorial-mode="2d"]')).toBeTruthy();
-    expect(tutorial.querySelector('[data-tutorial-mode="3d"]')).toBeTruthy();
-    expect(tutorial.querySelector("[data-tutorial-skip]")).toBeTruthy();
-  });
-
-  it("advances through mode-specific steps and remembers completion", async () => {
-    const tutorial = await mount();
-    tutorial.querySelector<HTMLButtonElement>("[data-tutorial-start]")!.click();
-    await tutorial.updateComplete;
-    tutorial
-      .querySelector<HTMLButtonElement>('[data-tutorial-mode="3d"]')!
-      .click();
-    await tutorial.updateComplete;
-
-    expect(tutorial.querySelector("[data-tutorial-step]")).toBeTruthy();
-    expect(
-      tutorial.querySelector("[data-tutorial-progress]")?.textContent,
-    ).toContain("1 / 5");
-    expect(tutorial.querySelector("[data-tutorial-previous]")).toBeNull();
-
-    for (let index = 0; index < 4; index += 1) {
-      tutorial
-        .querySelector<HTMLButtonElement>("[data-tutorial-next]")!
-        .click();
-      await tutorial.updateComplete;
-    }
-
-    expect(tutorial.querySelector("[data-tutorial-finish]")).toBeTruthy();
-    tutorial
-      .querySelector<HTMLButtonElement>("[data-tutorial-finish]")!
-      .click();
-    await tutorial.updateComplete;
+    document.removeEventListener("join-lobby", spy);
 
     expect(localStorage.getItem(PLAYER_TUTORIAL_STORAGE_KEY)).toBe("complete");
     expect(tutorial.querySelector("[data-tutorial-overlay]")).toBeNull();
   });
 
-  it("can be reopened from any global tutorial entry point", async () => {
-    localStorage.setItem(PLAYER_TUTORIAL_STORAGE_KEY, "complete");
+  it("never asks which camera the player wants", async () => {
+    // A player who has not played cannot answer that, and the tutorial is
+    // about the game rather than the view. Classic 2D, always.
     const tutorial = await mount();
-
-    document.dispatchEvent(new CustomEvent("open-player-tutorial"));
+    tutorial.querySelector<HTMLButtonElement>("[data-tutorial-start]")!.click();
     await tutorial.updateComplete;
 
-    expect(tutorial.querySelector('[data-tutorial-mode="2d"]')).toBeTruthy();
-    expect(tutorial.querySelector('[data-tutorial-mode="3d"]')).toBeTruthy();
+    const text = tutorial.textContent ?? "";
+    expect(text).not.toMatch(/immersive 3d/i);
+    expect(text).not.toMatch(/choose/i);
   });
 
   it("ships translated labels for both tutorial modes", () => {

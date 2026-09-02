@@ -1,3 +1,11 @@
+## OpenBack v0.36.278 - A Tutorial You Play
+
+- The tutorial is now a real match on the world map rather than a set of description cards. Thirteen steps take you from choosing where your nation begins through expanding, cities, factories, ports, attacking, fortifying, crossing the sea, warships, silos and a first atom bomb, each one explaining why the thing matters and waiting until you have actually done it. A marker pulses over the button a step is asking for.
+- The tutorial no longer asks whether you want it in 2D or 3D. It is Classic 2D, because it teaches the game rather than the camera, and that is not a question somebody who has never played can answer.
+- Any step can be skipped, and the tutorial can be ended at any point without leaving the match.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.277 - An Evenly Spaced Home Screen
 
 - The home screen is spaced evenly from top to bottom. The gap under the name row was wider than every other gap, and the space above the game cards was twice the rest, so the top of the screen looked loose against a crowded bottom. Nothing moved or changed shape; only the spacing between the rows.
