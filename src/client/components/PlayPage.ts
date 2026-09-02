@@ -12,7 +12,7 @@ export class PlayPage extends LitElement {
     return html`
       <div
         id="page-play"
-        class="flex flex-col gap-2 w-full px-0 lg:px-4 min-h-0"
+        class="flex flex-col gap-3 sm:gap-4 w-full px-0 lg:px-4 min-h-0"
       >
         <token-login class="absolute"></token-login>
         <rewards-modal class="absolute"></rewards-modal>
@@ -20,7 +20,7 @@ export class PlayPage extends LitElement {
         <!-- Identity strip. News and external promotions stay out of the play
              screen so the controls remain stable and quick to load. -->
         <div
-          class="w-full pb-4 lg:pb-0 flex flex-col gap-4 sm:-mx-4 sm:w-[calc(100%+2rem)] lg:mx-0 lg:w-full"
+          class="w-full flex flex-col gap-4 sm:-mx-4 sm:w-[calc(100%+2rem)] lg:mx-0 lg:w-full"
         >
           <!-- Mobile: spacer for fixed top bar -->
           <div

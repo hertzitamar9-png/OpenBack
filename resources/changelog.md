@@ -1,3 +1,9 @@
+## OpenBack v0.36.277 - An Evenly Spaced Home Screen
+
+- The home screen is spaced evenly from top to bottom. The gap under the name row was wider than every other gap, and the space above the game cards was twice the rest, so the top of the screen looked loose against a crowded bottom. Nothing moved or changed shape; only the spacing between the rows.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.276 - Waves That Stay Waves Up Close
 
 - Zooming in no longer turns the sea into a few slow drifting shapes. The water pattern is drawn in map tiles, so zooming magnified every crest along with the land until a single one filled the screen; a finer set of waves now appears as you close in, sized to what you are actually looking at. The zoomed-out view is untouched.

@@ -201,65 +201,79 @@ export class GameModeSelector extends LitElement {
           )}
         </div>
         <!-- iOS Add to Home Screen banner -->
+        <!-- empty:hidden so the banner stops eating a gap on each side when
+             it renders nothing, which is every device that is not iOS Safari.
+             A zero-height flex child still sits between two gaps, which left
+             a double space above the game cards and nowhere else. -->
         <ios-add-to-home-screen-banner
-          class="no-crazygames"
+          class="no-crazygames empty:hidden"
         ></ios-add-to-home-screen-banner>
 
         <!-- Game cards grid -->
-        ${this.lobbies === null
-          ? html`<div
-              class="home-lobby-loading flex items-center justify-center h-44 sm:h-[min(24rem,40vh)]"
-            >
-              <span
-                class="w-24 h-24 border-[6px] border-blue-500/30 border-t-blue-500 rounded-full animate-spin"
-              ></span>
-            </div>`
-          : html`<div
-              class="home-lobby-grid grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4 lg:h-[min(20rem,30vh)]"
-            >
-              <!-- Left col: main card (desktop only) -->
-              ${ffa
-                ? html`<div class="desktop-lobby-feature hidden lg:block">
-                    ${this.renderLobbyCard(ffa, this.getLobbyTitle(ffa), true)}
-                  </div>`
-                : nothing}
-
-              <!-- Right col: special + teams (desktop only) -->
-              <div
-                class="desktop-lobby-secondary hidden lg:flex lg:flex-col lg:gap-4"
+        ${
+          this.lobbies === null
+            ? html`<div
+                class="home-lobby-loading flex items-center justify-center h-44 sm:h-[min(24rem,40vh)]"
               >
-                ${special
-                  ? html`<div class="flex-1 min-h-0">
-                      ${this.renderSpecialLobbyCard(special)}
-                    </div>`
-                  : nothing}
-                ${teams
-                  ? html`<div class="flex-1 min-h-0">
-                      ${this.renderLobbyCard(teams, this.getLobbyTitle(teams))}
-                    </div>`
-                  : nothing}
-              </div>
+                <span
+                  class="w-24 h-24 border-[6px] border-blue-500/30 border-t-blue-500 rounded-full animate-spin"
+                ></span>
+              </div>`
+            : html`<div
+                class="home-lobby-grid grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4 lg:h-[min(20rem,30vh)]"
+              >
+                <!-- Left col: main card (desktop only) -->
+                ${
+                  ffa
+                    ? html`<div class="desktop-lobby-feature hidden lg:block">
+                        ${this.renderLobbyCard(ffa, this.getLobbyTitle(ffa), true)}
+                      </div>`
+                    : nothing
+                }
 
-              <!-- Phones show every live match at once: one featured card and
+                <!-- Right col: special + teams (desktop only) -->
+                <div
+                  class="desktop-lobby-secondary hidden lg:flex lg:flex-col lg:gap-4"
+                >
+                  ${
+                    special
+                      ? html`<div class="flex-1 min-h-0">
+                          ${this.renderSpecialLobbyCard(special)}
+                        </div>`
+                      : nothing
+                  }
+                  ${
+                    teams
+                      ? html`<div class="flex-1 min-h-0">
+                          ${this.renderLobbyCard(teams, this.getLobbyTitle(teams))}
+                        </div>`
+                      : nothing
+                  }
+                </div>
+
+                <!-- Phones show every live match at once: one featured card and
                    two compact cards below it. -->
-              <div class="mobile-lobby-mosaic lg:hidden">
-                ${mobileLobbies.map(
-                  (lobby, index) => html`
-                    <div
-                      class=${index === 0
-                        ? "mobile-lobby-feature"
-                        : "mobile-lobby-secondary"}
-                    >
-                      ${this.renderLobbyCard(
+                <div class="mobile-lobby-mosaic lg:hidden">
+                  ${mobileLobbies.map(
+                    (lobby, index) => html`
+                      <div
+                        class=${
+                        index === 0
+                          ? "mobile-lobby-feature"
+                          : "mobile-lobby-secondary"
+                      }
+                      >
+                        ${this.renderLobbyCard(
                         lobby,
                         this.getLobbyTitle(lobby),
                         index === 0,
                       )}
-                    </div>
-                  `,
-                )}
-              </div>
-            </div>`}
+                      </div>
+                    `,
+                  )}
+                </div>
+              </div>`
+        }
 
         <!-- Solo: full width, desktop only -->
         <div class="desktop-home-actions hidden lg:block h-14">
@@ -356,18 +370,21 @@ export class GameModeSelector extends LitElement {
       <button
         @click=${onClick}
         ?disabled=${!this.inputValid}
-        class="relative flex items-center justify-center w-full h-full rounded-lg px-1 ${bgClass} transition-all duration-200 text-[11px] leading-tight sm:text-sm lg:text-base font-semibold text-white uppercase tracking-[0.06em] sm:tracking-wider text-center ${!this
-          .inputValid
-          ? "opacity-50 cursor-not-allowed pointer-events-none"
-          : ""}"
+        class="relative flex items-center justify-center w-full h-full rounded-lg px-1 ${bgClass} transition-all duration-200 text-[11px] leading-tight sm:text-sm lg:text-base font-semibold text-white uppercase tracking-[0.06em] sm:tracking-wider text-center ${
+          !this.inputValid
+            ? "opacity-50 cursor-not-allowed pointer-events-none"
+            : ""
+        }"
       >
         ${title}
-        ${badge
-          ? html`<span
-              class="absolute -top-2 -right-2 min-w-[1.375rem] h-[1.375rem] px-1.5 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold tracking-normal"
-              >${badge}</span
-            >`
-          : nothing}
+        ${
+          badge
+            ? html`<span
+                class="absolute -top-2 -right-2 min-w-[1.375rem] h-[1.375rem] px-1.5 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold tracking-normal"
+                >${badge}</span
+              >`
+            : nothing
+        }
       </button>
     `;
   }
@@ -431,52 +448,57 @@ export class GameModeSelector extends LitElement {
       <button
         @click=${() => this.validateAndJoin(lobby)}
         ?disabled=${!this.inputValid}
-        class="group relative w-full h-44 sm:h-full text-white uppercase rounded-2xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] bg-surface hover:shadow-[var(--shadow-lobby-card-hover)] ${!this
-          .inputValid
-          ? "opacity-50 cursor-not-allowed pointer-events-none"
-          : ""}"
+        class="group relative w-full h-44 sm:h-full text-white uppercase rounded-2xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] bg-surface hover:shadow-[var(--shadow-lobby-card-hover)] ${
+          !this.inputValid
+            ? "opacity-50 cursor-not-allowed pointer-events-none"
+            : ""
+        }"
       >
         <!-- Image clipped separately so overflow-hidden doesn't block absolute children -->
         <div
           class="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none"
         >
-          ${mapImageSrc
-            ? html`<img
-                src="${mapImageSrc}"
-                srcset="${mapImageSrcset}"
-                sizes="(min-width: 1024px) 70vw, 100vw"
-                alt="${mapName ?? lobby.gameConfig?.gameMap ?? "map"}"
-                draggable="false"
-                class="absolute inset-0 w-full h-full ${useContain
-                  ? "object-contain"
-                  : "object-cover object-center"} [image-rendering:auto]"
-              />`
-            : null}
+          ${
+            mapImageSrc
+              ? html`<img
+                  src="${mapImageSrc}"
+                  srcset="${mapImageSrcset}"
+                  sizes="(min-width: 1024px) 70vw, 100vw"
+                  alt="${mapName ?? lobby.gameConfig?.gameMap ?? "map"}"
+                  draggable="false"
+                  class="absolute inset-0 w-full h-full ${
+                    useContain ? "object-contain" : "object-cover object-center"
+                  } [image-rendering:auto]"
+                />`
+              : null
+          }
         </div>
         <!-- Top row: modifiers + timer -->
         <div
           class="absolute inset-x-2 top-2 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-1.5"
         >
-          ${modifierLabels.length > 0
-            ? html`<div
-                class="flex min-w-0 max-w-full flex-col items-start gap-1 mt-[2px]"
-              >
-                ${modifierLabels.map(
-                  (label) =>
-                    html`<span
-                      class="max-w-full truncate px-2 py-1 rounded text-[10px] sm:text-xs font-bold uppercase tracking-wider sm:tracking-widest bg-malibu-blue text-white shadow-[var(--shadow-malibu-blue-pill)]"
-                      title=${label}
-                      >${label}</span
-                    >`,
-                )}
-              </div>`
-            : html`<div></div>`}
+          ${
+            modifierLabels.length > 0
+              ? html`<div
+                  class="flex min-w-0 max-w-full flex-col items-start gap-1 mt-[2px]"
+                >
+                  ${modifierLabels.map(
+                    (label) =>
+                      html`<span
+                        class="max-w-full truncate px-2 py-1 rounded text-[10px] sm:text-xs font-bold uppercase tracking-wider sm:tracking-widest bg-malibu-blue text-white shadow-[var(--shadow-malibu-blue-pill)]"
+                        title=${label}
+                        >${label}</span
+                      >`,
+                  )}
+                </div>`
+              : html`<div></div>`
+          }
           <div class="shrink-0">
             <span
               data-lobby-timer
-              class="block whitespace-nowrap text-[10px] sm:text-xs font-bold tracking-wider sm:tracking-widest ${timeDisplayUppercase
-                ? "uppercase"
-                : "normal-case"} bg-malibu-blue text-white px-2 py-1 rounded"
+              class="block whitespace-nowrap text-[10px] sm:text-xs font-bold tracking-wider sm:tracking-widest ${
+                timeDisplayUppercase ? "uppercase" : "normal-case"
+              } bg-malibu-blue text-white px-2 py-1 rounded"
               >${timeDisplay}</span
             >
           </div>
@@ -501,13 +523,15 @@ export class GameModeSelector extends LitElement {
               ></path>
             </svg>
           </span>
-          ${mapName
-            ? html`<p
-                class="text-sm sm:text-base font-bold uppercase tracking-wider text-left leading-tight"
-              >
-                ${mapName}
-              </p>`
-            : ""}
+          ${
+            mapName
+              ? html`<p
+                  class="text-sm sm:text-base font-bold uppercase tracking-wider text-left leading-tight"
+                >
+                  ${mapName}
+                </p>`
+              : ""
+          }
           <h3 class="text-xs text-white/70 uppercase tracking-wider text-left">
             ${titleContent}
           </h3>
