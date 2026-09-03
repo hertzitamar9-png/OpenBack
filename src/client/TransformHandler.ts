@@ -523,6 +523,18 @@ export class TransformHandler {
     this.changed = true;
   }
 
+  /**
+   * Stop a camera glide that is still in flight.
+   *
+   * The glide runs on an interval that clears itself once it arrives, so a
+   * game ending mid-flight left it running against a map nobody was looking
+   * at -- and holding this handler, and the game behind it, alive until it
+   * finished.
+   */
+  dispose() {
+    this.clearTarget();
+  }
+
   private clearTarget() {
     if (this.intervalID !== null) {
       clearInterval(this.intervalID);

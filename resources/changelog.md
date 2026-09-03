@@ -1,3 +1,10 @@
+## OpenBack v0.36.282 - Nothing Left Behind
+
+- The rest of a finished game is now let go of too. Each match's heads-up display kept a window listener for as long as the tab stayed open, so after a few games several finished matches were still measuring the screen on every resize and holding their maps in memory. A camera still gliding when a game ended now stops with it.
+- The per-tick timing record is only built when the performance overlay is actually being read.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.281 - Letting Go of Finished Games
 
 - Playing several games in a row no longer leaves the earlier ones behind. Every match installed its own keyboard and mouse handling and never took it off again, so a finished game kept listening alongside the one being played and held its whole map in memory. Long sessions should stay as responsive as the first game.

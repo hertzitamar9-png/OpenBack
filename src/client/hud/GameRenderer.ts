@@ -348,6 +348,16 @@ export function createRenderer(
 export class GameRenderer {
   private layerTickState = new Map<Controller, { lastTickAtMs: number }>();
 
+  /**
+   * Scopes the window listener below to this renderer's own lifetime.
+   *
+   * One renderer is built per match, but `window` outlives them all: without
+   * this, every game played left another resize handler behind, measuring the
+   * canvas for a game that had finished and keeping that game's camera, UI
+   * state and HUD layers alive behind it.
+   */
+  private readonly listeners = new AbortController();
+
   constructor(
     public transformHandler: TransformHandler,
     public uiState: UIState,
@@ -362,19 +372,31 @@ export class GameRenderer {
 
     this.layers.forEach((l) => l.init?.());
 
-    window.addEventListener("resize", () =>
-      this.transformHandler.updateCanvasBoundingRect(),
+    window.addEventListener(
+      "resize",
+      () => this.transformHandler.updateCanvasBoundingRect(),
+      { signal: this.listeners.signal },
     );
 
     //show whole map on startup
     this.transformHandler.centerAll(0.9);
   }
 
+  /** Let go of the window, and stop any camera glide still in flight. */
+  destroy() {
+    this.listeners.abort();
+    this.transformHandler.dispose();
+  }
+
   tick() {
     const nowMs = performance.now();
     const shouldProfileTick = FrameProfiler.isEnabled();
 
-    const tickLayerDurations: Record<string, number> = {};
+    // Only built when something is going to read it. This runs every tick of
+    // every game, and profiling is off for all but the person measuring.
+    const tickLayerDurations: Record<string, number> | null = shouldProfileTick
+      ? {}
+      : null;
 
     for (const layer of this.layers) {
       if (!layer.tick) {
@@ -394,16 +416,16 @@ export class GameRenderer {
       state.lastTickAtMs = nowMs;
       this.layerTickState.set(layer, state);
 
-      const tickStart = shouldProfileTick ? performance.now() : 0;
+      const tickStart = tickLayerDurations === null ? 0 : performance.now();
       layer.tick();
-      if (shouldProfileTick && tickStart !== 0) {
+      if (tickLayerDurations !== null) {
         const duration = performance.now() - tickStart;
         const label = layer.constructor?.name ?? "UnknownLayer";
         tickLayerDurations[label] = (tickLayerDurations[label] ?? 0) + duration;
       }
     }
 
-    if (shouldProfileTick) {
+    if (tickLayerDurations !== null) {
       this.performanceOverlay?.updateTickLayerMetrics(tickLayerDurations);
     }
   }

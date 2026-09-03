@@ -1177,6 +1177,9 @@ export class ClientGameRunner {
     // and pointers next to the one for the game being played, holding that
     // game's view, event bus and renderer alive behind it.
     this.input.destroy();
+    // Same for the HUD renderer's window listener and any camera glide still
+    // running: both outlive the match otherwise, and hold it alive with them.
+    this.renderer.destroy();
     this.disposeRenderer?.();
     if (!this.isActive) return;
 
