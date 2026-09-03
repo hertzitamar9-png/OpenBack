@@ -92,6 +92,48 @@ async function connect(jwt: string): Promise<WebSocket> {
   return ws;
 }
 
+type TestAccount = { jwt: string; publicId: string };
+
+async function befriend(a: TestAccount, b: TestAccount): Promise<void> {
+  await fetch(`${origin}/friends/requests/${b.publicId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${a.jwt}`,
+    },
+  });
+  await fetch(`${origin}/friends/requests/${a.publicId}/accept`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${b.jwt}`,
+    },
+  });
+}
+
+function sendLobbyInvite(
+  sender: WebSocket,
+  jwt: string,
+  target: string,
+  lobbyId: string,
+): void {
+  sender.send(
+    JSON.stringify({ type: "invite", jwt, target, kind: "lobby", lobbyId }),
+  );
+}
+
+function closeAll(...sockets: WebSocket[]): Promise<unknown> {
+  return Promise.all(
+    sockets.map(
+      (socket) =>
+        new Promise<void>((resolve) => {
+          socket.once("close", () => resolve());
+          socket.close();
+        }),
+    ),
+  );
+}
+
 describe("SocialService", () => {
   test("delivers a private lobby invite only after players become friends", async () => {
     const a = await signUp(`social-a-${Date.now()}@example.com`);
@@ -159,14 +201,77 @@ describe("SocialService", () => {
       type: "invite_result",
       delivered: true,
     });
-    await Promise.all(
-      [sender, receiver].map(
-        (socket) =>
-          new Promise<void>((resolve) => {
-            socket.once("close", () => resolve());
-            socket.close();
-          }),
-      ),
-    );
+    await closeAll(sender, receiver);
+  });
+
+  test("a second invite to a different lobby reaches the friend", async () => {
+    // Reported as "the first invite works, then he doesn't see the message
+    // get sent". An unanswered invitation stays pending, and the second
+    // invite was treated as a repeat of it purely because both were lobby
+    // invites -- the sender was told it had been delivered while nothing was
+    // sent, and the only invitation the friend still held pointed at a lobby
+    // that had already finished.
+    const a = await signUp(`social-c-${Date.now()}@example.com`);
+    const b = await signUp(`social-d-${Date.now()}@example.com`);
+    await befriend(a, b);
+
+    const sender = await connect(a.jwt);
+    const receiver = await connect(b.jwt);
+
+    const firstInvite = nextMessageOfType(receiver, "invite");
+    sendLobbyInvite(sender, a.jwt, b.publicId, "FirstGame");
+    const first = await firstInvite;
+    expect(first).toMatchObject({ kind: "lobby", lobbyId: "FirstGame" });
+
+    // The friend never answers it -- the popup times out, or they simply
+    // ignore it. The host starts a second game and invites them again.
+    const secondInvite = nextMessageOfType(receiver, "invite");
+    const secondResult = nextMessageOfType(sender, "invite_result");
+    const removal = nextMessageOfType(receiver, "invite_removed");
+    sendLobbyInvite(sender, a.jwt, b.publicId, "SecondGame");
+
+    await expect(secondInvite).resolves.toMatchObject({
+      kind: "lobby",
+      lobbyId: "SecondGame",
+    });
+    await expect(secondResult).resolves.toMatchObject({ delivered: true });
+    // And the dead one is withdrawn, so accepting from the friends list
+    // cannot send them to a lobby the host has left.
+    await expect(removal).resolves.toMatchObject({ inviteId: first.id });
+
+    const pending = nextMessageOfType(receiver, "pending_invites");
+    receiver.send(JSON.stringify({ type: "party_state_request", jwt: b.jwt }));
+    const lobbies = ((await pending).invites as Array<{ payload: unknown }>)
+      .map((invite) => invite.payload as { kind: string; lobbyId?: string })
+      .filter((payload) => payload.kind === "lobby")
+      .map((payload) => payload.lobbyId);
+    expect(lobbies).toEqual(["SecondGame"]);
+
+    await closeAll(sender, receiver);
+  });
+
+  test("re-inviting to the same lobby sends it again rather than only claiming success", async () => {
+    // Same lobby, so it is the same invitation and must keep its id -- but the
+    // friend may have dismissed the popup or reconnected since, and the
+    // pending list is what they read from.
+    const a = await signUp(`social-e-${Date.now()}@example.com`);
+    const b = await signUp(`social-f-${Date.now()}@example.com`);
+    await befriend(a, b);
+
+    const sender = await connect(a.jwt);
+    const receiver = await connect(b.jwt);
+
+    const firstInvite = nextMessageOfType(receiver, "invite");
+    sendLobbyInvite(sender, a.jwt, b.publicId, "SameGame1");
+    const first = await firstInvite;
+
+    const repeat = nextMessageOfType(receiver, "invite");
+    sendLobbyInvite(sender, a.jwt, b.publicId, "SameGame1");
+    await expect(repeat).resolves.toMatchObject({
+      id: first.id,
+      lobbyId: "SameGame1",
+    });
+
+    await closeAll(sender, receiver);
   });
 });

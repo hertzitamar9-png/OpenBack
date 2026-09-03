@@ -42,6 +42,22 @@ interface Party {
   members: Array<{ publicId: string; displayName: string }>;
 }
 
+/** Two invitations are the same one only if they lead to the same place. */
+export function samePayload(a: InvitePayload, b: InvitePayload): boolean {
+  if (a.kind !== b.kind) return false;
+  if (a.kind === "lobby" && b.kind === "lobby") return a.lobbyId === b.lobbyId;
+  if (a.kind === "ranked_party" && b.kind === "ranked_party") {
+    return (
+      a.partyCode === b.partyCode &&
+      a.teamSize === b.teamSize &&
+      a.experienceMode === b.experienceMode
+    );
+  }
+  // A party invite names no destination beyond the sender, who is the same
+  // person in both, so there is nothing left to tell apart.
+  return true;
+}
+
 export class SocialService {
   private readonly wss = new WebSocketServer({ noServer: true });
   private readonly clientsByPublicId = new Map<string, Set<SocialClient>>();
@@ -182,20 +198,41 @@ export class SocialService {
         return;
       }
     }
+    // An invite the recipient never answered stays pending, so a second invite
+    // has to say whether it is the same invitation or a new one. Comparing the
+    // kind alone made every later lobby invite "the same" as the first, and
+    // the reply said delivered while nothing was sent: the host invited a
+    // friend to a second game and the friend was never told, still holding an
+    // invitation to a lobby that had already finished.
+    const supersededIds: string[] = [];
     for (const invite of this.pendingInvites.values()) {
-      if (
-        invite.from === sender.publicId &&
-        invite.to === target &&
-        invite.payload.kind === payload.kind
-      ) {
+      if (invite.from !== sender.publicId || invite.to !== target) continue;
+      if (invite.payload.kind !== payload.kind) continue;
+      if (samePayload(invite.payload, payload)) {
+        // Genuinely the same invitation. Re-send it rather than only
+        // reporting success -- the recipient may have dismissed the popup, or
+        // reconnected since, and the pending list is what they read from.
+        this.sendInvite(invite);
         this.send(sender.ws, {
           type: "invite_result",
           target,
-          delivered: true,
+          delivered: this.clientsByPublicId.has(target),
           inviteId: invite.id,
         });
         return;
       }
+      // Same kind, different destination: the older one points somewhere the
+      // sender has moved on from, and accepting it would send the recipient
+      // to a lobby nobody is in.
+      supersededIds.push(invite.id);
+    }
+    for (const id of supersededIds) {
+      this.pendingInvites.delete(id);
+      this.sendToPublicId(target, { type: "invite_removed", inviteId: id });
+      this.sendToPublicId(sender.publicId, {
+        type: "invite_removed",
+        inviteId: id,
+      });
     }
     const invite: PendingInvite = {
       id: crypto.randomUUID(),

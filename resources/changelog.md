@@ -1,3 +1,10 @@
+## OpenBack v0.36.280 - Inviting a Friend Twice
+
+- Inviting the same friend to a second game now actually reaches them. An invitation they never answered stayed pending, and every later invite was treated as a repeat of it: the host was told it had been delivered while nothing was sent, and the only invitation the friend still held pointed at a game that had already finished. A new invitation withdraws the stale one, and re-sending the same one shows it again.
+- Hosts stay hosts after a dropped connection. Reconnecting could hand the lobby back without the host, leaving the start button dead, the host missing from the player list, and the lobby closing itself on everyone a few minutes later.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.279 - The Tutorial Card Keeps Clear
 
 - The tutorial card no longer sits underneath the leaderboard. Both are drawn at the top of the screen, so on a phone they covered each other; the card now drops below the leaderboard whenever the two would overlap, and stays where it is when they do not. It follows the leaderboard as that grows with the players in it, and moves back up when it is closed.

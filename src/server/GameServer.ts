@@ -944,7 +944,17 @@ export class GameServer {
         });
         // Kick the existing client instead of the new one, because this was causing issues when
         // a client wanted to replay the game afterwards.
-        this.kickClient(conflicting.clientID, KICK_REASON_DUPLICATE_SESSION);
+        //
+        // Without a ban: the connection being closed belongs to the same
+        // account as the one being admitted, so banning it would bar the
+        // player from the game they are joining right now -- and, for a host,
+        // silently strip them of being the host, since lobbyCreatorID reads
+        // through the same ban list.
+        this.kickClient(
+          conflicting.clientID,
+          KICK_REASON_DUPLICATE_SESSION,
+          false,
+        );
       }
     }
 
@@ -1231,6 +1241,23 @@ export class GameServer {
     // clients reconnect, and a host socket closing then must not tear the
     // starting game down.
     if (this.hasStarted()) {
+      return;
+    }
+    // A player who reconnects before the server notices the old socket is
+    // gone holds TWO connections for a moment, and the dead one's close
+    // arrives after the live one has joined. Only the connection that still
+    // owns the mapping may clear it -- deleting it unconditionally erased the
+    // identity of the connection that had just replaced it.
+    //
+    // For the host that erasure is not cosmetic. lobbyCreatorID resolves
+    // through this map, so losing the entry stops the server recognising the
+    // host as the host: their start press is refused as a non-creator intent,
+    // the lobby stops naming a creator, and the grace timer below reads the
+    // missing entry as the host being gone and closes the lobby on everyone.
+    const currentClientID = this.persistentIdToClientId.get(
+      client.persistentID,
+    );
+    if (currentClientID !== client.clientID) {
       return;
     }
     // Remove persistentId if the game has not started to prevent going over max players
@@ -2082,9 +2109,19 @@ export class GameServer {
       : hashPersistentID(this.creatorPersistentID);
   }
 
+  /**
+   * Remove a client from the game.
+   *
+   * `ban` is the difference between moderation and housekeeping. A kick by the
+   * host bars the account from coming back, which is the whole point of it. An
+   * eviction of somebody's own superseded connection must not: the account
+   * being evicted is the same account that just reconnected, and barring it
+   * locks the player out of the game they are sitting in.
+   */
   public kickClient(
     clientID: ClientID,
     reasonKey: string = KICK_REASON_DUPLICATE_SESSION,
+    ban: boolean = true,
   ): void {
     if (this.isKicked(clientID)) {
       this.log.warn(`cannot kick client, already kicked`, {
@@ -2103,7 +2140,9 @@ export class GameServer {
       return;
     }
 
-    this.kickedPersistentIds.add(clientToKick.persistentID);
+    if (ban) {
+      this.kickedPersistentIds.add(clientToKick.persistentID);
+    }
 
     const client = this.activeClients.find((c) => c.clientID === clientID);
     if (client) {
