@@ -57,7 +57,15 @@ export class LiveStatsController implements Controller {
           },
         ];
       })
-      .sort((a, b) => a.clientID.localeCompare(b.clientID));
+      // Code-unit order, not localeCompare. Every client has to produce a
+      // byte-identical payload for the server to reach consensus on it, and
+      // collation is locale- and ICU-version-dependent: clientIDs are mixed
+      // case, which is exactly where locales disagree ("a" before "B" in
+      // en-US, after it by code unit). A player in a different locale would
+      // vote for a differently ordered payload and never agree with anyone.
+      .sort((a, b) =>
+        a.clientID < b.clientID ? -1 : a.clientID > b.clientID ? 1 : 0,
+      );
     const stats: LiveStats = { turn, players };
     this.eventBus.emit(new SendLiveStatsEvent(stats));
   }

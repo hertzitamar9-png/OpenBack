@@ -42,6 +42,17 @@ interface Party {
   members: Array<{ publicId: string; displayName: string }>;
 }
 
+/**
+ * How long an unanswered invitation stays live.
+ *
+ * An invite is only worth anything while whatever it points at still exists,
+ * and nothing here can see when a lobby ends. Without a limit they only ever
+ * left the map when somebody answered them, so one ignored invitation sat in
+ * the recipient's list forever -- offering to send them to a finished game --
+ * and the server's copy was never reclaimed.
+ */
+const INVITE_TTL_MS = 30 * 60 * 1000;
+
 /** Two invitations are the same one only if they lead to the same place. */
 export function samePayload(a: InvitePayload, b: InvitePayload): boolean {
   if (a.kind !== b.kind) return false;
@@ -204,6 +215,7 @@ export class SocialService {
     // the reply said delivered while nothing was sent: the host invited a
     // friend to a second game and the friend was never told, still holding an
     // invitation to a lobby that had already finished.
+    this.pruneExpired(Date.now());
     const supersededIds: string[] = [];
     for (const invite of this.pendingInvites.values()) {
       if (invite.from !== sender.publicId || invite.to !== target) continue;
@@ -368,7 +380,31 @@ export class SocialService {
     });
   }
 
+  /**
+   * Drop invitations that have gone stale, telling both sides so the
+   * recipient's list and the sender's view of it stay in step.
+   *
+   * Swept when the map is read rather than on a timer: the only thing that
+   * cares is a client about to be handed the list.
+   */
+  private pruneExpired(now: number): void {
+    for (const [id, invite] of this.pendingInvites) {
+      const createdAt = Date.parse(invite.createdAt);
+      // An unparseable timestamp is not grounds for deleting somebody's
+      // invitation -- leave it and let an answer or a newer invite clear it.
+      if (Number.isNaN(createdAt)) continue;
+      if (now - createdAt < INVITE_TTL_MS) continue;
+      this.pendingInvites.delete(id);
+      this.sendToPublicId(invite.to, { type: "invite_removed", inviteId: id });
+      this.sendToPublicId(invite.from, {
+        type: "invite_removed",
+        inviteId: id,
+      });
+    }
+  }
+
   private sendPending(publicId: string): void {
+    this.pruneExpired(Date.now());
     const invites = [...this.pendingInvites.values()].filter(
       (invite) => invite.to === publicId || invite.from === publicId,
     );

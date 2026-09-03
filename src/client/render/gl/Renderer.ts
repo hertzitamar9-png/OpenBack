@@ -125,6 +125,12 @@ const SAM_RADIUS_HIGHLIGHT_TYPES = new Set([
 
 const GRID_VIEW_KEY = "renderer:grid_view_enabled";
 
+/**
+ * Stand-in for "no 3D models are ready yet", so the 3D branch does not
+ * allocate a throwaway set on every frame it runs without a unit pass.
+ */
+const NO_READY_MODELS: ReadonlySet<string> = new Set();
+
 export class GPURenderer {
   private gl: WebGL2RenderingContext;
   private camera: Camera;
@@ -1521,7 +1527,7 @@ export class GPURenderer {
         const screenFacingScale = threeDScreenFacingScale(threeDCamera);
         this.unitPass.setThreeDProjection(threeDCamera, this.terrainBytesTex);
         const readyModelTypes =
-          this.threeDUnitPass?.readyModelTypes() ?? new Set();
+          this.threeDUnitPass?.readyModelTypes() ?? NO_READY_MODELS;
         this.unitPass.setThreeDReadyModelTypes(readyModelTypes);
         this.structurePass.setThreeDProjection(
           threeDCamera,
@@ -1682,13 +1688,36 @@ export class GPURenderer {
     );
   }
 
+  /**
+   * The clear colour, parsed once per distinct setting rather than per frame.
+   *
+   * backgroundColor is a hex string in the live settings object, and turning
+   * it into a colour costs a regex, a parse and two array allocations. The
+   * value changes when the player changes it, not sixty times a second -- but
+   * it can change, so the string is kept alongside and re-read when it moves.
+   */
+  private clearColorFor: string | null = null;
+  private clearColor: readonly [number, number, number] = [
+    60 / 255,
+    60 / 255,
+    60 / 255,
+  ];
+
   private drawBaseLayer(cam: Float32Array): void {
     const gl = this.gl;
     const pe = this.settings.passEnabled;
-    const [bgR, bgG, bgB] = hexToRgb(this.settings.terrain.backgroundColor) ?? [
-      60, 60, 60,
-    ];
-    gl.clearColor(bgR / 255, bgG / 255, bgB / 255, 1.0);
+    const bg = this.settings.terrain.backgroundColor;
+    if (bg !== this.clearColorFor) {
+      this.clearColorFor = bg;
+      const rgb = hexToRgb(bg) ?? [60, 60, 60];
+      this.clearColor = [rgb[0] / 255, rgb[1] / 255, rgb[2] / 255];
+    }
+    gl.clearColor(
+      this.clearColor[0],
+      this.clearColor[1],
+      this.clearColor[2],
+      1.0,
+    );
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.disable(gl.BLEND);
     if (pe.terrain) {

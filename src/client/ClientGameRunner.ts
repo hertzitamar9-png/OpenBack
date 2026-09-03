@@ -1171,6 +1171,12 @@ export class ClientGameRunner {
   public stop() {
     this.soundManager.dispose();
     this.graphicsListenerAbort?.abort();
+    // Unsubscribe the input handler's DOM listeners and stop its key-repeat
+    // timer. Most of those listeners are on `window`, so they outlive the
+    // game: a finished handler stayed subscribed and kept reacting to keys
+    // and pointers next to the one for the game being played, holding that
+    // game's view, event bus and renderer alive behind it.
+    this.input.destroy();
     this.disposeRenderer?.();
     if (!this.isActive) return;
 

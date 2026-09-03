@@ -1,3 +1,11 @@
+## OpenBack v0.36.281 - Letting Go of Finished Games
+
+- Playing several games in a row no longer leaves the earlier ones behind. Every match installed its own keyboard and mouse handling and never took it off again, so a finished game kept listening alongside the one being played and held its whole map in memory. Long sessions should stay as responsive as the first game.
+- Invitations nobody answers now expire instead of sitting in a friend's list forever offering a game that already ended.
+- The map's background colour is worked out when it changes rather than on every frame drawn.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.280 - Inviting a Friend Twice
 
 - Inviting the same friend to a second game now actually reaches them. An invitation they never answered stayed pending, and every later invite was treated as a repeat of it: the host was told it had been delivered while nothing was sent, and the only invitation the friend still held pointed at a game that had already finished. A new invitation withdraws the stale one, and re-sending the same one shows it again.

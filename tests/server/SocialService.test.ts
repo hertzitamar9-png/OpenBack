@@ -250,6 +250,39 @@ describe("SocialService", () => {
     await closeAll(sender, receiver);
   });
 
+  test("an invitation nobody answered eventually expires", async () => {
+    // Nothing here can see when a lobby ends, so an unanswered invitation used
+    // to sit in the recipient's list forever, offering to send them to a
+    // finished game -- and the server's copy was never reclaimed.
+    const a = await signUp(`social-g-${Date.now()}@example.com`);
+    const b = await signUp(`social-h-${Date.now()}@example.com`);
+    await befriend(a, b);
+
+    const sender = await connect(a.jwt);
+    const receiver = await connect(b.jwt);
+
+    const arrived = nextMessageOfType(receiver, "invite");
+    sendLobbyInvite(sender, a.jwt, b.publicId, "OldGame1");
+    const invite = await arrived;
+
+    // Move the clock past the invitation's life, then ask for the list.
+    const removal = nextMessageOfType(receiver, "invite_removed");
+    const pending = nextMessageOfType(receiver, "pending_invites");
+    vi.useFakeTimers();
+    vi.setSystemTime(Date.now() + 31 * 60 * 1000);
+    try {
+      receiver.send(
+        JSON.stringify({ type: "party_state_request", jwt: b.jwt }),
+      );
+      await expect(removal).resolves.toMatchObject({ inviteId: invite.id });
+      expect((await pending).invites).toEqual([]);
+    } finally {
+      vi.useRealTimers();
+    }
+
+    await closeAll(sender, receiver);
+  });
+
   test("re-inviting to the same lobby sends it again rather than only claiming success", async () => {
     // Same lobby, so it is the same invitation and must keep its id -- but the
     // friend may have dismissed the popup or reconnected since, and the
