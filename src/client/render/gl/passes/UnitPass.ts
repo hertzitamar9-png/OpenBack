@@ -2,9 +2,9 @@
  * UnitPass — GPU-rendered mobile unit sprites.
  *
  * Renders all mobile (non-structure) units: boats, nukes, shells, SAM
- * missiles, and MIRV warheads. All unit types are rotationally symmetric
- * — no rotation needed. Sprites are tiny grayscale PNGs colorized on the
- * GPU using the standard 3-band gray replacement (180/130/70). MIRV
+ * missiles, and MIRV warheads. Moving units rotate their artwork to follow
+ * their course. Sprites are grayscale PNGs colorized on the GPU using the
+ * standard 3-band gray replacement (180/130/70). MIRV
  * Warhead uses a programmatic 3×3 white square (colorized to border
  * color); Shell is a single white pixel.
  *
@@ -14,8 +14,8 @@
  *   Missiles (nukes, shells, SAM, MIRV warheads) → rendered above structures
  *
  * Atlas layout (12 columns × 13px cells, pre-built by generate-sprite-atlases.mjs):
- *   Col 0: Transport (5×5)
- *   Col 1: Trade Ship (5×5)
+ *   Col 0: Transport (11×13)
+ *   Col 1: Trade Ship (13×13)
  *   Col 2: Warship (11×11)
  *   Col 3: Atom Bomb (7×7)
  *   Col 4: Hydrogen Bomb (9×9)

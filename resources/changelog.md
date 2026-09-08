@@ -1,3 +1,11 @@
+## OpenBack v0.36.283 - Ships You Can Read
+
+- The camera turns more responsively with an ordinary two-finger drag in Immersive 3D instead of needing a hard fling.
+- The conquest transport and trade ship now use larger, clearly different ship silhouettes in both Classic 2D and Immersive 3D. Both face along their course and leave a visible wake, including trade ships which previously left none.
+- Informational match messages can now be swiped away reliably on a phone, including captured-ship notices. Vertical scrolling still works, while alliance requests and other decisions stay on screen.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.282 - Nothing Left Behind
 
 - The rest of a finished game is now let go of too. Each match's heads-up display kept a window listener for as long as the tab stayed open, so after a few games several finished matches were still measuring the screen on every resize and holding their maps in memory. A camera still gliding when a game ended now stops with it.

@@ -113,31 +113,45 @@ describe("ship wake", () => {
     // It rides the sea like the hull does rather than the terrain.
     expect(unitPass3D).toContain("ANIMATION.none + surface * 10");
   });
+
+  it("stamps both conquest transports and trade ships into the shared trail", () => {
+    const gameView = read("src/client/view/GameView.ts");
+    const trailTypes = gameView.slice(
+      gameView.indexOf("const TRAIL_TYPES"),
+      gameView.indexOf("const STATUS_NUKE_TYPES"),
+    );
+    expect(trailTypes).toContain("UnitType.TransportShip");
+    expect(trailTypes).toContain("UnitType.TradeShip");
+  });
 });
 
-// The generated models for ships and trains are assembled from a few boxes and
-// cones, which at the size they are actually seen reads as a pile of blocks --
-// train carriages especially, which sit as separate lumps with gaps between
-// them because each is placed independently rather than coupled to the next.
-// The flat sprite is real artwork and is drawn screen-facing in 3D, so it
-// shows its face from every angle.
+function setBody(source: string, declaration: string): string {
+  const start = source.indexOf(declaration);
+  const end = source.indexOf("]);", start);
+  return source.slice(start, end);
+}
+
+// Ships use the same readable artwork in both views. Immersive 3D anchors and
+// rotates that artwork over its raised water instead of swapping in a GLB.
 describe("units that keep their flat artwork in 3D", () => {
-  it("lists the ships, trains and warheads", () => {
+  it("lists the ships and train, but not fired 3D projectiles", () => {
+    const spriteTypes = setBody(unitPass3D, "export const SPRITE_IN_THREE_D");
+    for (const type of ["TransportShip", "TradeShip", "Warship", "Train"]) {
+      expect(spriteTypes).toContain(`UnitType.${type},`);
+    }
     for (const type of [
-      "TransportShip",
-      "TradeShip",
-      "Warship",
-      "Train",
-      // A warhead's built model is a 0.28-wide cylinder against a ship's 2.7
-      // footprint. Loading it hid the sprite and put almost nothing in its
-      // place, so an incoming strike had no readable marker at all.
       "AtomBomb",
       "HydrogenBomb",
       "MIRV",
       "MIRVWarhead",
+      "SAMMissile",
     ]) {
-      expect(unitPass3D).toContain(`UnitType.${type},`);
+      expect(spriteTypes).not.toContain(`UnitType.${type},`);
+      const rockets = setBody(unitPass3D, "THREE_D_ROCKET_PROJECTILES");
+      expect(rockets).toContain(`UnitType.${type},`);
     }
+    // The same atlas sprites remain active in 3D because these types never
+    // enter the ready-model mask that suppresses the classic draw.
     expect(unitPass3D).toContain("export const SPRITE_IN_THREE_D");
   });
 

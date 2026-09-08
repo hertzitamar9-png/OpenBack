@@ -67,6 +67,24 @@ const TIER_1_TYPES: ReadonlySet<MessageType> = new Set([
 
 const isTier1 = (type: MessageType): boolean => TIER_1_TYPES.has(type);
 
+export type NotificationSwipeAxis = "pending" | "horizontal" | "vertical";
+const NOTIFICATION_SWIPE_SLOP_PX = 6;
+const NOTIFICATION_DISMISS_PX = 48;
+
+export function notificationSwipeAxis(
+  deltaX: number,
+  deltaY: number,
+): NotificationSwipeAxis {
+  if (Math.hypot(deltaX, deltaY) < NOTIFICATION_SWIPE_SLOP_PX) {
+    return "pending";
+  }
+  return Math.abs(deltaX) > Math.abs(deltaY) ? "horizontal" : "vertical";
+}
+
+export function shouldDismissNotificationSwipe(offset: number): boolean {
+  return Math.abs(offset) >= NOTIFICATION_DISMISS_PX;
+}
+
 @customElement("events-display")
 export class EventsDisplay extends LitElement implements Controller {
   public eventBus: EventBus;
@@ -78,7 +96,14 @@ export class EventsDisplay extends LitElement implements Controller {
   private userSettings = new UserSettings();
   private nextEventId = 1;
   private swipe:
-    | { id: number; startX: number; startY: number; offset: number }
+    | {
+        id: number;
+        pointerId: number;
+        startX: number;
+        startY: number;
+        offset: number;
+        axis: NotificationSwipeAxis;
+      }
     | undefined;
 
   @state() private _isVisible: boolean = false;
@@ -266,11 +291,14 @@ export class EventsDisplay extends LitElement implements Controller {
   }
 
   private swipeStart(pointer: PointerEvent, event: GameEvent): void {
+    if (!pointer.isPrimary && pointer.pointerType !== "touch") return;
     this.swipe = {
       id: event.id,
+      pointerId: pointer.pointerId,
       startX: pointer.clientX,
       startY: pointer.clientY,
       offset: 0,
+      axis: "pending",
     };
     (pointer.currentTarget as HTMLElement).setPointerCapture?.(
       pointer.pointerId,
@@ -278,16 +306,32 @@ export class EventsDisplay extends LitElement implements Controller {
   }
 
   private swipeMove(pointer: PointerEvent): void {
-    if (!this.swipe) return;
+    if (!this.swipe || this.swipe.pointerId !== pointer.pointerId) return;
     const dx = pointer.clientX - this.swipe.startX;
     const dy = pointer.clientY - this.swipe.startY;
-    if (Math.abs(dy) > Math.abs(dx)) return;
-    this.swipe = { ...this.swipe, offset: dx };
+    const axis =
+      this.swipe.axis === "pending"
+        ? notificationSwipeAxis(dx, dy)
+        : this.swipe.axis;
+    if (axis === "vertical") {
+      this.swipe = undefined;
+      this.requestUpdate();
+      return;
+    }
+    if (axis === "pending") return;
+    pointer.preventDefault();
+    pointer.stopPropagation();
+    this.swipe = { ...this.swipe, axis, offset: dx };
     this.requestUpdate();
   }
 
-  private swipeEnd(event: GameEvent): void {
-    if (this.swipe?.id === event.id && Math.abs(this.swipe.offset) >= 56) {
+  private swipeEnd(pointer: PointerEvent, event: GameEvent): void {
+    if (!this.swipe || this.swipe.pointerId !== pointer.pointerId) return;
+    if (
+      this.swipe.id === event.id &&
+      this.swipe.axis === "horizontal" &&
+      shouldDismissNotificationSwipe(this.swipe.offset)
+    ) {
       this.dismissEvent(event);
       return;
     }
@@ -633,42 +677,52 @@ export class EventsDisplay extends LitElement implements Controller {
 
   private renderEventRow(event: GameEvent) {
     const offset = this.swipe?.id === event.id ? this.swipe.offset : 0;
+    const activelySwiping =
+      this.swipe?.id === event.id && this.swipe.axis === "horizontal";
     return html`
-      <tr
-        data-swipe-dismissable
-        class="touch-pan-y transition-transform"
-        style="transform:translateX(${offset}px);opacity:${Math.max(
-          0.35,
-          1 - Math.abs(offset) / 180,
-        )}"
-        @pointerdown=${(pointer: PointerEvent) =>
-          this.swipeStart(pointer, event)}
-        @pointermove=${this.swipeMove}
-        @pointerup=${() => this.swipeEnd(event)}
-        @pointercancel=${() => this.swipeEnd(event)}
-      >
-        <td
-          class="lg:px-2 lg:py-1 p-1 text-left ${getMessageTypeClasses(
-            event.type,
-          )}"
-        >
-          ${event.focusID
-            ? this.renderButton({
-                content: this.getEventDescription(event),
-                onClick: () => {
-                  if (event.focusID) this.emitGoToPlayerEvent(event.focusID);
-                },
-                className: "text-left",
-              })
-            : event.unitView
-              ? this.renderButton({
-                  content: this.getEventDescription(event),
-                  onClick: () => {
-                    if (event.unitView) this.emitGoToUnitEvent(event.unitView);
-                  },
-                  className: "text-left",
-                })
-              : this.getEventDescription(event)}
+      <tr>
+        <td class="p-0 text-left ${getMessageTypeClasses(event.type)}">
+          <div
+            data-swipe-dismissable
+            class="touch-pan-y lg:px-2 lg:py-1 p-1 ${
+              activelySwiping ? "" : "transition-transform"
+            }"
+            style="transform:translate3d(${offset}px,0,0);opacity:${Math.max(
+              0.35,
+              1 - Math.abs(offset) / 160,
+            )}"
+            @pointerdown=${(pointer: PointerEvent) =>
+              this.swipeStart(pointer, event)}
+            @pointermove=${this.swipeMove}
+            @pointerup=${(pointer: PointerEvent) =>
+              this.swipeEnd(pointer, event)}
+            @pointercancel=${() => {
+              this.swipe = undefined;
+              this.requestUpdate();
+            }}
+          >
+            ${
+              event.focusID
+                ? this.renderButton({
+                    content: this.getEventDescription(event),
+                    onClick: () => {
+                      if (event.focusID)
+                        this.emitGoToPlayerEvent(event.focusID);
+                    },
+                    className: "text-left",
+                  })
+                : event.unitView
+                  ? this.renderButton({
+                      content: this.getEventDescription(event),
+                      onClick: () => {
+                        if (event.unitView)
+                          this.emitGoToUnitEvent(event.unitView);
+                      },
+                      className: "text-left",
+                    })
+                  : this.getEventDescription(event)
+            }
+          </div>
         </td>
       </tr>
     `;
@@ -706,45 +760,51 @@ export class EventsDisplay extends LitElement implements Controller {
 
     return html`
       <div class="flex flex-col gap-1 w-full min-[1200px]:w-96">
-        ${tier2Events.length > 0
-          ? html`
-              <div
-                class="bg-gray-800/92 backdrop-blur-sm max-h-[12vh] lg:max-h-[22vh] overflow-y-auto rounded-lg opacity-90 events-container"
-              >
-                <table
-                  class="w-full border-collapse text-white text-xs lg:text-sm pointer-events-auto"
+        ${
+          tier2Events.length > 0
+            ? html`
+                <div
+                  class="bg-gray-800/92 backdrop-blur-sm max-h-[12vh] lg:max-h-[22vh] overflow-y-auto rounded-lg opacity-90 events-container"
                 >
-                  <tbody>
-                    ${tier2Events.map((event) => this.renderEventRow(event))}
-                  </tbody>
-                </table>
-              </div>
-            `
-          : ""}
-        ${tier1Events.length > 0 || showBetrayalTimer
-          ? html`
-              <div
-                class="bg-gray-800 backdrop-blur-sm max-h-[30vh] lg:max-h-[40vh] overflow-y-auto rounded-lg shadow-lg border-l-4 border-red-500 important-events-container"
-              >
-                <table
-                  class="w-full border-collapse text-white text-base lg:text-lg font-medium pointer-events-auto"
+                  <table
+                    class="w-full border-collapse text-white text-xs lg:text-sm pointer-events-auto"
+                  >
+                    <tbody>
+                      ${tier2Events.map((event) => this.renderEventRow(event))}
+                    </tbody>
+                  </table>
+                </div>
+              `
+            : ""
+        }
+        ${
+          tier1Events.length > 0 || showBetrayalTimer
+            ? html`
+                <div
+                  class="bg-gray-800 backdrop-blur-sm max-h-[30vh] lg:max-h-[40vh] overflow-y-auto rounded-lg shadow-lg border-l-4 border-red-500 important-events-container"
                 >
-                  <tbody>
-                    ${tier1Events.map((event) => this.renderEventRow(event))}
-                    ${showBetrayalTimer
-                      ? html`
-                          <tr>
-                            <td class="lg:px-2 lg:py-1 p-1 text-left">
-                              ${this.renderBetrayalDebuffTimer()}
-                            </td>
-                          </tr>
-                        `
-                      : ""}
-                  </tbody>
-                </table>
-              </div>
-            `
-          : ""}
+                  <table
+                    class="w-full border-collapse text-white text-base lg:text-lg font-medium pointer-events-auto"
+                  >
+                    <tbody>
+                      ${tier1Events.map((event) => this.renderEventRow(event))}
+                      ${
+                        showBetrayalTimer
+                          ? html`
+                              <tr>
+                                <td class="lg:px-2 lg:py-1 p-1 text-left">
+                                  ${this.renderBetrayalDebuffTimer()}
+                                </td>
+                              </tr>
+                            `
+                          : ""
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              `
+            : ""
+        }
       </div>
     `;
   }

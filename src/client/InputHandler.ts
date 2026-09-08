@@ -99,6 +99,11 @@ export class RotateCameraEvent implements GameEvent {
   ) {}
 }
 
+// A two-finger pointer update moves the pair's centre by only half as much as
+// the finger that generated it. On a phone that made orbiting feel glued in
+// place. Keep this at the touch source so desktop right-drag remains exact.
+const THREE_D_TOUCH_ORBIT_MULTIPLIER = 2.5;
+
 export class AlternateViewEvent implements GameEvent {
   constructor(public readonly alternateView: boolean) {}
 }
@@ -1295,7 +1300,12 @@ export class InputHandler {
         const centerDeltaX = currentPinchCenter.x - this.lastPinchCenter.x;
         const centerDeltaY = currentPinchCenter.y - this.lastPinchCenter.y;
         if (centerDeltaX !== 0 || centerDeltaY !== 0) {
-          this.eventBus.emit(new RotateCameraEvent(centerDeltaX, centerDeltaY));
+          this.eventBus.emit(
+            new RotateCameraEvent(
+              centerDeltaX * THREE_D_TOUCH_ORBIT_MULTIPLIER,
+              centerDeltaY * THREE_D_TOUCH_ORBIT_MULTIPLIER,
+            ),
+          );
         }
       }
       this.lastPinchCenter = currentPinchCenter;

@@ -128,7 +128,10 @@ describe("InputHandler mobile placement gestures", () => {
     pointer(window, "pointermove", 5, 110, 110);
 
     expect(ctx.rotations).toHaveLength(1);
-    expect(ctx.rotations[0]).toMatchObject({ deltaX: 5, deltaY: 5 });
+    // A finger moved ten pixels, while the two-pointer centre moved only five.
+    // Touch orbiting amplifies that centre movement so a normal swipe can turn
+    // the camera without the player having to fling both fingers.
+    expect(ctx.rotations[0]).toMatchObject({ deltaX: 12.5, deltaY: 12.5 });
     expect(ctx.zooms).toHaveLength(1);
     ctx.handler.destroy();
   });
