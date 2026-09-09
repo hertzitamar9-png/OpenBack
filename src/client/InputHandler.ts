@@ -998,7 +998,8 @@ export class InputHandler {
       }
       this.pointerDown = true;
       const remaining = this.pointers.values().next().value as
-        PointerEvent | undefined;
+        | PointerEvent
+        | undefined;
       if (remaining) {
         this.lastPointerX = remaining.clientX;
         this.lastPointerY = remaining.clientY;

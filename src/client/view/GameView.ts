@@ -365,7 +365,8 @@ export class GameView implements GameMap {
     }
 
     const spawnPhaseEndUpdate = gu.updates[GameUpdateType.SpawnPhaseEnd][0] as
-      SpawnPhaseEndUpdate | undefined;
+      | SpawnPhaseEndUpdate
+      | undefined;
     if (spawnPhaseEndUpdate) {
       this.startTick = spawnPhaseEndUpdate.startTick;
     }

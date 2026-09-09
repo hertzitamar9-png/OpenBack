@@ -8,9 +8,11 @@ import { MAX_USERNAME_LENGTH } from "../src/core/validations/username";
 // than the network.
 const getUserMe = vi.fn(async (): Promise<UserMeResponse | false> => false);
 const invalidateUserMe = vi.fn();
+const updateMyIdentityPreferences = vi.fn(async (): Promise<boolean> => true);
 vi.mock("../src/client/Api", () => ({
   getUserMe: () => getUserMe(),
   invalidateUserMe: () => invalidateUserMe(),
+  updateMyIdentityPreferences: () => updateMyIdentityPreferences(),
 }));
 const checkClanTagOwnership = vi.fn(
   async (
@@ -90,6 +92,8 @@ beforeEach(() => {
   getUserMe.mockReset();
   getUserMe.mockResolvedValue(false);
   invalidateUserMe.mockReset();
+  updateMyIdentityPreferences.mockReset();
+  updateMyIdentityPreferences.mockResolvedValue(true);
   checkClanTagOwnership.mockReset();
   checkClanTagOwnership.mockImplementation(async (tag: string) => ({
     tag,
