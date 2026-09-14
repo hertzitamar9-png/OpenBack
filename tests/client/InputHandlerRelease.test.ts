@@ -1,8 +1,10 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { InputHandler, MouseMoveEvent } from "../../src/client/InputHandler";
 import type { UIState } from "../../src/client/UIState";
 import type { GameView } from "../../src/client/view";
 import { EventBus } from "../../src/core/EventBus";
+
+const liveHandlers: InputHandler[] = [];
 
 /**
  * A finished game's input handler has to let go of the window.
@@ -26,6 +28,7 @@ function setup() {
     canvas,
     bus,
   );
+  liveHandlers.push(handler);
   const moves: MouseMoveEvent[] = [];
   bus.on(MouseMoveEvent, (event) => moves.push(event));
   handler.initialize();
@@ -39,7 +42,15 @@ function mouseMove(x: number, y: number): void {
 }
 
 describe("an input handler releases the window when the game ends", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
   afterEach(() => {
+    for (const handler of liveHandlers.splice(0)) {
+      handler.destroy();
+    }
+    expect(vi.getTimerCount()).toBe(0);
     document.body.innerHTML = "";
     vi.useRealTimers();
   });
@@ -73,7 +84,6 @@ describe("an input handler releases the window when the game ends", () => {
   });
 
   it("stops its key-repeat timer", () => {
-    vi.useFakeTimers();
     const { handler } = setup();
     const pending = vi.getTimerCount();
     expect(pending).toBeGreaterThan(0);
