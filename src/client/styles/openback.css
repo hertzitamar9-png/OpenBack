@@ -10,6 +10,22 @@
 /* Path is relative to this file, which sits one level deeper than styles.css. */
 @import "../hud/war-table/war-table-hud.css";
 
+/* HUD elements persist between matches; never show their last frame over home. */
+body:not(.in-game)
+  :is(
+    #game-bottom-hud,
+    .game-top-right-safe,
+    game-left-sidebar,
+    leader-board,
+    team-stats,
+    player-info-overlay,
+    spawn-timer,
+    immunity-timer,
+    performance-overlay
+  ) {
+  display: none !important;
+}
+
 /* Login/profile is an optional focused flow: obscure the main menu while it
    is open, but keep the account page and its working Back arrow available. */
 body.account-flow-open #main-menu-shell {
@@ -211,6 +227,7 @@ textarea:focus-visible {
   .game-left-sidebar-surface {
     top: var(--game-safe-top) !important;
     left: var(--game-safe-left) !important;
+    max-width: calc(100dvw - var(--game-safe-left) - var(--game-safe-right));
   }
 
   .player-info-shell {

@@ -98,6 +98,29 @@ describe("LocalServer archiving", () => {
     vi.unstubAllGlobals();
   });
 
+  it("never archives a tutorial as a normal singleplayer result", async () => {
+    const start = makeGameStartInfo();
+    start.config.tutorialMission = "first-command-v1";
+    const server = new LocalServer(
+      {
+        gameStartInfo: start,
+        playerName: "TestUser",
+        playerClanTag: null,
+      } as any,
+      false,
+      new EventBus(),
+    );
+    server.updateCallback(
+      () => {},
+      () => {},
+    );
+    server.start();
+    server.onMessage(winnerMsg);
+    server.endGame();
+    await Promise.resolve();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("archives at win time, without keepalive, and not again at endGame", async () => {
     const server = makeServer(false);
     server.start();

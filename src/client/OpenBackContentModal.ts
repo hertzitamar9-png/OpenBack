@@ -3,6 +3,7 @@ import { customElement, property, state } from "lit/decorators.js";
 import { appRouter } from "./AppRouter";
 import { BaseModal } from "./components/BaseModal";
 import { modalHeader } from "./components/ui/ModalHeader";
+import { translateText } from "./Utils";
 
 type ContentSection = { title: string; text: string; tips?: string[] };
 type ContentPage = {
@@ -146,6 +147,22 @@ export class OpenBackContentModal extends BaseModal {
             : "Read about OpenBack systems, updates, multiplayer design, and the ideas behind the battlefield."}
         </p>
       </div>
+      ${isGuide
+        ? html`<button
+            class="mb-8 w-full rounded-2xl border border-teal-200/50 bg-slate-800 p-6 text-start text-white"
+            data-tutorial-entry="guides"
+            @click=${() =>
+              document.dispatchEvent(new CustomEvent("open-player-tutorial"))}
+          >
+            <strong class="block text-2xl text-teal-100"
+              >◈ ${translateText("first_command.name")}</strong
+            ><span class="mt-2 block"
+              >${translateText("first_command.duration")}</span
+            ><span class="mt-3 block text-teal-200"
+              >${translateText("player_tutorial.open")} →</span
+            >
+          </button>`
+        : null}
       <div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
         ${this.pages.map((page) => this.renderCard(page))}
       </div>

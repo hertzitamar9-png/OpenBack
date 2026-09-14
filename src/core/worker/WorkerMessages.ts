@@ -11,6 +11,7 @@ import { ErrorUpdate, GameUpdateViewData } from "../game/GameUpdates";
 import { ClientID, GameStartInfo, Turn } from "../Schemas";
 
 export type WorkerMessageType =
+  | "tutorial_command"
   | "init"
   | "initialized"
   | "turn"
@@ -139,6 +140,10 @@ export interface TransportShipSpawnResultMessage extends BaseWorkerMessage {
 
 // Union types for type safety
 export type MainThreadMessage =
+  | {
+      type: "tutorial_command";
+      command: import("../tutorial/Mission").MissionCommand;
+    }
   | InitMessage
   | TurnMessage
   | PlayerActionsMessage

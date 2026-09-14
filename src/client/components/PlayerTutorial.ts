@@ -124,10 +124,16 @@ export class PlayerTutorial extends LitElement {
    * played, and it is Classic 2D because that is the game, not the camera.
    */
   private openTutorial = (): void => {
-    this.markComplete();
-    this.screen = "closed";
-    document.body.classList.remove("tutorial-coach-active");
-    void startTutorialMatch();
+    void startTutorialMatch()
+      .then((started) => {
+        if (!started) return;
+        this.markComplete();
+        this.screen = "closed";
+        document.body.classList.remove("tutorial-coach-active");
+      })
+      .catch((error: unknown) => {
+        console.error("Tutorial launch failed", error);
+      });
   };
 
   private startTutorial = (): void => {
@@ -180,6 +186,10 @@ export class PlayerTutorial extends LitElement {
           ${translateText("player_tutorial.first_title")}
         </h1>
         <p>${translateText("player_tutorial.first_body")}</p>
+        <p>
+          ${translateText("first_command.name")} ·
+          ${translateText("first_command.duration")}
+        </p>
         <div class="tutorial-actions tutorial-actions-stack-mobile">
           <button
             type="button"

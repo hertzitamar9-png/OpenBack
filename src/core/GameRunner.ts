@@ -31,6 +31,9 @@ import { createNationsForGame } from "./game/NationCreation";
 import { loadTerrainMap as loadGameMap } from "./game/TerrainMapLoader";
 import { PseudoRandom } from "./PseudoRandom";
 import { ClientID, GameStartInfo, Turn } from "./Schemas";
+import { isTutorialConfig, MissionCommand } from "./tutorial/Mission";
+import { MissionDirector } from "./tutorial/MissionDirector";
+import { createTutorialTerrain } from "./tutorial/TutorialTerrain";
 import { simpleHash } from "./Util";
 
 export async function createGameRunner(
@@ -40,13 +43,18 @@ export async function createGameRunner(
   callBack: (gu: GameUpdateViewData | ErrorUpdate) => void,
 ): Promise<GameRunner> {
   const config = new Config(gameStart.config, null, false, gameStart.listed);
-  const gameMap = await loadGameMap(
-    gameStart.config.gameMap,
-    gameStart.config.gameMapSize,
-    mapLoader,
-    false, // Worker never renders layers — skip image loading to save memory.
+  const tutorial = isTutorialConfig(gameStart.config);
+  const gameMap = tutorial
+    ? createTutorialTerrain()
+    : await loadGameMap(
+        gameStart.config.gameMap,
+        gameStart.config.gameMapSize,
+        mapLoader,
+        false, // Worker never renders layers — skip image loading to save memory.
+      );
+  const random = new PseudoRandom(
+    simpleHash(tutorial ? "first-command-v1" : gameStart.gameID),
   );
-  const random = new PseudoRandom(simpleHash(gameStart.gameID));
 
   const humans = gameStart.players.map((p) => {
     return new PlayerInfo(
@@ -63,13 +71,15 @@ export async function createGameRunner(
     );
   });
 
-  const nations = createNationsForGame(
-    gameStart,
-    gameMap.nations,
-    gameMap.additionalNations,
-    humans.length,
-    random,
-  );
+  const nations = tutorial
+    ? []
+    : createNationsForGame(
+        gameStart,
+        gameMap.nations,
+        gameMap.additionalNations,
+        humans.length,
+        random,
+      );
 
   const game: Game = createGame(
     humans,
@@ -96,6 +106,11 @@ export async function createGameRunner(
 }
 
 export class GameRunner {
+  private tutorial?: MissionDirector;
+
+  public tutorialCommand(command: MissionCommand): void {
+    this.tutorial?.command(command);
+  }
   private static readonly TURN_COMPACTION_THRESHOLD = 1024;
   private turns: Turn[] = [];
   private currTurn = 0;
@@ -111,6 +126,14 @@ export class GameRunner {
   ) {}
 
   init() {
+    if (isTutorialConfig(this.game.config().gameConfig())) {
+      this.tutorial = new MissionDirector(this.game);
+      this.game.addExecution(this.tutorial);
+      this.game.addExecution(
+        new RecomputeRailClusterExecution(this.game.railNetwork()),
+      );
+      return;
+    }
     if (this.game.config().gameConfig().gameType !== GameType.Singleplayer) {
       this.game.addExecution(new SpawnTimerExecution());
     }
@@ -163,7 +186,10 @@ export class GameRunner {
     this.isExecuting = true;
 
     this.game.addExecution(
-      ...this.execManager.createExecs(this.turns[this.currTurn]),
+      ...this.execManager.createExecs(
+        this.tutorial?.filterTurn(this.turns[this.currTurn]) ??
+          this.turns[this.currTurn],
+      ),
     );
     this.currTurn++;
 
@@ -232,6 +258,7 @@ export class GameRunner {
       nukeImpactTiles.length > 0 ? new Uint32Array(nukeImpactTiles) : undefined;
 
     this.callBack({
+      ...(this.tutorial ? { tutorial: this.tutorial.snapshot() } : {}),
       tick: this.game.ticks(),
       packedTileUpdates,
       ...(packedMotionPlans ? { packedMotionPlans } : {}),

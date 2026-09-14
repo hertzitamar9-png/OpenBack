@@ -22,7 +22,17 @@ import type { UsernameInput } from "../UsernameInput";
  * a choice before a player knows what either view is asks them to decide
  * something they have no way to answer.
  */
-export async function startTutorialMatch(): Promise<void> {
+let launchInFlight: Promise<boolean> | null = null;
+
+export function startTutorialMatch(): Promise<boolean> {
+  if (launchInFlight) return launchInFlight;
+  launchInFlight = launch().finally(() => {
+    launchInFlight = null;
+  });
+  return launchInFlight;
+}
+
+async function launch(): Promise<boolean> {
   const clientID = generateID();
   const gameID = generateID();
 
@@ -31,13 +41,14 @@ export async function startTutorialMatch(): Promise<void> {
   ) as UsernameInput | null;
   await usernameInput?.whenSeeded();
 
-  markTutorialMatch();
+  const cosmetics = await getPlayerCosmetics();
 
   // Leave whatever page is open before joining. The solo screen closes itself
   // first for the same reason: the renderer starts inside the join handler,
   // and an open subpage sits over the map it is drawing -- the match never
   // becomes visible and the HUD never mounts.
-  await appRouter.navigatePage("page-play");
+  if (!(await appRouter.navigatePage("page-play", true))) return false;
+  markTutorialMatch();
 
   const joinEvent = new CustomEvent("join-lobby", {
     detail: {
@@ -49,29 +60,26 @@ export async function startTutorialMatch(): Promise<void> {
             clientID,
             username: usernameInput?.getUsername() ?? "Recruit",
             clanTag: usernameInput?.getClanTag() ?? null,
-            cosmetics: await getPlayerCosmetics(),
+            cosmetics,
           },
         ],
         config: {
           experienceMode: "2d" as const,
+          tutorialMission: "first-command-v1" as const,
           gameMap: GameMapType.World,
           gameMapSize: GameMapSize.Normal,
           gameType: GameType.Singleplayer,
           gameMode: GameMode.FFA,
-          // Easy, few opponents, generous gold: the steps ask the player to
-          // build one of nearly everything, and a tutorial that cannot afford
-          // its own instructions teaches nothing. Nations are left in so the
-          // world still looks like a match rather than an empty map.
+          // The mission director owns all actors. Never add general bot AI.
           difficulty: Difficulty.Easy,
-          bots: 40,
+          bots: 0,
           // A plain number, not a bigint: the wire schema types this as a
           // uint, and a bigint here fails validation and the match never
           // starts -- silently, because the join has already been accepted.
           startingGold: 5_000_000,
           goldMultiplier: 3,
-          // Required by the config schema. "default" keeps the world full of
-          // nations, so the map looks like a real match to learn on.
-          nations: "default",
+          // Ordinary map nations are replaced by the mission's fixed actors.
+          nations: "disabled",
           infiniteGold: false,
           infiniteTroops: false,
           instantBuild: false,
@@ -99,4 +107,5 @@ export async function startTutorialMatch(): Promise<void> {
   });
 
   document.dispatchEvent(joinEvent);
+  return true;
 }

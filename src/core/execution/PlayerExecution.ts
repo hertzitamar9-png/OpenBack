@@ -5,10 +5,12 @@ import {
   Game,
   MessageType,
   Player,
+  PlayerType,
   Structures,
   UnitType,
 } from "../game/Game";
 import { GameMap, TileRef } from "../game/GameMap";
+import { isTutorialConfig } from "../tutorial/Mission";
 import { calculateBoundingBox, getMode, inscribed, simpleHash } from "../Util";
 import { hasPlaneBeachhead, isPlaneBeachhead } from "./AnnexationExemptions";
 
@@ -31,6 +33,7 @@ export class PlayerExecution implements Execution {
   private mapState: Uint16Array;
   private mapTerrain: Uint8Array;
   private active = true;
+  private deathHandled = false;
   // Reusable neighbor buffer to avoid closures/allocation in cluster checks.
   private nbuf: TileRef[] = [0, 0, 0, 0];
   private diagNbuf: TileRef[] = [0, 0, 0, 0, 0, 0, 0, 0];
@@ -114,11 +117,19 @@ export class PlayerExecution implements Execution {
     }
 
     if (!this.player.isAlive()) {
-      this.removeOnDeath();
-      this.active = false;
-      this.mg.stats().playerKilled(this.player, ticks);
+      if (!this.deathHandled) {
+        this.removeOnDeath();
+        this.mg.stats().playerKilled(this.player, ticks);
+        this.deathHandled = true;
+      }
+      // A training recruit can be restored by mission supplies. Keep exactly
+      // one dormant economy execution; normal games still remove it on defeat.
+      this.active =
+        this.player.type() === PlayerType.Human &&
+        isTutorialConfig(this.config.gameConfig());
       return;
     }
+    this.deathHandled = false;
 
     const exhaustion = this.updateWarExhaustion();
     const troopInc = this.config.troopIncreaseRate(this.player) * exhaustion;

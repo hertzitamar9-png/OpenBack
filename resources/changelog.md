@@ -1,3 +1,16 @@
+## OpenBack v0.36.284 - First Command
+
+- A dedicated coastal training operation replaces the old tutorial checklist: 14 chapters teach expansion, troop commitment, construction, defense, naval landings and a live missile strike using the real game controls.
+- Fixed training opponents follow mission cues instead of ordinary bot AI. The complete exercise includes at least five minutes of active gameplay, with supplies available when needed and Skip and Exit controls throughout.
+- Animated chapter briefings, camera guidance, highlighted equipment and map-anchored objectives give the mission its own presentation. English and Hebrew guidance, compact phone briefings and reduced-motion support are included.
+- Cancelling a tutorial launch now preserves your current match, and repeated Start clicks cannot launch duplicate matches. The troop-slider lesson checks a real slider change; construction lessons wait for finished buildings.
+- The mobile leaderboard stays inside screen safe areas. Tutorial guidance no longer competes with that leaderboard or the normal spawn prompt. Tutorial listeners and animations are released when leaving a match.
+- Leaving a match clears the old pause banner and hides the match HUD on the home screen. Tutorial framing also respects reduced motion without retaining an excessive zoom.
+- Tutorial recovery restarts the real economy after defeat, and phone objective framing keeps the marked location below the briefing so it remains tappable.
+- Updated production dependencies to resolve the reported security advisories. Training results are excluded from normal match archives.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.283 - Ships You Can Read
 
 - The camera turns more responsively with an ordinary two-finger drag in Immersive 3D instead of needing a hard fling.

@@ -18,6 +18,7 @@ import {
 import { TileRef } from "./GameMap";
 
 export interface GameUpdateViewData {
+  tutorial?: import("../tutorial/Mission").MissionSnapshot;
   tick: number;
   updates: GameUpdates;
   /**

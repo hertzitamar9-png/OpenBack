@@ -100,11 +100,11 @@ export class AppRouter {
 
   async navigate(
     target: AppRouteTarget,
-    options: { replace?: boolean } = {},
+    options: { replace?: boolean; confirmCurrentGame?: boolean } = {},
   ): Promise<boolean> {
     const path = pathForTarget(target);
     if (
-      this.currentUrl() !== path &&
+      (this.currentUrl() !== path || options.confirmCurrentGame) &&
       this.navigationGuard &&
       !(await this.navigationGuard(target, this.currentAddress()))
     ) {
@@ -120,8 +120,11 @@ export class AppRouter {
     return true;
   }
 
-  navigatePage(pageId: AppPageId): Promise<boolean> {
-    return this.navigate({ pageId });
+  navigatePage(
+    pageId: AppPageId,
+    confirmCurrentGame = false,
+  ): Promise<boolean> {
+    return this.navigate({ pageId }, { confirmCurrentGame });
   }
 
   syncOpened(name: string, args?: RouteArgs): void {

@@ -2,6 +2,7 @@ import { LitElement, html } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { GameMode, GameType, RankedType } from "../../../core/game/Game";
 import { GameUpdateType } from "../../../core/game/GameUpdates";
+import { isTutorialConfig } from "../../../core/tutorial/Mission";
 import { Controller } from "../../Controller";
 import { translateText } from "../../Utils";
 import { GameView } from "../../view";
@@ -88,8 +89,21 @@ export class HeadsUpMessage extends LitElement implements Controller {
   };
 
   init() {
+    this.dispose();
     this.isVisible = true;
     this.requestUpdate();
+  }
+
+  dispose(): void {
+    this.isVisible = false;
+    this.isPaused = false;
+    this.isImmunityActive = false;
+    this.isCatchingUp = false;
+    this.catchingUpTicks = 0;
+    this.isOvertimeNotice = false;
+    this.toastMessage = null;
+    if (this.toastTimeout) clearTimeout(this.toastTimeout);
+    this.toastTimeout = null;
   }
 
   tick() {
@@ -200,7 +214,12 @@ export class HeadsUpMessage extends LitElement implements Controller {
               </div>
             `
           : null}
-        ${this.isVisible
+        ${this.isVisible &&
+        !(
+          this.game?.inSpawnPhase() &&
+          isTutorialConfig(this.game.config().gameConfig()) &&
+          !this.isPaused
+        )
           ? html`
               <div
                 class="fixed top-[15%] left-1/2 -translate-x-1/2 z-[799]
@@ -216,7 +235,8 @@ export class HeadsUpMessage extends LitElement implements Controller {
               </div>
             `
           : null}
-        ${this.game?.inSpawnPhase() &&
+        ${this.isVisible &&
+        this.game?.inSpawnPhase() &&
         !this.game.config().isReplay() &&
         this.game.config().gameConfig().rankedType !== RankedType.OneVOne &&
         this.game.config().gameConfig().gameMode === GameMode.FFA &&

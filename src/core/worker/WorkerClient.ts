@@ -26,6 +26,9 @@ async function createGameWorker(): Promise<Worker> {
 }
 
 export class WorkerClient {
+  tutorialCommand(command: import("../tutorial/Mission").MissionCommand): void {
+    this.worker?.postMessage({ type: "tutorial_command", command });
+  }
   private worker: Worker | null = null;
   private isInitialized = false;
   private messageHandlers: Map<string, (message: WorkerMessage) => void>;

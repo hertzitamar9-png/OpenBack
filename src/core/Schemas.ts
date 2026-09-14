@@ -425,6 +425,7 @@ export const OvertimeConfigSchema = z.object({
 });
 
 export const GameConfigSchema = z.object({
+  tutorialMission: z.literal("first-command-v1").optional(),
   gameMap: z.enum(GameMapType),
   difficulty: z.enum(Difficulty),
   donateGold: z.boolean(), // Configures donations to humans only

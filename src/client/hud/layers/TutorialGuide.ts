@@ -1,26 +1,35 @@
-import { html, LitElement, TemplateResult } from "lit";
+import { html, LitElement } from "lit";
 import { customElement, state } from "lit/decorators.js";
-import { UnitType } from "../../../core/game/Game";
-import { Controller } from "../../Controller";
+import { keyed } from "lit/directives/keyed.js";
+import { Cell } from "../../../core/game/Game";
 import {
-  TUTORIAL_STEPS,
-  TutorialProgress,
-  TutorialStep,
-} from "../../tutorial/TutorialScript";
+  isTutorialConfig,
+  MISSION_STAGES,
+  MissionSnapshot,
+} from "../../../core/tutorial/Mission";
+import { TUTORIAL_POINTS } from "../../../core/tutorial/TutorialTerrain";
+import { appRouter } from "../../AppRouter";
+import { Controller } from "../../Controller";
+import { TransformHandler } from "../../TransformHandler";
+import { translateText } from "../../Utils";
 import { GameView } from "../../view/GameView";
+import "./TutorialGuide.css";
 
-/** Set by the launcher so only a tutorial match shows the guide. */
 export const TUTORIAL_FLAG = "openback.tutorial.active";
-
 export function markTutorialMatch(): void {
   try {
     sessionStorage.setItem(TUTORIAL_FLAG, "1");
   } catch {
-    // A private window without storage still gets a playable match; it just
-    // will not be guided, which is better than refusing to start.
+    /* storage is optional */
   }
 }
-
+export function clearTutorialMatch(): void {
+  try {
+    sessionStorage.removeItem(TUTORIAL_FLAG);
+  } catch {
+    /* storage is optional */
+  }
+}
 export function isTutorialMatch(): boolean {
   try {
     return sessionStorage.getItem(TUTORIAL_FLAG) === "1";
@@ -28,16 +37,6 @@ export function isTutorialMatch(): boolean {
     return false;
   }
 }
-
-export function clearTutorialMatch(): void {
-  try {
-    sessionStorage.removeItem(TUTORIAL_FLAG);
-  } catch {
-    /* nothing to clear */
-  }
-}
-
-/** Just the parts of a DOMRect this decision needs. */
 export interface Bounds {
   top: number;
   bottom: number;
@@ -45,418 +44,382 @@ export interface Bounds {
   right: number;
   height: number;
 }
-
-/**
- * Where the card should sit so the leaderboard does not cover it, or null to
- * leave it where the stylesheet puts it.
- *
- * The card is centred at the top of the screen, which is where the leaderboard
- * lives on a phone, so the two were drawn over each other. Measured rather
- * than nudged by a constant: the leaderboard grows with the number of players
- * and can be closed, so any fixed offset is wrong for most matches.
- */
 export function cardTopAvoiding(
   card: Bounds,
   board: Bounds | undefined,
 ): number | null {
-  if (board === undefined || board.height === 0) return null;
-  // Only when they actually share horizontal space. On a wide screen the
-  // leaderboard sits off to one side and the card can stay where it is.
-  const sideBySide = board.right <= card.left || board.left >= card.right;
-  if (sideBySide) return null;
-  if (board.bottom <= card.top) return null;
+  if (
+    !board?.height ||
+    board.right <= card.left ||
+    board.left >= card.right ||
+    board.bottom <= card.top
+  )
+    return null;
   return Math.round(board.bottom + 8);
 }
+const text = (key: string, params?: Record<string, string | number>) =>
+  translateText(`first_command.${key}`, params);
+const visible = (selector: string): HTMLElement | undefined =>
+  Array.from(document.querySelectorAll<HTMLElement>(selector)).find((el) => {
+    const r = el.getBoundingClientRect();
+    return (
+      r.width > 0 &&
+      r.height > 0 &&
+      r.left >= 0 &&
+      r.right <= window.innerWidth &&
+      r.top >= 0 &&
+      r.bottom <= window.innerHeight
+    );
+  });
 
-/**
- * The guide that runs alongside a tutorial match.
- *
- * It reads the real game every tick and advances only when the player has
- * actually done the thing being asked -- there is no timer moving it along, so
- * a player who wanders off comes back to the same instruction.
- *
- * Rendered into the light DOM so it can point at controls that live elsewhere
- * on the page: the pointer is positioned from getBoundingClientRect of whatever
- * the step names, which needs the two to share a coordinate space.
- */
 @customElement("tutorial-guide")
 export class TutorialGuide extends LitElement implements Controller {
   @state() private active = false;
-  @state() private stepIndex = 0;
-  @state() private pointer: { x: number; y: number; below: boolean } | null =
-    null;
-  @state() private celebrating = false;
-
+  @state() private expanded = true;
+  @state() private mission: MissionSnapshot | null = null;
   private game: GameView | null = null;
-  private tilesAtStepStart = 0;
-  private readonly everOwned = new Set<UnitType>();
-  private repositionTimer: ReturnType<typeof setInterval> | null = null;
-
+  private transform: TransformHandler | null = null;
+  private abort?: AbortController;
+  private frame = 0;
+  private lastPhase = -1;
+  private highlight: HTMLElement | null = null;
+  private lastSelector = "";
+  private nextMeasure = 0;
   createRenderRoot() {
     return this;
   }
-
-  setGame(game: GameView): void {
+  setGame(game: GameView, transform?: TransformHandler): void {
     this.game = game;
+    this.transform = transform ?? null;
   }
-
   init(): void {
-    if (!isTutorialMatch()) return;
+    this.dispose();
+    if (!this.game || !isTutorialConfig(this.game.config().gameConfig()))
+      return;
     this.active = true;
-    this.stepIndex = 0;
-    // The pointed-at control moves: the build bar relays out when the screen
-    // rotates or Android slides its navigation over the page, and the bar
-    // scrolls sideways. Re-measure rather than pin it once.
-    this.repositionTimer = setInterval(() => this.placePointer(), 250);
-    this.requestUpdate();
+    this.expanded = true;
+    this.lastPhase = -1;
+    this.mission = null;
+    document.body.classList.add("first-command-active");
+    this.abort = new AbortController();
+    document.addEventListener("input", this.onRatioInput, {
+      signal: this.abort.signal,
+    });
+    this.frame = requestAnimationFrame(this.positionMarkers);
   }
-
+  dispose(): void {
+    this.abort?.abort();
+    this.abort = undefined;
+    cancelAnimationFrame(this.frame);
+    this.highlight?.classList.remove("mission-control-highlight");
+    this.highlight = null;
+    this.lastSelector = "";
+    this.active = false;
+    document
+      .querySelectorAll(".mission-equipment-locked")
+      .forEach((el) => el.classList.remove("mission-equipment-locked"));
+    document.body.classList.remove("first-command-active");
+  }
   disconnectedCallback(): void {
-    if (this.repositionTimer !== null) clearInterval(this.repositionTimer);
-    this.repositionTimer = null;
+    this.dispose();
     super.disconnectedCallback();
   }
-
-  /** Watch what the player owns, including units that do not last. */
-  private recordOwnedUnits(): void {
-    const me = this.game?.myPlayer();
-    if (!me) return;
-    for (const unit of me.units()) this.everOwned.add(unit.type());
-  }
-
-  private progress(): TutorialProgress | null {
-    const game = this.game;
-    const me = game?.myPlayer();
-    if (!game || !me) return null;
-    return {
-      spawning: game.inSpawnPhase(),
-      tiles: me.numTilesOwned(),
-      tilesAtStepStart: this.tilesAtStepStart,
-      gold: me.gold(),
-      outgoingAttacks: me.outgoingAttacks().length,
-      alliances: me.alliances().length,
-      everOwned: this.everOwned,
-    };
-  }
-
   tick(): void {
-    if (!this.active || this.celebrating) return;
-    this.recordOwnedUnits();
-    const progress = this.progress();
-    if (progress === null) return;
-
-    const step = TUTORIAL_STEPS[this.stepIndex];
-    if (step === undefined) return;
-
-    // The first tick of a step records the tiles it started from, so a step
-    // asking for "sixty more" means sixty more than when it was asked.
-    if (this.tilesAtStepStart === 0 && progress.tiles > 0) {
-      this.tilesAtStepStart = progress.tiles;
-      return;
+    if (!this.active || !this.game?.tutorial) return;
+    const next = this.game.tutorial;
+    if (next.phase !== this.lastPhase) {
+      this.lastPhase = next.phase;
+      this.expanded = true;
+      this.mission = next;
+      this.updateComplete.then(() => {
+        if (!this.active) return;
+        if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+          this.focusObjective();
+        if (next.phase === 2) {
+          const slider = visible('input[data-tutorial="troop-ratio"]') as
+            | HTMLInputElement
+            | undefined;
+          if (slider)
+            this.game?.worker.tutorialCommand({
+              phase: 2,
+              action: "ratio",
+              value: Number(slider.value),
+            });
+        }
+      });
     }
-
-    if (step.done(progress)) this.advance();
-  }
-
-  private advance(): void {
-    if (this.stepIndex >= TUTORIAL_STEPS.length - 1) {
-      this.celebrating = true;
-      this.pointer = null;
-      this.requestUpdate();
-      return;
-    }
-    this.stepIndex += 1;
-    this.tilesAtStepStart = this.game?.myPlayer()?.numTilesOwned() ?? 0;
-    this.placePointer();
-    this.requestUpdate();
-  }
-
-  private skipStep = () => {
-    // A player who cannot manage a step should not be stuck behind it. The
-    // match keeps running; only the instruction moves on.
-    this.advance();
-  };
-
-  private endTutorial = () => {
-    this.active = false;
-    clearTutorialMatch();
-    this.requestUpdate();
-  };
-
-  /**
-   * Drop the card below the leaderboard when the two would overlap.
-   *
-   * The card is centred at the top, which is also where the leaderboard sits
-   * on a phone, so the two were drawn on top of each other. Measured rather
-   * than given a fixed offset: the leaderboard grows with the number of
-   * players in it and can be collapsed, so any constant would be wrong for
-   * most matches.
-   */
-  private avoidLeaderboard(): void {
-    const card = this.querySelector<HTMLElement>(".tutorial-card");
-    if (card === null) return;
-
-    // Measure from the stylesheet's own position, which carries the safe-area
-    // inset. Setting an inline top would otherwise become the thing we
-    // measure next time, and the card would creep down the screen.
-    card.style.removeProperty("top");
-    const resting = card.getBoundingClientRect();
-    const board = document
-      .querySelector<HTMLElement>("leader-board")
-      ?.getBoundingClientRect();
-
-    const top = cardTopAvoiding(resting, board);
-    if (top !== null) card.style.top = `${top}px`;
-  }
-
-  /** Put the pointer over whatever control the step names, if it is on screen. */
-  private placePointer(): void {
-    this.avoidLeaderboard();
-    if (!this.active || this.celebrating) {
-      if (this.pointer !== null) {
-        this.pointer = null;
-        this.requestUpdate();
-      }
-      return;
-    }
-    const step: TutorialStep | undefined = TUTORIAL_STEPS[this.stepIndex];
-    const target = step?.target;
-    if (!target) {
-      if (this.pointer !== null) {
-        this.pointer = null;
-        this.requestUpdate();
-      }
-      return;
-    }
-    const el = document.querySelector(target.selector);
-    const rect = el?.getBoundingClientRect();
-    if (!rect || rect.width === 0 || rect.height === 0) {
-      if (this.pointer !== null) {
-        this.pointer = null;
-        this.requestUpdate();
-      }
-      return;
-    }
-    const next = {
-      x: Math.round(rect.left + rect.width / 2),
-      y: Math.round(target.place === "above" ? rect.top : rect.bottom),
-      below: target.place === "below",
-    };
+    // One-second readout updates; markers follow the camera without Lit renders.
     if (
-      this.pointer?.x !== next.x ||
-      this.pointer?.y !== next.y ||
-      this.pointer?.below !== next.below
-    ) {
-      this.pointer = next;
-      this.requestUpdate();
+      !this.mission ||
+      Math.floor(next.phaseTicks / 10) !==
+        Math.floor(this.mission.phaseTicks / 10) ||
+      next.objectiveMet !== this.mission.objectiveMet ||
+      next.completed !== this.mission.completed ||
+      next.skipped !== this.mission.skipped ||
+      next.recovered !== this.mission.recovered ||
+      next.cue !== this.mission.cue
+    )
+      this.mission = next;
+  }
+  private onRatioInput = (event: Event): void => {
+    if (
+      !(event.target instanceof HTMLInputElement) ||
+      !event.target.matches('input[data-tutorial="troop-ratio"]') ||
+      this.mission?.phase !== 2
+    )
+      return;
+    this.game?.worker.tutorialCommand({
+      phase: 2,
+      action: "ratio",
+      value: Number(event.target.value),
+    });
+  };
+  private focusObjective = (): void => {
+    const point =
+      TUTORIAL_POINTS[MISSION_STAGES[this.mission?.phase ?? 0].point];
+    const phone = window.innerWidth < 700;
+    const zoom = phone ? 1.25 : 1.8;
+    let screenOffsetY = 0;
+    if (phone) {
+      const panel =
+        this.querySelector(".mission-panel")?.getBoundingClientRect();
+      const controls = document
+        .querySelector(".game-hud-controls")
+        ?.getBoundingClientRect();
+      const clearBottom = controls?.height
+        ? controls.top - 45
+        : innerHeight - 60;
+      const clearTop = (panel?.bottom ?? 0) + 45;
+      const targetY = Math.min(
+        clearBottom,
+        Math.max(innerHeight / 2, clearTop),
+      );
+      screenOffsetY = targetY - innerHeight / 2;
     }
-  }
-
-  private renderPointer(): TemplateResult | null {
-    const p = this.pointer;
-    if (p === null) return null;
-    return html`
-      <div
-        class="tutorial-pointer"
-        style=${`left:${p.x}px; top:${p.y}px; transform: translate(-50%, ${
-          p.below ? "0" : "-100%"
-        });`}
-      >
-        <div class="tutorial-pointer-ring"></div>
-        <div class="tutorial-pointer-arrow">${p.below ? "▲" : "▼"}</div>
-      </div>
-    `;
-  }
-
-  render(): TemplateResult | null {
+    // On a short phone the geometric center is inside the briefing. Frame
+    // the real map target in the available playfield so it remains tappable.
+    this.transform?.focusMission(point.x, point.y - screenOffsetY / zoom, zoom);
+  };
+  private skip = (): void => {
+    const mission = this.game?.tutorial;
+    if (!mission) return;
+    this.game!.worker.tutorialCommand({ phase: mission.phase, action: "skip" });
+    this.mission = { ...mission, skipped: true };
+  };
+  private recover = (): void => {
+    if (this.mission)
+      this.game?.worker.tutorialCommand({
+        phase: this.mission.phase,
+        action: "recover",
+      });
+  };
+  private exit = (): void => {
+    void appRouter.navigatePage("page-play", true);
+  };
+  private practice = (): void => {
+    clearTutorialMatch();
+    this.dispose();
+  };
+  private positionMarkers = (now: number): void => {
+    if (!this.active) return;
+    const stage = MISSION_STAGES[this.mission?.phase ?? 0];
+    const point = TUTORIAL_POINTS[stage.point];
+    const location = this.transform?.worldToScreenCoordinates(
+      new Cell(point.x, point.y),
+    );
+    const marker = this.querySelector<HTMLElement>(".mission-world-marker");
+    if (marker && location) {
+      marker.style.transform = `translate3d(${location.x}px,${location.y}px,0)`;
+      marker.hidden =
+        location.x < 20 ||
+        location.x > innerWidth - 20 ||
+        location.y < 60 ||
+        location.y > innerHeight - 90;
+    }
+    const route = this.querySelector<SVGPathElement>(".mission-route path");
+    if (route && this.transform) {
+      const a = this.transform.worldToScreenCoordinates(
+        new Cell(TUTORIAL_POINTS.harbor.x, TUTORIAL_POINTS.harbor.y),
+      );
+      const b = this.transform.worldToScreenCoordinates(
+        new Cell(TUTORIAL_POINTS.landing.x, TUTORIAL_POINTS.landing.y),
+      );
+      route.setAttribute(
+        "d",
+        `M ${a.x} ${a.y} Q ${(a.x + b.x) / 2} ${Math.min(a.y, b.y) - 45} ${b.x} ${b.y}`,
+      );
+    }
+    if (now >= this.nextMeasure) {
+      this.nextMeasure = now + 200;
+      const finished =
+        this.mission?.skipped === true || this.mission?.completed === true;
+      const selector = finished
+        ? ""
+        : (stage.selector ??
+          (stage.unit ? `[data-build-unit="${stage.unit}"]` : ""));
+      const unlocked = new Set(
+        MISSION_STAGES.slice(0, (this.mission?.phase ?? 0) + 1).flatMap((s) =>
+          s.unit ? [s.unit as string] : [],
+        ),
+      );
+      document
+        .querySelectorAll<HTMLElement>("[data-build-unit]")
+        .forEach((el) => {
+          el.classList.toggle(
+            "mission-equipment-locked",
+            !finished && !unlocked.has(el.dataset.buildUnit ?? ""),
+          );
+        });
+      if (selector !== this.lastSelector) {
+        this.highlight?.classList.remove("mission-control-highlight");
+        this.highlight = null;
+        this.lastSelector = selector;
+      }
+      const target = selector ? visible(selector) : undefined;
+      if (target !== this.highlight) {
+        this.highlight?.classList.remove("mission-control-highlight");
+        this.highlight = target ?? null;
+        this.highlight?.classList.add("mission-control-highlight");
+      }
+    }
+    this.frame = requestAnimationFrame(this.positionMarkers);
+  };
+  render() {
     if (!this.active) return null;
-
-    if (this.celebrating) {
-      return html`
-        ${this.styles()}
-        <div class="tutorial-card tutorial-card-done">
-          <div class="tutorial-eyebrow">Training complete</div>
-          <h2 class="tutorial-title">You know how to play</h2>
-          <p class="tutorial-body">
-            Cities and factories pay for everything, ports open the sea, defence
-            posts hold a border and bombs clear one. Keep this match going as
-            long as you like, or leave and start a real one.
-          </p>
-          <button class="tutorial-primary" @click=${this.endTutorial}>
-            Keep playing
-          </button>
-        </div>
-      `;
-    }
-
-    const step = TUTORIAL_STEPS[this.stepIndex];
-    if (step === undefined) return null;
-
-    return html`
-      ${this.styles()} ${this.renderPointer()}
-      <div class="tutorial-card">
-        <div class="tutorial-eyebrow">
-          Step ${this.stepIndex + 1} of ${TUTORIAL_STEPS.length}
-        </div>
-        <h2 class="tutorial-title">${step.title}</h2>
-        <p class="tutorial-body">${step.body}</p>
-        <div class="tutorial-actions">
-          <button class="tutorial-ghost" @click=${this.skipStep}>
-            Skip this step
-          </button>
-          <button class="tutorial-ghost" @click=${this.endTutorial}>
-            End tutorial
-          </button>
-        </div>
-        <div class="tutorial-track">
-          <div
-            class="tutorial-fill"
-            style=${`width:${((this.stepIndex + 1) / TUTORIAL_STEPS.length) * 100}%`}
-          ></div>
-        </div>
-      </div>
-    `;
-  }
-
-  private styles(): TemplateResult {
-    return html`
-      <style>
-        /* Anchored to the top so it never covers the build bar the steps keep
-           asking the player to press. */
-        .tutorial-card {
-          position: fixed;
-          left: 50%;
-          transform: translateX(-50%);
-          top: calc(env(safe-area-inset-top) + 4.5rem);
-          z-index: 90;
-          width: min(30rem, calc(100vw - 1.5rem));
-          padding: 0.85rem 1rem 0.9rem;
-          border-radius: 0.9rem;
-          background: rgb(9 22 39 / 0.95);
-          border: 1px solid rgb(56 189 248 / 0.35);
-          box-shadow: 0 10px 30px rgb(0 0 0 / 0.45);
-          color: #e8eef8;
-          pointer-events: auto;
-        }
-        .tutorial-eyebrow {
-          font-size: 0.65rem;
-          letter-spacing: 0.16em;
-          text-transform: uppercase;
-          color: rgb(125 211 252);
-          font-weight: 700;
-        }
-        .tutorial-title {
-          margin: 0.15rem 0 0.35rem;
-          font-size: 1.05rem;
-          line-height: 1.25;
-          font-weight: 800;
-          text-wrap: balance;
-        }
-        .tutorial-body {
-          margin: 0;
-          font-size: 0.82rem;
-          line-height: 1.45;
-          color: rgb(203 213 225);
-        }
-        .tutorial-actions {
-          display: flex;
-          gap: 0.5rem;
-          margin-top: 0.6rem;
-        }
-        .tutorial-ghost,
-        .tutorial-primary {
-          font: inherit;
-          cursor: pointer;
-          border-radius: 0.5rem;
-          padding: 0.35rem 0.7rem;
-          font-size: 0.72rem;
-          font-weight: 700;
-          letter-spacing: 0.04em;
-        }
-        .tutorial-ghost {
-          background: transparent;
-          border: 1px solid rgb(255 255 255 / 0.18);
-          color: rgb(203 213 225);
-        }
-        .tutorial-ghost:hover {
-          color: #fff;
-          border-color: rgb(255 255 255 / 0.35);
-        }
-        .tutorial-primary {
-          background: rgb(14 165 233);
-          border: 0;
-          color: #fff;
-          padding: 0.5rem 1rem;
-          font-size: 0.8rem;
-          margin-top: 0.7rem;
-        }
-        .tutorial-track {
-          margin-top: 0.7rem;
-          height: 3px;
-          border-radius: 999px;
-          background: rgb(255 255 255 / 0.12);
-          overflow: hidden;
-        }
-        .tutorial-fill {
-          height: 100%;
-          background: rgb(56 189 248);
-          transition: width 240ms ease-out;
-        }
-
-        /* The pointer sits over the control the step names and pulses, so the
-           instruction has somewhere to point rather than describing a button
-           the player has to hunt for. */
-        .tutorial-pointer {
-          position: fixed;
-          z-index: 95;
-          pointer-events: none;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-        .tutorial-pointer-ring {
-          width: 2.6rem;
-          height: 2.6rem;
-          border-radius: 999px;
-          border: 2px solid rgb(56 189 248);
-          animation: tutorial-pulse 1.4s ease-out infinite;
-        }
-        .tutorial-pointer-arrow {
-          color: rgb(56 189 248);
-          font-size: 0.9rem;
-          line-height: 1;
-          animation: tutorial-nudge 1.4s ease-in-out infinite;
-        }
-        @keyframes tutorial-pulse {
-          0% {
-            transform: scale(0.72);
-            opacity: 0.95;
-          }
-          70% {
-            transform: scale(1.25);
-            opacity: 0.12;
-          }
-          100% {
-            transform: scale(1.25);
-            opacity: 0;
-          }
-        }
-        @keyframes tutorial-nudge {
-          0%,
-          100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(3px);
-          }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .tutorial-pointer-ring,
-          .tutorial-pointer-arrow {
-            animation: none;
-          }
-        }
-      </style>
-    `;
+    const m = this.mission,
+      phase = m?.phase ?? 0,
+      stage = MISSION_STAGES[phase];
+    const finished = m?.completed === true || m?.skipped === true;
+    const seconds = Math.max(
+      0,
+      Math.ceil((stage.minimumTicks - (m?.phaseTicks ?? 0)) / 10),
+    );
+    const elapsed = Math.floor((m?.elapsedTicks ?? 0) / 10);
+    const cue =
+      m?.cue && m.cue !== "briefing"
+        ? text(m.cue === "resupplied" ? "supply_notice" : m.cue)
+        : null;
+    return html` ${!finished
+        ? keyed(
+            `cinematic-${phase}`,
+            html`<aside class="mission-chapter-cinematic" aria-hidden="true">
+              <small
+                >${text("chapter", {
+                  current: phase + 1,
+                  total: MISSION_STAGES.length,
+                })}</small
+              ><strong>${text(`${stage.id}_title`)}</strong><i></i>
+            </aside>`,
+          )
+        : null}
+      ${!finished && phase >= 9 && phase <= 10
+        ? html`<svg class="mission-route" aria-hidden="true">
+            <path fill="none" />
+          </svg>`
+        : null}
+      ${!finished
+        ? html`<div class="mission-world-marker" aria-hidden="true">
+            <div class="mission-beacon"></div>
+            <span
+              >${text("map_label")} ${String(phase + 1).padStart(2, "0")}</span
+            >
+          </div>`
+        : null}
+      <section
+        class="mission-panel tutorial-card"
+        aria-label=${text("name")}
+        data-mission-phase=${stage.id}
+        data-mission-completed=${m?.completed ?? false}
+      >
+        <header class="mission-masthead">
+          <span class="mission-insignia" aria-hidden="true">◈</span>
+          <div>
+            <small>${text("eyebrow")}</small><strong>${text("name")}</strong>
+          </div>
+          <time
+            >${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(
+              2,
+              "0",
+            )}</time
+          >
+        </header>
+        ${finished
+          ? html`<div class="mission-finale">
+              <small>${text(m.completed ? "completed" : "skipped")}</small>
+              <h2>${text(m.completed ? "completed" : "skipped")}</h2>
+              <p>${text(m.completed ? "summary" : "skipped_body")}</p>
+              <button @click=${this.practice}>${text("practice")}</button
+              ><button @click=${this.exit}>${text("exit")}</button>
+            </div>`
+          : html`
+              <div class="mission-chapter-row">
+                <span
+                  >${text("chapter", {
+                    current: phase + 1,
+                    total: MISSION_STAGES.length,
+                  })}</span
+                ><button
+                  class="mission-toggle"
+                  aria-expanded=${this.expanded}
+                  @click=${() => {
+                    this.expanded = !this.expanded;
+                  }}
+                >
+                  ${text(this.expanded ? "collapse" : "briefing")}
+                  ${this.expanded ? "−" : "+"}
+                </button>
+              </div>
+              ${keyed(
+                phase,
+                html`<div class="mission-chapter">
+                  <h2>${text(`${stage.id}_title`)}</h2>
+                  <div class="mission-details" ?hidden=${!this.expanded}>
+                    <p>${text(`${stage.id}_body`)}</p>
+                    <p class="mission-tip">${text(`${stage.id}_hint`)}</p>
+                  </div>
+                </div>`,
+              )}
+              <div class="mission-status" role="status">
+                <span
+                  class=${m?.objectiveMet
+                    ? "mission-check done"
+                    : "mission-check"}
+                  >${m?.objectiveMet ? "✓" : "○"}</span
+                ><span>${text(m?.objectiveMet ? "verified" : "action")}</span
+                >${seconds > 0
+                  ? html`<small>${text("window", { seconds })}</small>`
+                  : null}
+              </div>
+              ${cue && this.expanded
+                ? html`<aside class="mission-radio">${cue}</aside>`
+                : null}
+              <div class="mission-actions">
+                <button class="mission-focus" @click=${this.focusObjective}>
+                  ⌖ ${text("focus")}</button
+                ><button @click=${this.recover}>${text("supplies")}</button>
+              </div>
+              <footer class="mission-footer">
+                <button @click=${this.skip}>${text("skip")}</button
+                ><button @click=${this.exit}>${text("exit")}</button>
+              </footer>
+              ${this.expanded
+                ? html`<small class="mission-equipment-note"
+                    >${text("locked")}</small
+                  >`
+                : null}
+              <div
+                class="mission-progress"
+                role="progressbar"
+                aria-valuenow=${phase}
+                aria-valuemin="0"
+                aria-valuemax=${MISSION_STAGES.length}
+                aria-label=${text("name")}
+              >
+                <i
+                  style=${`width:${(phase / MISSION_STAGES.length) * 100}%`}
+                ></i>
+              </div>
+            `}
+      </section>`;
   }
 }

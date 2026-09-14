@@ -330,6 +330,20 @@ export class TransformHandler {
     this.intervalID = setInterval(() => this.goTo(), GOTO_INTERVAL_MS);
   }
 
+  /** One-shot tutorial framing; regular drag/zoom still interrupts the move. */
+  focusMission(x: number, y: number, zoom: number): void {
+    this.onGoToPosition(new GoToPositionEvent(x, y));
+    this.targetScale = zoom;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      this.clearTarget();
+      this.scale = zoom;
+      const center = this.screenCenter();
+      this.offsetX += x - center.screenX;
+      this.offsetY += y - center.screenY;
+      this.changed = true;
+    }
+  }
+
   onGoToUnit(event: GoToUnitEvent) {
     this.clearTarget();
     this.target = new Cell(

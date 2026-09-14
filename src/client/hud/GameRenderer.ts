@@ -207,7 +207,7 @@ export function createRenderer(
   const tutorialGuide = document.querySelector(
     "tutorial-guide",
   ) as TutorialGuide | null;
-  tutorialGuide?.setGame(game);
+  tutorialGuide?.setGame(game, transformHandler);
 
   const unitDisplay = document.querySelector("unit-display") as UnitDisplay;
   if (!(unitDisplay instanceof UnitDisplay)) {
@@ -385,6 +385,7 @@ export class GameRenderer {
   /** Let go of the window, and stop any camera glide still in flight. */
   destroy() {
     this.listeners.abort();
+    this.layers.forEach((layer) => layer.dispose?.());
     this.transformHandler.dispose();
   }
 

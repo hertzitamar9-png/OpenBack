@@ -3,6 +3,7 @@ import { customElement, state } from "lit/decorators.js";
 import { assetUrl } from "../../../core/AssetUrls";
 import { EventBus } from "../../../core/EventBus";
 import { GameType } from "../../../core/game/Game";
+import { isTutorialConfig } from "../../../core/tutorial/Mission";
 import { createNextLobby } from "../../Api";
 import { ClientEnv } from "../../ClientEnv";
 import "../../components/DoomsdayClockPanel";
@@ -556,7 +557,8 @@ export class GameRightSidebar extends LitElement implements Controller {
     const showNewLobbyButton = this.isLobbyCreator && this.isPrivateLobby;
 
     return html`
-      ${isReplayOrSingleplayer
+      ${isReplayOrSingleplayer &&
+      !isTutorialConfig(this.game?.config().gameConfig() ?? {})
         ? html`
             <div class="cursor-pointer" @click=${this.toggleReplayPanel}>
               <img

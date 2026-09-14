@@ -63,6 +63,14 @@ describe("AppRouter", () => {
     expect(news.open).toHaveBeenCalledOnce();
   });
 
+  it("confirms replacement even when a tutorial starts from the current URL", async () => {
+    const guard = vi.fn(async () => false);
+    router.setNavigationGuard(guard);
+    expect(await router.navigatePage("page-play", true)).toBe(false);
+    expect(guard).toHaveBeenCalledOnce();
+    expect(window.showPage).not.toHaveBeenCalled();
+  });
+
   it("restores a nested tab when browser history changes", async () => {
     await router.start();
     history.pushState(null, "", "/settings/keybinds");

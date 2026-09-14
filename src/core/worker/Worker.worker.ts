@@ -141,6 +141,9 @@ ctx.addEventListener("message", async (e: MessageEvent<MainThreadMessage>) => {
   const message = e.data;
 
   switch (message.type) {
+    case "tutorial_command":
+      (await gameRunner)?.tutorialCommand(message.command);
+      break;
     case "init":
       try {
         // Set before createGameRunner so map fetches via mapLoader pick up the

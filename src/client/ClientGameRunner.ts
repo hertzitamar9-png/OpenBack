@@ -33,6 +33,8 @@ import {
   USER_SETTINGS_CHANGED_EVENT,
   UserSettings,
 } from "../core/game/UserSettings";
+import { isTutorialConfig } from "../core/tutorial/Mission";
+import { createTutorialTerrain } from "../core/tutorial/TutorialTerrain";
 import { WorkerClient } from "../core/worker/WorkerClient";
 import { getPersistentID } from "./Auth";
 import { ClientEnv } from "./ClientEnv";
@@ -612,7 +614,9 @@ async function createClientGame(
   );
   let gameMap: TerrainMapData;
 
-  if (terrainLoad) {
+  if (isTutorialConfig(lobbyConfig.gameStartInfo.config)) {
+    gameMap = createTutorialTerrain();
+  } else if (terrainLoad) {
     gameMap = await terrainLoad;
   } else {
     gameMap = await loadTerrainMap(
@@ -1128,6 +1132,7 @@ export class ClientGameRunner {
           !hasGoneToPlayer &&
           this.gameView.myPlayer() &&
           this.userSettings.goToPlayer() &&
+          !isTutorialConfig(this.gameView.config().gameConfig()) &&
           this.gameView.config().experienceMode() !== "3d"
         ) {
           hasGoneToPlayer = true;

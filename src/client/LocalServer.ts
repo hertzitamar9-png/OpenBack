@@ -14,6 +14,7 @@ import {
   StampedIntent,
   Turn,
 } from "../core/Schemas";
+import { isTutorialConfig } from "../core/tutorial/Mission";
 import {
   createPartialGameRecord,
   decompressGameRecord,
@@ -44,6 +45,9 @@ const SPEED_ORDER: ReplaySpeedMultiplier[] = [
 const MAX_REPLAY_BACKLOG_TURNS = 60;
 
 export class LocalServer {
+  private get isTutorial(): boolean {
+    return isTutorialConfig(this.lobbyConfig.gameStartInfo?.config ?? {});
+  }
   // All turns from the game record on replay.
   private replayTurns: Turn[] = [];
 
@@ -108,11 +112,13 @@ export class LocalServer {
     }, 5);
 
     this.eventBus.on(ReplaySpeedChangeEvent, (event) => {
+      if (this.isTutorial) return;
       this.replaySpeedMultiplier = event.replaySpeedMultiplier;
     });
 
     if (!this.isReplay) {
       this.eventBus.on(GameSpeedUpIntentEvent, () => {
+        if (this.isTutorial) return;
         const idx = SPEED_ORDER.indexOf(this.replaySpeedMultiplier);
         if (idx < 0 || idx >= SPEED_ORDER.length - 1) return;
         this.replaySpeedMultiplier = SPEED_ORDER[idx + 1];
@@ -122,6 +128,7 @@ export class LocalServer {
       });
 
       this.eventBus.on(GameSpeedDownIntentEvent, () => {
+        if (this.isTutorial) return;
         const idx = SPEED_ORDER.indexOf(this.replaySpeedMultiplier);
         if (idx <= 0) return;
         this.replaySpeedMultiplier = SPEED_ORDER[idx - 1];
@@ -286,6 +293,7 @@ export class LocalServer {
   }
 
   private archiveGameRecord(unloading: boolean) {
+    if (this.isTutorial) return;
     if (this.archived || this.archiveInFlight) {
       return;
     }

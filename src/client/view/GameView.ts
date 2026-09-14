@@ -85,6 +85,7 @@ type TrainPlanState = {
 };
 
 export class GameView implements GameMap {
+  public tutorial?: import("../../core/tutorial/Mission").MissionSnapshot;
   private lastUpdate: GameUpdateViewData | null;
   private startTick: Tick | null = null;
   private smallIDToID = new Map<number, PlayerID>();
@@ -323,6 +324,7 @@ export class GameView implements GameMap {
   }
 
   public update(gu: GameUpdateViewData) {
+    this.tutorial = gu.tutorial;
     this._unitsByOwnerStale = true;
     if (this.toDelete.size > 0) this._unitsDirty = true;
     this.toDelete.forEach((id) => {
