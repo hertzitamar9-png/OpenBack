@@ -101,7 +101,7 @@ export class NavAccountMenu extends LitElement {
       this.removePanel();
       return;
     }
-    const trigger = this.querySelector<HTMLElement>("[data-account-trigger]");
+    const trigger = this.querySelector<HTMLElement>("[data-account-chevron]");
     if (!trigger) return;
 
     if (this.panel === null) {
@@ -182,14 +182,13 @@ export class NavAccountMenu extends LitElement {
     // stats, games and friends. Only the little chevron beside it opens the
     // shortcut menu; pressing the pill used to give that menu and there was no
     // way to reach the account page from the bar at all.
-    const onChevron = (e.target as HTMLElement | null)?.closest(
-      "[data-account-chevron]",
-    );
-    if (!onChevron) {
-      this.menuOpen = false;
-      openAccountSettings();
-      return;
-    }
+    this.menuOpen = false;
+    openAccountSettings();
+  };
+
+  private handleMenuClick = (e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     this.menuOpen = !this.menuOpen;
   };
 
@@ -369,22 +368,31 @@ export class NavAccountMenu extends LitElement {
 
   private renderChevron(): TemplateResult {
     return html`
-      <svg
+      <button
+        type="button"
         data-account-chevron
-        class="w-3 h-3 shrink-0 transition-transform ${this.menuOpen
-          ? "rotate-180"
-          : ""}"
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        aria-hidden="true"
+        @click=${this.handleMenuClick}
+        aria-label=${translateText("nav_account_menu.title")}
+        aria-haspopup="menu"
+        aria-expanded=${this.menuOpen ? "true" : "false"}
+        class="h-10 w-10 shrink-0 flex items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/10 cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
       >
-        <path d="m6 9 6 6 6-6" />
-      </svg>
+        <svg
+          class="w-3 h-3 shrink-0 transition-transform ${this.menuOpen
+            ? "rotate-180"
+            : ""}"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </button>
     `;
   }
 
@@ -457,34 +465,32 @@ export class NavAccountMenu extends LitElement {
   private renderDesktopTrigger(): TemplateResult {
     const signedIn = this.isSignedIn();
     return html`
-      <button
-        id="nav-account-button"
-        data-account-trigger
-        data-account-border
-        aria-haspopup=${ifDefined(signedIn ? "menu" : undefined)}
-        aria-expanded=${ifDefined(
-          signedIn ? (this.menuOpen ? "true" : "false") : undefined,
-        )}
-        @click=${this.handleTriggerClick}
-        class="nav-menu-item relative h-10 rounded-full flex items-center justify-center gap-2 px-3 bg-transparent border border-white/20 text-white/80 hover:text-white cursor-pointer transition-colors [&.active]:text-white"
-        data-page="page-account"
-        data-i18n-aria-label="main.account"
-        data-i18n-title="main.account"
-      >
-        ${this.renderIdentityIcons({
-          ids: true,
-          iconClass: "w-5 h-5",
-          badgeClass: "absolute bottom-1 right-1",
-        })}
-        <span
-          id="nav-account-signin-text"
-          data-account-signin-text
-          class="hidden text-xs font-bold tracking-widest"
-          data-i18n="main.sign_in"
+      <div class="flex items-center">
+        <button
+          id="nav-account-button"
+          data-account-trigger
+          data-account-border
+          @click=${this.handleTriggerClick}
+          class="nav-menu-item relative h-10 rounded-full flex items-center justify-center gap-2 px-3 bg-transparent border border-white/20 text-white/80 hover:text-white cursor-pointer transition-colors [&.active]:text-white"
+          data-page="page-account"
+          data-i18n-aria-label="main.account"
+          data-i18n-title="main.account"
         >
-        </span>
+          ${this.renderIdentityIcons({
+            ids: true,
+            iconClass: "w-5 h-5",
+            badgeClass: "absolute bottom-1 right-1",
+          })}
+          <span
+            id="nav-account-signin-text"
+            data-account-signin-text
+            class="hidden text-xs font-bold tracking-widest"
+            data-i18n="main.sign_in"
+          >
+          </span>
+        </button>
         ${signedIn ? this.renderChevron() : nothing}
-      </button>
+      </div>
     `;
   }
 
@@ -492,35 +498,33 @@ export class NavAccountMenu extends LitElement {
   private renderMobileTrigger(): TemplateResult {
     const signedIn = this.isSignedIn();
     return html`
-      <button
-        data-account-trigger
-        aria-haspopup=${ifDefined(signedIn ? "menu" : undefined)}
-        aria-expanded=${ifDefined(
-          signedIn ? (this.menuOpen ? "true" : "false") : undefined,
-        )}
-        @click=${this.handleTriggerClick}
-        class="nav-menu-item h-10 flex items-center justify-center gap-1 pl-1 pr-1.5 rounded-full text-white/90 cursor-pointer transition-colors"
-        data-page="page-account"
-        data-i18n-aria-label="main.account"
-        data-i18n-title="main.account"
-      >
-        <span class="relative flex items-center justify-center w-8 h-8">
-          ${this.renderIdentityIcons({
-            ids: false,
-            iconClass: "w-7 h-7",
-            badgeClass: "absolute -bottom-0.5 -right-0.5",
-          })}
-        </span>
-        <!-- The sign-in label is desktop-only; on the top bar the icon alone is
+      <div class="flex items-center">
+        <button
+          data-account-trigger
+          @click=${this.handleTriggerClick}
+          class="nav-menu-item h-10 flex items-center justify-center gap-1 pl-1 pr-1.5 rounded-full text-white/90 cursor-pointer transition-colors"
+          data-page="page-account"
+          data-i18n-aria-label="main.account"
+          data-i18n-title="main.account"
+        >
+          <span class="relative flex items-center justify-center w-8 h-8">
+            ${this.renderIdentityIcons({
+              ids: false,
+              iconClass: "w-7 h-7",
+              badgeClass: "absolute -bottom-0.5 -right-0.5",
+            })}
+          </span>
+          <!-- The sign-in label is desktop-only; on the top bar the icon alone is
              the affordance, so keep the element (the shared updater toggles it)
              but never show text. -->
-        <span
-          data-account-signin-text
-          data-account-signin-text-silent
-          class="hidden"
-        ></span>
+          <span
+            data-account-signin-text
+            data-account-signin-text-silent
+            class="hidden"
+          ></span>
+        </button>
         ${signedIn ? this.renderChevron() : nothing}
-      </button>
+      </div>
     `;
   }
 }

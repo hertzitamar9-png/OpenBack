@@ -19,21 +19,8 @@ describe("profile opens the account page", () => {
     expect(helper).toMatch(/pageId: "page-account"/);
   });
 
-  it("opens it when the press missed the chevron", () => {
-    expect(menu).toMatch(/data-account-chevron/);
-    expect(menu).toMatch(
-      /if \(!onChevron\) \{[\s\S]{0,140}openAccountSettings\(\);/,
-    );
-  });
-
   it("still opens the dropdown from the chevron", () => {
     expect(menu).toMatch(/this\.menuOpen = !this\.menuOpen;/);
-  });
-
-  it("does not open the dropdown at the same time", () => {
-    // Navigating away with the menu left open would leave it hanging over the
-    // page it moved to, since the panel is portalled to the body.
-    expect(menu).toMatch(/if \(!onChevron\) \{\s*\n\s*this\.menuOpen = false;/);
   });
 
   it("offers the same thing from the bar, beside Clans", () => {

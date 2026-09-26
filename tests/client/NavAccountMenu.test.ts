@@ -144,10 +144,11 @@ describe("nav-account-menu", () => {
     await el.updateComplete;
     const pill = () =>
       el.querySelector<HTMLButtonElement>("[data-account-trigger]")!;
-    expect(pill().querySelector("[data-account-chevron]")).not.toBeNull();
+    expect(trigger().tagName).toBe("BUTTON");
+    expect(pill().contains(trigger())).toBe(false);
     await click(trigger());
     expect(menu()).not.toBeNull();
-    expect(pill().getAttribute("aria-expanded")).toBe("true");
+    expect(trigger().getAttribute("aria-expanded")).toBe("true");
     await click(trigger());
     expect(menu()).toBeNull();
   });
@@ -170,6 +171,22 @@ describe("nav-account-menu", () => {
     await el.updateComplete;
     expect(itemKeys()).toContain("subscription");
   });
+
+  it.each(["desktop", "mobile"] as const)(
+    "opens the profile independently of the %s menu button",
+    async (variant) => {
+      el.variant = variant;
+      fireUserMe(userMe());
+      await el.updateComplete;
+      const showPage = vi.fn();
+      window.showPage = showPage;
+      await click(trigger());
+      expect(menu()).not.toBeNull();
+      await click(el.querySelector("[data-account-trigger]")!);
+      expect(menu()).toBeNull();
+      expect(showPage).toHaveBeenCalledWith("page-account", {});
+    },
+  );
 
   it("copies the profile URL and toasts, and hides without a publicId", async () => {
     fireUserMe(userMe());

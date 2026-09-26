@@ -1,3 +1,10 @@
+## OpenBack v0.36.285 - Account Menu Within Reach
+
+- The arrow beside your profile now has its own full-height button on desktop and mobile. Clicking around the arrow opens the account shortcuts, including the owner's analytics dashboard, reliably.
+- Your name and picture continue to open your account page. The shortcut button can also be reached and activated with the keyboard.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.284 - First Command
 
 - A dedicated coastal training operation replaces the old tutorial checklist: 14 chapters teach expansion, troop commitment, construction, defense, naval landings and a live missile strike using the real game controls.
