@@ -1841,7 +1841,16 @@ export function authRouter(): express.Router {
     }
   });
 
-  router.get("/game/:id", async (req, res) => {
+  router.get("/game/:id", async (req, res, next) => {
+    // This legacy archive endpoint shares its URL with browser invite links.
+    // Let document requests reach the master's app-shell fallback; a live game
+    // has no archive yet. Prefer JSON for */* so existing fetch/API consumers
+    // retain their behavior, including genuine missing-record 404 responses.
+    res.vary("Accept");
+    if (req.accepts(["json", "html"]) === "html") {
+      next();
+      return;
+    }
     const record = await loadFullGameRecord(req.params.id);
     if (!record) {
       res.status(404).json({ error: "not_found" });

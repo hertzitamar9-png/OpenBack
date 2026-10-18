@@ -30,6 +30,12 @@ beforeAll(async () => {
   app.set("trust proxy", 1);
   app.use(express.json());
   app.use(auth.authRouter());
+  // Match the master's route order: auth/archive routes precede the app shell.
+  app.get("/game/:id", (_req, res) => {
+    res
+      .type("html")
+      .send("<!doctype html><title>OpenBack</title><main>Join game</main>");
+  });
   server = app.listen(0, "127.0.0.1");
   await new Promise<void>((resolve) => server.once("listening", resolve));
   const address = server.address();
@@ -56,6 +62,38 @@ async function postJson(pathname: string, body: unknown, cookie?: string) {
 }
 
 describe("email account lifecycle", () => {
+  test("game invite navigations reach the app shell, not the archive API", async () => {
+    for (const accept of [
+      "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      "text/html",
+      "application/json;q=0.5,text/html;q=1",
+    ]) {
+      const response = await fetch(`${origin}/game/46U9tFUm`, {
+        headers: { Accept: accept },
+      });
+      expect(response.status).toBe(200);
+      expect(response.headers.get("content-type")).toContain("text/html");
+      expect(await response.text()).toContain("Join game");
+    }
+  });
+
+  test("archive fetches still return JSON, including genuine missing records", async () => {
+    for (const accept of [
+      "application/json",
+      "*/*",
+      "text/html;q=0,application/json",
+    ]) {
+      const response = await fetch(`${origin}/game/46U9tFUm`, {
+        headers: { Accept: accept },
+      });
+      expect(response.status).toBe(404);
+      expect(response.headers.get("content-type")).toContain(
+        "application/json",
+      );
+      await expect(response.json()).resolves.toEqual({ error: "not_found" });
+    }
+  });
+
   test("stores profile pictures and first-death state on the signed-in account", async () => {
     const email = `presentation-${Date.now()}@example.com`;
     const requested = await postJson("/auth/request-code", {

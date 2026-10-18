@@ -1,3 +1,11 @@
+## OpenBack v0.36.286 - Invitations Open the Game
+
+- Opening a shared game invitation now loads OpenBack instead of showing a blank page with a "not_found" error. Previously shared invitation links also open the game correctly.
+- New host invitations point directly to the correct game worker. Replay downloads and match-history records continue to work normally.
+- On single-port hosted servers, abruptly closing a browser connection no longer crashes the WebSocket proxy and disconnects other players.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.285 - Account Menu Within Reach
 
 - The arrow beside your profile now has its own full-height button on desktop and mobile. Clicking around the arrow opens the account shortcuts, including the owner's analytics dashboard, reliably.

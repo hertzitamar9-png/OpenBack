@@ -6,6 +6,19 @@ export interface HostedProxyTarget {
   port: number;
 }
 
+/** A reset on either side of a WebSocket tunnel must not crash the proxy. */
+export function relayHostedSockets(client: Socket, upstream: Socket): void {
+  const close = () => {
+    client.destroy();
+    upstream.destroy();
+  };
+  client.on("error", close);
+  upstream.on("error", close);
+  client.once("close", close);
+  upstream.once("close", close);
+  upstream.pipe(client).pipe(upstream);
+}
+
 const MASTER_PORT = 3000;
 const FIRST_WORKER_PORT = 3001;
 
@@ -109,8 +122,16 @@ export function startHostedProxy(
       path: target.path,
       port: target.port,
     });
+    // The browser can leave before the upstream upgrade has completed.
+    clientSocket.on("error", () => upstream.destroy());
+    clientSocket.once("close", () => upstream.destroy());
 
     upstream.on("upgrade", (upstreamResponse, upstreamSocket, upstreamHead) => {
+      if (clientSocket.destroyed) {
+        upstreamSocket.destroy();
+        return;
+      }
+      relayHostedSockets(clientSocket, upstreamSocket);
       const headers = Object.entries(upstreamResponse.headers)
         .flatMap(([name, value]) =>
           (Array.isArray(value) ? value : [value]).map(
@@ -123,7 +144,6 @@ export function startHostedProxy(
       );
       if (upstreamHead.length > 0) clientSocket.write(upstreamHead);
       if (head.length > 0) upstreamSocket.write(head);
-      upstreamSocket.pipe(clientSocket).pipe(upstreamSocket);
     });
     upstream.on("response", (upstreamResponse) => {
       clientSocket.write(

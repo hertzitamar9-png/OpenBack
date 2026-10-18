@@ -1,7 +1,28 @@
+import { Socket } from "node:net";
 import { describe, expect, it } from "vitest";
-import { resolveHostedProxyTarget } from "../../src/server/HostedProxy";
+import {
+  relayHostedSockets,
+  resolveHostedProxyTarget,
+} from "../../src/server/HostedProxy";
 
 describe("hosted single-port proxy routing", () => {
+  it.each(["client", "upstream"])(
+    "cleans up a reset %s socket without an unhandled error",
+    (side) => {
+      const client = new Socket();
+      const upstream = new Socket();
+      relayHostedSockets(client, upstream);
+      expect(() =>
+        (side === "client" ? client : upstream).emit(
+          "error",
+          new Error("ECONNRESET"),
+        ),
+      ).not.toThrow();
+      expect(client.destroyed).toBe(true);
+      expect(upstream.destroyed).toBe(true);
+    },
+  );
+
   it("routes ordinary traffic and master WebSockets to the master", () => {
     expect(resolveHostedProxyTarget("/", 2)).toEqual({
       path: "/",

@@ -154,7 +154,7 @@ export class HostLobbyModal extends BaseModal {
         return link;
       }
     }
-    return `${ClientEnv.shareOrigin()}/game/${this.lobbyId}`;
+    return `${ClientEnv.shareOrigin()}/${ClientEnv.workerPath(this.lobbyId)}/game/${this.lobbyId}`;
   }
 
   private async constructUrl(): Promise<string> {
