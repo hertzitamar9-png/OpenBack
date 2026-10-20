@@ -1232,9 +1232,13 @@ export class JoinLobbyModal extends BaseModal {
           detail: {
             gameID: lobbyId,
             source: "private",
+            // A URL invite can connect before lobby info arrives. Let the
+            // server supply its mode rather than incorrectly requesting 2D.
             expectedExperienceMode:
-              this.gameConfig?.experienceMode ??
-              (this.gameConfig?.worldMechanics?.threeDMode ? "3d" : "2d"),
+              this.gameConfig === null
+                ? undefined
+                : (this.gameConfig.experienceMode ??
+                  (this.gameConfig.worldMechanics?.threeDMode ? "3d" : "2d")),
             spectator,
           } as JoinLobbyEvent,
           bubbles: true,

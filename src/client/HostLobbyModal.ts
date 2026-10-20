@@ -613,6 +613,9 @@ export class HostLobbyModal extends BaseModal {
   }
 
   protected onOpen(args?: Record<string, unknown>): void {
+    if (args?.experienceMode === "2d" || args?.experienceMode === "3d") {
+      this.setExperienceMode(args.experienceMode);
+    }
     this.startLobbyUpdates();
     document.addEventListener(
       "social-friends-changed",

@@ -1,3 +1,11 @@
+## OpenBack v0.36.288 - Open the Right World
+
+- Direct solo and host links now open the requested 2D or 3D world instead of silently using a previous mode. New multiplayer lobbies are created in the correct mode before viewers join.
+- Fresh guests opening a 3D invitation no longer get rejected as if they had requested a 2D game. The host's actual world mode is used while the lobby loads.
+- Opening a game from the normal menu continues to respect your selected mode.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.287 - Play as a Guest
 
 - Ranked matchmaking now welcomes guests, just like solo games and private multiplayer. No email, Google account, or other manual sign-in is required to play.

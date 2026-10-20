@@ -629,7 +629,10 @@ export class SinglePlayerModal extends BaseModal {
     this.experienceMode = DEFAULT_OPTIONS.experienceMode;
   }
 
-  protected onOpen(): void {
+  protected onOpen(args?: Record<string, unknown>): void {
+    if (args?.experienceMode === "2d" || args?.experienceMode === "3d") {
+      this.setExperienceMode(args.experienceMode);
+    }
     void this.loadNationCount();
   }
 
