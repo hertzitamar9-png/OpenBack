@@ -2,13 +2,12 @@ import { html } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { ClientEnv } from "src/client/ClientEnv";
 import { UserMeResponse } from "../core/ApiSchemas";
-import { getUserMe, hasLinkedAccount, invalidateUserMe } from "./Api";
+import { getUserMe, invalidateUserMe } from "./Api";
 import { appRouter } from "./AppRouter";
 import { getPlayToken } from "./Auth";
 import { BaseModal } from "./components/BaseModal";
 import "./components/Difficulties";
 import { modalHeader } from "./components/ui/ModalHeader";
-import { crazyGamesSDK } from "./CrazyGamesSDK";
 import type { JoinLobbyEvent } from "./Main";
 import type { UsernameInput } from "./UsernameInput";
 import { translateText } from "./Utils";
@@ -369,31 +368,11 @@ export class MatchmakingModal extends BaseModal {
       return;
     }
 
-    // CrazyGames players authenticate through the SDK rather than a linked
-    // Discord/Google/email account, so a signed-in CrazyGames user counts as
-    // logged in for ranked.
-    const crazyGamesSignedIn =
-      crazyGamesSDK.isOnCrazyGames() &&
-      (await crazyGamesSDK.getUserProfile()) !== null;
-    if (!this.isModalOpen) {
-      return;
-    }
-
-    if (
-      userMe === false ||
-      (!hasLinkedAccount(userMe) && !crazyGamesSignedIn)
-    ) {
-      window.dispatchEvent(
-        new CustomEvent("show-message", {
-          detail: {
-            message: translateText("matchmaking_modal.must_login"),
-            color: "red",
-            duration: 3000,
-          },
-        }),
-      );
+    // Anonymous browser sessions have a valid play token and profile too.
+    // A failed profile request is a connection issue, not a reason to sign in.
+    if (userMe === false) {
+      this.showMatchmakingError("error_modal.connection_error");
       this.close();
-      void appRouter.navigate({ pageId: "page-account" });
       return;
     }
 

@@ -1,3 +1,10 @@
+## OpenBack v0.36.287 - Play as a Guest
+
+- Ranked matchmaking now welcomes guests, just like solo games and private multiplayer. No email, Google account, or other manual sign-in is required to play.
+- A failed connection now shows a connection error instead of sending you to the sign-in page. Guest sessions are still created automatically to keep multiplayer connections and ratings working.
+
+Created by **frootz jhklphy**.
+
 ## OpenBack v0.36.286 - Invitations Open the Game
 
 - Opening a shared game invitation now loads OpenBack instead of showing a blank page with a "not_found" error. Previously shared invitation links also open the game correctly.

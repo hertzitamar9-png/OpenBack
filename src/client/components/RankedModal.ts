@@ -2,10 +2,8 @@ import { html } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { UserMeResponse } from "../../core/ApiSchemas";
 import type { ExperienceMode } from "../../core/Schemas";
-import { getUserMe, hasLinkedAccount } from "../Api";
-import { appRouter } from "../AppRouter";
+import { getUserMe } from "../Api";
 import { userAuth } from "../Auth";
-import { crazyGamesSDK } from "../CrazyGamesSDK";
 import { requireLifetimeAccess } from "../LifetimeAccess";
 import { socialClient, type GlobalPartyState } from "../SocialClient";
 import { translateText } from "../Utils";
@@ -20,18 +18,15 @@ export class RankedModal extends BaseModal {
   @state() private elo: number | string = "...";
   @state() private userMeResponse: UserMeResponse | false = false;
   @state() private errorMessage: string | null = null;
-  // CrazyGames players authenticate through the SDK, not a linked
-  // Discord/Google/email account, so track that separately for ranked.
-  @state() private crazyGamesSignedIn = false;
   @state() private party: GlobalPartyState | null = socialClient.getParty();
   private experienceMode: ExperienceMode = "2d";
   private readonly partyListener = (event: Event) => {
     this.party = (event as CustomEvent<GlobalPartyState | null>).detail;
   };
 
-  // Eligible to see/play ranked: a linked account or a signed-in CrazyGames one.
+  // Guest sessions are created automatically, without a manual sign-in.
   private isRankedEligible(): boolean {
-    return hasLinkedAccount(this.userMeResponse) || this.crazyGamesSignedIn;
+    return this.userMeResponse !== false;
   }
 
   constructor() {
@@ -98,9 +93,6 @@ export class RankedModal extends BaseModal {
         this.close();
         return;
       }
-      this.crazyGamesSignedIn =
-        crazyGamesSDK.isOnCrazyGames() &&
-        (await crazyGamesSDK.getUserProfile()) !== null;
     } catch (error) {
       console.error("Failed to fetch user profile for ranked modal", error);
       this.userMeResponse = false;
@@ -225,8 +217,7 @@ export class RankedModal extends BaseModal {
   private async handleRanked(teamSize: 1 | 2 | 3 | 4 = 1, withFriends = false) {
     if (!(await requireLifetimeAccess("ranked"))) return;
     if ((await userAuth()) === false) {
-      this.close();
-      void appRouter.navigate({ pageId: "page-account" });
+      this.errorMessage = translateText("error_modal.connection_error");
       return;
     }
 

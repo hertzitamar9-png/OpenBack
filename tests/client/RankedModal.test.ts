@@ -6,6 +6,16 @@ afterEach(() => {
 });
 
 describe("RankedModal", () => {
+  it("allows a guest profile to play ranked without linking an account", () => {
+    const modal = new RankedModal();
+    Reflect.set(modal, "userMeResponse", {
+      user: {},
+      player: { publicId: "guest" },
+    });
+    expect(Reflect.get(modal, "isRankedEligible").call(modal)).toBe(true);
+    Reflect.set(modal, "userMeResponse", false);
+    expect(Reflect.get(modal, "isRankedEligible").call(modal)).toBe(false);
+  });
   it("presents OpenBack-styled teammate and friend-party choices", async () => {
     const modal = new RankedModal();
     Object.assign(modal, {

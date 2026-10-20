@@ -4,11 +4,12 @@ import type { UserMeResponse } from "../../src/core/ApiSchemas";
 const apiMocks = vi.hoisted(() => ({
   getUserMe: vi.fn(),
   invalidateUserMe: vi.fn(),
+  hasLinkedAccount: vi.fn(() => true),
 }));
 
 vi.mock("../../src/client/Api", () => ({
   getUserMe: apiMocks.getUserMe,
-  hasLinkedAccount: vi.fn(() => true),
+  hasLinkedAccount: apiMocks.hasLinkedAccount,
   invalidateUserMe: apiMocks.invalidateUserMe,
 }));
 
@@ -134,6 +135,7 @@ describe("MatchmakingModal clan-aware joins", () => {
     sockets.length = 0;
     apiMocks.getUserMe.mockReset();
     apiMocks.invalidateUserMe.mockReset();
+    apiMocks.hasLinkedAccount.mockReturnValue(true);
     vi.stubGlobal("WebSocket", FakeWebSocket);
   });
 
@@ -155,6 +157,36 @@ describe("MatchmakingModal clan-aware joins", () => {
       clanTag: "ALLY",
       experienceMode: "2d",
     });
+  });
+
+  it("queues an automatic guest session without a linked account", async () => {
+    const guest = userMe();
+    guest.user = {};
+    apiMocks.getUserMe.mockResolvedValue(guest);
+    apiMocks.hasLinkedAccount.mockReturnValue(false);
+    installClanSelection(null);
+    const { modal, message } = await openAndJoin("1v1");
+    expect(message).toMatchObject({ type: "join", jwt: "play-token" });
+    expect(modal.isOpen()).toBe(true);
+    modal.close();
+  });
+
+  it("reports a guest-session connection failure without requesting sign-in", async () => {
+    apiMocks.getUserMe.mockResolvedValue(false);
+    const showMessage = vi.fn();
+    window.addEventListener("show-message", showMessage);
+    try {
+      const modal = new MatchmakingModal();
+      modal.open();
+      await vi.waitFor(() => expect(showMessage).toHaveBeenCalledOnce());
+      expect(showMessage.mock.calls[0][0].detail.message).toBe(
+        "error_modal.connection_error",
+      );
+      expect(sockets).toHaveLength(0);
+      expect(modal.isOpen()).toBe(false);
+    } finally {
+      window.removeEventListener("show-message", showMessage);
+    }
   });
 
   it("omits clanTag when 2v2 has no selected current membership", async () => {
