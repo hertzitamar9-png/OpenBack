@@ -1340,7 +1340,6 @@
     "limit_reached": "You're out of free ranked matches.",
     "limit_reached_info": "Free matches refill daily. Subscribe for unlimited ranked play.",
     "limit_upsell": "Get unlimited ranked",
-    "must_login": "You must be logged in to play ranked matchmaking.",
     "no_elo": "No ELO yet",
     "queue_size": "Players in queue: {count}",
     "replaced": "You joined matchmaking from another tab or window.",
